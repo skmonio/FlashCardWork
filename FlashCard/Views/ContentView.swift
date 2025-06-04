@@ -3,26 +3,51 @@ import SwiftUI
 struct ContentView: View {
     @StateObject private var viewModel = FlashCardViewModel()
     @State private var showingAddCard = false
+    @State private var showingRPG = false
     
     var body: some View {
         NavigationView {
             List {
-                ForEach(viewModel.flashCards) { card in
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(card.word)
-                            .font(.headline)
-                        Text(card.definition)
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                        if !card.example.isEmpty {
-                            Text("Example: \(card.example)")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                // RPG Button Section
+                Section {
+                    Button(action: { showingRPG = true }) {
+                        HStack {
+                            Image(systemName: "crossed.swords")
+                                .foregroundColor(.red)
+                                .font(.title2)
+                            Text("Play RPG Battle Mode")
+                                .foregroundColor(.primary)
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .foregroundColor(.gray)
                         }
                     }
-                    .padding(.vertical, 8)
+                    .disabled(viewModel.flashCards.isEmpty)
+                } header: {
+                    Text("Game Modes")
                 }
-                .onDelete(perform: viewModel.deleteCard)
+                
+                // Flash Cards Section
+                Section {
+                    ForEach(viewModel.flashCards) { card in
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(card.word)
+                                .font(.headline)
+                            Text(card.definition)
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                            if !card.example.isEmpty {
+                                Text("Example: \(card.example)")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        .padding(.vertical, 8)
+                    }
+                    .onDelete(perform: viewModel.deleteCard)
+                } header: {
+                    Text("Flash Cards")
+                }
             }
             .navigationTitle("Flash Cards")
             .toolbar {
@@ -53,6 +78,11 @@ struct ContentView: View {
             }
             .sheet(isPresented: $showingAddCard) {
                 AddCardView(viewModel: viewModel)
+            }
+            .sheet(isPresented: $showingRPG) {
+                NavigationView {
+                    RPGView(viewModel: viewModel)
+                }
             }
         }
     }

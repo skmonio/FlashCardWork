@@ -10,7 +10,7 @@ class FlashCardViewModel: ObservableObject {
     private let userDefaultsKey = "SavedFlashCards"
     
     init() {
-        loadCards()
+        loadSampleCards()
     }
     
     func addCard(word: String, definition: String, example: String) {
@@ -32,6 +32,25 @@ class FlashCardViewModel: ObservableObject {
         if let savedCards = UserDefaults.standard.data(forKey: userDefaultsKey),
            let decodedCards = try? JSONDecoder().decode([FlashCard].self, from: savedCards) {
             flashCards = decodedCards
+        }
+    }
+    
+    private func loadSampleCards() {
+        let sampleCards = [
+            ("Huis", "House", "Ik woon in een groot huis - I live in a big house"),
+            ("Kat", "Cat", "De kat slaapt - The cat is sleeping"),
+            ("Boek", "Book", "Ik lees een boek - I am reading a book"),
+            ("Water", "Water", "Ik drink water - I drink water"),
+            ("Fiets", "Bicycle", "Ik ga met de fiets - I go by bicycle"),
+            ("Brood", "Bread", "Vers brood - Fresh bread"),
+            ("Kaas", "Cheese", "Nederlandse kaas - Dutch cheese"),
+            ("Rood", "Red", "De appel is rood - The apple is red"),
+            ("Boom", "Tree", "Een grote boom - A big tree"),
+            ("Zon", "Sun", "De zon schijnt - The sun is shining")
+        ]
+        
+        flashCards = sampleCards.map { word, definition, example in
+            FlashCard(word: word, definition: definition, example: example)
         }
     }
 } 
