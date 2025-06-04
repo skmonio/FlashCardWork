@@ -28,6 +28,11 @@ struct ContentView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     HStack {
+                        NavigationLink(destination: GameView(viewModel: viewModel)) {
+                            Image(systemName: "gamecontroller.fill")
+                        }
+                        .disabled(viewModel.flashCards.isEmpty)
+                        
                         NavigationLink(destination: TestView(viewModel: viewModel)) {
                             Image(systemName: "checkmark.circle.fill")
                         }
