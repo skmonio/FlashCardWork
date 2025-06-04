@@ -2,6 +2,7 @@ import SwiftUI
 
 struct TestView: View {
     @ObservedObject var viewModel: FlashCardViewModel
+    let cards: [FlashCard]
     @Environment(\.dismiss) private var dismiss
     @State private var currentQuestionIndex = 0
     @State private var userAnswer = ""
@@ -12,7 +13,7 @@ struct TestView: View {
     
     var body: some View {
         VStack {
-            if viewModel.flashCards.isEmpty {
+            if cards.isEmpty {
                 emptyStateView
             } else if isTestComplete {
                 testResultView
@@ -39,7 +40,7 @@ struct TestView: View {
     private var testQuestionView: some View {
         VStack(spacing: 20) {
             // Progress
-            Text("Question \(currentQuestionIndex + 1) of \(viewModel.flashCards.count)")
+            Text("Question \(currentQuestionIndex + 1) of \(cards.count)")
                 .font(.headline)
                 .foregroundColor(.secondary)
             
@@ -49,19 +50,19 @@ struct TestView: View {
                     .font(.headline)
                     .foregroundColor(.secondary)
                 
-                Text(viewModel.flashCards[currentQuestionIndex].definition)
+                Text(cards[currentQuestionIndex].definition)
                     .font(.body)
                     .padding()
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(Color.blue.opacity(0.1))
                     .cornerRadius(10)
                 
-                if !viewModel.flashCards[currentQuestionIndex].example.isEmpty {
+                if !cards[currentQuestionIndex].example.isEmpty {
                     Text("Example:")
                         .font(.headline)
                         .foregroundColor(.secondary)
                     
-                    Text(viewModel.flashCards[currentQuestionIndex].example)
+                    Text(cards[currentQuestionIndex].example)
                         .font(.body)
                         .italic()
                         .padding()
@@ -107,11 +108,11 @@ struct TestView: View {
                     .font(.title)
                     .bold()
                 
-                Text("Score: \(score) / \(viewModel.flashCards.count)")
+                Text("Score: \(score) / \(cards.count)")
                     .font(.title2)
                 
                 // Score percentage
-                let percentage = Double(score) / Double(viewModel.flashCards.count) * 100
+                let percentage = Double(score) / Double(cards.count) * 100
                 Text(String(format: "%.1f%%", percentage))
                     .font(.title)
                     .foregroundColor(percentage >= 70 ? .green : .red)
@@ -154,7 +155,7 @@ struct TestView: View {
     }
     
     private func submitAnswer() {
-        let currentCard = viewModel.flashCards[currentQuestionIndex]
+        let currentCard = cards[currentQuestionIndex]
         let isCorrect = userAnswer.lowercased().trimmingCharacters(in: .whitespacesAndNewlines) ==
             currentCard.word.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
         
@@ -168,7 +169,7 @@ struct TestView: View {
     }
     
     private func getResultMessage() -> String {
-        let currentCard = viewModel.flashCards[currentQuestionIndex]
+        let currentCard = cards[currentQuestionIndex]
         let isCorrect = userAnswer.lowercased().trimmingCharacters(in: .whitespacesAndNewlines) ==
             currentCard.word.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
         
@@ -177,7 +178,7 @@ struct TestView: View {
     
     private func moveToNextQuestion() {
         userAnswer = ""
-        if currentQuestionIndex < viewModel.flashCards.count - 1 {
+        if currentQuestionIndex < cards.count - 1 {
             currentQuestionIndex += 1
         } else {
             isTestComplete = true

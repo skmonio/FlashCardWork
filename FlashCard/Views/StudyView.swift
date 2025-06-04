@@ -2,12 +2,13 @@ import SwiftUI
 
 struct StudyView: View {
     @ObservedObject var viewModel: FlashCardViewModel
+    let cards: [FlashCard]
     @State private var currentIndex = 0
     @Environment(\.dismiss) private var dismiss
     
     var body: some View {
         VStack {
-            if viewModel.flashCards.isEmpty {
+            if cards.isEmpty {
                 emptyStateView
             } else {
                 studyView
@@ -32,13 +33,13 @@ struct StudyView: View {
     private var studyView: some View {
         VStack {
             // Progress indicator
-            Text("\(currentIndex + 1) of \(viewModel.flashCards.count)")
+            Text("\(currentIndex + 1) of \(cards.count)")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .padding(.top)
             
             // Card
-            CardView(card: viewModel.flashCards[currentIndex])
+            CardView(card: cards[currentIndex])
                 .padding()
             
             // Navigation buttons
@@ -54,8 +55,8 @@ struct StudyView: View {
                     Image(systemName: "arrow.right.circle.fill")
                         .font(.system(size: 44))
                 }
-                .disabled(currentIndex == viewModel.flashCards.count - 1)
-                .opacity(currentIndex == viewModel.flashCards.count - 1 ? 0.3 : 1)
+                .disabled(currentIndex == cards.count - 1)
+                .opacity(currentIndex == cards.count - 1 ? 0.3 : 1)
             }
             .foregroundColor(.blue)
             .padding(.bottom)
@@ -64,7 +65,7 @@ struct StudyView: View {
     
     private func nextCard() {
         withAnimation {
-            if currentIndex < viewModel.flashCards.count - 1 {
+            if currentIndex < cards.count - 1 {
                 currentIndex += 1
             }
         }

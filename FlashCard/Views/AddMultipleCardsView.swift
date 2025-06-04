@@ -1,13 +1,19 @@
 import SwiftUI
 
-struct AddCardView: View {
+struct CardEntry: Identifiable {
+    let id = UUID()
+    var word: String = ""
+    var definition: String = ""
+    var example: String = ""
+}
+
+struct AddMultipleCardsView: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject var viewModel: FlashCardViewModel
-    
     @State private var cardEntries: [CardEntry] = [CardEntry()]
     @State private var selectedDeckIds: Set<UUID> = []
     @State private var showingNewDeckSheet = false
-    @State private var newDeckName: String = ""
+    @State private var newDeckName = ""
     
     private var canSave: Bool {
         !cardEntries.isEmpty && cardEntries.allSatisfy { entry in
@@ -16,48 +22,10 @@ struct AddCardView: View {
         }
     }
     
-    private var canAddAnotherCard: Bool {
-        guard let lastEntry = cardEntries.last else { return true }
-        return !lastEntry.word.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-               !lastEntry.definition.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-    }
-    
     var body: some View {
         NavigationView {
             Form {
-                ForEach($cardEntries.indices, id: \.self) { index in
-                    Section(header: Text(cardEntries.count > 1 ? "Card \(index + 1)" : "Card Details")) {
-                        TextField("Word", text: $cardEntries[index].word)
-                        
-                        TextField("Definition", text: $cardEntries[index].definition)
-                        
-                        TextField("Example (Optional)", text: $cardEntries[index].example)
-                        
-                        if cardEntries.count > 1 {
-                            Button(role: .destructive, action: {
-                                cardEntries.remove(at: index)
-                            }) {
-                                Text("Remove Card")
-                                    .foregroundColor(.red)
-                            }
-                        }
-                    }
-                }
-                
-                Section {
-                    Button(action: {
-                        cardEntries.append(CardEntry())
-                    }) {
-                        HStack {
-                            Image(systemName: "plus.circle.fill")
-                            Text("Add Another Card")
-                        }
-                        .foregroundColor(.blue)
-                    }
-                    .disabled(!canAddAnotherCard)
-                }
-
-                Section(header: Text("Decks (Select one or more)")) {
+                Section(header: Text("Select Decks")) {
                     ForEach(viewModel.getSelectableDecks()) { deck in
                         Button(action: {
                             if selectedDeckIds.contains(deck.id) {
@@ -87,8 +55,49 @@ struct AddCardView: View {
                         }
                     }
                 }
+                
+                Section(header: Text("Cards")) {
+                    ForEach($cardEntries) { $entry in
+                        VStack(spacing: 12) {
+                            TextField("Word", text: $entry.word)
+                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                            
+                            TextField("Definition", text: $entry.definition)
+                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                            
+                            TextField("Example (Optional)", text: $entry.example)
+                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                            
+                            if cardEntries.count > 1 {
+                                Button(role: .destructive, action: {
+                                    if let index = cardEntries.firstIndex(where: { $0.id == entry.id }) {
+                                        cardEntries.remove(at: index)
+                                    }
+                                }) {
+                                    Text("Remove Card")
+                                        .foregroundColor(.red)
+                                }
+                            }
+                            
+                            if entry.id == cardEntries.last?.id {
+                                Button(action: {
+                                    cardEntries.append(CardEntry())
+                                }) {
+                                    Text("Add Another Card")
+                                        .foregroundColor(.blue)
+                                }
+                            }
+                            
+                            if entry.id != cardEntries.last?.id {
+                                Divider()
+                                    .padding(.vertical, 8)
+                            }
+                        }
+                        .padding(.vertical, 8)
+                    }
+                }
             }
-            .navigationTitle("Add Cards")
+            .navigationTitle("Add Multiple Cards")
             .navigationBarItems(
                 leading: Button("Cancel") {
                     dismiss()

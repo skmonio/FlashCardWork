@@ -1,60 +1,34 @@
 import SwiftUI
 
-struct AddCardView: View {
+struct EditCardView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.presentationMode) private var presentationMode
     @ObservedObject var viewModel: FlashCardViewModel
+    let card: FlashCard
     
-    @State private var cardEntries: [CardEntry] = [CardEntry()]
-    @State private var selectedDeckIds: Set<UUID> = []
+    @State private var word: String
+    @State private var definition: String
+    @State private var example: String
+    @State private var selectedDeckIds: Set<UUID>
     @State private var showingNewDeckSheet = false
-    @State private var newDeckName: String = ""
+    @State private var newDeckName = ""
     
-    private var canSave: Bool {
-        !cardEntries.isEmpty && cardEntries.allSatisfy { entry in
-            !entry.word.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-            !entry.definition.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        }
-    }
-    
-    private var canAddAnotherCard: Bool {
-        guard let lastEntry = cardEntries.last else { return true }
-        return !lastEntry.word.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-               !lastEntry.definition.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    init(viewModel: FlashCardViewModel, card: FlashCard) {
+        self.viewModel = viewModel
+        self.card = card
+        _word = State(initialValue: card.word)
+        _definition = State(initialValue: card.definition)
+        _example = State(initialValue: card.example)
+        _selectedDeckIds = State(initialValue: card.deckIds)
     }
     
     var body: some View {
         NavigationView {
             Form {
-                ForEach($cardEntries.indices, id: \.self) { index in
-                    Section(header: Text(cardEntries.count > 1 ? "Card \(index + 1)" : "Card Details")) {
-                        TextField("Word", text: $cardEntries[index].word)
-                        
-                        TextField("Definition", text: $cardEntries[index].definition)
-                        
-                        TextField("Example (Optional)", text: $cardEntries[index].example)
-                        
-                        if cardEntries.count > 1 {
-                            Button(role: .destructive, action: {
-                                cardEntries.remove(at: index)
-                            }) {
-                                Text("Remove Card")
-                                    .foregroundColor(.red)
-                            }
-                        }
-                    }
-                }
-                
-                Section {
-                    Button(action: {
-                        cardEntries.append(CardEntry())
-                    }) {
-                        HStack {
-                            Image(systemName: "plus.circle.fill")
-                            Text("Add Another Card")
-                        }
-                        .foregroundColor(.blue)
-                    }
-                    .disabled(!canAddAnotherCard)
+                Section(header: Text("Card Details")) {
+                    TextField("Word", text: $word)
+                    TextField("Definition", text: $definition)
+                    TextField("Example (Optional)", text: $example)
                 }
 
                 Section(header: Text("Decks (Select one or more)")) {
@@ -88,23 +62,23 @@ struct AddCardView: View {
                     }
                 }
             }
-            .navigationTitle("Add Cards")
+            .navigationTitle("Edit Card")
             .navigationBarItems(
                 leading: Button("Cancel") {
                     dismiss()
                 },
                 trailing: Button("Save") {
-                    for entry in cardEntries {
-                        viewModel.addCard(
-                            word: entry.word.trimmingCharacters(in: .whitespacesAndNewlines),
-                            definition: entry.definition.trimmingCharacters(in: .whitespacesAndNewlines),
-                            example: entry.example.trimmingCharacters(in: .whitespacesAndNewlines),
-                            deckIds: selectedDeckIds
-                        )
-                    }
+                    viewModel.updateCard(
+                        card,
+                        word: word.trimmingCharacters(in: .whitespacesAndNewlines),
+                        definition: definition.trimmingCharacters(in: .whitespacesAndNewlines),
+                        example: example.trimmingCharacters(in: .whitespacesAndNewlines),
+                        deckIds: selectedDeckIds
+                    )
                     dismiss()
                 }
-                .disabled(!canSave)
+                .disabled(word.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+                         definition.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             )
             .sheet(isPresented: $showingNewDeckSheet) {
                 NavigationView {

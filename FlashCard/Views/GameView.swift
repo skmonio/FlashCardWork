@@ -16,8 +16,9 @@ struct Card: Identifiable {
 
 struct GameView: View {
     @ObservedObject var viewModel: FlashCardViewModel
+    let cards: [FlashCard]
     @Environment(\.dismiss) private var dismiss
-    @State private var cards: [Card] = []
+    @State private var gameCards: [Card] = []
     @State private var selectedCard: Card?
     @State private var score = 0
     @State private var moves = 0
@@ -31,7 +32,7 @@ struct GameView: View {
     
     var body: some View {
         VStack {
-            if viewModel.flashCards.isEmpty {
+            if cards.isEmpty {
                 emptyStateView
             } else {
                 gameView
@@ -79,7 +80,7 @@ struct GameView: View {
             // Game grid
             ScrollView {
                 LazyVGrid(columns: columns, spacing: 16) {
-                    ForEach(cards) { card in
+                    ForEach(gameCards) { card in
                         GameCardView(card: card) {
                             cardTapped(card)
                         }
@@ -106,65 +107,71 @@ struct GameView: View {
         selectedCard = nil
         
         // Create pairs of cards (word and definition)
-        cards = []
-        for flashCard in viewModel.flashCards {
-            cards.append(Card(content: flashCard.word, type: .word, originalCard: flashCard))
-            cards.append(Card(content: flashCard.definition, type: .definition, originalCard: flashCard))
+        gameCards = []
+        for flashCard in cards {
+            gameCards.append(Card(content: flashCard.word, type: .word, originalCard: flashCard))
+            gameCards.append(Card(content: flashCard.definition, type: .definition, originalCard: flashCard))
         }
         
         // Shuffle the cards
-        cards.shuffle()
+        gameCards.shuffle()
     }
     
     private func cardTapped(_ card: Card) {
-        // Find the tapped card in our array
-        guard let index = cards.firstIndex(where: { $0.id == card.id }),
-              !cards[index].isMatched,
-              !cards[index].isFaceUp else { return }
+        // Ignore taps on matched or face-up cards
+        if card.isMatched || card.isFaceUp {
+            return
+        }
         
-        // Flip the card
-        cards[index].isFaceUp = true
+        // Find the index of the tapped card
+        guard let index = gameCards.firstIndex(where: { $0.id == card.id }) else { return }
         
-        // If we already have a card selected
-        if let selectedCard = selectedCard {
-            moves += 1
+        // Flip the card face up
+        gameCards[index].isFaceUp = true
+        
+        // If this is the first card of the pair
+        if selectedCard == nil {
+            selectedCard = card
+            return
+        }
+        
+        // This is the second card
+        moves += 1
+        
+        // Check if it's a match
+        if selectedCard?.originalCard.id == card.originalCard.id &&
+           selectedCard?.type != card.type {
+            // It's a match!
+            score += 1
             
-            // Check if they match
-            if selectedCard.originalCard.id == card.originalCard.id &&
-               selectedCard.type != card.type {
-                // Match found!
-                cards[index].isMatched = true
-                if let selectedIndex = cards.firstIndex(where: { $0.id == selectedCard.id }) {
-                    cards[selectedIndex].isMatched = true
-                }
-                score += 1
+            // Mark both cards as matched
+            if let selectedIndex = gameCards.firstIndex(where: { $0.id == selectedCard?.id }) {
+                gameCards[selectedIndex].isMatched = true
+                gameCards[index].isMatched = true
                 
                 // Show match animation
                 matchAnimation = card
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                     matchAnimation = nil
                 }
-                
-                // Check if game is complete
-                if score == viewModel.flashCards.count {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                        showingGameOver = true
-                    }
-                }
-            } else {
-                // No match - flip both cards back
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                    cards[index].isFaceUp = false
-                    if let selectedIndex = cards.firstIndex(where: { $0.id == selectedCard.id }) {
-                        cards[selectedIndex].isFaceUp = false
-                    }
-                }
             }
-            self.selectedCard = nil
+            
+            // Check if game is complete
+            if score == cards.count {
+                showingGameOver = true
+            }
         } else {
-            // First card selected
-            selectedCard = card
+            // Not a match - flip both cards face down after a delay
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                if let selectedIndex = gameCards.firstIndex(where: { $0.id == selectedCard?.id }) {
+                    gameCards[selectedIndex].isFaceUp = false
+                }
+                gameCards[index].isFaceUp = false
+            }
         }
+        
+        // Reset selected card
+        selectedCard = nil
     }
 }
 
