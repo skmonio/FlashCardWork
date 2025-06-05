@@ -1,25 +1,34 @@
 import SwiftUI
+import os
 
 struct EditCardView: View {
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.presentationMode) private var presentationMode
     @ObservedObject var viewModel: FlashCardViewModel
-    let card: FlashCard
+    let cardId: UUID
     
-    @State private var word: String
-    @State private var definition: String
-    @State private var example: String
-    @State private var selectedDeckIds: Set<UUID>
+    @State private var word: String = ""
+    @State private var definition: String = ""
+    @State private var example: String = ""
+    @State private var selectedDeckIds: Set<UUID> = []
     @State private var showingNewDeckSheet = false
     @State private var newDeckName = ""
     
+    private let logger = Logger(subsystem: "com.flashcards", category: "EditCardView")
+    
     init(viewModel: FlashCardViewModel, card: FlashCard) {
+        logger.debug("Initializing EditCardView for card: \(card.id)")
         self.viewModel = viewModel
-        self.card = card
+        self.cardId = card.id
         _word = State(initialValue: card.word)
         _definition = State(initialValue: card.definition)
         _example = State(initialValue: card.example)
         _selectedDeckIds = State(initialValue: card.deckIds)
+    }
+    
+    private var card: FlashCard? {
+        let foundCard = viewModel.flashCards.first(where: { $0.id == cardId })
+        logger.debug("Retrieved card from viewModel: \(foundCard != nil)")
+        return foundCard
     }
     
     var body: some View {
@@ -27,8 +36,19 @@ struct EditCardView: View {
             Form {
                 Section(header: Text("Card Details")) {
                     TextField("Word", text: $word)
+                        .onChange(of: word) { oldValue, newValue in
+                            logger.debug("Word changed from '\(oldValue)' to '\(newValue)'")
+                        }
+                    
                     TextField("Definition", text: $definition)
+                        .onChange(of: definition) { oldValue, newValue in
+                            logger.debug("Definition changed from '\(oldValue)' to '\(newValue)'")
+                        }
+                    
                     TextField("Example (Optional)", text: $example)
+                        .onChange(of: example) { oldValue, newValue in
+                            logger.debug("Example changed from '\(oldValue)' to '\(newValue)'")
+                        }
                 }
 
                 Section(header: Text("Decks (Select one or more)")) {
@@ -39,6 +59,7 @@ struct EditCardView: View {
                             } else {
                                 selectedDeckIds.insert(deck.id)
                             }
+                            logger.debug("Selected deck IDs changed: \(selectedDeckIds)")
                         }) {
                             HStack {
                                 Text(deck.name)
@@ -65,16 +86,36 @@ struct EditCardView: View {
             .navigationTitle("Edit Card")
             .navigationBarItems(
                 leading: Button("Cancel") {
+                    logger.debug("Cancel button tapped")
                     dismiss()
                 },
                 trailing: Button("Save") {
+                    logger.debug("Save button tapped")
+                    guard let currentCard = card else {
+                        logger.error("Failed to find card with ID: \(cardId)")
+                        return
+                    }
+                    
+                    let trimmedWord = word.trimmingCharacters(in: .whitespacesAndNewlines)
+                    let trimmedDefinition = definition.trimmingCharacters(in: .whitespacesAndNewlines)
+                    let trimmedExample = example.trimmingCharacters(in: .whitespacesAndNewlines)
+                    
+                    logger.debug("Updating card with values - Word: \(trimmedWord), Definition: \(trimmedDefinition)")
+                    
+                    // Update the card
                     viewModel.updateCard(
-                        card,
-                        word: word.trimmingCharacters(in: .whitespacesAndNewlines),
-                        definition: definition.trimmingCharacters(in: .whitespacesAndNewlines),
-                        example: example.trimmingCharacters(in: .whitespacesAndNewlines),
+                        currentCard,
+                        word: trimmedWord,
+                        definition: trimmedDefinition,
+                        example: trimmedExample,
                         deckIds: selectedDeckIds
                     )
+                    
+                    // Force a save to UserDefaults
+                    UserDefaults.standard.synchronize()
+                    logger.debug("UserDefaults synchronized")
+                    
+                    // Dismiss the view
                     dismiss()
                 }
                 .disabled(word.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
@@ -93,6 +134,7 @@ struct EditCardView: View {
                             showingNewDeckSheet = false
                         },
                         trailing: Button("Create") {
+                            logger.debug("Creating new deck: \(newDeckName)")
                             let newDeck = viewModel.createDeck(name: newDeckName.trimmingCharacters(in: .whitespacesAndNewlines))
                             selectedDeckIds.insert(newDeck.id)
                             showingNewDeckSheet = false
@@ -102,6 +144,12 @@ struct EditCardView: View {
                     )
                 }
             }
+        }
+        .onAppear {
+            logger.debug("EditCardView appeared")
+        }
+        .onDisappear {
+            logger.debug("EditCardView disappeared")
         }
     }
 } 

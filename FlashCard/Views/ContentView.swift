@@ -6,13 +6,17 @@ struct ContentView: View {
     @State private var showingAddDeck = false
     @State private var showingDeckSelection = false
     @State private var selectedMode: DeckSelectionView.StudyMode = .study
+    @State private var showingViewCards = false
     
     var body: some View {
         NavigationView {
             List {
                 Section(header: Text("Study Options")) {
-                    NavigationLink(destination: DecksView(viewModel: viewModel)) {
+                    Button(action: {
+                        showingViewCards = true
+                    }) {
                         Label("View Cards", systemImage: "rectangle.stack.fill")
+                            .foregroundColor(.blue)
                     }
                     
                     Button(action: {
@@ -38,6 +42,11 @@ struct ContentView: View {
                 }
             }
             .navigationTitle("FlashCards")
+            .background(
+                NavigationLink(isActive: $showingViewCards,
+                             destination: { DecksView(viewModel: viewModel) },
+                             label: { EmptyView() })
+            )
         }
         .sheet(isPresented: $showingDeckSelection) {
             DeckSelectionView(viewModel: viewModel, mode: selectedMode)
@@ -52,43 +61,53 @@ struct DecksView: View {
     
     var body: some View {
         List {
-            ForEach(viewModel.decks) { deck in
-                NavigationLink(destination: DeckView(viewModel: viewModel, deck: deck)) {
+            Section(header: Text("Actions")) {
+                NavigationLink(isActive: $showingAddCard) {
+                    AddCardView(viewModel: viewModel)
+                } label: {
                     HStack {
-                        Text(deck.name)
+                        Image(systemName: "plus.card.fill")
+                        Text("Add New Card")
                         Spacer()
-                        Text("\(deck.cards.count)")
-                            .foregroundColor(.secondary)
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 14))
+                            .foregroundColor(.gray)
+                    }
+                }
+                
+                NavigationLink(isActive: $showingAddDeck) {
+                    AddDeckView(viewModel: viewModel)
+                } label: {
+                    HStack {
+                        Image(systemName: "folder.badge.plus")
+                        Text("Add New Deck")
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 14))
+                            .foregroundColor(.gray)
                     }
                 }
             }
-            .onDelete { indices in
-                indices.forEach { index in
-                    viewModel.deleteDeck(viewModel.decks[index])
+            
+            Section(header: Text("Decks")) {
+                ForEach(viewModel.decks) { deck in
+                    NavigationLink(destination: DeckView(viewModel: viewModel, deck: deck)) {
+                        HStack {
+                            Text(deck.name)
+                            Spacer()
+                            Text("\(deck.cards.count)")
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
+                .onDelete { indices in
+                    indices.forEach { index in
+                        viewModel.deleteDeck(viewModel.decks[index])
+                    }
                 }
             }
         }
         .navigationTitle("View Cards")
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Menu {
-                    Button(action: { showingAddCard = true }) {
-                        Label("Add Card", systemImage: "plus.card.fill")
-                    }
-                    Button(action: { showingAddDeck = true }) {
-                        Label("Add Deck", systemImage: "folder.badge.plus")
-                    }
-                } label: {
-                    Image(systemName: "plus")
-                }
-            }
-        }
-        .sheet(isPresented: $showingAddCard) {
-            AddCardView(viewModel: viewModel)
-        }
-        .sheet(isPresented: $showingAddDeck) {
-            AddDeckView(viewModel: viewModel)
-        }
     }
 }
 

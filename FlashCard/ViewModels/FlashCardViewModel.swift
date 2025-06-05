@@ -3,12 +3,14 @@ import Foundation
 class FlashCardViewModel: ObservableObject {
     @Published var flashCards: [FlashCard] = [] {
         didSet {
+            print("FlashCards changed: \(flashCards.count) cards")
             saveCards()
         }
     }
     
     @Published var decks: [Deck] = [] {
         didSet {
+            print("Decks changed: \(decks.count) decks")
             saveDecks()
         }
     }
@@ -18,6 +20,7 @@ class FlashCardViewModel: ObservableObject {
     private var uncategorizedDeckId: UUID?
     
     init() {
+        print("ViewModel init - Loading data")
         loadCards()
         loadDecks()
         
@@ -35,6 +38,7 @@ class FlashCardViewModel: ObservableObject {
     }
     
     private func updateCardDeckAssociations() {
+        print("Updating card-deck associations")
         // Clear all deck cards
         for index in decks.indices {
             decks[index].cards = []
@@ -56,38 +60,67 @@ class FlashCardViewModel: ObservableObject {
                 }
             }
         }
+        
+        // Save decks after updating associations
+        saveDecks()
     }
     
     func addCard(word: String, definition: String, example: String, deckIds: Set<UUID>) {
+        print("Adding new card")
         let newCard = FlashCard(word: word, definition: definition, example: example, deckIds: deckIds)
         flashCards.append(newCard)
         updateCardDeckAssociations()
     }
     
     func updateCard(_ card: FlashCard, word: String, definition: String, example: String, deckIds: Set<UUID>) {
+        print("Updating card: \(card.id)")
+        print("Before update - flashCards count: \(flashCards.count)")
+        
         if let cardIndex = flashCards.firstIndex(where: { $0.id == card.id }) {
-            // Update card
-            flashCards[cardIndex].word = word
-            flashCards[cardIndex].definition = definition
-            flashCards[cardIndex].example = example
-            flashCards[cardIndex].deckIds = deckIds
+            print("Found card at index: \(cardIndex)")
             
+            // Create updated card
+            var updatedCard = card
+            updatedCard.word = word
+            updatedCard.definition = definition
+            updatedCard.example = example
+            updatedCard.deckIds = deckIds
+            
+            // Update in flashCards array
+            flashCards[cardIndex] = updatedCard
+            
+            print("Card updated - New word: \(updatedCard.word)")
+            
+            // Force a save of the cards
+            saveCards()
+            
+            // Update deck associations
             updateCardDeckAssociations()
+            
+            // Force UserDefaults to synchronize
+            UserDefaults.standard.synchronize()
+            
+            print("After update - flashCards count: \(flashCards.count)")
+        } else {
+            print("Error: Card not found in flashCards array")
         }
     }
     
     func deleteCard(at indices: IndexSet) {
+        print("Deleting card(s) at indices: \(indices)")
         flashCards.remove(atOffsets: indices)
         updateCardDeckAssociations()
     }
     
     func createDeck(name: String) -> Deck {
+        print("Creating new deck: \(name)")
         let newDeck = Deck(name: name)
         decks.append(newDeck)
         return newDeck
     }
     
     func deleteDeck(_ deck: Deck) {
+        print("Deleting deck: \(deck.name)")
         if deck.name != "Uncategorized" {
             // Remove deck from all cards that reference it
             for index in flashCards.indices {
@@ -107,28 +140,44 @@ class FlashCardViewModel: ObservableObject {
     }
     
     private func saveCards() {
+        print("Saving cards to UserDefaults")
         if let encoded = try? JSONEncoder().encode(flashCards) {
             UserDefaults.standard.set(encoded, forKey: userDefaultsKey)
+            print("Cards saved successfully")
+        } else {
+            print("Error: Failed to encode cards")
         }
     }
     
     private func loadCards() {
+        print("Loading cards from UserDefaults")
         if let savedCards = UserDefaults.standard.data(forKey: userDefaultsKey),
            let decodedCards = try? JSONDecoder().decode([FlashCard].self, from: savedCards) {
             flashCards = decodedCards
+            print("Loaded \(flashCards.count) cards")
+        } else {
+            print("No saved cards found or error decoding")
         }
     }
     
     private func saveDecks() {
+        print("Saving decks to UserDefaults")
         if let encoded = try? JSONEncoder().encode(decks) {
             UserDefaults.standard.set(encoded, forKey: decksDefaultsKey)
+            print("Decks saved successfully")
+        } else {
+            print("Error: Failed to encode decks")
         }
     }
     
     private func loadDecks() {
+        print("Loading decks from UserDefaults")
         if let savedDecks = UserDefaults.standard.data(forKey: decksDefaultsKey),
            let decodedDecks = try? JSONDecoder().decode([Deck].self, from: savedDecks) {
             decks = decodedDecks
+            print("Loaded \(decks.count) decks")
+        } else {
+            print("No saved decks found or error decoding")
         }
     }
 } 

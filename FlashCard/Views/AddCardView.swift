@@ -1,60 +1,42 @@
 import SwiftUI
+import os
 
 struct AddCardView: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject var viewModel: FlashCardViewModel
     
-    @State private var cardEntries: [CardEntry] = [CardEntry()]
+    @State private var word: String = ""
+    @State private var definition: String = ""
+    @State private var example: String = ""
     @State private var selectedDeckIds: Set<UUID> = []
     @State private var showingNewDeckSheet = false
     @State private var newDeckName: String = ""
     
-    private var canSave: Bool {
-        !cardEntries.isEmpty && cardEntries.allSatisfy { entry in
-            !entry.word.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-            !entry.definition.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        }
-    }
+    private let logger = Logger(subsystem: "com.flashcards", category: "AddCardView")
     
-    private var canAddAnotherCard: Bool {
-        guard let lastEntry = cardEntries.last else { return true }
-        return !lastEntry.word.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-               !lastEntry.definition.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    private var canSave: Bool {
+        !word.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+        !definition.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
     
     var body: some View {
         NavigationView {
             Form {
-                ForEach($cardEntries.indices, id: \.self) { index in
-                    Section(header: Text(cardEntries.count > 1 ? "Card \(index + 1)" : "Card Details")) {
-                        TextField("Word", text: $cardEntries[index].word)
-                        
-                        TextField("Definition", text: $cardEntries[index].definition)
-                        
-                        TextField("Example (Optional)", text: $cardEntries[index].example)
-                        
-                        if cardEntries.count > 1 {
-                            Button(role: .destructive, action: {
-                                cardEntries.remove(at: index)
-                            }) {
-                                Text("Remove Card")
-                                    .foregroundColor(.red)
-                            }
+                Section(header: Text("Card Details")) {
+                    TextField("Word", text: $word)
+                        .onChange(of: word) { oldValue, newValue in
+                            logger.debug("Word changed from '\(oldValue)' to '\(newValue)'")
                         }
-                    }
-                }
-                
-                Section {
-                    Button(action: {
-                        cardEntries.append(CardEntry())
-                    }) {
-                        HStack {
-                            Image(systemName: "plus.circle.fill")
-                            Text("Add Another Card")
+                    
+                    TextField("Definition", text: $definition)
+                        .onChange(of: definition) { oldValue, newValue in
+                            logger.debug("Definition changed from '\(oldValue)' to '\(newValue)'")
                         }
-                        .foregroundColor(.blue)
-                    }
-                    .disabled(!canAddAnotherCard)
+                    
+                    TextField("Example (Optional)", text: $example)
+                        .onChange(of: example) { oldValue, newValue in
+                            logger.debug("Example changed from '\(oldValue)' to '\(newValue)'")
+                        }
                 }
 
                 Section(header: Text("Decks (Select one or more)")) {
@@ -65,6 +47,7 @@ struct AddCardView: View {
                             } else {
                                 selectedDeckIds.insert(deck.id)
                             }
+                            logger.debug("Selected deck IDs changed: \(selectedDeckIds)")
                         }) {
                             HStack {
                                 Text(deck.name)
@@ -88,20 +71,32 @@ struct AddCardView: View {
                     }
                 }
             }
-            .navigationTitle("Add Cards")
+            .navigationTitle("Add Card")
             .navigationBarItems(
                 leading: Button("Cancel") {
+                    logger.debug("Cancel button tapped")
                     dismiss()
                 },
                 trailing: Button("Save") {
-                    for entry in cardEntries {
-                        viewModel.addCard(
-                            word: entry.word.trimmingCharacters(in: .whitespacesAndNewlines),
-                            definition: entry.definition.trimmingCharacters(in: .whitespacesAndNewlines),
-                            example: entry.example.trimmingCharacters(in: .whitespacesAndNewlines),
-                            deckIds: selectedDeckIds
-                        )
-                    }
+                    logger.debug("Save button tapped")
+                    
+                    let trimmedWord = word.trimmingCharacters(in: .whitespacesAndNewlines)
+                    let trimmedDefinition = definition.trimmingCharacters(in: .whitespacesAndNewlines)
+                    let trimmedExample = example.trimmingCharacters(in: .whitespacesAndNewlines)
+                    
+                    logger.debug("Adding card - Word: \(trimmedWord), Definition: \(trimmedDefinition)")
+                    
+                    viewModel.addCard(
+                        word: trimmedWord,
+                        definition: trimmedDefinition,
+                        example: trimmedExample,
+                        deckIds: selectedDeckIds
+                    )
+                    
+                    // Force a save to UserDefaults
+                    UserDefaults.standard.synchronize()
+                    logger.debug("UserDefaults synchronized")
+                    
                     dismiss()
                 }
                 .disabled(!canSave)
@@ -119,6 +114,7 @@ struct AddCardView: View {
                             showingNewDeckSheet = false
                         },
                         trailing: Button("Create") {
+                            logger.debug("Creating new deck: \(newDeckName)")
                             let newDeck = viewModel.createDeck(name: newDeckName.trimmingCharacters(in: .whitespacesAndNewlines))
                             selectedDeckIds.insert(newDeck.id)
                             showingNewDeckSheet = false
@@ -128,6 +124,12 @@ struct AddCardView: View {
                     )
                 }
             }
+        }
+        .onAppear {
+            logger.debug("AddCardView appeared")
+        }
+        .onDisappear {
+            logger.debug("AddCardView disappeared")
         }
     }
 } 
