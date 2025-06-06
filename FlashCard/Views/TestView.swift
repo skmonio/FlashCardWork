@@ -2,32 +2,313 @@ import SwiftUI
 
 struct TestView: View {
     @ObservedObject var viewModel: FlashCardViewModel
-    let cards: [FlashCard]
+    @State private var cards: [FlashCard]
+    @State private var currentIndex = 0
+    @State private var showingResults = false
+    @State private var correctAnswers = 0
+    @State private var selectedAnswer: String?
+    @State private var hasAnswered = false
+    @State private var shuffledOptions: [String] = []
+    @State private var showingFeedback = false
     @Environment(\.dismiss) private var dismiss
-    @State private var currentQuestionIndex = 0
-    @State private var userAnswer = ""
-    @State private var showingResult = false
-    @State private var score = 0
-    @State private var incorrectAnswers: [(FlashCard, String)] = []
-    @State private var isTestComplete = false
+    @State private var incorrectCards: Set<UUID> = []
+    
+    init(viewModel: FlashCardViewModel, cards: [FlashCard]) {
+        self.viewModel = viewModel
+        _cards = State(initialValue: cards.shuffled())
+    }
+    
+    private var currentCard: FlashCard {
+        cards[currentIndex]
+    }
+    
+    private func generateOptions() -> [String] {
+        var options = [currentCard.definition] // Correct answer
+        
+        // Get all available decks for the current card
+        let cardDecks = viewModel.decks.filter { deck in
+            deck.cards.contains { $0.id == currentCard.id }
+        }
+        
+        // Get all cards from the same decks (excluding current card)
+        var poolOfOptions = Set<String>()
+        for deck in cardDecks {
+            let deckDefinitions = deck.cards
+                .filter { $0.id != currentCard.id }
+                .map { $0.definition }
+            poolOfOptions.formUnion(deckDefinitions)
+        }
+        
+        // If we don't have enough options from the same decks, use other cards
+        if poolOfOptions.count < 3 {
+            let otherDefinitions = viewModel.flashCards
+                .filter { $0.id != currentCard.id }
+                .map { $0.definition }
+            poolOfOptions.formUnion(otherDefinitions)
+        }
+        
+        // Add random definitions until we have 4 total options
+        let additionalOptions = Array(poolOfOptions)
+            .shuffled()
+            .prefix(3)
+        
+        options.append(contentsOf: additionalOptions)
+        return options.shuffled()
+    }
+    
+    private func handleAnswer(_ option: String) {
+        if !hasAnswered {
+            selectedAnswer = option
+            hasAnswered = true
+            if option == currentCard.definition {
+                correctAnswers += 1
+            } else {
+                incorrectCards.insert(currentCard.id)
+            }
+            showingFeedback = true
+        }
+    }
+    
+    private func moveToNextQuestion() {
+        if currentIndex < cards.count - 1 {
+            currentIndex += 1
+            selectedAnswer = nil
+            hasAnswered = false
+            shuffledOptions = generateOptions()
+        } else {
+            showingResults = true
+        }
+    }
+    
+    private func resetTest(onlyIncorrect: Bool = false) {
+        if onlyIncorrect {
+            cards = cards.filter { incorrectCards.contains($0.id) }
+        } else {
+            cards = cards.shuffled()
+        }
+        currentIndex = 0
+        correctAnswers = 0
+        showingResults = false
+        selectedAnswer = nil
+        hasAnswered = false
+        incorrectCards.removeAll()
+        shuffledOptions = generateOptions()
+    }
     
     var body: some View {
         VStack {
             if cards.isEmpty {
                 emptyStateView
-            } else if isTestComplete {
-                testResultView
+            } else if showingResults {
+                resultsView
             } else {
-                testQuestionView
+                testView
             }
+            
+            Spacer()
+            
+            // Bottom Navigation Bar
+            HStack {
+                Button(action: {
+                    dismiss()
+                }) {
+                    VStack {
+                        Image(systemName: "chevron.backward")
+                        Text("Back")
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                
+                Button(action: {
+                    dismiss()
+                }) {
+                    VStack {
+                        Image(systemName: "house")
+                        Text("Home")
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                
+                Button(action: {
+                    resetTest()
+                }) {
+                    VStack {
+                        Image(systemName: "arrow.clockwise")
+                        Text("Reset")
+                    }
+                }
+                .frame(maxWidth: .infinity)
+            }
+            .padding()
+            .background(Color(.systemBackground))
+            .overlay(
+                Rectangle()
+                    .frame(height: 1)
+                    .foregroundColor(.gray)
+                    .opacity(0.2),
+                alignment: .top
+            )
         }
-        .navigationTitle("Test Mode")
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarHidden(true)
+    }
+    
+    private var testView: some View {
+        VStack(spacing: 20) {
+            // Progress
+            HStack {
+                Text("\(currentIndex + 1) of \(cards.count)")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                Spacer()
+                Text("Correct: \(correctAnswers)")
+                    .font(.subheadline)
+                    .foregroundColor(.green)
+            }
+            .padding(.horizontal)
+            
+            // Question
+            VStack(spacing: 16) {
+                Text("What does this word mean?")
+                    .font(.headline)
+                    .foregroundColor(.secondary)
+                    .padding(.top)
+                
+                Text(currentCard.word)
+                    .font(.title)
+                    .bold()
+                    .multilineTextAlignment(.center)
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .background(Color(.systemBackground))
+                    .cornerRadius(15)
+                    .shadow(radius: 5)
+                
+                Text("Choose one of the following:")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .padding(.top)
+                
+                // Answer options
+                VStack(spacing: 12) {
+                    ForEach(shuffledOptions, id: \.self) { option in
+                        Button(action: {
+                            handleAnswer(option)
+                        }) {
+                            Text(option)
+                                .font(.body)
+                                .multilineTextAlignment(.center)
+                                .padding()
+                                .frame(maxWidth: .infinity)
+                                .background(
+                                    Group {
+                                        if hasAnswered {
+                                            if option == currentCard.definition {
+                                                Color.green.opacity(0.2)
+                                            } else if option == selectedAnswer {
+                                                Color.red.opacity(0.2)
+                                            } else {
+                                                Color(.systemGray6)
+                                            }
+                                        } else {
+                                            Color(.systemGray6)
+                                        }
+                                    }
+                                )
+                                .cornerRadius(10)
+                        }
+                        .disabled(hasAnswered)
+                    }
+                }
+                .padding(.horizontal)
+            }
+            
+            Spacer()
+        }
+        .onAppear {
+            shuffledOptions = generateOptions()
+        }
+        .alert(isPresented: $showingFeedback) {
+            Alert(
+                title: Text(selectedAnswer == currentCard.definition ? "Correct! 🎉" : "Incorrect"),
+                message: Text(getFeedbackMessage()),
+                dismissButton: .default(Text("Next")) {
+                    moveToNextQuestion()
+                }
+            )
+        }
+    }
+    
+    private func getFeedbackMessage() -> String {
+        if selectedAnswer == currentCard.definition {
+            var message = "'\(currentCard.word)' means:\n\(currentCard.definition)"
+            if !currentCard.example.isEmpty {
+                message += "\n\nExample:\n\(currentCard.example)"
+            }
+            return message
+        } else {
+            return "'\(currentCard.word)'\n\nYour answer:\n\(selectedAnswer ?? "")\n\nCorrect answer:\n\(currentCard.definition)"
+        }
+    }
+    
+    private var resultsView: some View {
+        VStack(spacing: 20) {
+            Text("Test Complete! 🎉")
+                .font(.title)
+                .multilineTextAlignment(.center)
+            
+            Text("Score: \(correctAnswers) / \(cards.count)")
+                .font(.title2)
+            
+            Text("\(Int((Double(correctAnswers) / Double(cards.count)) * 100))%")
+                .font(.largeTitle)
+                .bold()
+                .foregroundColor(
+                    Double(correctAnswers) / Double(cards.count) >= 0.7 ? .green : .red
+                )
+            
+            VStack(spacing: 16) {
+                Button(action: {
+                    resetTest()
+                }) {
+                    Text("Test All Cards Again")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.blue)
+                        .cornerRadius(10)
+                }
+                
+                if !incorrectCards.isEmpty {
+                    Button(action: {
+                        resetTest(onlyIncorrect: true)
+                    }) {
+                        Text("Review Incorrect Answers (\(incorrectCards.count))")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.red)
+                            .cornerRadius(10)
+                    }
+                }
+                
+                Button(action: {
+                    dismiss()
+                }) {
+                    Text("Done")
+                        .font(.headline)
+                        .foregroundColor(.blue)
+                }
+            }
+            .padding(.top)
+        }
+        .padding()
     }
     
     private var emptyStateView: some View {
         VStack(spacing: 20) {
-            Image(systemName: "square.stack.3d.up.slash")
+            Image(systemName: "questionmark.circle.fill")
                 .font(.system(size: 50))
                 .foregroundColor(.secondary)
             Text("No cards to test")
@@ -35,161 +316,5 @@ struct TestView: View {
             Text("Add some cards to get started!")
                 .foregroundColor(.secondary)
         }
-    }
-    
-    private var testQuestionView: some View {
-        VStack(spacing: 20) {
-            // Progress
-            Text("Question \(currentQuestionIndex + 1) of \(cards.count)")
-                .font(.headline)
-                .foregroundColor(.secondary)
-            
-            // Question Card
-            VStack(alignment: .leading, spacing: 16) {
-                Text("Definition:")
-                    .font(.headline)
-                    .foregroundColor(.secondary)
-                
-                Text(cards[currentQuestionIndex].definition)
-                    .font(.body)
-                    .padding()
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.blue.opacity(0.1))
-                    .cornerRadius(10)
-                
-                if !cards[currentQuestionIndex].example.isEmpty {
-                    Text("Example:")
-                        .font(.headline)
-                        .foregroundColor(.secondary)
-                    
-                    Text(cards[currentQuestionIndex].example)
-                        .font(.body)
-                        .italic()
-                        .padding()
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color.blue.opacity(0.1))
-                        .cornerRadius(10)
-                }
-                
-                Text("What's the word?")
-                    .font(.headline)
-                    .padding(.top)
-                
-                TextField("Enter your answer", text: $userAnswer)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .autocapitalization(.none)
-                
-                Button(action: submitAnswer) {
-                    Text("Submit Answer")
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
-                }
-                .disabled(userAnswer.isEmpty)
-            }
-            .padding()
-        }
-        .alert("Answer Result", isPresented: $showingResult) {
-            Button("Continue") {
-                moveToNextQuestion()
-            }
-        } message: {
-            Text(getResultMessage())
-        }
-    }
-    
-    private var testResultView: some View {
-        ScrollView {
-            VStack(spacing: 20) {
-                // Score Display
-                Text("Test Complete!")
-                    .font(.title)
-                    .bold()
-                
-                Text("Score: \(score) / \(cards.count)")
-                    .font(.title2)
-                
-                // Score percentage
-                let percentage = Double(score) / Double(cards.count) * 100
-                Text(String(format: "%.1f%%", percentage))
-                    .font(.title)
-                    .foregroundColor(percentage >= 70 ? .green : .red)
-                    .padding(.bottom)
-                
-                if !incorrectAnswers.isEmpty {
-                    Text("Review Incorrect Answers:")
-                        .font(.headline)
-                        .padding(.top)
-                    
-                    ForEach(incorrectAnswers, id: \.0.id) { card, userAnswer in
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Word: \(card.word)")
-                                .font(.headline)
-                            Text("Your answer: \(userAnswer)")
-                                .foregroundColor(.red)
-                            Text("Definition: \(card.definition)")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                        }
-                        .padding()
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color.gray.opacity(0.1))
-                        .cornerRadius(10)
-                    }
-                }
-                
-                Button(action: restartTest) {
-                    Text("Take Test Again")
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
-                }
-                .padding(.top)
-            }
-            .padding()
-        }
-    }
-    
-    private func submitAnswer() {
-        let currentCard = cards[currentQuestionIndex]
-        let isCorrect = userAnswer.lowercased().trimmingCharacters(in: .whitespacesAndNewlines) ==
-            currentCard.word.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
-        
-        if isCorrect {
-            score += 1
-        } else {
-            incorrectAnswers.append((currentCard, userAnswer))
-        }
-        
-        showingResult = true
-    }
-    
-    private func getResultMessage() -> String {
-        let currentCard = cards[currentQuestionIndex]
-        let isCorrect = userAnswer.lowercased().trimmingCharacters(in: .whitespacesAndNewlines) ==
-            currentCard.word.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
-        
-        return isCorrect ? "Correct! 🎉" : "Incorrect. The correct word was: \(currentCard.word)"
-    }
-    
-    private func moveToNextQuestion() {
-        userAnswer = ""
-        if currentQuestionIndex < cards.count - 1 {
-            currentQuestionIndex += 1
-        } else {
-            isTestComplete = true
-        }
-    }
-    
-    private func restartTest() {
-        currentQuestionIndex = 0
-        score = 0
-        userAnswer = ""
-        incorrectAnswers = []
-        isTestComplete = false
     }
 } 

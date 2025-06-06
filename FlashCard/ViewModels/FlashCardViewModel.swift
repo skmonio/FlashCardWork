@@ -17,12 +17,25 @@ class FlashCardViewModel: ObservableObject {
     
     private let userDefaultsKey = "SavedFlashCards"
     private let decksDefaultsKey = "SavedDecks"
+    private let cardStatusKey = "CardStatus"
     private var uncategorizedDeckId: UUID?
+    
+    enum CardStatus: String, Codable {
+        case unknown
+        case known
+    }
+    
+    private var cardStatus: [UUID: CardStatus] = [:] {
+        didSet {
+            saveCardStatus()
+        }
+    }
     
     init() {
         print("ViewModel init - Loading data")
         loadCards()
         loadDecks()
+        loadCardStatus()
         
         // Create "Uncategorized" deck if it doesn't exist
         if !decks.contains(where: { $0.name == "Uncategorized" }) {
@@ -33,8 +46,164 @@ class FlashCardViewModel: ObservableObject {
             uncategorizedDeckId = decks.first(where: { $0.name == "Uncategorized" })?.id
         }
         
+        // Add example Dutch cards if no cards exist
+        if flashCards.isEmpty {
+            createExampleDutchCards()
+        }
+        
         // Update cards and decks
         updateCardDeckAssociations()
+    }
+    
+    private func createExampleDutchCards() {
+        // Create decks
+        let basicsDeck = createDeck(name: "A1 - Basics")
+        let familyDeck = createDeck(name: "A1 - Family")
+        let foodDeck = createDeck(name: "A1 - Food & Drinks")
+        let numbersDeck = createDeck(name: "A1 - Numbers & Time")
+        let dailyDeck = createDeck(name: "A2 - Daily Life")
+        let weatherDeck = createDeck(name: "A2 - Weather")
+        
+        // Basic Greetings and Phrases (A1)
+        addCard(
+            word: "Hallo",
+            definition: "Hello",
+            example: "Hallo, hoe gaat het?",
+            deckIds: [basicsDeck.id]
+        )
+        addCard(
+            word: "Dank je wel",
+            definition: "Thank you",
+            example: "Dank je wel voor je hulp.",
+            deckIds: [basicsDeck.id]
+        )
+        addCard(
+            word: "Alsjeblieft",
+            definition: "Please / Here you are",
+            example: "Mag ik een kopje koffie, alsjeblieft?",
+            deckIds: [basicsDeck.id]
+        )
+        
+        // Family (A1)
+        addCard(
+            word: "Familie",
+            definition: "Family",
+            example: "Mijn familie woont in Amsterdam.",
+            deckIds: [familyDeck.id]
+        )
+        addCard(
+            word: "Ouders",
+            definition: "Parents",
+            example: "Mijn ouders komen uit Nederland.",
+            deckIds: [familyDeck.id]
+        )
+        addCard(
+            word: "Broer",
+            definition: "Brother",
+            example: "Ik heb één broer.",
+            deckIds: [familyDeck.id]
+        )
+        
+        // Food & Drinks (A1)
+        addCard(
+            word: "Brood",
+            definition: "Bread",
+            example: "Ik eet brood met kaas.",
+            deckIds: [foodDeck.id]
+        )
+        addCard(
+            word: "Koffie",
+            definition: "Coffee",
+            example: "Wil je een kopje koffie?",
+            deckIds: [foodDeck.id]
+        )
+        addCard(
+            word: "Water",
+            definition: "Water",
+            example: "Mag ik een glas water?",
+            deckIds: [foodDeck.id]
+        )
+        
+        // Numbers & Time (A1)
+        addCard(
+            word: "Een",
+            definition: "One",
+            example: "Ik heb een kat.",
+            deckIds: [numbersDeck.id]
+        )
+        addCard(
+            word: "Tijd",
+            definition: "Time",
+            example: "Hoe laat is het?",
+            deckIds: [numbersDeck.id]
+        )
+        addCard(
+            word: "Uur",
+            definition: "Hour",
+            example: "Het is twee uur.",
+            deckIds: [numbersDeck.id]
+        )
+        
+        // Daily Life (A2)
+        addCard(
+            word: "Werken",
+            definition: "To work",
+            example: "Ik werk in een kantoor.",
+            deckIds: [dailyDeck.id]
+        )
+        addCard(
+            word: "Boodschappen",
+            definition: "Groceries",
+            example: "Ik ga boodschappen doen.",
+            deckIds: [dailyDeck.id]
+        )
+        addCard(
+            word: "Afspraak",
+            definition: "Appointment",
+            example: "Ik heb een afspraak met de dokter.",
+            deckIds: [dailyDeck.id]
+        )
+        
+        // Weather (A2)
+        addCard(
+            word: "Weer",
+            definition: "Weather",
+            example: "Het weer is mooi vandaag.",
+            deckIds: [weatherDeck.id]
+        )
+        addCard(
+            word: "Regen",
+            definition: "Rain",
+            example: "Het regent vandaag.",
+            deckIds: [weatherDeck.id]
+        )
+        addCard(
+            word: "Zonnig",
+            definition: "Sunny",
+            example: "Het is zonnig buiten.",
+            deckIds: [weatherDeck.id]
+        )
+    }
+    
+    func getCardStatus(cardId: UUID) -> CardStatus {
+        return cardStatus[cardId] ?? .unknown
+    }
+    
+    func setCardStatus(cardId: UUID, status: CardStatus) {
+        cardStatus[cardId] = status
+    }
+    
+    private func saveCardStatus() {
+        if let encoded = try? JSONEncoder().encode(cardStatus) {
+            UserDefaults.standard.set(encoded, forKey: cardStatusKey)
+        }
+    }
+    
+    private func loadCardStatus() {
+        if let savedStatus = UserDefaults.standard.data(forKey: cardStatusKey),
+           let decodedStatus = try? JSONDecoder().decode([UUID: CardStatus].self, from: savedStatus) {
+            cardStatus = decodedStatus
+        }
     }
     
     private func updateCardDeckAssociations() {
@@ -106,10 +275,43 @@ class FlashCardViewModel: ObservableObject {
         }
     }
     
-    func deleteCard(at indices: IndexSet) {
-        print("Deleting card(s) at indices: \(indices)")
-        flashCards.remove(atOffsets: indices)
+    func deleteCard(at offsets: IndexSet) {
+        // Remove the card from all decks first
+        offsets.forEach { index in
+            let cardToDelete = flashCards[index]
+            decks = decks.map { deck in
+                var updatedDeck = deck
+                updatedDeck.cards.removeAll { $0.id == cardToDelete.id }
+                return updatedDeck
+            }
+        }
+        
+        // Then remove from main cards array
+        flashCards.remove(atOffsets: offsets)
+        saveCards()
+        saveDecks()
+    }
+    
+    func removeCardFromDeck(card: FlashCard, deck: Deck) {
+        // Remove the deck ID from the card's deckIds
+        if let cardIndex = flashCards.firstIndex(where: { $0.id == card.id }) {
+            flashCards[cardIndex].deckIds.remove(deck.id)
+        }
+        
+        // Remove the card from the specified deck
+        decks = decks.map { currentDeck in
+            if currentDeck.id == deck.id {
+                var updatedDeck = currentDeck
+                updatedDeck.cards.removeAll { $0.id == card.id }
+                return updatedDeck
+            }
+            return currentDeck
+        }
+        
+        // Update associations to ensure card goes to Uncategorized if needed
         updateCardDeckAssociations()
+        saveCards()
+        saveDecks()
     }
     
     func createDeck(name: String) -> Deck {
