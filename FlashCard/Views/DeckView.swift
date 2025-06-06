@@ -10,14 +10,54 @@ struct DeckView: View {
     @State private var selectedCard: FlashCard?
     @State private var cardToDelete: FlashCard?
     @State private var showingDeleteAlert = false
+    @State private var sortOption: SortOption = .default
+    @State private var searchText = ""
     
     private let logger = Logger(subsystem: "com.flashcards", category: "DeckView")
+    
+    enum SortOption {
+        case `default`
+        case alphabeticalByWord
+        case reverseAlphabeticalByWord
+        
+        var label: String {
+            switch self {
+            case .default: return "Default"
+            case .alphabeticalByWord: return "A-Z"
+            case .reverseAlphabeticalByWord: return "Z-A"
+            }
+        }
+    }
+    
+    private var filteredCards: [FlashCard] {
+        let cards = deckCards
+        if searchText.isEmpty {
+            return cards
+        }
+        return cards.filter { card in
+            card.word.localizedCaseInsensitiveContains(searchText) ||
+            card.definition.localizedCaseInsensitiveContains(searchText) ||
+            card.example.localizedCaseInsensitiveContains(searchText)
+        }
+    }
     
     private var deckCards: [FlashCard] {
         // Get the current deck's cards from the view model
         if let updatedDeck = viewModel.decks.first(where: { $0.id == deck.id }) {
             logger.debug("Found \(updatedDeck.cards.count) cards in deck: \(deck.name)")
-            return updatedDeck.cards
+            var cards = updatedDeck.cards
+            
+            // Apply sorting
+            switch sortOption {
+            case .default:
+                break // Keep original order
+            case .alphabeticalByWord:
+                cards.sort { $0.word.localizedCaseInsensitiveCompare($1.word) == .orderedAscending }
+            case .reverseAlphabeticalByWord:
+                cards.sort { $0.word.localizedCaseInsensitiveCompare($1.word) == .orderedDescending }
+            }
+            
+            return cards
         }
         logger.debug("No cards found in deck: \(deck.name)")
         return []
@@ -54,6 +94,24 @@ struct DeckView: View {
     
     var body: some View {
         VStack {
+            // Search bar
+            HStack {
+                Image(systemName: "magnifyingglass")
+                    .foregroundColor(.gray)
+                TextField("Search cards...", text: $searchText)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                if !searchText.isEmpty {
+                    Button(action: {
+                        searchText = ""
+                    }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.gray)
+                    }
+                }
+            }
+            .padding(.horizontal)
+            .padding(.top, 8)
+            
             List {
                 Button(action: {
                     showingAddCard = true
@@ -65,28 +123,59 @@ struct DeckView: View {
                     .foregroundColor(.blue)
                 }
                 
-                ForEach(deckCards) { currentCard in
-                    Button(action: {
-                        selectedCard = currentCard
-                    }) {
-                        CardRow(card: currentCard)
-                    }
-                    .swipeActions(edge: .trailing) {
-                        Button(role: .destructive) {
-                            cardToDelete = currentCard
-                            if isCardInMultipleDecks(currentCard) {
-                                showingDeleteAlert = true
-                            } else {
-                                deleteCard(fromAllDecks: true)
+                if filteredCards.isEmpty && !searchText.isEmpty {
+                    Text("No cards match your search")
+                        .foregroundColor(.secondary)
+                        .italic()
+                } else {
+                    ForEach(filteredCards) { currentCard in
+                        Button(action: {
+                            selectedCard = currentCard
+                        }) {
+                            CardRow(card: currentCard)
+                        }
+                        .swipeActions(edge: .trailing) {
+                            Button(role: .destructive) {
+                                cardToDelete = currentCard
+                                if isCardInMultipleDecks(currentCard) {
+                                    showingDeleteAlert = true
+                                } else {
+                                    deleteCard(fromAllDecks: true)
+                                }
+                            } label: {
+                                Label("Delete", systemImage: "trash")
                             }
-                        } label: {
-                            Label("Delete", systemImage: "trash")
                         }
                     }
                 }
             }
             .navigationTitle(deck.name)
             .navigationBarBackButtonHidden(true)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Menu {
+                        ForEach([
+                            SortOption.default,
+                            SortOption.alphabeticalByWord,
+                            SortOption.reverseAlphabeticalByWord
+                        ], id: \.self) { option in
+                            Button(action: {
+                                sortOption = option
+                            }) {
+                                HStack {
+                                    Text(option.label)
+                                    if sortOption == option {
+                                        Image(systemName: "checkmark")
+                                    }
+                                }
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "arrow.up.arrow.down")
+                            .imageScale(.large)
+                    }
+                }
+            }
             .alert("Delete Card", isPresented: $showingDeleteAlert) {
                 Button("Remove from \(deck.name)", role: .destructive) {
                     deleteCard(fromAllDecks: false)

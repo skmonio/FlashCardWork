@@ -32,6 +32,14 @@ struct HomeView: View {
                             NavigationLink(destination: DeckSelectionView(viewModel: viewModel, mode: .truefalse)) {
                                 MenuButton(title: "True or False", icon: "questionmark.circle.fill")
                             }
+                            
+                            NavigationLink(destination: DeckSelectionView(viewModel: viewModel, mode: .hangman)) {
+                                MenuButton(title: "Hangman", icon: "person.fill.questionmark")
+                            }
+                            
+                            NavigationLink(destination: DeckSelectionView(viewModel: viewModel, mode: .spelling)) {
+                                MenuButton(title: "Spelling Practice", icon: "pencil.line")
+                            }
                         }
                     }
                     .padding(.top)
@@ -51,6 +59,32 @@ struct HomeView: View {
                 .padding(.horizontal)
             }
             .navigationTitle("FlashCards")
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Menu {
+                        Button(action: {
+                            showingAddCard = true
+                        }) {
+                            Label("Add Card", systemImage: "plus.card")
+                        }
+                        
+                        Button(action: {
+                            showingAddDeck = true
+                        }) {
+                            Label("Add Deck", systemImage: "folder.badge.plus")
+                        }
+                    } label: {
+                        Image(systemName: "plus")
+                            .imageScale(.large)
+                    }
+                }
+            }
+            .sheet(isPresented: $showingAddCard) {
+                AddCardView(viewModel: viewModel)
+            }
+            .sheet(isPresented: $showingAddDeck) {
+                AddDeckView(viewModel: viewModel)
+            }
             .background(Color(.systemGroupedBackground))
         }
     }
