@@ -33,6 +33,7 @@ class FlashCardViewModel: ObservableObject {
     
     init() {
         print("ViewModel init - Loading data")
+        
         loadCards()
         loadDecks()
         loadCardStatus()
@@ -206,7 +207,7 @@ class FlashCardViewModel: ObservableObject {
         }
     }
     
-    private func updateCardDeckAssociations() {
+    func updateCardDeckAssociations() {
         print("Updating card-deck associations")
         // Clear all deck cards
         for index in decks.indices {
@@ -353,13 +354,194 @@ class FlashCardViewModel: ObservableObject {
     
     private func loadCards() {
         print("Loading cards from UserDefaults")
-        if let savedCards = UserDefaults.standard.data(forKey: userDefaultsKey),
-           let decodedCards = try? JSONDecoder().decode([FlashCard].self, from: savedCards) {
+        
+        // Check if there's any data at all
+        if let savedCards = UserDefaults.standard.data(forKey: userDefaultsKey) {
+            print("Found saved data: \(savedCards.count) bytes")
+            
+            // Try to see what the raw data looks like
+            if let jsonString = String(data: savedCards, encoding: .utf8) {
+                print("Raw saved data: \(jsonString.prefix(500))...")
+            }
+            
+            // First try to decode with new format (Set<UUID> for deckIds)
+            do {
+                let decodedCards = try JSONDecoder().decode([FlashCard].self, from: savedCards)
             flashCards = decodedCards
-            print("Loaded \(flashCards.count) cards")
+                print("✅ Successfully loaded \(flashCards.count) cards with new format")
+                return
+            } catch {
+                print("❌ Failed to decode with new format: \(error)")
+            }
+            
+            // If that fails, try to decode with old format (single deckId)
+            do {
+                let oldCards = try JSONDecoder().decode([OldFlashCard].self, from: savedCards)
+                print("✅ Found \(oldCards.count) cards in old format, migrating...")
+                
+                // Convert old format to new format
+                flashCards = oldCards.map { oldCard in
+                    var newCard = FlashCard(
+                        word: oldCard.word,
+                        definition: oldCard.definition,
+                        example: oldCard.example,
+                        deckIds: oldCard.deckId.map { Set([$0]) } ?? []
+                    )
+                    newCard.id = oldCard.id
+                    newCard.successCount = oldCard.successCount
+                    return newCard
+                }
+                
+                print("✅ Successfully migrated \(flashCards.count) cards to new format")
+                
+                // Save in new format immediately
+                saveCards()
+                return
+            } catch {
+                print("❌ Failed to decode with old format: \(error)")
+            }
+            
+            // Try very old format without deckId
+            do {
+                let veryOldCards = try JSONDecoder().decode([VeryOldFlashCard].self, from: savedCards)
+                print("✅ Found \(veryOldCards.count) cards in very old format, migrating...")
+                
+                // Convert very old format to new format
+                flashCards = veryOldCards.map { veryOldCard in
+                    var newCard = FlashCard(
+                        word: veryOldCard.word,
+                        definition: veryOldCard.definition,
+                        example: veryOldCard.example,
+                        deckIds: []  // No deck associations in very old format
+                    )
+                    newCard.id = veryOldCard.id
+                    newCard.successCount = veryOldCard.successCount ?? 0
+                    return newCard
+                }
+                
+                print("✅ Successfully migrated \(flashCards.count) cards from very old format")
+                
+                // Save in new format immediately
+                saveCards()
+                return
+            } catch {
+                print("❌ Failed to decode with very old format: \(error)")
+            }
+            
+            // Try simple format without successCount or deckId
+            do {
+                let simpleCards = try JSONDecoder().decode([SimpleFlashCard].self, from: savedCards)
+                print("✅ Found \(simpleCards.count) cards in simple format, migrating...")
+                
+                // Convert simple format to new format
+                flashCards = simpleCards.map { simpleCard in
+                    var newCard = FlashCard(
+                        word: simpleCard.word,
+                        definition: simpleCard.definition,
+                        example: simpleCard.example,
+                        deckIds: []  // No deck associations in simple format
+                    )
+                    newCard.id = simpleCard.id
+                    newCard.successCount = 0
+                    return newCard
+                }
+                
+                print("✅ Successfully migrated \(flashCards.count) cards from simple format")
+                
+                // Save in new format immediately
+                saveCards()
+                return
+            } catch {
+                print("❌ Failed to decode with simple format: \(error)")
+            }
+            
+            // If both fail, try to see if there are any other possible formats
+            print("❌ Failed to decode data in any known format")
+            
         } else {
-            print("No saved cards found or error decoding")
+            print("❌ No saved data found in UserDefaults for key: \(userDefaultsKey)")
         }
+        
+        // Also check for any other possible keys that might have been used
+        let allKeys = UserDefaults.standard.dictionaryRepresentation().keys
+        let cardKeys = allKeys.filter { $0.lowercased().contains("card") || $0.lowercased().contains("flash") }
+        if !cardKeys.isEmpty {
+            print("Found other potential card-related keys: \(cardKeys)")
+            
+            // Try loading from alternative keys
+            for key in cardKeys {
+                if key != userDefaultsKey, let altData = UserDefaults.standard.data(forKey: key) {
+                    print("Trying to load from alternative key: \(key)")
+                    
+                    // Try the same migration process with this alternative data
+                    if let jsonString = String(data: altData, encoding: .utf8) {
+                        print("Alternative data: \(jsonString.prefix(200))...")
+                    }
+                    
+                    // Try simple format first (most likely to work)
+                    if let simpleCards = try? JSONDecoder().decode([SimpleFlashCard].self, from: altData) {
+                        print("✅ Found \(simpleCards.count) cards under key '\(key)' in simple format!")
+                        
+                        flashCards = simpleCards.map { simpleCard in
+                            var newCard = FlashCard(
+                                word: simpleCard.word,
+                                definition: simpleCard.definition,
+                                example: simpleCard.example,
+                                deckIds: []
+                            )
+                            newCard.id = simpleCard.id
+                            newCard.successCount = 0
+                            return newCard
+                        }
+                        
+                        saveCards() // Save under correct key
+                        return
+                    }
+                    
+                    // Try very old format
+                    if let veryOldCards = try? JSONDecoder().decode([VeryOldFlashCard].self, from: altData) {
+                        print("✅ Found \(veryOldCards.count) cards under key '\(key)' in very old format!")
+                        
+                        flashCards = veryOldCards.map { veryOldCard in
+                            var newCard = FlashCard(
+                                word: veryOldCard.word,
+                                definition: veryOldCard.definition,
+                                example: veryOldCard.example,
+                                deckIds: []
+                            )
+                            newCard.id = veryOldCard.id
+                            newCard.successCount = veryOldCard.successCount ?? 0
+                            return newCard
+                        }
+                        
+                        saveCards() // Save under correct key
+                        return
+                    }
+                    
+                    // Try old format with deckId
+                    if let oldCards = try? JSONDecoder().decode([OldFlashCard].self, from: altData) {
+                        print("✅ Found \(oldCards.count) cards under key '\(key)' in old format!")
+                        
+                        flashCards = oldCards.map { oldCard in
+                            var newCard = FlashCard(
+                                word: oldCard.word,
+                                definition: oldCard.definition,
+                                example: oldCard.example,
+                                deckIds: oldCard.deckId.map { Set([$0]) } ?? []
+                            )
+                            newCard.id = oldCard.id
+                            newCard.successCount = oldCard.successCount
+                            return newCard
+                        }
+                        
+                        saveCards() // Save under correct key
+                        return
+                    }
+                }
+            }
+        }
+        
+        print("No saved cards found or error decoding")
     }
     
     private func saveDecks() {
@@ -382,4 +564,31 @@ class FlashCardViewModel: ObservableObject {
             print("No saved decks found or error decoding")
         }
     }
+}
+
+// Add this struct for migration purposes at the end of the file
+private struct OldFlashCard: Codable {
+    var id: UUID
+    var word: String
+    var definition: String
+    var example: String
+    var deckId: UUID?  // Old single deckId format
+    var successCount: Int
+}
+
+// Try even older format without deckId
+private struct VeryOldFlashCard: Codable {
+    var id: UUID
+    var word: String
+    var definition: String
+    var example: String
+    var successCount: Int?
+}
+
+// Try format without successCount
+private struct SimpleFlashCard: Codable {
+    var id: UUID
+    var word: String
+    var definition: String
+    var example: String
 } 

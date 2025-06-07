@@ -6,12 +6,14 @@ struct FlashCard: Identifiable, Codable, Hashable {
     var definition: String
     var example: String
     var deckIds: Set<UUID>  // Changed from single deckId to Set of deckIds
+    var successCount: Int = 0
     
     init(word: String = "", definition: String = "", example: String = "", deckIds: Set<UUID> = []) {
         self.word = word
         self.definition = definition
         self.example = example
         self.deckIds = deckIds
+        self.successCount = 0
     }
     
     // Implement Hashable
