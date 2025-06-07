@@ -7,6 +7,13 @@ struct ManageDecksView: View {
     private let logger = Logger(subsystem: "com.flashcards", category: "ManageDecksView")
     @State private var showingAddDeck = false
     @State private var showingAddCard = false
+    @State private var showingAddMultipleCards = false
+    
+    // Multi-select states for decks
+    @State private var isSelectionMode = false
+    @State private var selectedDecks: Set<UUID> = []
+    @State private var showingMoveDecksSheet = false
+    @State private var showingBulkDeleteAlert = false
     
     var body: some View {
         VStack {
@@ -23,6 +30,16 @@ struct ManageDecksView: View {
                     }
                     
                     Button(action: {
+                        showingAddMultipleCards = true
+                    }) {
+                        HStack {
+                            Image(systemName: "plus.rectangle.stack.fill")
+                            Text("Add Multiple Cards")
+                        }
+                        .foregroundColor(.blue)
+                    }
+                    
+                    Button(action: {
                         showingAddDeck = true
                     }) {
                         HStack {
@@ -34,43 +51,48 @@ struct ManageDecksView: View {
                 }
                 
                 Section {
-                    ForEach(viewModel.getTopLevelDecks()) { deck in
-                        VStack(alignment: .leading, spacing: 0) {
-                            // Main deck row
+                    ForEach(viewModel.getAllDecksHierarchical()) { deck in
+                        HStack {
+                            if isSelectionMode {
+                                Button(action: {
+                                    if selectedDecks.contains(deck.id) {
+                                        selectedDecks.remove(deck.id)
+                                    } else {
+                                        selectedDecks.insert(deck.id)
+                                    }
+                                    HapticManager.shared.multiSelectToggle()
+                                }) {
+                                    Image(systemName: selectedDecks.contains(deck.id) ? "checkmark.circle.fill" : "circle")
+                                        .foregroundColor(selectedDecks.contains(deck.id) ? .blue : .gray)
+                                }
+                                .buttonStyle(PlainButtonStyle())
+                            }
+                            
                             NavigationLink {
                                 DeckView(viewModel: viewModel, deck: deck)
                             } label: {
                                 HStack {
-                                    Text(deck.name)
+                                    // Show indentation for sub-decks
+                                    if deck.isSubDeck {
+                                        HStack(spacing: 4) {
+                                            Text("    ↳")
+                                                .foregroundColor(.secondary)
+                                            Text(deck.name)
+                                        }
+                                    } else {
+                                        Text(deck.name)
+                                    }
                                     Spacer()
                                     Text("\(deck.cards.count)")
                                         .foregroundColor(.secondary)
                                 }
                             }
-                            
-                            // Sub-decks with indentation
-                            ForEach(viewModel.getSubDecks(for: deck.id)) { subDeck in
-                                NavigationLink {
-                                    DeckView(viewModel: viewModel, deck: subDeck)
-                                } label: {
-                                    HStack {
-                                        HStack(spacing: 4) {
-                                            Text("    ↳") // Indentation indicator
-                                                .foregroundColor(.secondary)
-                                            Text(subDeck.name)
-                                        }
-                                        Spacer()
-                                        Text("\(subDeck.cards.count)")
-                                            .foregroundColor(.secondary)
-                                    }
-                                }
-                            }
                         }
                     }
                     .onDelete { indices in
-                        let topLevelDecks = viewModel.getTopLevelDecks()
+                        let allDecks = viewModel.getAllDecksHierarchical()
                         indices.forEach { index in
-                            let deck = topLevelDecks[index]
+                            let deck = allDecks[index]
                             if deck.name != "Uncategorized" {
                                 viewModel.deleteDeck(deck)
                             }
@@ -80,30 +102,76 @@ struct ManageDecksView: View {
             }
             .navigationTitle("View Your Cards")
             .navigationBarBackButtonHidden(true)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    if isSelectionMode {
+                        Button("Cancel") {
+                            isSelectionMode = false
+                            selectedDecks.removeAll()
+                        }
+                    } else {
+                        EmptyView()
+                    }
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    if !isSelectionMode {
+                        Button("Select") {
+                            isSelectionMode = true
+                        }
+                    } else {
+                        EmptyView()
+                    }
+                }
+            }
             
             Spacer()
             
             // Bottom Navigation Bar
             HStack {
-                Button(action: {
-                    dismiss()
-                }) {
-                    VStack {
-                        Image(systemName: "chevron.backward")
-                        Text("Back")
+                if isSelectionMode && !selectedDecks.isEmpty {
+                    Button(action: {
+                        showingBulkDeleteAlert = true
+                    }) {
+                        VStack {
+                            Image(systemName: "trash")
+                            Text("Delete (\(selectedDecks.count))")
+                        }
+                        .foregroundColor(.red)
                     }
-                }
-                .frame(maxWidth: .infinity)
-                
-                Button(action: {
-                    dismiss()
-                }) {
-                    VStack {
-                        Image(systemName: "house")
-                        Text("Home")
+                    .frame(maxWidth: .infinity)
+                    
+                    Button(action: {
+                        showingMoveDecksSheet = true
+                    }) {
+                        VStack {
+                            Image(systemName: "folder.badge.gearshape")
+                            Text("Move (\(selectedDecks.count))")
+                        }
+                        .foregroundColor(.blue)
                     }
+                    .frame(maxWidth: .infinity)
+                } else {
+                    Button(action: {
+                        dismiss()
+                    }) {
+                        VStack {
+                            Image(systemName: "chevron.backward")
+                            Text("Back")
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    
+                    Button(action: {
+                        dismiss()
+                    }) {
+                        VStack {
+                            Image(systemName: "house")
+                            Text("Home")
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
                 }
-                .frame(maxWidth: .infinity)
             }
             .padding()
             .background(Color(.systemBackground))
@@ -120,6 +188,23 @@ struct ManageDecksView: View {
         }
         .sheet(isPresented: $showingAddCard) {
             AddCardView(viewModel: viewModel)
+        }
+        .sheet(isPresented: $showingAddMultipleCards) {
+            AddMultipleCardsView(viewModel: viewModel)
+        }
+        .alert("Delete Decks", isPresented: $showingBulkDeleteAlert) {
+            Button("Delete \(selectedDecks.count) decks", role: .destructive) {
+                for deckId in selectedDecks {
+                    if let deck = viewModel.decks.first(where: { $0.id == deckId && $0.name != "Uncategorized" }) {
+                        viewModel.deleteDeck(deck)
+                    }
+                }
+                isSelectionMode = false
+                selectedDecks.removeAll()
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("Are you sure you want to delete \(selectedDecks.count) selected decks? This will also delete all their cards.")
         }
     }
 } 

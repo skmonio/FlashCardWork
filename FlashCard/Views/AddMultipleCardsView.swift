@@ -43,6 +43,56 @@ struct AddMultipleCardsView: View {
                             logger.debug("Example changed for card \(index): \(newValue)")
                         }
                     
+                    // Dutch language features
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Article (Optional)")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        
+                        HStack(spacing: 20) {
+                            // De checkbox
+                            Button(action: {
+                                if cardEntries[index].isDeSelected {
+                                    cardEntries[index].isDeSelected = false
+                                } else {
+                                    cardEntries[index].isDeSelected = true
+                                    cardEntries[index].isHetSelected = false
+                                }
+                            }) {
+                                HStack {
+                                    Image(systemName: cardEntries[index].isDeSelected ? "checkmark.square.fill" : "square")
+                                        .foregroundColor(cardEntries[index].isDeSelected ? .blue : .gray)
+                                    Text("de")
+                                        .foregroundColor(.primary)
+                                }
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                            
+                            // Het checkbox
+                            Button(action: {
+                                if cardEntries[index].isHetSelected {
+                                    cardEntries[index].isHetSelected = false
+                                } else {
+                                    cardEntries[index].isHetSelected = true
+                                    cardEntries[index].isDeSelected = false
+                                }
+                            }) {
+                                HStack {
+                                    Image(systemName: cardEntries[index].isHetSelected ? "checkmark.square.fill" : "square")
+                                        .foregroundColor(cardEntries[index].isHetSelected ? .blue : .gray)
+                                    Text("het")
+                                        .foregroundColor(.primary)
+                                }
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                            
+                            Spacer()
+                        }
+                    }
+                    
+                    TextField("Past Tense (Optional)", text: $cardEntries[index].pastTense)
+                    TextField("Future Tense (Optional)", text: $cardEntries[index].futureTense)
+                    
                     if cardEntries.count > 1 {
                         Button(role: .destructive, action: {
                             logger.debug("Removing card at index \(index)")
@@ -83,7 +133,16 @@ struct AddMultipleCardsView: View {
                         logger.debug("Selected deck IDs changed: \(selectedDeckIds)")
                     }) {
                         HStack {
-                            Text(deck.name)
+                            // Show indentation for sub-decks
+                            if deck.isSubDeck {
+                                HStack(spacing: 4) {
+                                    Text("    ↳")
+                                        .foregroundColor(.secondary)
+                                    Text(deck.name)
+                                }
+                            } else {
+                                Text(deck.name)
+                            }
                             Spacer()
                             if selectedDeckIds.contains(deck.id) {
                                 Image(systemName: "checkmark")
@@ -117,6 +176,8 @@ struct AddMultipleCardsView: View {
                     let trimmedWord = entry.word.trimmingCharacters(in: .whitespacesAndNewlines)
                     let trimmedDefinition = entry.definition.trimmingCharacters(in: .whitespacesAndNewlines)
                     let trimmedExample = entry.example.trimmingCharacters(in: .whitespacesAndNewlines)
+                    let trimmedPastTense = entry.pastTense.trimmingCharacters(in: .whitespacesAndNewlines)
+                    let trimmedFutureTense = entry.futureTense.trimmingCharacters(in: .whitespacesAndNewlines)
                     
                     logger.debug("Adding card - Word: \(trimmedWord), Definition: \(trimmedDefinition)")
                     
@@ -124,7 +185,10 @@ struct AddMultipleCardsView: View {
                         word: trimmedWord,
                         definition: trimmedDefinition,
                         example: trimmedExample,
-                        deckIds: selectedDeckIds
+                        deckIds: selectedDeckIds,
+                        article: entry.isDeSelected ? "de" : (entry.isHetSelected ? "het" : nil),
+                        pastTense: trimmedPastTense.isEmpty ? nil : trimmedPastTense,
+                        futureTense: trimmedFutureTense.isEmpty ? nil : trimmedFutureTense
                     )
                 }
                 

@@ -36,6 +36,10 @@ struct HomeView: View {
                             NavigationLink(destination: DeckSelectionView(viewModel: viewModel, mode: .hangman)) {
                                 MenuButton(title: "Hangman", icon: "person.fill")
                             }
+                            
+                            NavigationLink(destination: DeckSelectionView(viewModel: viewModel, mode: .dehet)) {
+                                MenuButton(title: "de of het", icon: "questionmark.diamond.fill")
+                            }
                         }
                     }
                     .padding(.top)
