@@ -13,13 +13,12 @@ struct AddCardView: View {
     @State private var newDeckName: String = ""
     
     // Dutch language features
-    @State private var selectedArticle: String = "None"
+    @State private var isDeSelected: Bool = false
+    @State private var isHetSelected: Bool = false
     @State private var pastTense: String = ""
     @State private var futureTense: String = ""
     
     private let logger = Logger(subsystem: "com.flashcards", category: "AddCardView")
-    
-    private let articleOptions = ["None", "de", "het"]
     
     private var canSave: Bool {
         !word.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
@@ -47,17 +46,51 @@ struct AddCardView: View {
                 }
                 
                 Section(header: Text("Dutch Language Features (Optional)")) {
-                    // Article picker
-                    VStack(alignment: .leading, spacing: 8) {
+                    // Article selection
+                    VStack(alignment: .leading, spacing: 12) {
                         Text("Article")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
-                        Picker("Article", selection: $selectedArticle) {
-                            ForEach(articleOptions, id: \.self) { article in
-                                Text(article).tag(article)
+                        
+                        HStack(spacing: 20) {
+                            // De checkbox
+                            Button(action: {
+                                if isDeSelected {
+                                    isDeSelected = false // Uncheck if already selected
+                                } else {
+                                    isDeSelected = true
+                                    isHetSelected = false // Uncheck het if de is selected
+                                }
+                            }) {
+                                HStack {
+                                    Image(systemName: isDeSelected ? "checkmark.square.fill" : "square")
+                                        .foregroundColor(isDeSelected ? .blue : .gray)
+                                    Text("de")
+                                        .foregroundColor(.primary)
+                                }
                             }
+                            .buttonStyle(PlainButtonStyle())
+                            
+                            // Het checkbox
+                            Button(action: {
+                                if isHetSelected {
+                                    isHetSelected = false // Uncheck if already selected
+                                } else {
+                                    isHetSelected = true
+                                    isDeSelected = false // Uncheck de if het is selected
+                                }
+                            }) {
+                                HStack {
+                                    Image(systemName: isHetSelected ? "checkmark.square.fill" : "square")
+                                        .foregroundColor(isHetSelected ? .blue : .gray)
+                                    Text("het")
+                                        .foregroundColor(.primary)
+                                }
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                            
+                            Spacer()
                         }
-                        .pickerStyle(SegmentedPickerStyle())
                     }
                     
                     // Tense fields
@@ -76,7 +109,16 @@ struct AddCardView: View {
                             logger.debug("Selected deck IDs changed: \(selectedDeckIds)")
                         }) {
                             HStack {
-                                Text(deck.name)
+                                // Show indentation for sub-decks
+                                if deck.isSubDeck {
+                                    HStack(spacing: 4) {
+                                        Text("    ↳")
+                                            .foregroundColor(.secondary)
+                                        Text(deck.name)
+                                    }
+                                } else {
+                                    Text(deck.name)
+                                }
                                 Spacer()
                                 if selectedDeckIds.contains(deck.id) {
                                     Image(systemName: "checkmark")
@@ -119,7 +161,7 @@ struct AddCardView: View {
                         definition: trimmedDefinition,
                         example: trimmedExample,
                         deckIds: selectedDeckIds,
-                        article: selectedArticle == "None" ? nil : selectedArticle,
+                        article: isDeSelected ? "de" : (isHetSelected ? "het" : nil),
                         pastTense: trimmedPastTense.isEmpty ? nil : trimmedPastTense,
                         futureTense: trimmedFutureTense.isEmpty ? nil : trimmedFutureTense
                     )

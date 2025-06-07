@@ -59,27 +59,58 @@ struct DeckSelectionView: View {
                         }
                     }
                     
-                    ForEach(viewModel.decks) { deck in
-                        Button(action: {
-                            if selectedDeckIds.contains(deck.id) {
-                                selectedDeckIds.remove(deck.id)
-                            } else {
-                                selectedDeckIds.insert(deck.id)
-                            }
-                            selectedCards = availableCards
-                        }) {
-                            HStack {
-                                Text(deck.name)
-                                Spacer()
+                    ForEach(viewModel.getTopLevelDecks()) { deck in
+                        VStack(alignment: .leading, spacing: 4) {
+                            // Main deck button
+                            Button(action: {
                                 if selectedDeckIds.contains(deck.id) {
-                                    Image(systemName: "checkmark")
-                                        .foregroundColor(.blue)
+                                    selectedDeckIds.remove(deck.id)
+                                } else {
+                                    selectedDeckIds.insert(deck.id)
                                 }
-                                Text("\(deck.cards.count)")
-                                    .foregroundColor(.secondary)
+                                selectedCards = availableCards
+                            }) {
+                                HStack {
+                                    Text(deck.name)
+                                    Spacer()
+                                    if selectedDeckIds.contains(deck.id) {
+                                        Image(systemName: "checkmark")
+                                            .foregroundColor(.blue)
+                                    }
+                                    Text("\(deck.cards.count)")
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                            .foregroundColor(.primary)
+                            
+                            // Sub-deck buttons with indentation
+                            ForEach(viewModel.getSubDecks(for: deck.id)) { subDeck in
+                                Button(action: {
+                                    if selectedDeckIds.contains(subDeck.id) {
+                                        selectedDeckIds.remove(subDeck.id)
+                                    } else {
+                                        selectedDeckIds.insert(subDeck.id)
+                                    }
+                                    selectedCards = availableCards
+                                }) {
+                                    HStack {
+                                        HStack(spacing: 4) {
+                                            Text("    ↳") // Indentation indicator
+                                                .foregroundColor(.secondary)
+                                            Text(subDeck.name)
+                                        }
+                                        Spacer()
+                                        if selectedDeckIds.contains(subDeck.id) {
+                                            Image(systemName: "checkmark")
+                                                .foregroundColor(.blue)
+                                        }
+                                        Text("\(subDeck.cards.count)")
+                                            .foregroundColor(.secondary)
+                                    }
+                                }
+                                .foregroundColor(.primary)
                             }
                         }
-                        .foregroundColor(.primary)
                     }
                 }
                 

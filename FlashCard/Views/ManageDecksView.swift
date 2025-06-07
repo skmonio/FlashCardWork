@@ -34,21 +34,43 @@ struct ManageDecksView: View {
                 }
                 
                 Section {
-                    ForEach(viewModel.decks) { deck in
-                        NavigationLink {
-                            DeckView(viewModel: viewModel, deck: deck)
-                        } label: {
-                            HStack {
-                                Text(deck.name)
-                                Spacer()
-                                Text("\(deck.cards.count)")
-                                    .foregroundColor(.secondary)
+                    ForEach(viewModel.getTopLevelDecks()) { deck in
+                        VStack(alignment: .leading, spacing: 0) {
+                            // Main deck row
+                            NavigationLink {
+                                DeckView(viewModel: viewModel, deck: deck)
+                            } label: {
+                                HStack {
+                                    Text(deck.name)
+                                    Spacer()
+                                    Text("\(deck.cards.count)")
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                            
+                            // Sub-decks with indentation
+                            ForEach(viewModel.getSubDecks(for: deck.id)) { subDeck in
+                                NavigationLink {
+                                    DeckView(viewModel: viewModel, deck: subDeck)
+                                } label: {
+                                    HStack {
+                                        HStack(spacing: 4) {
+                                            Text("    ↳") // Indentation indicator
+                                                .foregroundColor(.secondary)
+                                            Text(subDeck.name)
+                                        }
+                                        Spacer()
+                                        Text("\(subDeck.cards.count)")
+                                            .foregroundColor(.secondary)
+                                    }
+                                }
                             }
                         }
                     }
                     .onDelete { indices in
+                        let topLevelDecks = viewModel.getTopLevelDecks()
                         indices.forEach { index in
-                            let deck = viewModel.decks[index]
+                            let deck = topLevelDecks[index]
                             if deck.name != "Uncategorized" {
                                 viewModel.deleteDeck(deck)
                             }

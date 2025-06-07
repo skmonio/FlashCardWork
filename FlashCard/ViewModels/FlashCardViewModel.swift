@@ -309,9 +309,58 @@ class FlashCardViewModel: ObservableObject {
         return newDeck
     }
     
+    func createSubDeck(name: String, parentId: UUID) -> Deck {
+        print("Creating new sub-deck: \(name) under parent: \(parentId)")
+        let newSubDeck = Deck(name: name, parentId: parentId)
+        decks.append(newSubDeck)
+        
+        // Update parent deck to include this sub-deck
+        if let parentIndex = decks.firstIndex(where: { $0.id == parentId }) {
+            decks[parentIndex].subDeckIds.insert(newSubDeck.id)
+        }
+        
+        return newSubDeck
+    }
+    
+    func getTopLevelDecks() -> [Deck] {
+        return decks.filter { $0.parentId == nil }
+    }
+    
+    func getSubDecks(for parentId: UUID) -> [Deck] {
+        return decks.filter { $0.parentId == parentId }
+    }
+    
+    func getAllDecksHierarchical() -> [Deck] {
+        // Returns all decks organized hierarchically (parents first, then their children)
+        var result: [Deck] = []
+        let topLevel = getTopLevelDecks().sorted { $0.name < $1.name }
+        
+        for deck in topLevel {
+            result.append(deck)
+            let subDecks = getSubDecks(for: deck.id).sorted { $0.name < $1.name }
+            result.append(contentsOf: subDecks)
+        }
+        
+        return result
+    }
+    
     func deleteDeck(_ deck: Deck) {
         print("Deleting deck: \(deck.name)")
         if deck.name != "Uncategorized" {
+            // If this is a parent deck, delete all its sub-decks first
+            if !deck.subDeckIds.isEmpty {
+                let subDecks = decks.filter { deck.subDeckIds.contains($0.id) }
+                for subDeck in subDecks {
+                    deleteDeck(subDeck)
+                }
+            }
+            
+            // If this is a sub-deck, remove it from parent's subDeckIds
+            if let parentId = deck.parentId,
+               let parentIndex = decks.firstIndex(where: { $0.id == parentId }) {
+                decks[parentIndex].subDeckIds.remove(deck.id)
+            }
+            
             // Remove deck from all cards that reference it
             for index in flashCards.indices {
                 flashCards[index].deckIds.remove(deck.id)
@@ -326,7 +375,7 @@ class FlashCardViewModel: ObservableObject {
     }
     
     func getSelectableDecks() -> [Deck] {
-        return decks.filter { $0.name != "Uncategorized" }
+        return getAllDecksHierarchical().filter { $0.name != "Uncategorized" }
     }
     
     private func saveCards() {

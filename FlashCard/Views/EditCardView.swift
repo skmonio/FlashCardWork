@@ -14,13 +14,12 @@ struct EditCardView: View {
     @State private var newDeckName = ""
     
     // Dutch language features
-    @State private var selectedArticle: String = "None"
+    @State private var isDeSelected: Bool = false
+    @State private var isHetSelected: Bool = false
     @State private var pastTense: String = ""
     @State private var futureTense: String = ""
     
     private let logger = Logger(subsystem: "com.flashcards", category: "EditCardView")
-    
-    private let articleOptions = ["None", "de", "het"]
     
     init(viewModel: FlashCardViewModel, card: FlashCard) {
         logger.debug("Initializing EditCardView for card: \(card.id)")
@@ -32,7 +31,8 @@ struct EditCardView: View {
         _selectedDeckIds = State(initialValue: card.deckIds)
         
         // Initialize Dutch language fields
-        _selectedArticle = State(initialValue: card.article ?? "None")
+        _isDeSelected = State(initialValue: card.article == "de")
+        _isHetSelected = State(initialValue: card.article == "het")
         _pastTense = State(initialValue: card.pastTense ?? "")
         _futureTense = State(initialValue: card.futureTense ?? "")
     }
@@ -64,17 +64,51 @@ struct EditCardView: View {
                 }
                 
                 Section(header: Text("Dutch Language Features (Optional)")) {
-                    // Article picker
-                    VStack(alignment: .leading, spacing: 8) {
+                    // Article selection
+                    VStack(alignment: .leading, spacing: 12) {
                         Text("Article")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
-                        Picker("Article", selection: $selectedArticle) {
-                            ForEach(articleOptions, id: \.self) { article in
-                                Text(article).tag(article)
+                        
+                        HStack(spacing: 20) {
+                            // De checkbox
+                            Button(action: {
+                                if isDeSelected {
+                                    isDeSelected = false // Uncheck if already selected
+                                } else {
+                                    isDeSelected = true
+                                    isHetSelected = false // Uncheck het if de is selected
+                                }
+                            }) {
+                                HStack {
+                                    Image(systemName: isDeSelected ? "checkmark.square.fill" : "square")
+                                        .foregroundColor(isDeSelected ? .blue : .gray)
+                                    Text("de")
+                                        .foregroundColor(.primary)
+                                }
                             }
+                            .buttonStyle(PlainButtonStyle())
+                            
+                            // Het checkbox
+                            Button(action: {
+                                if isHetSelected {
+                                    isHetSelected = false // Uncheck if already selected
+                                } else {
+                                    isHetSelected = true
+                                    isDeSelected = false // Uncheck de if het is selected
+                                }
+                            }) {
+                                HStack {
+                                    Image(systemName: isHetSelected ? "checkmark.square.fill" : "square")
+                                        .foregroundColor(isHetSelected ? .blue : .gray)
+                                    Text("het")
+                                        .foregroundColor(.primary)
+                                }
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                            
+                            Spacer()
                         }
-                        .pickerStyle(SegmentedPickerStyle())
                     }
                     
                     // Tense fields
@@ -93,7 +127,16 @@ struct EditCardView: View {
                             logger.debug("Selected deck IDs changed: \(selectedDeckIds)")
                         }) {
                             HStack {
-                                Text(deck.name)
+                                // Show indentation for sub-decks
+                                if deck.isSubDeck {
+                                    HStack(spacing: 4) {
+                                        Text("    ↳")
+                                            .foregroundColor(.secondary)
+                                        Text(deck.name)
+                                    }
+                                } else {
+                                    Text(deck.name)
+                                }
                                 Spacer()
                                 if selectedDeckIds.contains(deck.id) {
                                     Image(systemName: "checkmark")
@@ -142,7 +185,7 @@ struct EditCardView: View {
                         definition: trimmedDefinition,
                         example: trimmedExample,
                         deckIds: selectedDeckIds,
-                        article: selectedArticle == "None" ? nil : selectedArticle,
+                        article: isDeSelected ? "de" : (isHetSelected ? "het" : nil),
                         pastTense: trimmedPastTense.isEmpty ? nil : trimmedPastTense,
                         futureTense: trimmedFutureTense.isEmpty ? nil : trimmedFutureTense
                     )

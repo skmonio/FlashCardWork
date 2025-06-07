@@ -376,7 +376,7 @@ struct MoveCardsSheet: View {
     }
     
     var availableDecks: [Deck] {
-        return viewModel.decks.filter { $0.id != currentDeck.id }
+        return viewModel.getAllDecksHierarchical().filter { $0.id != currentDeck.id }
     }
     
     var body: some View {
@@ -409,7 +409,15 @@ struct MoveCardsSheet: View {
                                 }
                             }) {
                                 HStack {
-                                    Text(deck.name)
+                                    if deck.isSubDeck {
+                                        HStack(spacing: 4) {
+                                            Text("    ↳")
+                                                .foregroundColor(.secondary)
+                                            Text(deck.name)
+                                        }
+                                    } else {
+                                        Text(deck.name)
+                                    }
                                     Spacer()
                                     if selectedDeckIds.contains(deck.id) {
                                         Image(systemName: "checkmark")
