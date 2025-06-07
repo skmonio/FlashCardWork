@@ -380,6 +380,183 @@ class FlashCardViewModel: ObservableObject {
         return getAllDecksHierarchical().filter { $0.name != "Uncategorized" }
     }
     
+    // MARK: - Export Functionality
+    
+    func exportCardsToCSV() -> String {
+        let headers = ["Word", "Definition", "Example", "Article", "Past Tense", "Future Tense", "Decks", "Success Count"]
+        var csvContent = headers.joined(separator: ",") + "\n"
+        
+        for card in flashCards {
+            let deckNames = getDeckNamesForCard(card).joined(separator: "; ")
+            
+            let row = [
+                escapeCSVField(card.word),
+                escapeCSVField(card.definition),
+                escapeCSVField(card.example),
+                escapeCSVField(card.article ?? ""),
+                escapeCSVField(card.pastTense ?? ""),
+                escapeCSVField(card.futureTense ?? ""),
+                escapeCSVField(deckNames),
+                String(card.successCount)
+            ]
+            
+            csvContent += row.joined(separator: ",") + "\n"
+        }
+        
+        return csvContent
+    }
+    
+    func exportDeckToCSV(_ deck: Deck) -> String {
+        let headers = ["Word", "Definition", "Example", "Article", "Past Tense", "Future Tense", "Success Count"]
+        var csvContent = headers.joined(separator: ",") + "\n"
+        
+        for card in deck.cards {
+            let row = [
+                escapeCSVField(card.word),
+                escapeCSVField(card.definition),
+                escapeCSVField(card.example),
+                escapeCSVField(card.article ?? ""),
+                escapeCSVField(card.pastTense ?? ""),
+                escapeCSVField(card.futureTense ?? ""),
+                String(card.successCount)
+            ]
+            
+            csvContent += row.joined(separator: ",") + "\n"
+        }
+        
+        return csvContent
+    }
+    
+    private func getDeckNamesForCard(_ card: FlashCard) -> [String] {
+        var deckNames: [String] = []
+        
+        for deckId in card.deckIds {
+            if let deck = decks.first(where: { $0.id == deckId }) {
+                deckNames.append(deck.name)
+            }
+        }
+        
+        // If no decks found, add to uncategorized
+        if deckNames.isEmpty {
+            deckNames.append("Uncategorized")
+        }
+        
+        return deckNames.sorted()
+    }
+    
+    private func escapeCSVField(_ field: String) -> String {
+        // Escape commas, quotes, and newlines in CSV fields
+        let escapedField = field.replacingOccurrences(of: "\"", with: "\"\"")
+        
+        if field.contains(",") || field.contains("\"") || field.contains("\n") {
+            return "\"\(escapedField)\""
+        }
+        
+        return escapedField
+    }
+    
+    // MARK: - Import Functionality
+    
+    func importCardsFromCSV(_ csvContent: String) -> (success: Int, errors: [String]) {
+        let lines = csvContent.components(separatedBy: .newlines).filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+        
+        guard lines.count > 1 else {
+            return (0, ["CSV file appears to be empty or invalid"])
+        }
+        
+        var successCount = 0
+        var errors: [String] = []
+        
+        // Skip header row
+        for (index, line) in lines.dropFirst().enumerated() {
+            let lineNumber = index + 2 // +2 because we dropped first and want 1-based indexing
+            
+            let fields = parseCSVLine(line)
+            
+            // Validate minimum required fields
+            guard fields.count >= 2, 
+                  !fields[0].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                  !fields[1].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                errors.append("Line \(lineNumber): Missing required word or definition")
+                continue
+            }
+            
+            let word = fields[0].trimmingCharacters(in: .whitespacesAndNewlines)
+            let definition = fields[1].trimmingCharacters(in: .whitespacesAndNewlines)
+            let example = fields.count > 2 ? fields[2].trimmingCharacters(in: .whitespacesAndNewlines) : ""
+            let article = fields.count > 3 ? (fields[3].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : fields[3].trimmingCharacters(in: .whitespacesAndNewlines)) : nil
+            let pastTense = fields.count > 4 ? (fields[4].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : fields[4].trimmingCharacters(in: .whitespacesAndNewlines)) : nil
+            let futureTense = fields.count > 5 ? (fields[5].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : fields[5].trimmingCharacters(in: .whitespacesAndNewlines)) : nil
+            
+            // Handle deck names (if provided)
+            var deckIds: Set<UUID> = []
+            if fields.count > 6 && !fields[6].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                let deckNamesString = fields[6].trimmingCharacters(in: .whitespacesAndNewlines)
+                let deckNames = deckNamesString.components(separatedBy: ";").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                
+                for deckName in deckNames {
+                    if let existingDeck = decks.first(where: { $0.name == deckName }) {
+                        deckIds.insert(existingDeck.id)
+                    } else if deckName != "Uncategorized" {
+                        // Create new deck if it doesn't exist
+                        let newDeck = createDeck(name: deckName)
+                        deckIds.insert(newDeck.id)
+                    }
+                }
+            }
+            
+            // Create the card
+            let _ = addCard(
+                word: word,
+                definition: definition,
+                example: example,
+                deckIds: deckIds,
+                article: article,
+                pastTense: pastTense,
+                futureTense: futureTense
+            )
+            
+            successCount += 1
+        }
+        
+        return (successCount, errors)
+    }
+    
+    private func parseCSVLine(_ line: String) -> [String] {
+        var fields: [String] = []
+        var currentField = ""
+        var insideQuotes = false
+        var i = line.startIndex
+        
+        while i < line.endIndex {
+            let char = line[i]
+            
+            if char == "\"" {
+                if insideQuotes && i < line.index(before: line.endIndex) && line[line.index(after: i)] == "\"" {
+                    // Escaped quote
+                    currentField += "\""
+                    i = line.index(after: i) // Skip next quote
+                } else {
+                    // Toggle quote state
+                    insideQuotes.toggle()
+                }
+            } else if char == "," && !insideQuotes {
+                // Field separator
+                fields.append(currentField)
+                currentField = ""
+            } else {
+                currentField += String(char)
+            }
+            
+            i = line.index(after: i)
+        }
+        
+        // Add final field
+        fields.append(currentField)
+        
+        return fields
+    }
+    
     private func saveCards() {
         print("Saving cards to UserDefaults")
         if let encoded = try? JSONEncoder().encode(flashCards) {

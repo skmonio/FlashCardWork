@@ -1,0 +1,260 @@
+import SwiftUI
+import UniformTypeIdentifiers
+
+struct ExportImportView: View {
+    @ObservedObject var viewModel: FlashCardViewModel
+    @Environment(\.dismiss) private var dismiss
+    
+    @State private var showingExportSheet = false
+    @State private var showingImportPicker = false
+    @State private var showingImportAlert = false
+    @State private var importResult: (success: Int, errors: [String]) = (0, [])
+    @State private var exportContent = ""
+    @State private var selectedExportOption: ExportOption = .allCards
+    
+    enum ExportOption: Hashable, Equatable {
+        case allCards
+        case specificDeck(Deck)
+        
+        var title: String {
+            switch self {
+            case .allCards:
+                return "All Cards"
+            case .specificDeck(let deck):
+                return deck.name
+            }
+        }
+        
+        // Implement Hashable
+        func hash(into hasher: inout Hasher) {
+            switch self {
+            case .allCards:
+                hasher.combine("allCards")
+            case .specificDeck(let deck):
+                hasher.combine("specificDeck")
+                hasher.combine(deck.id)
+            }
+        }
+        
+        // Implement Equatable
+        static func == (lhs: ExportOption, rhs: ExportOption) -> Bool {
+            switch (lhs, rhs) {
+            case (.allCards, .allCards):
+                return true
+            case (.specificDeck(let deck1), .specificDeck(let deck2)):
+                return deck1.id == deck2.id
+            default:
+                return false
+            }
+        }
+    }
+    
+    var body: some View {
+        NavigationView {
+            List {
+                Section(header: Text("Export")) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Export your flashcards to CSV format")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        
+                        Picker("Export Options", selection: $selectedExportOption) {
+                            Text("All Cards (\(viewModel.flashCards.count) cards)").tag(ExportOption.allCards)
+                            
+                            ForEach(viewModel.getAllDecksHierarchical()) { deck in
+                                if deck.name != "Uncategorized" {
+                                    Text("\(deck.displayName) (\(deck.cards.count) cards)")
+                                        .tag(ExportOption.specificDeck(deck))
+                                }
+                            }
+                        }
+                        .pickerStyle(MenuPickerStyle())
+                        
+                        Button(action: {
+                            exportToCSV()
+                        }) {
+                            HStack {
+                                Image(systemName: "square.and.arrow.up")
+                                Text("Export to CSV")
+                            }
+                            .foregroundColor(.blue)
+                        }
+                        .disabled(viewModel.flashCards.isEmpty)
+                    }
+                }
+                
+                Section(header: Text("Import"), footer: Text("Import CSV files with columns: Word, Definition, Example, Article, Past Tense, Future Tense, Decks, Success Count")) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Import flashcards from CSV format")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        
+                        Button(action: {
+                            showingImportPicker = true
+                        }) {
+                            HStack {
+                                Image(systemName: "square.and.arrow.down")
+                                Text("Import from CSV")
+                            }
+                            .foregroundColor(.blue)
+                        }
+                    }
+                }
+                
+                Section(header: Text("CSV Format")) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("CSV Structure")
+                            .font(.subheadline)
+                            .bold()
+                        
+                        VStack(alignment: .leading, spacing: 4) {
+                            ForEach([
+                                "Word (required)",
+                                "Definition (required)", 
+                                "Example (optional)",
+                                "Article (optional: de/het)",
+                                "Past Tense (optional)",
+                                "Future Tense (optional)",
+                                "Decks (optional: separated by ;)",
+                                "Success Count (optional)"
+                            ], id: \.self) { field in
+                                Text("• \(field)")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        
+                        Text("Example")
+                            .font(.subheadline)
+                            .bold()
+                            .padding(.top, 8)
+                        
+                        Text("""
+                        Word,Definition,Example,Article,Past Tense,Future Tense,Decks,Success Count
+                        Hallo,Hello,"Hallo, hoe gaat het?",,,,"A1 - Basics",5
+                        Brood,Bread,"Ik eet brood met kaas",het,,,"A1 - Food & Drinks; Basics",3
+                        """)
+                            .font(.caption)
+                            .fontDesign(.monospaced)
+                            .padding(8)
+                            .background(Color(.systemGray6))
+                            .cornerRadius(8)
+                    }
+                }
+            }
+            .navigationTitle("Export & Import")
+            .navigationBarItems(
+                leading: Button("Cancel") {
+                    dismiss()
+                }
+            )
+            .sheet(isPresented: $showingExportSheet) {
+                ShareSheet(activityItems: [exportContent])
+            }
+            .fileImporter(
+                isPresented: $showingImportPicker,
+                allowedContentTypes: [.commaSeparatedText, .plainText],
+                allowsMultipleSelection: false
+            ) { result in
+                handleImport(result: result)
+            }
+            .alert("Import Results", isPresented: $showingImportAlert) {
+                Button("OK") { }
+            } message: {
+                Text(importAlertMessage)
+            }
+        }
+    }
+    
+    private var importAlertMessage: String {
+        var message = "Successfully imported \(importResult.success) cards."
+        
+        if !importResult.errors.isEmpty {
+            message += "\n\nErrors encountered:"
+            for error in importResult.errors.prefix(5) {
+                message += "\n• \(error)"
+            }
+            
+            if importResult.errors.count > 5 {
+                message += "\n• ... and \(importResult.errors.count - 5) more errors"
+            }
+        }
+        
+        return message
+    }
+    
+    private func exportToCSV() {
+        switch selectedExportOption {
+        case .allCards:
+            exportContent = viewModel.exportCardsToCSV()
+        case .specificDeck(let deck):
+            exportContent = viewModel.exportDeckToCSV(deck)
+        }
+        
+        showingExportSheet = true
+    }
+    
+    private func handleImport(result: Result<[URL], Error>) {
+        switch result {
+        case .success(let urls):
+            guard let url = urls.first else { return }
+            
+            do {
+                let csvContent = try String(contentsOf: url)
+                importResult = viewModel.importCardsFromCSV(csvContent)
+                showingImportAlert = true
+            } catch {
+                importResult = (0, ["Failed to read file: \(error.localizedDescription)"])
+                showingImportAlert = true
+            }
+            
+        case .failure(let error):
+            importResult = (0, ["Import failed: \(error.localizedDescription)"])
+            showingImportAlert = true
+        }
+    }
+}
+
+// Helper struct for sharing functionality
+struct ShareSheet: UIViewControllerRepresentable {
+    let activityItems: [Any]
+    
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        let controller = UIActivityViewController(
+            activityItems: activityItems,
+            applicationActivities: nil
+        )
+        
+        // Suggest filename for CSV
+        if let csvString = activityItems.first as? String {
+            let tempURL = FileManager.default.temporaryDirectory
+                .appendingPathComponent("FlashCards_Export_\(DateFormatter.filenameFriendly.string(from: Date())).csv")
+            
+            do {
+                try csvString.write(to: tempURL, atomically: true, encoding: .utf8)
+                controller.setValue(csvString, forKey: "activityItems")
+            } catch {
+                print("Failed to create temporary file: \(error)")
+            }
+        }
+        
+        return controller
+    }
+    
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
+}
+
+// Extension for filename-friendly date formatting
+extension DateFormatter {
+    static let filenameFriendly: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd_HH-mm-ss"
+        return formatter
+    }()
+}
+
+struct ExportImportView_Previews: PreviewProvider {
+    static var previews: some View {
+        ExportImportView(viewModel: FlashCardViewModel())
+    }
+} 

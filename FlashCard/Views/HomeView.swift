@@ -4,6 +4,7 @@ struct HomeView: View {
     @ObservedObject var viewModel: FlashCardViewModel
     @State private var showingAddDeck = false
     @State private var showingAddCard = false
+    @State private var showingExportImport = false
     
     var body: some View {
         NavigationView {
@@ -77,6 +78,14 @@ struct HomeView: View {
                         }) {
                             Label("Add Deck", systemImage: "folder.badge.plus")
                         }
+                        
+                        Divider()
+                        
+                        Button(action: {
+                            showingExportImport = true
+                        }) {
+                            Label("Export & Import", systemImage: "square.and.arrow.up.on.square")
+                        }
                     } label: {
                         Image(systemName: "plus")
                     }
@@ -87,6 +96,9 @@ struct HomeView: View {
             }
             .sheet(isPresented: $showingAddDeck) {
                 AddDeckView(viewModel: viewModel)
+            }
+            .sheet(isPresented: $showingExportImport) {
+                ExportImportView(viewModel: viewModel)
             }
             .background(Color(.systemGroupedBackground))
         }

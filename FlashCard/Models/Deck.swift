@@ -1,6 +1,6 @@
 import Foundation
 
-struct Deck: Identifiable, Codable {
+struct Deck: Identifiable, Codable, Hashable {
     var id = UUID()
     var name: String
     var cards: [FlashCard]
@@ -21,5 +21,14 @@ struct Deck: Identifiable, Codable {
     
     var displayName: String {
         return name
+    }
+    
+    // Implement Hashable
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+    
+    static func == (lhs: Deck, rhs: Deck) -> Bool {
+        lhs.id == rhs.id
     }
 } 
