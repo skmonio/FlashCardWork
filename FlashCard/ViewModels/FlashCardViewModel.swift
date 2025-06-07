@@ -235,44 +235,31 @@ class FlashCardViewModel: ObservableObject {
         saveDecks()
     }
     
-    func addCard(word: String, definition: String, example: String, deckIds: Set<UUID>) {
+    func addCard(word: String, definition: String, example: String, deckIds: Set<UUID>, article: String? = nil, pastTense: String? = nil, futureTense: String? = nil) {
         print("Adding new card")
-        let newCard = FlashCard(word: word, definition: definition, example: example, deckIds: deckIds)
+        let newCard = FlashCard(
+            word: word, 
+            definition: definition, 
+            example: example, 
+            deckIds: deckIds,
+            article: article,
+            pastTense: pastTense,
+            futureTense: futureTense
+        )
         flashCards.append(newCard)
         updateCardDeckAssociations()
     }
     
-    func updateCard(_ card: FlashCard, word: String, definition: String, example: String, deckIds: Set<UUID>) {
-        print("Updating card: \(card.id)")
-        print("Before update - flashCards count: \(flashCards.count)")
-        
-        if let cardIndex = flashCards.firstIndex(where: { $0.id == card.id }) {
-            print("Found card at index: \(cardIndex)")
-            
-            // Create updated card
-            var updatedCard = card
-            updatedCard.word = word
-            updatedCard.definition = definition
-            updatedCard.example = example
-            updatedCard.deckIds = deckIds
-            
-            // Update in flashCards array
-            flashCards[cardIndex] = updatedCard
-            
-            print("Card updated - New word: \(updatedCard.word)")
-            
-            // Force a save of the cards
-            saveCards()
-            
-            // Update deck associations
+    func updateCard(_ card: FlashCard, word: String, definition: String, example: String, deckIds: Set<UUID>, article: String? = nil, pastTense: String? = nil, futureTense: String? = nil) {
+        if let index = flashCards.firstIndex(where: { $0.id == card.id }) {
+            flashCards[index].word = word
+            flashCards[index].definition = definition
+            flashCards[index].example = example
+            flashCards[index].deckIds = deckIds
+            flashCards[index].article = article
+            flashCards[index].pastTense = pastTense
+            flashCards[index].futureTense = futureTense
             updateCardDeckAssociations()
-            
-            // Force UserDefaults to synchronize
-            UserDefaults.standard.synchronize()
-            
-            print("After update - flashCards count: \(flashCards.count)")
-        } else {
-            print("Error: Card not found in flashCards array")
         }
     }
     

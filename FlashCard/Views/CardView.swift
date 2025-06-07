@@ -133,10 +133,19 @@ struct CardView: View {
             .shadow(radius: 5)
             .overlay(
                 VStack(spacing: 16) {
-                    Text(card.word)
-                        .font(.title)
-                        .bold()
-                        .foregroundColor(.black)
+                    // Word with optional article
+                    VStack(spacing: 4) {
+                        if let article = card.article {
+                            Text(article)
+                                .font(.caption)
+                                .foregroundColor(.blue)
+                                .bold()
+                        }
+                        Text(card.word)
+                            .font(.title)
+                            .bold()
+                            .foregroundColor(.black)
+                    }
                     
                     if !card.example.isEmpty && isShowingExample {
                         Divider()
@@ -162,6 +171,36 @@ struct CardView: View {
                         .font(.body)
                         .multilineTextAlignment(.center)
                         .foregroundColor(.black)
+                    
+                    // Show tenses if available
+                    if card.pastTense != nil || card.futureTense != nil {
+                        Divider()
+                        VStack(spacing: 8) {
+                            if let pastTense = card.pastTense {
+                                HStack {
+                                    Text("Past:")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    Text(pastTense)
+                                        .font(.callout)
+                                        .bold()
+                                    Spacer()
+                                }
+                            }
+                            if let futureTense = card.futureTense {
+                                HStack {
+                                    Text("Future:")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    Text(futureTense)
+                                        .font(.callout)
+                                        .bold()
+                                    Spacer()
+                                }
+                            }
+                        }
+                        .padding(.horizontal, 8)
+                    }
                 }
                 .padding()
             )

@@ -12,7 +12,14 @@ struct AddCardView: View {
     @State private var showingNewDeckSheet = false
     @State private var newDeckName: String = ""
     
+    // Dutch language features
+    @State private var selectedArticle: String = "None"
+    @State private var pastTense: String = ""
+    @State private var futureTense: String = ""
+    
     private let logger = Logger(subsystem: "com.flashcards", category: "AddCardView")
+    
+    private let articleOptions = ["None", "de", "het"]
     
     private var canSave: Bool {
         !word.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
@@ -37,6 +44,25 @@ struct AddCardView: View {
                         .onChange(of: example) { oldValue, newValue in
                             logger.debug("Example changed from '\(oldValue)' to '\(newValue)'")
                         }
+                }
+                
+                Section(header: Text("Dutch Language Features (Optional)")) {
+                    // Article picker
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Article")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        Picker("Article", selection: $selectedArticle) {
+                            ForEach(articleOptions, id: \.self) { article in
+                                Text(article).tag(article)
+                            }
+                        }
+                        .pickerStyle(SegmentedPickerStyle())
+                    }
+                    
+                    // Tense fields
+                    TextField("Past Tense (Optional)", text: $pastTense)
+                    TextField("Future Tense (Optional)", text: $futureTense)
                 }
 
                 Section(header: Text("Decks (Select one or more)")) {
@@ -83,6 +109,8 @@ struct AddCardView: View {
                     let trimmedWord = word.trimmingCharacters(in: .whitespacesAndNewlines)
                     let trimmedDefinition = definition.trimmingCharacters(in: .whitespacesAndNewlines)
                     let trimmedExample = example.trimmingCharacters(in: .whitespacesAndNewlines)
+                    let trimmedPastTense = pastTense.trimmingCharacters(in: .whitespacesAndNewlines)
+                    let trimmedFutureTense = futureTense.trimmingCharacters(in: .whitespacesAndNewlines)
                     
                     logger.debug("Adding card - Word: \(trimmedWord), Definition: \(trimmedDefinition)")
                     
@@ -90,7 +118,10 @@ struct AddCardView: View {
                         word: trimmedWord,
                         definition: trimmedDefinition,
                         example: trimmedExample,
-                        deckIds: selectedDeckIds
+                        deckIds: selectedDeckIds,
+                        article: selectedArticle == "None" ? nil : selectedArticle,
+                        pastTense: trimmedPastTense.isEmpty ? nil : trimmedPastTense,
+                        futureTense: trimmedFutureTense.isEmpty ? nil : trimmedFutureTense
                     )
                     
                     // Force a save to UserDefaults

@@ -13,7 +13,14 @@ struct EditCardView: View {
     @State private var showingNewDeckSheet = false
     @State private var newDeckName = ""
     
+    // Dutch language features
+    @State private var selectedArticle: String = "None"
+    @State private var pastTense: String = ""
+    @State private var futureTense: String = ""
+    
     private let logger = Logger(subsystem: "com.flashcards", category: "EditCardView")
+    
+    private let articleOptions = ["None", "de", "het"]
     
     init(viewModel: FlashCardViewModel, card: FlashCard) {
         logger.debug("Initializing EditCardView for card: \(card.id)")
@@ -23,6 +30,11 @@ struct EditCardView: View {
         _definition = State(initialValue: card.definition)
         _example = State(initialValue: card.example)
         _selectedDeckIds = State(initialValue: card.deckIds)
+        
+        // Initialize Dutch language fields
+        _selectedArticle = State(initialValue: card.article ?? "None")
+        _pastTense = State(initialValue: card.pastTense ?? "")
+        _futureTense = State(initialValue: card.futureTense ?? "")
     }
     
     private var card: FlashCard? {
@@ -49,6 +61,25 @@ struct EditCardView: View {
                         .onChange(of: example) { oldValue, newValue in
                             logger.debug("Example changed from '\(oldValue)' to '\(newValue)'")
                         }
+                }
+                
+                Section(header: Text("Dutch Language Features (Optional)")) {
+                    // Article picker
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Article")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        Picker("Article", selection: $selectedArticle) {
+                            ForEach(articleOptions, id: \.self) { article in
+                                Text(article).tag(article)
+                            }
+                        }
+                        .pickerStyle(SegmentedPickerStyle())
+                    }
+                    
+                    // Tense fields
+                    TextField("Past Tense (Optional)", text: $pastTense)
+                    TextField("Future Tense (Optional)", text: $futureTense)
                 }
 
                 Section(header: Text("Decks (Select one or more)")) {
@@ -99,6 +130,8 @@ struct EditCardView: View {
                     let trimmedWord = word.trimmingCharacters(in: .whitespacesAndNewlines)
                     let trimmedDefinition = definition.trimmingCharacters(in: .whitespacesAndNewlines)
                     let trimmedExample = example.trimmingCharacters(in: .whitespacesAndNewlines)
+                    let trimmedPastTense = pastTense.trimmingCharacters(in: .whitespacesAndNewlines)
+                    let trimmedFutureTense = futureTense.trimmingCharacters(in: .whitespacesAndNewlines)
                     
                     logger.debug("Updating card with values - Word: \(trimmedWord), Definition: \(trimmedDefinition)")
                     
@@ -108,7 +141,10 @@ struct EditCardView: View {
                         word: trimmedWord,
                         definition: trimmedDefinition,
                         example: trimmedExample,
-                        deckIds: selectedDeckIds
+                        deckIds: selectedDeckIds,
+                        article: selectedArticle == "None" ? nil : selectedArticle,
+                        pastTense: trimmedPastTense.isEmpty ? nil : trimmedPastTense,
+                        futureTense: trimmedFutureTense.isEmpty ? nil : trimmedFutureTense
                     )
                     
                     // Force a save to UserDefaults
