@@ -108,6 +108,7 @@ struct DeckView: View {
             }
         }
         
+        HapticManager.shared.bulkActionComplete() // Feedback for bulk operation completion
         isSelectionMode = false
         selectedCards.removeAll()
         refreshID = UUID()
@@ -158,6 +159,7 @@ struct DeckView: View {
                                     } else {
                                         selectedCards.insert(currentCard.id)
                                     }
+                                    HapticManager.shared.multiSelectToggle() // Selection feedback
                                 }) {
                                     Image(systemName: selectedCards.contains(currentCard.id) ? "checkmark.circle.fill" : "circle")
                                         .foregroundColor(selectedCards.contains(currentCard.id) ? .blue : .gray)
@@ -172,6 +174,7 @@ struct DeckView: View {
                                     } else {
                                         selectedCards.insert(currentCard.id)
                                     }
+                                    HapticManager.shared.multiSelectToggle() // Selection feedback
                                 } else {
                                     selectedCard = currentCard
                                 }
@@ -463,5 +466,8 @@ struct MoveCardsSheet: View {
         
         // Update deck associations
         viewModel.updateCardDeckAssociations()
+        
+        // Haptic feedback for successful move operation
+        HapticManager.shared.bulkActionComplete()
     }
 } 

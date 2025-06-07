@@ -56,20 +56,27 @@ struct HangmanView: View {
         guessedLetters.insert(letter)
         
         if !word.contains(letter) {
+            HapticManager.shared.wrongAnswer()
             remainingAttempts -= 1
             
             if remainingAttempts == 0 {
                 gameWon = false
+                HapticManager.shared.errorNotification()
                 showingGameOver = true
             }
-        } else if isWordGuessed {
-            gameWon = true
-            showingGameOver = true
-            // Update success count for the card
-            if let cardIndex = viewModel.flashCards.firstIndex(where: { $0.id == currentCard.id }) {
-                var updatedCards = viewModel.flashCards
-                updatedCards[cardIndex].successCount += 1
-                viewModel.flashCards = updatedCards
+        } else {
+            HapticManager.shared.lightImpact()
+            
+            if isWordGuessed {
+                gameWon = true
+                HapticManager.shared.gameComplete()
+                showingGameOver = true
+                // Update success count for the card
+                if let cardIndex = viewModel.flashCards.firstIndex(where: { $0.id == currentCard.id }) {
+                    var updatedCards = viewModel.flashCards
+                    updatedCards[cardIndex].successCount += 1
+                    viewModel.flashCards = updatedCards
+                }
             }
         }
     }

@@ -62,20 +62,24 @@ struct TestView: View {
             hasAnswered = true
             if option == currentCard.definition {
                 correctAnswers += 1
+                HapticManager.shared.correctAnswer()
             } else {
                 incorrectCards.insert(currentCard.id)
+                HapticManager.shared.wrongAnswer()
             }
             showingFeedback = true
         }
     }
     
     private func moveToNextQuestion() {
+        HapticManager.shared.questionAdvance()
         if currentIndex < cards.count - 1 {
             currentIndex += 1
             selectedAnswer = nil
             hasAnswered = false
             shuffledOptions = generateOptions()
         } else {
+            HapticManager.shared.gameComplete()
             showingResults = true
         }
     }

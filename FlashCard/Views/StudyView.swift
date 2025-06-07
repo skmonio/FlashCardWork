@@ -254,6 +254,7 @@ struct StudyView: View {
     }
     
     private func handleSwipeRight() {
+        HapticManager.shared.cardSwipeRight() // Success haptic for "I know this"
         let cardId = cards[currentIndex].id
         knownCards.insert(cardId)
         unknownCards.remove(cardId)
@@ -264,6 +265,7 @@ struct StudyView: View {
     }
     
     private func handleSwipeLeft() {
+        HapticManager.shared.cardSwipeLeft() // Warning haptic for "I don't know this"
         let cardId = cards[currentIndex].id
         unknownCards.insert(cardId)
         knownCards.remove(cardId)
@@ -282,6 +284,7 @@ struct StudyView: View {
                 dragOffset = 0
             }
         } else {
+            HapticManager.shared.gameComplete() // Strong haptic for session completion
             withAnimation {
                 showingResults = true
             }
