@@ -145,34 +145,21 @@ struct AddCardView: View {
                     logger.debug("Cancel button tapped")
                     dismiss()
                 },
-                trailing: Button("Save") {
-                    logger.debug("Save button tapped")
+                trailing: HStack {
+                    Button("Save & Add Another") {
+                        logger.debug("Save & Add Another button tapped")
+                        saveCurrentCard()
+                        resetForm()
+                    }
+                    .disabled(!canSave)
                     
-                    let trimmedWord = word.trimmingCharacters(in: .whitespacesAndNewlines)
-                    let trimmedDefinition = definition.trimmingCharacters(in: .whitespacesAndNewlines)
-                    let trimmedExample = example.trimmingCharacters(in: .whitespacesAndNewlines)
-                    let trimmedPastTense = pastTense.trimmingCharacters(in: .whitespacesAndNewlines)
-                    let trimmedFutureTense = futureTense.trimmingCharacters(in: .whitespacesAndNewlines)
-                    
-                    logger.debug("Adding card - Word: \(trimmedWord), Definition: \(trimmedDefinition)")
-                    
-                    viewModel.addCard(
-                        word: trimmedWord,
-                        definition: trimmedDefinition,
-                        example: trimmedExample,
-                        deckIds: selectedDeckIds,
-                        article: isDeSelected ? "de" : (isHetSelected ? "het" : nil),
-                        pastTense: trimmedPastTense.isEmpty ? nil : trimmedPastTense,
-                        futureTense: trimmedFutureTense.isEmpty ? nil : trimmedFutureTense
-                    )
-                    
-                    // Force a save to UserDefaults
-                    UserDefaults.standard.synchronize()
-                    logger.debug("UserDefaults synchronized")
-                    
-                    dismiss()
+                    Button("Save") {
+                        logger.debug("Save button tapped")
+                        saveCurrentCard()
+                        dismiss()
+                    }
+                    .disabled(!canSave)
                 }
-                .disabled(!canSave)
             )
             .sheet(isPresented: $showingNewDeckSheet) {
                 NavigationView {
@@ -204,5 +191,40 @@ struct AddCardView: View {
         .onDisappear {
             logger.debug("AddCardView disappeared")
         }
+    }
+    
+    private func saveCurrentCard() {
+        let trimmedWord = word.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedDefinition = definition.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedExample = example.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedPastTense = pastTense.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedFutureTense = futureTense.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        logger.debug("Adding card - Word: \(trimmedWord), Definition: \(trimmedDefinition)")
+        
+        viewModel.addCard(
+            word: trimmedWord,
+            definition: trimmedDefinition,
+            example: trimmedExample,
+            deckIds: selectedDeckIds,
+            article: isDeSelected ? "de" : (isHetSelected ? "het" : nil),
+            pastTense: trimmedPastTense.isEmpty ? nil : trimmedPastTense,
+            futureTense: trimmedFutureTense.isEmpty ? nil : trimmedFutureTense
+        )
+        
+        // Force a save to UserDefaults
+        UserDefaults.standard.synchronize()
+        logger.debug("UserDefaults synchronized")
+    }
+    
+    private func resetForm() {
+        word = ""
+        definition = ""
+        example = ""
+        // Keep selectedDeckIds so user doesn't have to reselect decks
+        isDeSelected = false
+        isHetSelected = false
+        pastTense = ""
+        futureTense = ""
     }
 } 

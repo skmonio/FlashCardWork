@@ -7,13 +7,35 @@ struct ManageDecksView: View {
     private let logger = Logger(subsystem: "com.flashcards", category: "ManageDecksView")
     @State private var showingAddDeck = false
     @State private var showingAddCard = false
-    @State private var showingAddMultipleCards = false
     
     // Multi-select states for decks
     @State private var isSelectionMode = false
     @State private var selectedDecks: Set<UUID> = []
     @State private var showingMoveDecksSheet = false
     @State private var showingBulkDeleteAlert = false
+    
+    // Search functionality
+    @State private var searchText = ""
+    @State private var showingSearch = false
+    
+    // Computed property for search results
+    private var searchResults: [(card: FlashCard, deckName: String)] {
+        guard !searchText.isEmpty else { return [] }
+        
+        var results: [(FlashCard, String)] = []
+        
+        for deck in viewModel.decks {
+            for card in deck.cards {
+                if card.word.localizedCaseInsensitiveContains(searchText) ||
+                   card.definition.localizedCaseInsensitiveContains(searchText) ||
+                   card.example.localizedCaseInsensitiveContains(searchText) {
+                    results.append((card, deck.name))
+                }
+            }
+        }
+        
+        return results
+    }
     
     var body: some View {
         VStack {
@@ -30,16 +52,6 @@ struct ManageDecksView: View {
                     }
                     
                     Button(action: {
-                        showingAddMultipleCards = true
-                    }) {
-                        HStack {
-                            Image(systemName: "plus.rectangle.stack.fill")
-                            Text("Add Multiple Cards")
-                        }
-                        .foregroundColor(.blue)
-                    }
-                    
-                    Button(action: {
                         showingAddDeck = true
                     }) {
                         HStack {
@@ -50,51 +62,111 @@ struct ManageDecksView: View {
                     }
                 }
                 
+                // Search bar
                 Section {
-                    ForEach(viewModel.getAllDecksHierarchical()) { deck in
-                        HStack {
-                            if isSelectionMode {
-                                Button(action: {
-                                    if selectedDecks.contains(deck.id) {
-                                        selectedDecks.remove(deck.id)
-                                    } else {
-                                        selectedDecks.insert(deck.id)
-                                    }
-                                    HapticManager.shared.multiSelectToggle()
-                                }) {
-                                    Image(systemName: selectedDecks.contains(deck.id) ? "checkmark.circle.fill" : "circle")
-                                        .foregroundColor(selectedDecks.contains(deck.id) ? .blue : .gray)
-                                }
-                                .buttonStyle(PlainButtonStyle())
+                    HStack {
+                        Image(systemName: "magnifyingglass")
+                            .foregroundColor(.gray)
+                        TextField("Search cards...", text: $searchText)
+                        if !searchText.isEmpty {
+                            Button(action: {
+                                searchText = ""
+                            }) {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundColor(.gray)
                             }
-                            
-                            NavigationLink {
-                                DeckView(viewModel: viewModel, deck: deck)
-                            } label: {
-                                HStack {
-                                    // Show indentation for sub-decks
-                                    if deck.isSubDeck {
-                                        HStack(spacing: 4) {
-                                            Text("    ↳")
+                        }
+                    }
+                }
+                
+                // Search results
+                if !searchText.isEmpty {
+                    Section(header: Text("Search Results (\(searchResults.count) cards)")) {
+                        if searchResults.isEmpty {
+                            Text("No cards found")
+                                .foregroundColor(.secondary)
+                                .italic()
+                        } else {
+                            ForEach(searchResults, id: \.card.id) { result in
+                                VStack(alignment: .leading, spacing: 4) {
+                                    HStack {
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text(result.card.word)
+                                                .font(.headline)
+                                            Text(result.card.definition)
+                                                .font(.subheadline)
                                                 .foregroundColor(.secondary)
-                                            Text(deck.name)
                                         }
-                                    } else {
-                                        Text(deck.name)
+                                        Spacer()
+                                        VStack(alignment: .trailing) {
+                                            Text("in \(result.deckName)")
+                                                .font(.caption)
+                                                .foregroundColor(.blue)
+                                                .padding(.horizontal, 8)
+                                                .padding(.vertical, 4)
+                                                .background(Color.blue.opacity(0.1))
+                                                .cornerRadius(8)
+                                        }
                                     }
-                                    Spacer()
-                                    Text("\(deck.cards.count)")
-                                        .foregroundColor(.secondary)
+                                }
+                                .padding(.vertical, 4)
+                                .onTapGesture {
+                                    // Navigate to the deck containing this card
+                                    if let deck = viewModel.decks.first(where: { $0.name == result.deckName }) {
+                                        // You could add navigation logic here if needed
+                                    }
                                 }
                             }
                         }
                     }
-                    .onDelete { indices in
-                        let allDecks = viewModel.getAllDecksHierarchical()
-                        indices.forEach { index in
-                            let deck = allDecks[index]
-                            if deck.name != "Uncategorized" {
-                                viewModel.deleteDeck(deck)
+                } else {
+                    // Regular deck display when not searching
+                    Section {
+                        ForEach(viewModel.getAllDecksHierarchical()) { deck in
+                            HStack {
+                                if isSelectionMode {
+                                    Button(action: {
+                                        if selectedDecks.contains(deck.id) {
+                                            selectedDecks.remove(deck.id)
+                                        } else {
+                                            selectedDecks.insert(deck.id)
+                                        }
+                                        HapticManager.shared.multiSelectToggle()
+                                    }) {
+                                        Image(systemName: selectedDecks.contains(deck.id) ? "checkmark.circle.fill" : "circle")
+                                            .foregroundColor(selectedDecks.contains(deck.id) ? .blue : .gray)
+                                    }
+                                    .buttonStyle(PlainButtonStyle())
+                                }
+                                
+                                NavigationLink {
+                                    DeckView(viewModel: viewModel, deck: deck)
+                                } label: {
+                                    HStack {
+                                        // Show indentation for sub-decks
+                                        if deck.isSubDeck {
+                                            HStack(spacing: 4) {
+                                                Text("    ↳")
+                                                    .foregroundColor(.secondary)
+                                                Text(deck.name)
+                                            }
+                                        } else {
+                                            Text(deck.name)
+                                        }
+                                        Spacer()
+                                        Text("\(deck.cards.count)")
+                                            .foregroundColor(.secondary)
+                                    }
+                                }
+                            }
+                        }
+                        .onDelete { indices in
+                            let allDecks = viewModel.getAllDecksHierarchical()
+                            indices.forEach { index in
+                                let deck = allDecks[index]
+                                if deck.name != "Uncategorized" {
+                                    viewModel.deleteDeck(deck)
+                                }
                             }
                         }
                     }
@@ -188,9 +260,6 @@ struct ManageDecksView: View {
         }
         .sheet(isPresented: $showingAddCard) {
             AddCardView(viewModel: viewModel)
-        }
-        .sheet(isPresented: $showingAddMultipleCards) {
-            AddMultipleCardsView(viewModel: viewModel)
         }
         .alert("Delete Decks", isPresented: $showingBulkDeleteAlert) {
             Button("Delete \(selectedDecks.count) decks", role: .destructive) {

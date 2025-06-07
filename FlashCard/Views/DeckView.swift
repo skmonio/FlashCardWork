@@ -180,6 +180,8 @@ struct DeckView: View {
                                 }
                             }) {
                                 CardRow(card: currentCard)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .contentShape(Rectangle()) // Make entire area tappable
                             }
                             .buttonStyle(PlainButtonStyle())
                         }
