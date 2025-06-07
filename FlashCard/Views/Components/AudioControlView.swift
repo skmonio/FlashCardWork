@@ -5,11 +5,21 @@ struct AudioControlView: View {
     let mode: AudioMode
     @StateObject private var audioManager = AudioManager.shared
     @State private var showingPermissionAlert = false
+    @State private var showingSimulatorInfo = false
     
     enum AudioMode {
         case record       // Show record/stop buttons
         case playOnly     // Show play button only
         case full         // Show both record and play
+    }
+    
+    // Simulator detection
+    private var isSimulator: Bool {
+        #if targetEnvironment(simulator)
+        return true
+        #else
+        return false
+        #endif
     }
     
     var body: some View {
@@ -23,11 +33,27 @@ struct AudioControlView: View {
             if mode == .playOnly || mode == .full {
                 playbackControls
             }
+            
+            // Simulator info button
+            if isSimulator && (mode == .record || mode == .full) {
+                Button(action: {
+                    showingSimulatorInfo = true
+                }) {
+                    Image(systemName: "info.circle")
+                        .foregroundColor(.blue)
+                        .font(.caption)
+                }
+            }
         }
         .alert("Microphone Permission Required", isPresented: $showingPermissionAlert) {
             Button("OK") { }
         } message: {
             Text("Please enable microphone access in Settings to record audio for your flashcards.")
+        }
+        .alert("Simulator Mode", isPresented: $showingSimulatorInfo) {
+            Button("OK") { }
+        } message: {
+            Text("Audio recording is simulated in the iOS Simulator. For real audio recording, test on a physical device.")
         }
     }
     
@@ -45,7 +71,7 @@ struct AudioControlView: View {
                             .font(.title2)
                         
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Recording...")
+                            Text(isSimulator ? "Simulating..." : "Recording...")
                                 .font(.caption)
                                 .foregroundColor(.red)
                             Text(audioManager.formatTime(audioManager.recordingTime))
@@ -77,7 +103,7 @@ struct AudioControlView: View {
                     Image(systemName: audioManager.audioExists(for: cardId) ? "mic.fill" : "mic")
                         .foregroundColor(audioManager.audioExists(for: cardId) ? .blue : .gray)
                     
-                    Text(audioManager.audioExists(for: cardId) ? "Re-record" : "Record")
+                    Text(audioManager.audioExists(for: cardId) ? "Re-record" : (isSimulator ? "Simulate" : "Record"))
                         .font(.caption)
                         .foregroundColor(audioManager.audioExists(for: cardId) ? .blue : .gray)
                 }
@@ -108,6 +134,12 @@ struct AudioControlView: View {
                             Text(audioManager.formatTime(duration))
                                 .font(.caption2)
                                 .foregroundColor(.secondary)
+                        }
+                        
+                        if isSimulator && audioManager.isPlaying {
+                            Text("(sim)")
+                                .font(.caption2)
+                                .foregroundColor(.orange)
                         }
                     }
                 }

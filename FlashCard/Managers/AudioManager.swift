@@ -15,9 +15,24 @@ class AudioManager: NSObject, ObservableObject {
     
     private var recordingTimer: Timer?
     
+    // Simulator detection
+    private var isSimulator: Bool {
+        #if targetEnvironment(simulator)
+        return true
+        #else
+        return false
+        #endif
+    }
+    
     override init() {
         super.init()
-        setupRecordingSession()
+        if !isSimulator {
+            setupRecordingSession()
+        } else {
+            // In simulator, assume permission is granted but recording won't work
+            hasPermission = true
+            print("AudioManager: Running in simulator - audio recording disabled")
+        }
     }
     
     // MARK: - Setup and Permissions
@@ -36,6 +51,7 @@ class AudioManager: NSObject, ObservableObject {
             }
         } catch {
             print("Failed to set up recording session: \(error)")
+            hasPermission = false
         }
     }
     
@@ -65,6 +81,13 @@ class AudioManager: NSObject, ObservableObject {
     func startRecording(for cardId: UUID) {
         guard hasPermission else {
             print("No recording permission")
+            return
+        }
+        
+        // Simulator fallback - create a dummy file
+        if isSimulator {
+            print("AudioManager: Cannot record in simulator - creating dummy audio file")
+            createDummyAudioFile(for: cardId)
             return
         }
         
@@ -98,6 +121,15 @@ class AudioManager: NSObject, ObservableObject {
     }
     
     func stopRecording() {
+        if isSimulator {
+            // Stop the simulated recording
+            isRecording = false
+            recordingTimer?.invalidate()
+            recordingTimer = nil
+            HapticManager.shared.lightImpact()
+            return
+        }
+        
         audioRecorder?.stop()
         audioRecorder = nil
         
@@ -120,6 +152,13 @@ class AudioManager: NSObject, ObservableObject {
             return
         }
         
+        // Simulator fallback - just simulate playback
+        if isSimulator {
+            print("AudioManager: Simulating audio playback in simulator")
+            simulatePlayback()
+            return
+        }
+        
         do {
             audioPlayer = try AVAudioPlayer(contentsOf: audioURL)
             audioPlayer?.delegate = self
@@ -133,6 +172,11 @@ class AudioManager: NSObject, ObservableObject {
     }
     
     func stopPlayback() {
+        if isSimulator {
+            isPlaying = false
+            return
+        }
+        
         audioPlayer?.stop()
         audioPlayer = nil
         isPlaying = false
@@ -141,6 +185,11 @@ class AudioManager: NSObject, ObservableObject {
     // MARK: - Utility
     
     func getRecordingDuration(for cardId: UUID) -> TimeInterval? {
+        if isSimulator {
+            // Return a dummy duration for simulator
+            return audioExists(for: cardId) ? 3.0 : nil
+        }
+        
         let audioURL = getAudioURL(for: cardId)
         
         guard FileManager.default.fileExists(atPath: audioURL.path) else {
@@ -159,6 +208,40 @@ class AudioManager: NSObject, ObservableObject {
         let minutes = Int(time) / 60
         let seconds = Int(time) % 60
         return String(format: "%02d:%02d", minutes, seconds)
+    }
+    
+    // MARK: - Simulator Helpers
+    
+    private func createDummyAudioFile(for cardId: UUID) {
+        let audioURL = getAudioURL(for: cardId)
+        
+        // Create a small dummy file to simulate recorded audio
+        let dummyData = Data("dummy audio".utf8)
+        try? dummyData.write(to: audioURL)
+        
+        // Simulate recording process
+        isRecording = true
+        recordingTime = 0
+        
+        recordingTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+            guard let self = self else { return }
+            self.recordingTime += 0.1
+            
+            // Auto-stop after 3 seconds in simulator
+            if self.recordingTime >= 3.0 {
+                self.stopRecording()
+            }
+        }
+    }
+    
+    private func simulatePlayback() {
+        isPlaying = true
+        HapticManager.shared.lightImpact()
+        
+        // Simulate 3 seconds of playback
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) { [weak self] in
+            self?.isPlaying = false
+        }
     }
 }
 
