@@ -9,7 +9,7 @@ struct DeckSelectionView: View {
     @State private var selectedCards: [FlashCard] = []
     
     enum StudyMode {
-        case study, test, game, truefalse, hangman, dehet
+        case study, test, game, truefalse, hangman, dehet, lookcovercheck
         
         var title: String {
             switch self {
@@ -19,6 +19,7 @@ struct DeckSelectionView: View {
             case .truefalse: return "True or False"
             case .hangman: return "Hangman"
             case .dehet: return "de of het"
+            case .lookcovercheck: return "Look Cover Check"
             }
         }
     }
@@ -164,6 +165,8 @@ struct DeckSelectionView: View {
                     HangmanView(viewModel: viewModel, cards: selectedCards)
                 case .dehet:
                     DeHetGameView(viewModel: viewModel, cards: selectedCards)
+                case .lookcovercheck:
+                    LookCoverCheckView(viewModel: viewModel, cards: selectedCards)
                 }
             }
         }

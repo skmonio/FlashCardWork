@@ -40,6 +40,10 @@ struct HomeView: View {
                             NavigationLink(destination: DeckSelectionView(viewModel: viewModel, mode: .dehet)) {
                                 MenuButton(title: "de of het", icon: "questionmark.diamond.fill")
                             }
+                            
+                            NavigationLink(destination: DeckSelectionView(viewModel: viewModel, mode: .lookcovercheck)) {
+                                MenuButton(title: "Look Cover Check", icon: "eye.slash.fill")
+                            }
                         }
                     }
                     .padding(.top)
