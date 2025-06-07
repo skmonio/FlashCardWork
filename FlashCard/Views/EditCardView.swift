@@ -63,6 +63,16 @@ struct EditCardView: View {
                         }
                 }
                 
+                Section(header: Text("Pronunciation (Optional)")) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Record pronunciation for this word")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        
+                        AudioControlView(cardId: cardId, mode: .full)
+                    }
+                }
+                
                 Section(header: Text("Dutch Language Features (Optional)")) {
                     // Article selection
                     VStack(alignment: .leading, spacing: 12) {
@@ -229,6 +239,9 @@ struct EditCardView: View {
         }
         .onDisappear {
             logger.debug("EditCardView disappeared")
+            // Stop any ongoing recording when view disappears
+            AudioManager.shared.stopRecording()
+            AudioManager.shared.stopPlayback()
         }
     }
 } 

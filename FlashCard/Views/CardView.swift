@@ -120,6 +120,24 @@ struct CardView: View {
                     isShowingExample = false // Reset example state when flipping
                 }
             }
+            
+            // Audio control overlay (only on front side with word)
+            if isShowingFront && AudioManager.shared.audioExists(for: card.id) {
+                VStack {
+                    HStack {
+                        Spacer()
+                        AudioControlView(cardId: card.id, mode: .playOnly)
+                            .background(
+                                Circle()
+                                    .fill(Color.white.opacity(0.9))
+                                    .shadow(radius: 2)
+                            )
+                            .padding(.trailing, 30)
+                    }
+                    Spacer()
+                }
+                .allowsHitTesting(true) // Ensure audio button is tappable even with card gestures
+            }
         }
     }
     

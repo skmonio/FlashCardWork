@@ -235,7 +235,7 @@ class FlashCardViewModel: ObservableObject {
         saveDecks()
     }
     
-    func addCard(word: String, definition: String, example: String, deckIds: Set<UUID>, article: String? = nil, pastTense: String? = nil, futureTense: String? = nil) {
+    func addCard(word: String, definition: String, example: String, deckIds: Set<UUID>, article: String? = nil, pastTense: String? = nil, futureTense: String? = nil, cardId: UUID? = nil) -> FlashCard {
         print("Adding new card")
         let newCard = FlashCard(
             word: word, 
@@ -244,10 +244,12 @@ class FlashCardViewModel: ObservableObject {
             deckIds: deckIds,
             article: article,
             pastTense: pastTense,
-            futureTense: futureTense
+            futureTense: futureTense,
+            cardId: cardId
         )
         flashCards.append(newCard)
         updateCardDeckAssociations()
+        return newCard
     }
     
     func updateCard(_ card: FlashCard, word: String, definition: String, example: String, deckIds: Set<UUID>, article: String? = nil, pastTense: String? = nil, futureTense: String? = nil) {

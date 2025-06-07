@@ -18,6 +18,9 @@ struct AddCardView: View {
     @State private var pastTense: String = ""
     @State private var futureTense: String = ""
     
+    // Audio recording
+    @State private var temporaryCardId: UUID = UUID()
+    
     private let logger = Logger(subsystem: "com.flashcards", category: "AddCardView")
     
     private var canSave: Bool {
@@ -43,6 +46,16 @@ struct AddCardView: View {
                         .onChange(of: example) { oldValue, newValue in
                             logger.debug("Example changed from '\(oldValue)' to '\(newValue)'")
                         }
+                }
+                
+                Section(header: Text("Pronunciation (Optional)")) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Record pronunciation for this word")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        
+                        AudioControlView(cardId: temporaryCardId, mode: .full)
+                    }
                 }
                 
                 Section(header: Text("Dutch Language Features (Optional)")) {
@@ -143,6 +156,8 @@ struct AddCardView: View {
             .navigationBarItems(
                 leading: Button("Cancel") {
                     logger.debug("Cancel button tapped")
+                    // Clean up any temporary audio recording
+                    AudioManager.shared.deleteAudio(for: temporaryCardId)
                     dismiss()
                 },
                 trailing: HStack {
@@ -190,6 +205,9 @@ struct AddCardView: View {
         }
         .onDisappear {
             logger.debug("AddCardView disappeared")
+            // Stop any ongoing recording when view disappears
+            AudioManager.shared.stopRecording()
+            AudioManager.shared.stopPlayback()
         }
     }
     
@@ -202,14 +220,16 @@ struct AddCardView: View {
         
         logger.debug("Adding card - Word: \(trimmedWord), Definition: \(trimmedDefinition)")
         
-        viewModel.addCard(
+        // Create the card with the temporary ID so audio gets associated correctly
+        let newCard = viewModel.addCard(
             word: trimmedWord,
             definition: trimmedDefinition,
             example: trimmedExample,
             deckIds: selectedDeckIds,
             article: isDeSelected ? "de" : (isHetSelected ? "het" : nil),
             pastTense: trimmedPastTense.isEmpty ? nil : trimmedPastTense,
-            futureTense: trimmedFutureTense.isEmpty ? nil : trimmedFutureTense
+            futureTense: trimmedFutureTense.isEmpty ? nil : trimmedFutureTense,
+            cardId: temporaryCardId // Pass the temporary ID so audio gets linked
         )
         
         // Force a save to UserDefaults
@@ -226,5 +246,8 @@ struct AddCardView: View {
         isHetSelected = false
         pastTense = ""
         futureTense = ""
+        
+        // Generate new temporary ID for next card
+        temporaryCardId = UUID()
     }
 } 

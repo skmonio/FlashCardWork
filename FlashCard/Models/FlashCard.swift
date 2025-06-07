@@ -13,7 +13,10 @@ struct FlashCard: Identifiable, Codable, Hashable {
     var pastTense: String? = nil     // Past tense form
     var futureTense: String? = nil   // Future tense form
     
-    init(word: String = "", definition: String = "", example: String = "", deckIds: Set<UUID> = [], article: String? = nil, pastTense: String? = nil, futureTense: String? = nil) {
+    init(word: String = "", definition: String = "", example: String = "", deckIds: Set<UUID> = [], article: String? = nil, pastTense: String? = nil, futureTense: String? = nil, cardId: UUID? = nil) {
+        if let cardId = cardId {
+            self.id = cardId
+        }
         self.word = word
         self.definition = definition
         self.example = example
