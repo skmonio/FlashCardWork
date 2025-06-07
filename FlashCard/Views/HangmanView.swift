@@ -24,39 +24,29 @@ struct HangmanView: View {
     
     private var maskedWord: String {
         word.map { letter in
-            guessedLetters.contains(letter) ? String(letter) : "_"
+            if letter == " " {
+                return "  " // Show spaces as larger gaps
+            } else if guessedLetters.contains(letter) {
+                return String(letter)
+            } else {
+                return "_"
+            }
         }.joined(separator: " ")
     }
     
     private var isWordGuessed: Bool {
-        Set(word).isSubset(of: guessedLetters)
-    }
-    
-    private var alphabetDisplay: some View {
-        let alphabet = "abcdefghijklmnopqrstuvwxyz"
-        let rows = [
-            "qwertyuiop",
-            "asdfghjkl", 
-            "zxcvbnm"
-        ]
-        
-        return VStack(spacing: 8) {
-            ForEach(rows, id: \.self) { row in
-                HStack(spacing: 4) {
-                    ForEach(Array(row), id: \.self) { letter in
-                        Text(String(letter).uppercased())
-                            .font(.system(size: 16, weight: .medium))
-                            .frame(width: 25, height: 30)
-                            .background(guessedLetters.contains(letter) ? Color.gray : Color.blue.opacity(0.1))
-                            .foregroundColor(guessedLetters.contains(letter) ? .white : .primary)
-                            .cornerRadius(6)
-                    }
-                }
-            }
-        }
+        // Only check letters, ignore spaces and punctuation
+        let lettersToGuess = Set(word.filter { $0.isLetter })
+        return lettersToGuess.isSubset(of: guessedLetters)
     }
     
     private func guessLetter(_ letter: Character) {
+        // Only process actual letters
+        guard letter.isLetter else { return }
+        
+        // Don't process if already guessed
+        guard !guessedLetters.contains(letter) else { return }
+        
         guessedLetters.insert(letter)
         
         if !word.contains(letter) {
@@ -106,42 +96,64 @@ struct HangmanView: View {
     
     var body: some View {
         ZStack {
-            VStack(spacing: 20) {
+            VStack(spacing: 30) {
                 // Progress and attempts
                 HStack {
                     Text("Word \(currentCardIndex + 1) of \(cards.count)")
+                        .font(.headline)
                     Spacer()
                     Text("Attempts left: \(remainingAttempts)")
+                        .font(.headline)
+                        .foregroundColor(remainingAttempts <= 2 ? .red : .primary)
                 }
-                .padding()
+                .padding(.horizontal)
                 
                 // Hangman drawing
                 HangmanDrawing(remainingAttempts: remainingAttempts)
                     .frame(height: 200)
                 
-                // Word to guess
-                Text(maskedWord)
-                    .font(.system(size: 30, weight: .bold, design: .monospaced))
-                    .padding()
+                // Word to guess - larger and more spaced
+                VStack(spacing: 20) {
+                    Text(maskedWord)
+                        .font(.system(size: 36, weight: .bold, design: .monospaced))
+                        .multilineTextAlignment(.center)
+                        .lineLimit(nil)
+                        .padding(.horizontal)
+                    
+                    // Show guessed letters
+                    if !guessedLetters.isEmpty {
+                        VStack(spacing: 8) {
+                            Text("Guessed letters:")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            
+                            Text(guessedLetters.sorted().map(String.init).joined(separator: ", "))
+                                .font(.body)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
                 
                 // Definition hint
                 Text(currentCard.definition)
-                    .font(.body)
+                    .font(.title3)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
-                    .padding()
+                    .padding(.horizontal)
                 
                 Spacer()
                 
-                // Alphabet display (shows guessed letters)
-                alphabetDisplay
-                    .padding()
-                
                 // Instruction text
-                Text("Type letters to guess the word")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .padding(.bottom)
+                VStack(spacing: 8) {
+                    Text("Type letters to guess the word")
+                        .font(.headline)
+                        .foregroundColor(.blue)
+                    
+                    Text("Tap anywhere to bring up keyboard")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .padding(.bottom, 20)
             }
             
             // Hidden text field for keyboard input
