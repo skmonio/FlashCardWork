@@ -11,6 +11,8 @@ struct HangmanView: View {
     @State private var showingGameOver = false
     @State private var gameWon = false
     @State private var showingNextWord = false
+    @State private var currentGuess = ""
+    @FocusState private var isKeyboardFocused: Bool
     
     private var currentCard: FlashCard {
         cards[currentCardIndex]
@@ -30,26 +32,28 @@ struct HangmanView: View {
         Set(word).isSubset(of: guessedLetters)
     }
     
-    private var keyboard: [[Character]] {
-        [
-            ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"],
-            ["a", "s", "d", "f", "g", "h", "j", "k", "l"],
-            ["z", "x", "c", "v", "b", "n", "m"]
+    private var alphabetDisplay: some View {
+        let alphabet = "abcdefghijklmnopqrstuvwxyz"
+        let rows = [
+            "qwertyuiop",
+            "asdfghjkl", 
+            "zxcvbnm"
         ]
-    }
-    
-    private func letterButton(_ letter: Character) -> some View {
-        Button(action: {
-            guessLetter(letter)
-        }) {
-            Text(String(letter).uppercased())
-                .font(.system(size: 20, weight: .medium))
-                .frame(width: 30, height: 40)
-                .background(guessedLetters.contains(letter) ? Color.gray : Color.blue)
-                .foregroundColor(.white)
-                .cornerRadius(8)
+        
+        return VStack(spacing: 8) {
+            ForEach(rows, id: \.self) { row in
+                HStack(spacing: 4) {
+                    ForEach(Array(row), id: \.self) { letter in
+                        Text(String(letter).uppercased())
+                            .font(.system(size: 16, weight: .medium))
+                            .frame(width: 25, height: 30)
+                            .background(guessedLetters.contains(letter) ? Color.gray : Color.blue.opacity(0.1))
+                            .foregroundColor(guessedLetters.contains(letter) ? .white : .primary)
+                            .cornerRadius(6)
+                    }
+                }
+            }
         }
-        .disabled(guessedLetters.contains(letter))
     }
     
     private func guessLetter(_ letter: Character) {
@@ -96,50 +100,85 @@ struct HangmanView: View {
         remainingAttempts = 6
         showingGameOver = false
         gameWon = false
+        currentGuess = ""
+        isKeyboardFocused = true // Refocus keyboard after reset
     }
     
     var body: some View {
-        VStack(spacing: 20) {
-            // Progress and attempts
-            HStack {
-                Text("Word \(currentCardIndex + 1) of \(cards.count)")
+        ZStack {
+            VStack(spacing: 20) {
+                // Progress and attempts
+                HStack {
+                    Text("Word \(currentCardIndex + 1) of \(cards.count)")
+                    Spacer()
+                    Text("Attempts left: \(remainingAttempts)")
+                }
+                .padding()
+                
+                // Hangman drawing
+                HangmanDrawing(remainingAttempts: remainingAttempts)
+                    .frame(height: 200)
+                
+                // Word to guess
+                Text(maskedWord)
+                    .font(.system(size: 30, weight: .bold, design: .monospaced))
+                    .padding()
+                
+                // Definition hint
+                Text(currentCard.definition)
+                    .font(.body)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding()
+                
                 Spacer()
-                Text("Attempts left: \(remainingAttempts)")
+                
+                // Alphabet display (shows guessed letters)
+                alphabetDisplay
+                    .padding()
+                
+                // Instruction text
+                Text("Type letters to guess the word")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .padding(.bottom)
             }
-            .padding()
             
-            // Hangman drawing
-            HangmanDrawing(remainingAttempts: remainingAttempts)
-                .frame(height: 200)
-            
-            // Word to guess
-            Text(maskedWord)
-                .font(.system(size: 30, weight: .bold, design: .monospaced))
-                .padding()
-            
-            // Definition hint
-            Text(currentCard.definition)
-                .font(.body)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-                .padding()
-            
-            Spacer()
-            
-            // Keyboard
-            VStack(spacing: 8) {
-                ForEach(keyboard, id: \.self) { row in
-                    HStack(spacing: 4) {
-                        ForEach(row, id: \.self) { letter in
-                            letterButton(letter)
+            // Hidden text field for keyboard input
+            TextField("", text: $currentGuess)
+                .focused($isKeyboardFocused)
+                .opacity(0.01) // Nearly invisible but still functional
+                .disableAutocorrection(true)
+                .textInputAutocapitalization(.never)
+                .keyboardType(.alphabet)
+                .onChange(of: currentGuess) { oldValue, newValue in
+                    // Process new letters
+                    let newLetters = Set(newValue.lowercased())
+                    let oldLetters = Set(oldValue.lowercased())
+                    let addedLetters = newLetters.subtracting(oldLetters)
+                    
+                    for letter in addedLetters {
+                        if letter.isLetter && !guessedLetters.contains(letter) {
+                            guessLetter(letter)
                         }
                     }
+                    
+                    // Clear the text field to allow repeated letters
+                    if !newValue.isEmpty {
+                        currentGuess = ""
+                    }
                 }
-            }
-            .padding()
         }
         .navigationTitle("Hangman")
         .navigationBarTitleDisplayMode(.inline)
+        .onAppear {
+            // Focus the keyboard when view appears
+            isKeyboardFocused = true
+        }
+        .onTapGesture {
+            // Tap anywhere to focus keyboard
+            isKeyboardFocused = true
+        }
         .alert("Game Over", isPresented: $showingGameOver) {
             if currentCardIndex < cards.count - 1 {
                 Button("Next Word") {

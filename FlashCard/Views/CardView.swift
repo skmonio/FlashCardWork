@@ -55,14 +55,30 @@ struct CardView: View {
                 DragGesture()
                     .onChanged { gesture in
                         guard exitSide == .none else { return }
+                        
+                        let previousOffset = offset.width
                         offset = gesture.translation
                         onDragChanged?(gesture.translation.width)
+                        
+                        // Haptic feedback when crossing thresholds
+                        if abs(gesture.translation.width) > 100 {
+                            // Crossed the swipe threshold
+                            if abs(previousOffset) <= 100 {
+                                HapticManager.shared.mediumImpact() // Feedback when crossing threshold
+                            }
+                        }
+                        
+                        // Light haptic during significant drag changes
+                        if abs(gesture.translation.width - previousOffset) > 50 {
+                            HapticManager.shared.lightImpact()
+                        }
                     }
                     .onEnded { gesture in
                         guard exitSide == .none else { return }
                         if gesture.translation.width < -100 {
                             // Swipe left - Don't know
                             exitSide = .left
+                            HapticManager.shared.heavyImpact() // Strong feedback for commit to swipe
                             withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
                                 offset.width = -1000
                             }
@@ -72,6 +88,7 @@ struct CardView: View {
                         } else if gesture.translation.width > 100 {
                             // Swipe right - Know it
                             exitSide = .right
+                            HapticManager.shared.heavyImpact() // Strong feedback for commit to swipe
                             withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
                                 offset.width = 1000
                             }
@@ -80,6 +97,7 @@ struct CardView: View {
                             }
                         } else {
                             // Reset if not swiped far enough
+                            HapticManager.shared.lightImpact() // Light feedback for card returning
                             withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
                                 offset = .zero
                                 onDragChanged?(0)
@@ -89,12 +107,14 @@ struct CardView: View {
             )
             .onTapGesture {
                 // Single tap to show example
+                HapticManager.shared.lightImpact() // Light feedback for tap
                 withAnimation(.easeInOut(duration: 0.3)) {
                     isShowingExample.toggle()
                 }
             }
             .onTapGesture(count: 2) {
                 // Double tap to flip
+                HapticManager.shared.cardFlip() // Card flip feedback
                 withAnimation(.easeInOut(duration: 0.5)) {
                     isShowingFront.toggle()
                     isShowingExample = false // Reset example state when flipping

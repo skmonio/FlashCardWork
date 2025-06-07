@@ -258,6 +258,9 @@ struct GameView: View {
             return
         }
         
+        // Light haptic for card tap
+        HapticManager.shared.lightImpact()
+        
         // If this is the first card of the pair
         if selectedCard == nil {
             displayedCards[index].isSelected = true
@@ -271,7 +274,9 @@ struct GameView: View {
         if let selectedIndex = displayedCards.firstIndex(where: { $0.id == selectedCard?.id }) {
             if selectedCard?.originalCard.id == tappedCard.originalCard.id &&
                selectedCard?.type != tappedCard.type {
-                // It's a match! Show second card as green
+                // It's a match! 
+                HapticManager.shared.cardMatch() // Strong haptic for successful match
+                score += 1
                 displayedCards[index].isSelected = true
                 
                 // After a brief delay, mark them as matched
@@ -289,12 +294,14 @@ struct GameView: View {
                         // Check if this was the last pair
                         let unmatchedCards = displayedCards.filter { !$0.isMatched }
                         if unmatchedCards.isEmpty && remainingCards.isEmpty {
+                            HapticManager.shared.gameComplete() // Double haptic for game completion
                             showingGameOver = true
                         }
                     }
                 }
             } else {
-                // Not a match - show wrong animation immediately
+                // Not a match
+                HapticManager.shared.cardMismatch() // Medium haptic for mismatch
                 displayedCards[index].showWrongAnimation = true
                 
                 // Track incorrect matches
