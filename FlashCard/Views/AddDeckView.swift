@@ -5,7 +5,6 @@ struct AddDeckView: View {
     @ObservedObject var viewModel: FlashCardViewModel
     @State private var deckName = ""
     @State private var selectedParentId: UUID? = nil
-    @State private var createAsSubDeck = false
     
     var availableParentDecks: [Deck] {
         return viewModel.getTopLevelDecks().filter { $0.name != "Uncategorized" }
@@ -17,26 +16,24 @@ struct AddDeckView: View {
                 Section(header: Text("New Deck")) {
                     TextField("Deck Name", text: $deckName)
                     
-                    Toggle("Create as Sub-Deck", isOn: $createAsSubDeck)
-                    
-                    if createAsSubDeck && !availableParentDecks.isEmpty {
-                        Picker("Parent Deck", selection: $selectedParentId) {
-                            Text("Select Parent Deck").tag(nil as UUID?)
+                    if !availableParentDecks.isEmpty {
+                        Picker("Location", selection: $selectedParentId) {
+                            Text("Top Level (Main Deck)").tag(nil as UUID?)
                             ForEach(availableParentDecks) { deck in
-                                Text(deck.name).tag(deck.id as UUID?)
+                                Text("Under \(deck.name)").tag(deck.id as UUID?)
                             }
                         }
                         .pickerStyle(MenuPickerStyle())
-                    } else if createAsSubDeck && availableParentDecks.isEmpty {
-                        Text("No parent decks available")
-                            .foregroundColor(.secondary)
-                            .italic()
                     }
                 }
                 
-                if createAsSubDeck {
-                    Section {
-                        Text("Sub-decks help organize your cards into more specific categories under a main deck.")
+                Section {
+                    if selectedParentId == nil {
+                        Text("This will create a main deck that can contain sub-decks.")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    } else {
+                        Text("This will create a sub-deck for more specific organization.")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -49,15 +46,14 @@ struct AddDeckView: View {
                 },
                 trailing: Button("Create") {
                     let trimmedName = deckName.trimmingCharacters(in: .whitespacesAndNewlines)
-                    if createAsSubDeck, let parentId = selectedParentId {
+                    if let parentId = selectedParentId {
                         _ = viewModel.createSubDeck(name: trimmedName, parentId: parentId)
                     } else {
                         _ = viewModel.createDeck(name: trimmedName)
                     }
                     dismiss()
                 }
-                .disabled(deckName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || 
-                         (createAsSubDeck && selectedParentId == nil && !availableParentDecks.isEmpty))
+                .disabled(deckName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             )
         }
     }

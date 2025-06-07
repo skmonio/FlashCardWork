@@ -592,13 +592,40 @@ class FlashCardViewModel: ObservableObject {
     
     private func loadDecks() {
         print("Loading decks from UserDefaults")
-        if let savedDecks = UserDefaults.standard.data(forKey: decksDefaultsKey),
-           let decodedDecks = try? JSONDecoder().decode([Deck].self, from: savedDecks) {
-            decks = decodedDecks
-            print("Loaded \(decks.count) decks")
-        } else {
-            print("No saved decks found or error decoding")
+        if let savedDecks = UserDefaults.standard.data(forKey: decksDefaultsKey) {
+            // Try to decode with new format first
+            do {
+                let decodedDecks = try JSONDecoder().decode([Deck].self, from: savedDecks)
+                decks = decodedDecks
+                print("✅ Successfully loaded \(decks.count) decks with new format")
+                return
+            } catch {
+                print("❌ Failed to decode with new format: \(error)")
+            }
+            
+            // Try to decode with old format (without parentId and subDeckIds)
+            do {
+                let oldDecks = try JSONDecoder().decode([OldDeck].self, from: savedDecks)
+                print("✅ Found \(oldDecks.count) decks in old format, migrating...")
+                
+                // Convert old format to new format
+                decks = oldDecks.map { oldDeck in
+                    var newDeck = Deck(name: oldDeck.name, cards: oldDeck.cards, parentId: nil)
+                    newDeck.id = oldDeck.id
+                    return newDeck
+                }
+                
+                print("✅ Successfully migrated \(decks.count) decks to new format")
+                
+                // Save in new format immediately
+                saveDecks()
+                return
+            } catch {
+                print("❌ Failed to decode with old format: \(error)")
+            }
         }
+        
+        print("No saved decks found or error decoding")
     }
 }
 
@@ -627,4 +654,11 @@ private struct SimpleFlashCard: Codable {
     var word: String
     var definition: String
     var example: String
+}
+
+// Old deck format without parentId and subDeckIds
+private struct OldDeck: Codable {
+    var id: UUID
+    var name: String
+    var cards: [FlashCard]
 } 
