@@ -11,7 +11,46 @@ struct AddDeckView: View {
     }
     
     var body: some View {
-        NavigationView {
+        VStack(spacing: 0) {
+            // Custom navigation bar
+            HStack {
+                Button("Cancel") {
+                    dismiss()
+                }
+                .foregroundColor(.blue)
+                
+                Spacer()
+                
+                Text("Create Deck")
+                    .font(.headline)
+                    .bold()
+                
+                Spacer()
+                
+                Button("Create") {
+                    let trimmedName = deckName.trimmingCharacters(in: .whitespacesAndNewlines)
+                    if let parentId = selectedParentId {
+                        _ = viewModel.createSubDeck(name: trimmedName, parentId: parentId)
+                    } else {
+                        _ = viewModel.createDeck(name: trimmedName)
+                    }
+                    dismiss()
+                }
+                .disabled(deckName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                .foregroundColor(deckName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .gray : .blue)
+                .fontWeight(.semibold)
+            }
+            .padding()
+            .background(Color(.systemBackground))
+            .overlay(
+                Rectangle()
+                    .frame(height: 1)
+                    .foregroundColor(.gray)
+                    .opacity(0.2),
+                alignment: .bottom
+            )
+            
+            // Main content
             Form {
                 Section(header: Text("New Deck")) {
                     TextField("Deck Name", text: $deckName)
@@ -39,22 +78,7 @@ struct AddDeckView: View {
                     }
                 }
             }
-            .navigationTitle("Create Deck")
-            .navigationBarItems(
-                leading: Button("Cancel") {
-                    dismiss()
-                },
-                trailing: Button("Create") {
-                    let trimmedName = deckName.trimmingCharacters(in: .whitespacesAndNewlines)
-                    if let parentId = selectedParentId {
-                        _ = viewModel.createSubDeck(name: trimmedName, parentId: parentId)
-                    } else {
-                        _ = viewModel.createDeck(name: trimmedName)
-                    }
-                    dismiss()
-                }
-                .disabled(deckName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-            )
         }
+        .navigationBarHidden(true)
     }
 } 

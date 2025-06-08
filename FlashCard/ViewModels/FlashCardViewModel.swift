@@ -15,6 +15,10 @@ class FlashCardViewModel: ObservableObject {
         }
     }
     
+    // Navigation state
+    @Published var shouldNavigateToRoot = false
+    @Published var navigationPath: [String] = []
+    
     private let userDefaultsKey = "SavedFlashCards"
     private let decksDefaultsKey = "SavedDecks"
     private let cardStatusKey = "CardStatus"
@@ -33,6 +37,10 @@ class FlashCardViewModel: ObservableObject {
     
     init() {
         print("ViewModel init - Loading data")
+        
+        // Reset navigation state first
+        shouldNavigateToRoot = false
+        navigationPath = []
         
         loadCards()
         loadDecks()
@@ -192,6 +200,14 @@ class FlashCardViewModel: ObservableObject {
     
     func setCardStatus(cardId: UUID, status: CardStatus) {
         cardStatus[cardId] = status
+    }
+    
+    func navigateToRoot() {
+        shouldNavigateToRoot = true
+    }
+    
+    func resetNavigationToRoot() {
+        shouldNavigateToRoot = false
     }
     
     private func saveCardStatus() {
@@ -373,6 +389,22 @@ class FlashCardViewModel: ObservableObject {
             
             // Update associations
             updateCardDeckAssociations()
+        }
+    }
+    
+    func renameDeck(_ deck: Deck, newName: String) {
+        let trimmedName = newName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedName.isEmpty && trimmedName != deck.name else { return }
+        
+        // Check if name already exists
+        if decks.contains(where: { $0.name == trimmedName && $0.id != deck.id }) {
+            return // Name already exists
+        }
+        
+        // Update the deck name
+        if let index = decks.firstIndex(where: { $0.id == deck.id }) {
+            decks[index].name = trimmedName
+            saveDecks()
         }
     }
     

@@ -44,7 +44,73 @@ struct EditCardView: View {
     }
     
     var body: some View {
-        NavigationView {
+        VStack(spacing: 0) {
+            // Custom navigation bar
+            HStack {
+                Button("Cancel") {
+                    logger.debug("Cancel button tapped")
+                    dismiss()
+                }
+                .foregroundColor(.blue)
+                
+                Spacer()
+                
+                Text("Edit Card")
+                    .font(.headline)
+                    .bold()
+                
+                Spacer()
+                
+                Button("Save") {
+                    logger.debug("Save button tapped")
+                    guard let currentCard = card else {
+                        logger.error("Failed to find card with ID: \(cardId)")
+                        return
+                    }
+                    
+                    let trimmedWord = word.trimmingCharacters(in: .whitespacesAndNewlines)
+                    let trimmedDefinition = definition.trimmingCharacters(in: .whitespacesAndNewlines)
+                    let trimmedExample = example.trimmingCharacters(in: .whitespacesAndNewlines)
+                    let trimmedPastTense = pastTense.trimmingCharacters(in: .whitespacesAndNewlines)
+                    let trimmedFutureTense = futureTense.trimmingCharacters(in: .whitespacesAndNewlines)
+                    
+                    logger.debug("Updating card with values - Word: \(trimmedWord), Definition: \(trimmedDefinition)")
+                    
+                    // Update the card
+                    viewModel.updateCard(
+                        currentCard,
+                        word: trimmedWord,
+                        definition: trimmedDefinition,
+                        example: trimmedExample,
+                        deckIds: selectedDeckIds,
+                        article: isDeSelected ? "de" : (isHetSelected ? "het" : nil),
+                        pastTense: trimmedPastTense.isEmpty ? nil : trimmedPastTense,
+                        futureTense: trimmedFutureTense.isEmpty ? nil : trimmedFutureTense
+                    )
+                    
+                    // Force a save to UserDefaults
+                    UserDefaults.standard.synchronize()
+                    logger.debug("UserDefaults synchronized")
+                    
+                    dismiss()
+                }
+                .disabled(word.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+                         definition.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                .foregroundColor((word.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+                               definition.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty) ? .gray : .blue)
+                .fontWeight(.semibold)
+            }
+            .padding()
+            .background(Color(.systemBackground))
+            .overlay(
+                Rectangle()
+                    .frame(height: 1)
+                    .foregroundColor(.gray)
+                    .opacity(0.2),
+                alignment: .bottom
+            )
+            
+            // Main content
             Form {
                 Section(header: Text("Card Details")) {
                     TextField("Word", text: $word)
@@ -167,72 +233,53 @@ struct EditCardView: View {
                     }
                 }
             }
-            .navigationTitle("Edit Card")
-            .navigationBarItems(
-                leading: Button("Cancel") {
-                    logger.debug("Cancel button tapped")
-                    dismiss()
-                },
-                trailing: Button("Save") {
-                    logger.debug("Save button tapped")
-                    guard let currentCard = card else {
-                        logger.error("Failed to find card with ID: \(cardId)")
-                        return
+        }
+        .navigationBarHidden(true)
+        .sheet(isPresented: $showingNewDeckSheet) {
+            VStack(spacing: 0) {
+                // Custom navigation bar for sheet
+                HStack {
+                    Button("Cancel") {
+                        showingNewDeckSheet = false
                     }
+                    .foregroundColor(.blue)
                     
-                    let trimmedWord = word.trimmingCharacters(in: .whitespacesAndNewlines)
-                    let trimmedDefinition = definition.trimmingCharacters(in: .whitespacesAndNewlines)
-                    let trimmedExample = example.trimmingCharacters(in: .whitespacesAndNewlines)
-                    let trimmedPastTense = pastTense.trimmingCharacters(in: .whitespacesAndNewlines)
-                    let trimmedFutureTense = futureTense.trimmingCharacters(in: .whitespacesAndNewlines)
+                    Spacer()
                     
-                    logger.debug("Updating card with values - Word: \(trimmedWord), Definition: \(trimmedDefinition)")
+                    Text("Create Deck")
+                        .font(.headline)
+                        .bold()
                     
-                    // Update the card
-                    viewModel.updateCard(
-                        currentCard,
-                        word: trimmedWord,
-                        definition: trimmedDefinition,
-                        example: trimmedExample,
-                        deckIds: selectedDeckIds,
-                        article: isDeSelected ? "de" : (isHetSelected ? "het" : nil),
-                        pastTense: trimmedPastTense.isEmpty ? nil : trimmedPastTense,
-                        futureTense: trimmedFutureTense.isEmpty ? nil : trimmedFutureTense
-                    )
+                    Spacer()
                     
-                    // Force a save to UserDefaults
-                    UserDefaults.standard.synchronize()
-                    logger.debug("UserDefaults synchronized")
-                    
-                    // Dismiss the view
-                    dismiss()
+                    Button("Create") {
+                        logger.debug("Creating new deck: \(newDeckName)")
+                        let newDeck = viewModel.createDeck(name: newDeckName.trimmingCharacters(in: .whitespacesAndNewlines))
+                        selectedDeckIds.insert(newDeck.id)
+                        showingNewDeckSheet = false
+                        newDeckName = ""
+                    }
+                    .disabled(newDeckName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    .foregroundColor(newDeckName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .gray : .blue)
+                    .fontWeight(.semibold)
                 }
-                .disabled(word.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
-                         definition.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-            )
-            .sheet(isPresented: $showingNewDeckSheet) {
-                NavigationView {
-                    Form {
-                        Section(header: Text("New Deck")) {
-                            TextField("Deck Name", text: $newDeckName)
-                        }
+                .padding()
+                .background(Color(.systemBackground))
+                .overlay(
+                    Rectangle()
+                        .frame(height: 1)
+                        .foregroundColor(.gray)
+                        .opacity(0.2),
+                    alignment: .bottom
+                )
+                
+                Form {
+                    Section(header: Text("New Deck")) {
+                        TextField("Deck Name", text: $newDeckName)
                     }
-                    .navigationTitle("Create Deck")
-                    .navigationBarItems(
-                        leading: Button("Cancel") {
-                            showingNewDeckSheet = false
-                        },
-                        trailing: Button("Create") {
-                            logger.debug("Creating new deck: \(newDeckName)")
-                            let newDeck = viewModel.createDeck(name: newDeckName.trimmingCharacters(in: .whitespacesAndNewlines))
-                            selectedDeckIds.insert(newDeck.id)
-                            showingNewDeckSheet = false
-                            newDeckName = ""
-                        }
-                        .disabled(newDeckName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                    )
                 }
             }
+            .navigationBarHidden(true)
         }
         .onAppear {
             logger.debug("EditCardView appeared")

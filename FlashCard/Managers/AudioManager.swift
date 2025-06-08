@@ -2,7 +2,29 @@ import Foundation
 import AVFoundation
 
 class AudioManager: NSObject, ObservableObject {
-    static let shared = AudioManager()
+    private static var _shared: AudioManager?
+    private static let initLock = NSLock()
+    
+    static var shared: AudioManager {
+        initLock.lock()
+        defer { initLock.unlock() }
+        
+        if let instance = _shared {
+            return instance
+        }
+        
+        do {
+            let instance = AudioManager()
+            _shared = instance
+            return instance
+        } catch {
+            print("AudioManager: Failed to initialize - creating disabled instance")
+            let disabledInstance = AudioManager()
+            disabledInstance.isDisabled = true
+            _shared = disabledInstance
+            return disabledInstance
+        }
+    }
     
     private var audioRecorder: AVAudioRecorder?
     private var audioPlayer: AVAudioPlayer?
@@ -14,6 +36,7 @@ class AudioManager: NSObject, ObservableObject {
     @Published var hasPermission = false
     
     private var recordingTimer: Timer?
+    private var isDisabled = false // Re-enabled now that permissions are properly configured
     
     // Simulator detection
     private var isSimulator: Bool {
@@ -26,8 +49,27 @@ class AudioManager: NSObject, ObservableObject {
     
     override init() {
         super.init()
+        do {
+            try setupAudioManager()
+        } catch {
+            print("AudioManager: Failed to setup - disabling functionality")
+            isDisabled = true
+        }
+    }
+    
+    private func setupAudioManager() throws {
         if !isSimulator {
-            setupRecordingSession()
+            // Ensure setup happens on main thread
+            DispatchQueue.main.async { [weak self] in
+                do {
+                    if let strongSelf = self {
+                        try strongSelf.setupRecordingSession()
+                    }
+                } catch {
+                    print("AudioManager: Failed to setup recording session - disabling")
+                    self?.isDisabled = true
+                }
+            }
         } else {
             // In simulator, assume permission is granted but recording won't work
             hasPermission = true
@@ -37,20 +79,42 @@ class AudioManager: NSObject, ObservableObject {
     
     // MARK: - Setup and Permissions
     
-    private func setupRecordingSession() {
-        recordingSession = AVAudioSession.sharedInstance()
-        
+    private func setupRecordingSession() throws {
         do {
-            try recordingSession.setCategory(.playAndRecord, mode: .default)
-            try recordingSession.setActive(true)
+            recordingSession = AVAudioSession.sharedInstance()
+            
+            // Use a more conservative category setup
+            try recordingSession.setCategory(.playAndRecord, mode: .default, options: [.allowBluetooth, .defaultToSpeaker])
+            
+            // Don't activate the session immediately - wait until we need to record
+            print("AudioManager: Audio session category configured")
             
             recordingSession.requestRecordPermission { [weak self] allowed in
                 DispatchQueue.main.async {
                     self?.hasPermission = allowed
+                    if allowed {
+                        print("AudioManager: Recording permission granted")
+                    } else {
+                        print("AudioManager: Recording permission denied")
+                    }
                 }
             }
-        } catch {
-            print("Failed to set up recording session: \(error)")
+        } catch let error as NSError {
+            print("AudioManager: Failed to set up recording session: \(error)")
+            print("AudioManager: Error domain: \(error.domain), code: \(error.code)")
+            
+            // Handle specific AVAudioSession errors
+            switch error.code {
+            case AVAudioSession.ErrorCode.insufficientPriority.rawValue:
+                print("AudioManager: Insufficient priority to interrupt other audio")
+            case AVAudioSession.ErrorCode.resourceNotAvailable.rawValue:
+                print("AudioManager: Audio resource not available")
+            case AVAudioSession.ErrorCode.sessionNotActive.rawValue:
+                print("AudioManager: Audio session not active")
+            default:
+                print("AudioManager: Audio session error - \(error.localizedDescription)")
+            }
+            
             hasPermission = false
         }
     }
@@ -67,20 +131,67 @@ class AudioManager: NSObject, ObservableObject {
     }
     
     func audioExists(for cardId: UUID) -> Bool {
-        let url = getAudioURL(for: cardId)
-        return FileManager.default.fileExists(atPath: url.path)
+        guard !isDisabled else {
+            print("AudioManager: Disabled - returning false for audio exists")
+            return false
+        }
+        
+        do {
+            let url = getAudioURL(for: cardId)
+            return FileManager.default.fileExists(atPath: url.path)
+        } catch {
+            print("AudioManager: Error checking if audio exists: \(error)")
+            return false
+        }
     }
     
     func deleteAudio(for cardId: UUID) {
+        guard !isDisabled else {
+            print("AudioManager: Disabled - cannot delete audio")
+            return
+        }
+        
         let url = getAudioURL(for: cardId)
         try? FileManager.default.removeItem(at: url)
+    }
+    
+    // MARK: - Recording Availability
+    
+    func canRecord() -> Bool {
+        guard !isDisabled else {
+            print("AudioManager: Disabled - cannot record")
+            return false
+        }
+        
+        guard hasPermission else {
+            print("AudioManager: No recording permission")
+            return false
+        }
+        
+        guard !isRecording else {
+            print("AudioManager: Already recording")
+            return false
+        }
+        
+        // Check if microphone is available
+        guard AVAudioSession.sharedInstance().isInputAvailable else {
+            print("AudioManager: No audio input available")
+            return false
+        }
+        
+        return true
     }
     
     // MARK: - Recording
     
     func startRecording(for cardId: UUID) {
-        guard hasPermission else {
-            print("No recording permission")
+        guard !isDisabled else {
+            print("AudioManager: Disabled - cannot start recording")
+            return
+        }
+        
+        // Check if recording is possible
+        guard canRecord() else {
             return
         }
         
@@ -91,36 +202,99 @@ class AudioManager: NSObject, ObservableObject {
             return
         }
         
-        let audioURL = getAudioURL(for: cardId)
-        
-        let settings = [
-            AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
-            AVSampleRateKey: 12000,
-            AVNumberOfChannelsKey: 1,
-            AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
-        ]
-        
+        // Ensure we're on main thread for audio session operations
+        DispatchQueue.main.async { [weak self] in
+            self?.performRecording(for: cardId)
+        }
+    }
+    
+    private func performRecording(for cardId: UUID) {
         do {
+            // Ensure audio session is properly configured
+            let session = AVAudioSession.sharedInstance()
+            
+            // Try to activate the session first
+            try session.setActive(true, options: [])
+            
+            let audioURL = getAudioURL(for: cardId)
+            
+            // Create directory if it doesn't exist
+            let directory = audioURL.deletingLastPathComponent()
+            if !FileManager.default.fileExists(atPath: directory.path) {
+                try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            }
+            
+            // Clean up any existing file
+            if FileManager.default.fileExists(atPath: audioURL.path) {
+                try FileManager.default.removeItem(at: audioURL)
+            }
+            
+            let settings: [String: Any] = [
+                AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
+                AVSampleRateKey: 44100.0,
+                AVNumberOfChannelsKey: 1,
+                AVEncoderAudioQualityKey: AVAudioQuality.medium.rawValue,
+                AVEncoderBitRateKey: 64000
+            ]
+            
             audioRecorder = try AVAudioRecorder(url: audioURL, settings: settings)
             audioRecorder?.delegate = self
-            audioRecorder?.record()
+            audioRecorder?.isMeteringEnabled = false
+            
+            guard let recorder = audioRecorder else {
+                print("AudioManager: Failed to create audio recorder")
+                return
+            }
+            
+            // Prepare the recorder
+            guard recorder.prepareToRecord() else {
+                print("AudioManager: Failed to prepare recorder")
+                audioRecorder = nil
+                return
+            }
+            
+            // Start recording
+            guard recorder.record() else {
+                print("AudioManager: Failed to start recording")
+                audioRecorder = nil
+                return
+            }
             
             isRecording = true
             recordingTime = 0
             
             // Start timer to track recording time
             recordingTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
-                guard let self = self, let recorder = self.audioRecorder else { return }
+                guard let self = self, let recorder = self.audioRecorder, recorder.isRecording else {
+                    self?.stopRecording()
+                    return
+                }
                 self.recordingTime = recorder.currentTime
             }
             
             HapticManager.shared.lightImpact()
+            print("AudioManager: Recording started successfully")
+            
         } catch {
-            print("Could not start recording: \(error)")
+            print("AudioManager: Could not start recording: \(error)")
+            print("AudioManager: Error details: \(error.localizedDescription)")
+            audioRecorder = nil
+            isRecording = false
+            
+            // Show user-friendly error handling
+            DispatchQueue.main.async {
+                // You could show an alert here if needed
+                print("AudioManager: Recording failed - please try again")
+            }
         }
     }
     
     func stopRecording() {
+        guard !isDisabled else {
+            print("AudioManager: Disabled - cannot stop recording")
+            return
+        }
+        
         if isSimulator {
             // Stop the simulated recording
             isRecording = false
@@ -130,12 +304,39 @@ class AudioManager: NSObject, ObservableObject {
             return
         }
         
-        audioRecorder?.stop()
-        audioRecorder = nil
+        // Ensure we're on the main thread
+        DispatchQueue.main.async { [weak self] in
+            self?.performStopRecording()
+        }
+    }
+    
+    private func performStopRecording() {
+        guard isRecording else {
+            print("AudioManager: Not currently recording")
+            return
+        }
         
+        // Stop and clean up the recorder
+        if let recorder = audioRecorder {
+            if recorder.isRecording {
+                recorder.stop()
+                print("AudioManager: Recording stopped successfully")
+            }
+        }
+        
+        audioRecorder = nil
         isRecording = false
+        
+        // Clean up timer
         recordingTimer?.invalidate()
         recordingTimer = nil
+        
+        // Try to deactivate audio session
+        do {
+            try AVAudioSession.sharedInstance().setActive(false, options: [.notifyOthersOnDeactivation])
+        } catch {
+            print("AudioManager: Could not deactivate audio session: \(error)")
+        }
         
         HapticManager.shared.lightImpact()
     }
@@ -143,6 +344,11 @@ class AudioManager: NSObject, ObservableObject {
     // MARK: - Playback
     
     func playAudio(for cardId: UUID) {
+        guard !isDisabled else {
+            print("AudioManager: Disabled - cannot play audio")
+            return
+        }
+        
         guard !isRecording else { return }
         
         let audioURL = getAudioURL(for: cardId)
@@ -172,6 +378,11 @@ class AudioManager: NSObject, ObservableObject {
     }
     
     func stopPlayback() {
+        guard !isDisabled else {
+            print("AudioManager: Disabled - cannot stop playback")
+            return
+        }
+        
         if isSimulator {
             isPlaying = false
             return

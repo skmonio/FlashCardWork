@@ -4,11 +4,13 @@ struct CardView: View {
     let card: FlashCard
     @Binding var isShowingFront: Bool
     @Binding var isShowingExample: Bool
-    @State private var offset = CGSize.zero
+    @State private var offset: CGSize = .zero
     @State private var exitSide: ExitSide = .none
-    var onSwipeLeft: (() -> Void)?
-    var onSwipeRight: (() -> Void)?
-    var onDragChanged: ((CGFloat) -> Void)?
+    @State private var hasAudio: Bool = false
+    
+    let onSwipeLeft: (() -> Void)?
+    let onSwipeRight: (() -> Void)?
+    let onDragChanged: ((CGFloat) -> Void)?
     
     private enum ExitSide {
         case none, left, right
@@ -122,11 +124,11 @@ struct CardView: View {
             }
             
             // Audio control overlay (only on front side with word)
-            if isShowingFront && AudioManager.shared.audioExists(for: card.id) {
+            if isShowingFront && hasAudio {
                 VStack {
                     HStack {
                         Spacer()
-                        AudioControlView(cardId: card.id, mode: .playOnly)
+                        AudioControlView(cardId: card.id, mode: .studyMode)
                             .background(
                                 Circle()
                                     .fill(Color.white.opacity(0.9))
@@ -137,6 +139,22 @@ struct CardView: View {
                     Spacer()
                 }
                 .allowsHitTesting(true) // Ensure audio button is tappable even with card gestures
+            }
+        }
+        .onAppear {
+            // Safely check for audio existence in background
+            DispatchQueue.global(qos: .background).async {
+                do {
+                    let audioExists = AudioManager.shared.audioExists(for: card.id)
+                    DispatchQueue.main.async {
+                        hasAudio = audioExists
+                    }
+                } catch {
+                    print("CardView: Error checking audio existence: \(error)")
+                    DispatchQueue.main.async {
+                        hasAudio = false
+                    }
+                }
             }
         }
     }

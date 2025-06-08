@@ -24,6 +24,7 @@ struct TrueFalseView: View {
     @State private var currentIndex = 0
     @State private var correctAnswers = 0
     @State private var incorrectAnswers = 0
+    @State private var showingCloseConfirmation = false
     
     init(viewModel: FlashCardViewModel, cards: [FlashCard]) {
         self.viewModel = viewModel
@@ -32,35 +33,30 @@ struct TrueFalseView: View {
     }
     
     var body: some View {
-        VStack {
+        VStack(spacing: 0) {
             if cards.isEmpty {
                 emptyStateView
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if showingResults {
                 resultsView
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 trueFalseView
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            
-            Spacer()
             
             // Bottom Navigation Bar
             HStack {
                 Button(action: {
-                    dismiss()
+                    if questionsAnswered > 0 && !showingResults {
+                        showingCloseConfirmation = true
+                    } else {
+                        dismiss()
+                    }
                 }) {
                     VStack {
                         Image(systemName: "chevron.backward")
                         Text("Back")
-                    }
-                }
-                .frame(maxWidth: .infinity)
-                
-                Button(action: {
-                    dismiss()
-                }) {
-                    VStack {
-                        Image(systemName: "house")
-                        Text("Home")
                     }
                 }
                 .frame(maxWidth: .infinity)
@@ -92,7 +88,15 @@ struct TrueFalseView: View {
         .onAppear {
             resetGame()
         }
-        
+        .alert("Close Game?", isPresented: $showingCloseConfirmation) {
+            Button("Close", role: .destructive) {
+                dismissToRoot()
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("Are you sure you want to close? Your progress will be lost.")
+        }
+
         if showingGameOver {
             // Semi-transparent background
             Color.black.opacity(0.5)
@@ -129,11 +133,11 @@ struct TrueFalseView: View {
                     }
                     
                     Button(action: {
-                        dismiss()
+                        dismissToRoot()
                     }) {
                         HStack {
                             Image(systemName: "house.fill")
-                            Text("Return to Home")
+                            Text("Return to Main Menu")
                         }
                         .frame(maxWidth: .infinity)
                         .padding()
@@ -165,18 +169,19 @@ struct TrueFalseView: View {
     }
     
     private var trueFalseView: some View {
-        VStack(spacing: 30) {
-            // Score display
+        VStack(spacing: 40) {
+            // Score display - with top padding for status bar
             HStack {
                 Text("Score: \(score)/\(questionsAnswered)")
                     .font(.headline)
                 Spacer()
             }
             .padding(.horizontal)
+            .padding(.top, 50) // Add top padding for status bar
             
             if let question = currentQuestion {
                 // Question display
-                VStack(spacing: 20) {
+                VStack(spacing: 30) {
                     Text("Does the word:")
                         .font(.title3)
                     
@@ -198,10 +203,10 @@ struct TrueFalseView: View {
                         .background(Color.blue.opacity(0.1))
                         .cornerRadius(10)
                 }
-                .padding()
+                .padding(.horizontal)
                 
                 // Answer buttons
-                VStack(spacing: 15) {
+                VStack(spacing: 20) {
                     Button(action: { checkAnswer(true) }) {
                         HStack {
                             Image(systemName: "checkmark.circle.fill")
@@ -271,7 +276,7 @@ struct TrueFalseView: View {
                 }
                 
                 Button(action: {
-                    dismiss()
+                    dismissToRoot()
                 }) {
                     Text("Done")
                         .font(.headline)
@@ -359,6 +364,22 @@ struct TrueFalseView: View {
         incorrectAnswers = 0
         showingFeedback = false
         setupNextQuestion()
+    }
+    
+    private func dismissToRoot() {
+        // Send notification to dismiss all views
+        NotificationCenter.default.post(name: NSNotification.Name("DismissToRoot"), object: nil)
+        
+        // Also trigger ViewModel navigation
+        viewModel.navigateToRoot()
+        
+        // Fallback with multiple dismissals
+        dismiss()
+        for i in 1...8 {
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.15) {
+                dismiss()
+            }
+        }
     }
 }
 

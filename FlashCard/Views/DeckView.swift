@@ -13,11 +13,15 @@ struct DeckView: View {
     @State private var sortOption: SortOption = .default
     @State private var searchText = ""
     
-    // Multi-select states
+    // Multi-select states for cards
     @State private var isSelectionMode = false
     @State private var selectedCards: Set<UUID> = []
     @State private var showingMoveSheet = false
     @State private var showingBulkDeleteAlert = false
+    
+    // Navigation state for full-screen forms
+    @State private var showingAddCardView = false
+    @State private var showingEditCardView = false
     
     private let logger = Logger(subsystem: "com.flashcards", category: "DeckView")
     
@@ -136,7 +140,7 @@ struct DeckView: View {
             
             List {
                 Button(action: {
-                    showingAddCard = true
+                    showingAddCardView = true
                 }) {
                     HStack {
                         Image(systemName: "plus.circle.fill")
@@ -177,6 +181,7 @@ struct DeckView: View {
                                     HapticManager.shared.multiSelectToggle() // Selection feedback
                                 } else {
                                     selectedCard = currentCard
+                                    showingEditCardView = true
                                 }
                             }) {
                                 CardRow(card: currentCard)
@@ -184,20 +189,6 @@ struct DeckView: View {
                                     .contentShape(Rectangle()) // Make entire area tappable
                             }
                             .buttonStyle(PlainButtonStyle())
-                        }
-                        .swipeActions(edge: .trailing) {
-                            if !isSelectionMode {
-                                Button(role: .destructive) {
-                                    cardToDelete = currentCard
-                                    if isCardInMultipleDecks(currentCard) {
-                                        showingDeleteAlert = true
-                                    } else {
-                                        deleteCard(fromAllDecks: true)
-                                    }
-                                } label: {
-                                    Label("Delete", systemImage: "trash")
-                                }
-                            }
                         }
                     }
                 }
@@ -313,16 +304,6 @@ struct DeckView: View {
                         }
                     }
                     .frame(maxWidth: .infinity)
-                    
-                    Button(action: {
-                        dismiss()
-                    }) {
-                        VStack {
-                            Image(systemName: "house")
-                            Text("Home")
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
                 }
             }
             .padding()
@@ -335,16 +316,52 @@ struct DeckView: View {
                 alignment: .top
             )
         }
-        .sheet(isPresented: $showingAddCard) {
-            AddCardView(viewModel: viewModel)
-        }
-        .sheet(item: $selectedCard) { card in
-            EditCardView(viewModel: viewModel, card: card)
-        }
         .id(refreshID)
         .onAppear {
             logger.debug("DeckView appeared for deck: \(deck.name)")
             refreshID = UUID()
+        }
+        
+        // Navigation destinations
+        NavigationLink(destination: AddCardView(viewModel: viewModel, defaultDeck: deck), isActive: $showingAddCardView) {
+            EmptyView()
+        }
+        .hidden()
+        
+        NavigationLink(destination: 
+            Group {
+                if let card = selectedCard {
+                    EditCardView(viewModel: viewModel, card: card)
+                } else {
+                    EmptyView()
+                }
+            }, isActive: $showingEditCardView) {
+            EmptyView()
+        }
+        .hidden()
+        .onChange(of: showingEditCardView) { oldValue, newValue in
+            // Refresh the view when returning from EditCardView
+            if oldValue && !newValue {
+                logger.debug("Returned from EditCardView, refreshing DeckView")
+                refreshID = UUID()
+                selectedCard = nil
+            }
+        }
+    }
+    
+    private func dismissToRoot() {
+        // Send notification to dismiss all views
+        NotificationCenter.default.post(name: NSNotification.Name("DismissToRoot"), object: nil)
+        
+        // Also trigger ViewModel navigation
+        viewModel.navigateToRoot()
+        
+        // Fallback with multiple dismissals
+        dismiss()
+        for i in 1...8 {
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.15) {
+                dismiss()
+            }
         }
     }
 }

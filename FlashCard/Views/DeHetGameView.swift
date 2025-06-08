@@ -9,6 +9,7 @@ struct DeHetGameView: View {
     @State private var showingResults = false
     @State private var lastAnswerCorrect: Bool? = nil
     @State private var showingAnswer = false
+    @State private var showingCloseConfirmation = false
     @Environment(\.dismiss) private var dismiss
     
     // Filter cards to only include those with articles
@@ -28,22 +29,30 @@ struct DeHetGameView: View {
     }
     
     var body: some View {
-        VStack(spacing: 30) {
+        VStack(spacing: 0) {
             if filteredCards.isEmpty {
                 emptyStateView
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if showingResults {
                 resultsView
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 gameView
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            
-            Spacer()
             
             // Bottom Navigation Bar
             bottomNavigationBar
         }
-        .navigationTitle("de of het")
-        .navigationBarBackButtonHidden(true)
+        .navigationBarHidden(true)
+        .alert("Close Game?", isPresented: $showingCloseConfirmation) {
+            Button("Close", role: .destructive) {
+                dismissToRoot()
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("Are you sure you want to close? Your progress will be lost.")
+        }
     }
     
     private var emptyStateView: some View {
@@ -64,8 +73,8 @@ struct DeHetGameView: View {
     }
     
     private var gameView: some View {
-        VStack(spacing: 40) {
-            // Progress indicator
+        VStack(spacing: 50) {
+            // Progress indicator - with top padding for status bar
             HStack {
                 Text("Question \(currentIndex + 1) of \(filteredCards.count)")
                     .font(.headline)
@@ -75,10 +84,11 @@ struct DeHetGameView: View {
                     .foregroundColor(totalAnswers > 0 ? (Double(correctAnswers)/Double(totalAnswers) >= 0.7 ? .green : .orange) : .primary)
             }
             .padding(.horizontal)
+            .padding(.top, 50) // Add top padding for status bar
             
             // Card word display
             if let card = currentCard {
-                VStack(spacing: 20) {
+                VStack(spacing: 30) {
                     Text(card.word)
                         .font(.system(size: 48, weight: .bold))
                         .multilineTextAlignment(.center)
@@ -134,7 +144,7 @@ struct DeHetGameView: View {
                     .padding(.horizontal)
                 } else {
                     // Answer buttons
-                    HStack(spacing: 40) {
+                    HStack(spacing: 60) {
                         Button(action: {
                             checkAnswer("de")
                         }) {
@@ -163,6 +173,8 @@ struct DeHetGameView: View {
                     }
                 }
             }
+            
+            Spacer()
         }
     }
     
@@ -202,7 +214,11 @@ struct DeHetGameView: View {
     private var bottomNavigationBar: some View {
         HStack {
             Button(action: {
-                dismiss()
+                if totalAnswers > 0 && !showingResults {
+                    showingCloseConfirmation = true
+                } else {
+                    dismiss()
+                }
             }) {
                 VStack {
                     Image(systemName: "chevron.backward")
@@ -212,11 +228,11 @@ struct DeHetGameView: View {
             .frame(maxWidth: .infinity)
             
             Button(action: {
-                dismiss()
+                resetGame()
             }) {
                 VStack {
-                    Image(systemName: "house")
-                    Text("Home")
+                    Image(systemName: "arrow.clockwise")
+                    Text("Reset")
                 }
             }
             .frame(maxWidth: .infinity)
@@ -269,5 +285,21 @@ struct DeHetGameView: View {
         showingResults = false
         lastAnswerCorrect = nil
         showingAnswer = false
+    }
+    
+    private func dismissToRoot() {
+        // Send notification to dismiss all views
+        NotificationCenter.default.post(name: NSNotification.Name("DismissToRoot"), object: nil)
+        
+        // Also trigger ViewModel navigation
+        viewModel.navigateToRoot()
+        
+        // Fallback with multiple dismissals
+        dismiss()
+        for i in 1...8 {
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.15) {
+                dismiss()
+            }
+        }
     }
 } 

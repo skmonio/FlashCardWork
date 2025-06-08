@@ -9,7 +9,7 @@ struct TestView: View {
     @State private var selectedAnswer: String?
     @State private var hasAnswered = false
     @State private var shuffledOptions: [String] = []
-    @State private var showingFeedback = false
+    @State private var showingCloseConfirmation = false
     @Environment(\.dismiss) private var dismiss
     @State private var incorrectCards: Set<UUID> = []
     
@@ -67,7 +67,11 @@ struct TestView: View {
                 incorrectCards.insert(currentCard.id)
                 HapticManager.shared.wrongAnswer()
             }
-            showingFeedback = true
+            
+            // Automatically move to next question after a short delay
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                moveToNextQuestion()
+            }
         }
     }
     
@@ -99,22 +103,43 @@ struct TestView: View {
         shuffledOptions = generateOptions()
     }
     
+    private func dismissToRoot() {
+        // Send notification to dismiss all views
+        NotificationCenter.default.post(name: NSNotification.Name("DismissToRoot"), object: nil)
+        
+        // Also trigger ViewModel navigation
+        viewModel.navigateToRoot()
+        
+        // Fallback with multiple dismissals
+        dismiss()
+        for i in 1...8 {
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.15) {
+                dismiss()
+            }
+        }
+    }
+    
     var body: some View {
-        VStack {
+        VStack(spacing: 0) {
             if cards.isEmpty {
                 emptyStateView
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if showingResults {
                 resultsView
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 testView
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            
-            Spacer()
             
             // Bottom Navigation Bar
             HStack {
                 Button(action: {
-                    dismiss()
+                    if currentIndex > 0 && !showingResults {
+                        showingCloseConfirmation = true
+                    } else {
+                        dismiss()
+                    }
                 }) {
                     VStack {
                         Image(systemName: "chevron.backward")
@@ -124,17 +149,11 @@ struct TestView: View {
                 .frame(maxWidth: .infinity)
                 
                 Button(action: {
-                    dismiss()
-                }) {
-                    VStack {
-                        Image(systemName: "house")
-                        Text("Home")
-                    }
-                }
-                .frame(maxWidth: .infinity)
-                
-                Button(action: {
-                    resetTest()
+                    currentIndex = 0
+                    showingResults = false
+                    correctAnswers = 0
+                    incorrectCards.removeAll()
+                    cards = cards.shuffled()
                 }) {
                     VStack {
                         Image(systemName: "arrow.clockwise")
@@ -154,11 +173,21 @@ struct TestView: View {
             )
         }
         .navigationBarHidden(true)
+        .alert(isPresented: $showingCloseConfirmation) {
+            Alert(
+                title: Text("Are you sure you want to exit?"),
+                message: Text("You will lose your progress."),
+                primaryButton: .destructive(Text("Exit")) {
+                    dismissToRoot()
+                },
+                secondaryButton: .cancel()
+            )
+        }
     }
     
     private var testView: some View {
-        VStack(spacing: 20) {
-            // Progress
+        VStack(spacing: 30) {
+            // Progress - with top padding for status bar
             HStack {
                 Text("\(currentIndex + 1) of \(cards.count)")
                     .font(.subheadline)
@@ -169,13 +198,13 @@ struct TestView: View {
                     .foregroundColor(.green)
             }
             .padding(.horizontal)
+            .padding(.top, 50) // Add top padding for status bar
             
             // Question
-            VStack(spacing: 16) {
+            VStack(spacing: 20) {
                 Text("What does this word mean?")
                     .font(.headline)
                     .foregroundColor(.secondary)
-                    .padding(.top)
                 
                 Text(currentCard.word)
                     .font(.title)
@@ -190,7 +219,6 @@ struct TestView: View {
                 Text("Choose one of the following:")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
-                    .padding(.top)
                 
                 // Answer options
                 VStack(spacing: 12) {
@@ -225,32 +253,10 @@ struct TestView: View {
                 }
                 .padding(.horizontal)
             }
-            
-            Spacer()
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         }
         .onAppear {
             shuffledOptions = generateOptions()
-        }
-        .alert(isPresented: $showingFeedback) {
-            Alert(
-                title: Text(selectedAnswer == currentCard.definition ? "Correct! 🎉" : "Incorrect"),
-                message: Text(getFeedbackMessage()),
-                dismissButton: .default(Text("Next")) {
-                    moveToNextQuestion()
-                }
-            )
-        }
-    }
-    
-    private func getFeedbackMessage() -> String {
-        if selectedAnswer == currentCard.definition {
-            var message = "'\(currentCard.word)' means:\n\(currentCard.definition)"
-            if !currentCard.example.isEmpty {
-                message += "\n\nExample:\n\(currentCard.example)"
-            }
-            return message
-        } else {
-            return "'\(currentCard.word)'\n\nYour answer:\n\(selectedAnswer ?? "")\n\nCorrect answer:\n\(currentCard.definition)"
         }
     }
     
@@ -298,7 +304,7 @@ struct TestView: View {
                 }
                 
                 Button(action: {
-                    dismiss()
+                    dismissToRoot()
                 }) {
                     Text("Done")
                         .font(.headline)

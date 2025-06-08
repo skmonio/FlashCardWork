@@ -11,6 +11,7 @@ struct ExportImportView: View {
     @State private var importResult: (success: Int, errors: [String]) = (0, [])
     @State private var exportContent = ""
     @State private var selectedExportOption: ExportOption = .allCards
+    @State private var showingSimulatorAlert = false
     
     enum ExportOption: Hashable, Equatable {
         case allCards
@@ -75,7 +76,11 @@ struct ExportImportView: View {
                         }) {
                             HStack {
                                 Image(systemName: "square.and.arrow.up")
+                                #if targetEnvironment(simulator)
+                                Text("Export to CSV (Limited in Simulator)")
+                                #else
                                 Text("Export to CSV")
+                                #endif
                             }
                             .foregroundColor(.blue)
                         }
@@ -163,6 +168,11 @@ struct ExportImportView: View {
             } message: {
                 Text(importAlertMessage)
             }
+            .alert("Simulator Limitation", isPresented: $showingSimulatorAlert) {
+                Button("OK") { }
+            } message: {
+                Text("File sharing is limited in iOS Simulator. The CSV content has been printed to the console. On a real device, you would be able to save or share the file normally.")
+            }
         }
     }
     
@@ -191,7 +201,16 @@ struct ExportImportView: View {
             exportContent = viewModel.exportDeckToCSV(deck)
         }
         
+        #if targetEnvironment(simulator)
+        // In simulator, just show the content and inform user
+        print("=== CSV Export Content ===")
+        print(exportContent)
+        print("=== End CSV Content ===")
+        showingSimulatorAlert = true
+        #else
+        // On real device, show the share sheet
         showingExportSheet = true
+        #endif
     }
     
     private func handleImport(result: Result<[URL], Error>) {
@@ -220,22 +239,39 @@ struct ShareSheet: UIViewControllerRepresentable {
     let activityItems: [Any]
     
     func makeUIViewController(context: Context) -> UIActivityViewController {
-        let controller = UIActivityViewController(
-            activityItems: activityItems,
-            applicationActivities: nil
-        )
+        var itemsToShare: [Any] = []
         
-        // Suggest filename for CSV
+        // Handle CSV string export
         if let csvString = activityItems.first as? String {
+            // Create temporary file
             let tempURL = FileManager.default.temporaryDirectory
                 .appendingPathComponent("FlashCards_Export_\(DateFormatter.filenameFriendly.string(from: Date())).csv")
             
             do {
                 try csvString.write(to: tempURL, atomically: true, encoding: .utf8)
-                controller.setValue(csvString, forKey: "activityItems")
+                itemsToShare.append(tempURL)
             } catch {
                 print("Failed to create temporary file: \(error)")
+                // Fallback to sharing the string directly
+                itemsToShare.append(csvString)
             }
+        } else {
+            itemsToShare = activityItems
+        }
+        
+        let controller = UIActivityViewController(
+            activityItems: itemsToShare,
+            applicationActivities: nil
+        )
+        
+        // Set subject for email sharing
+        controller.setValue("FlashCards Export", forKey: "subject")
+        
+        // For iPad - prevent crash by setting source
+        if let popover = controller.popoverPresentationController {
+            popover.sourceView = UIApplication.shared.windows.first?.rootViewController?.view
+            popover.sourceRect = CGRect(x: UIScreen.main.bounds.width / 2, y: UIScreen.main.bounds.height / 2, width: 0, height: 0)
+            popover.permittedArrowDirections = []
         }
         
         return controller

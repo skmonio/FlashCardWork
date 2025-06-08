@@ -10,6 +10,7 @@ struct LookCoverCheckView: View {
     @State private var userInput = ""
     @State private var gamePhase: GamePhase = .look
     @State private var isCorrect: Bool? = nil
+    @State private var showingCloseConfirmation = false
     @Environment(\.dismiss) private var dismiss
     
     enum GamePhase {
@@ -29,22 +30,30 @@ struct LookCoverCheckView: View {
     }
     
     var body: some View {
-        VStack(spacing: 30) {
+        VStack(spacing: 0) {
             if cards.isEmpty {
                 emptyStateView
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if showingResults {
                 resultsView
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 gameView
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            
-            Spacer()
             
             // Bottom Navigation Bar
             bottomNavigationBar
         }
-        .navigationTitle("Look Cover Check")
-        .navigationBarBackButtonHidden(true)
+        .navigationBarHidden(true)
+        .alert("Close Game?", isPresented: $showingCloseConfirmation) {
+            Button("Close", role: .destructive) {
+                dismissToRoot()
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("Are you sure you want to close? Your progress will be lost.")
+        }
     }
     
     private var emptyStateView: some View {
@@ -65,8 +74,8 @@ struct LookCoverCheckView: View {
     }
     
     private var gameView: some View {
-        VStack(spacing: 40) {
-            // Progress indicator
+        VStack(spacing: 50) {
+            // Progress indicator - with top padding for status bar
             HStack {
                 Text("Card \(currentIndex + 1) of \(cards.count)")
                     .font(.headline)
@@ -76,6 +85,7 @@ struct LookCoverCheckView: View {
                     .foregroundColor(totalAnswers > 0 ? (Double(correctAnswers)/Double(totalAnswers) >= 0.7 ? .green : .orange) : .primary)
             }
             .padding(.horizontal)
+            .padding(.top, 50) // Add top padding for status bar
             
             if let card = currentCard {
                 switch gamePhase {
@@ -87,6 +97,8 @@ struct LookCoverCheckView: View {
                     checkPhaseView(card: card)
                 }
             }
+            
+            Spacer()
         }
     }
     
@@ -270,7 +282,11 @@ struct LookCoverCheckView: View {
     private var bottomNavigationBar: some View {
         HStack {
             Button(action: {
-                dismiss()
+                if totalAnswers > 0 && !showingResults {
+                    showingCloseConfirmation = true
+                } else {
+                    dismiss()
+                }
             }) {
                 VStack {
                     Image(systemName: "chevron.backward")
@@ -280,11 +296,11 @@ struct LookCoverCheckView: View {
             .frame(maxWidth: .infinity)
             
             Button(action: {
-                dismiss()
+                resetGame()
             }) {
                 VStack {
-                    Image(systemName: "house")
-                    Text("Home")
+                    Image(systemName: "arrow.clockwise")
+                    Text("Reset")
                 }
             }
             .frame(maxWidth: .infinity)
@@ -343,5 +359,21 @@ struct LookCoverCheckView: View {
         totalAnswers = 0
         showingResults = false
         resetForNextCard()
+    }
+    
+    private func dismissToRoot() {
+        // Send notification to dismiss all views
+        NotificationCenter.default.post(name: NSNotification.Name("DismissToRoot"), object: nil)
+        
+        // Also trigger ViewModel navigation
+        viewModel.navigateToRoot()
+        
+        // Fallback with multiple dismissals
+        dismiss()
+        for i in 1...8 {
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.15) {
+                dismiss()
+            }
+        }
     }
 } 

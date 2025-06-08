@@ -29,6 +29,7 @@ struct GameView: View {
     @State private var incorrectMatches: Set<FlashCard> = []
     @State private var showingReview = false
     @State private var reviewCards: [FlashCard] = []
+    @State private var showingCloseConfirmation = false
     
     private let columns = [
         GridItem(.flexible()),
@@ -37,33 +38,27 @@ struct GameView: View {
     
     var body: some View {
         ZStack {
-            VStack {
+            VStack(spacing: 0) {
                 if cards.isEmpty {
                     emptyStateView
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
                     gameView
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
-                
-                Spacer()
                 
                 // Bottom Navigation Bar
                 HStack {
                     Button(action: {
-                        dismiss()
+                        if moves > 0 && !showingGameOver {
+                            showingCloseConfirmation = true
+                        } else {
+                            dismiss()
+                        }
                     }) {
                         VStack {
                             Image(systemName: "chevron.backward")
                             Text("Back")
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
-                    
-                    Button(action: {
-                        dismiss()
-                    }) {
-                        VStack {
-                            Image(systemName: "house")
-                            Text("Home")
                         }
                     }
                     .frame(maxWidth: .infinity)
@@ -88,7 +83,7 @@ struct GameView: View {
                     alignment: .top
                 )
             }
-            
+
             if showingGameOver {
                 // Semi-transparent background
                 Color.black.opacity(0.5)
@@ -125,11 +120,11 @@ struct GameView: View {
                         }
                         
                         Button(action: {
-                            dismiss()
+                            dismissToRoot()
                         }) {
                             HStack {
                                 Image(systemName: "house.fill")
-                                Text("Return to Home")
+                                Text("Return to Main Menu")
                             }
                             .frame(maxWidth: .infinity)
                             .padding()
@@ -149,6 +144,14 @@ struct GameView: View {
         }
         .navigationBarHidden(true)
         .onAppear(perform: setupGame)
+        .alert("Close Game?", isPresented: $showingCloseConfirmation) {
+            Button("Close", role: .destructive) {
+                dismissToRoot()
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("Are you sure you want to close? Your progress will be lost.")
+        }
     }
     
     private var emptyStateView: some View {
@@ -164,8 +167,8 @@ struct GameView: View {
     }
     
     private var gameView: some View {
-        VStack {
-            // Score and moves
+        VStack(spacing: 20) {
+            // Score and moves - with top padding for status bar
             HStack {
                 Text("Matches: \(score)")
                     .font(.headline)
@@ -173,7 +176,8 @@ struct GameView: View {
                 Text("Moves: \(moves)")
                     .font(.headline)
             }
-            .padding()
+            .padding(.horizontal)
+            .padding(.top, 50) // Add top padding for status bar
             
             // Game grid
             ScrollView {
@@ -191,8 +195,9 @@ struct GameView: View {
                         }
                     }
                 }
-                .padding()
+                .padding(.horizontal)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
     
@@ -252,14 +257,21 @@ struct GameView: View {
     private func cardTapped(_ tappedCard: Card) {
         guard let index = displayedCards.firstIndex(where: { $0.id == tappedCard.id }) else { return }
         
-        // Ignore tapped card if it's already matched or selected, or if two cards are already selected
-        if displayedCards[index].isMatched || displayedCards[index].isSelected || 
+        // Ignore tapped card if it's already matched or if two cards are already selected
+        if displayedCards[index].isMatched || 
            displayedCards.filter({ $0.isSelected }).count >= 2 {
             return
         }
         
         // Light haptic for card tap
         HapticManager.shared.lightImpact()
+        
+        // If this card is already selected (first card), deselect it
+        if displayedCards[index].isSelected {
+            displayedCards[index].isSelected = false
+            selectedCard = nil
+            return
+        }
         
         // If this is the first card of the pair
         if selectedCard == nil {
@@ -317,6 +329,22 @@ struct GameView: View {
             
             // Reset selected card
             selectedCard = nil
+        }
+    }
+    
+    private func dismissToRoot() {
+        // Send notification to dismiss all views
+        NotificationCenter.default.post(name: NSNotification.Name("DismissToRoot"), object: nil)
+        
+        // Also trigger ViewModel navigation
+        viewModel.navigateToRoot()
+        
+        // Fallback with multiple dismissals
+        dismiss()
+        for i in 1...8 {
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.15) {
+                dismiss()
+            }
         }
     }
 }

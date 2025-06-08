@@ -12,6 +12,7 @@ struct HangmanView: View {
     @State private var gameWon = false
     @State private var showingNextWord = false
     @State private var currentGuess = ""
+    @State private var showingCloseConfirmation = false
     @FocusState private var isKeyboardFocused: Bool
     
     private var currentCard: FlashCard {
@@ -81,7 +82,7 @@ struct HangmanView: View {
             resetGame()
             showingNextWord = false
         } else {
-            dismiss()
+            dismissToRoot()
         }
     }
     
@@ -94,95 +95,150 @@ struct HangmanView: View {
         isKeyboardFocused = true // Refocus keyboard after reset
     }
     
+    private func dismissToRoot() {
+        // Send notification to dismiss all views
+        NotificationCenter.default.post(name: NSNotification.Name("DismissToRoot"), object: nil)
+        
+        // Also trigger ViewModel navigation
+        viewModel.navigateToRoot()
+        
+        // Fallback with multiple dismissals
+        dismiss()
+        for i in 1...8 {
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.15) {
+                dismiss()
+            }
+        }
+    }
+    
     var body: some View {
-        ZStack {
-            VStack(spacing: 30) {
-                // Progress and attempts
-                HStack {
-                    Text("Word \(currentCardIndex + 1) of \(cards.count)")
-                        .font(.headline)
-                    Spacer()
-                    Text("Attempts left: \(remainingAttempts)")
-                        .font(.headline)
-                        .foregroundColor(remainingAttempts <= 2 ? .red : .primary)
-                }
-                .padding(.horizontal)
-                
-                // Hangman drawing
-                HangmanDrawing(remainingAttempts: remainingAttempts)
-                    .frame(height: 200)
-                
-                // Word to guess - larger and more spaced
-                VStack(spacing: 20) {
-                    Text(maskedWord)
-                        .font(.system(size: 36, weight: .bold, design: .monospaced))
+        VStack(spacing: 0) {
+            ZStack {
+                VStack(spacing: 30) {
+                    // Progress and attempts - with top padding for status bar
+                    HStack {
+                        Text("Word \(currentCardIndex + 1) of \(cards.count)")
+                            .font(.headline)
+                        Spacer()
+                        Text("Attempts left: \(remainingAttempts)")
+                            .font(.headline)
+                            .foregroundColor(remainingAttempts <= 2 ? .red : .primary)
+                    }
+                    .padding(.horizontal)
+                    .padding(.top, 50) // Add top padding for status bar
+                    
+                    // Hangman drawing
+                    HangmanDrawing(remainingAttempts: remainingAttempts)
+                        .frame(height: 200)
+                    
+                    // Word to guess - larger and more spaced
+                    VStack(spacing: 20) {
+                        Text(maskedWord)
+                            .font(.system(size: 36, weight: .bold, design: .monospaced))
+                            .multilineTextAlignment(.center)
+                            .lineLimit(nil)
+                            .padding(.horizontal)
+                        
+                        // Show guessed letters
+                        if !guessedLetters.isEmpty {
+                            VStack(spacing: 8) {
+                                Text("Guessed letters:")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                
+                                Text(guessedLetters.sorted().map(String.init).joined(separator: ", "))
+                                    .font(.body)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                    }
+                    
+                    // Definition hint
+                    Text(currentCard.definition)
+                        .font(.title3)
+                        .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
-                        .lineLimit(nil)
                         .padding(.horizontal)
                     
-                    // Show guessed letters
-                    if !guessedLetters.isEmpty {
-                        VStack(spacing: 8) {
-                            Text("Guessed letters:")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                            
-                            Text(guessedLetters.sorted().map(String.init).joined(separator: ", "))
-                                .font(.body)
-                                .foregroundColor(.secondary)
+                    Spacer()
+                    
+                    // Instruction text
+                    VStack(spacing: 8) {
+                        Text("Type letters to guess the word")
+                            .font(.headline)
+                            .foregroundColor(.blue)
+                        
+                        Text("Tap anywhere to bring up keyboard")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.bottom, 20)
+                }
+                
+                // Hidden text field for keyboard input
+                TextField("", text: $currentGuess)
+                    .focused($isKeyboardFocused)
+                    .opacity(0.01) // Nearly invisible but still functional
+                    .disableAutocorrection(true)
+                    .textInputAutocapitalization(.never)
+                    .keyboardType(.alphabet)
+                    .onChange(of: currentGuess) { oldValue, newValue in
+                        // Process new letters
+                        let newLetters = Set(newValue.lowercased())
+                        let oldLetters = Set(oldValue.lowercased())
+                        let addedLetters = newLetters.subtracting(oldLetters)
+                        
+                        for letter in addedLetters {
+                            if letter.isLetter && !guessedLetters.contains(letter) {
+                                guessLetter(letter)
+                            }
+                        }
+                        
+                        // Clear the text field to allow repeated letters
+                        if !newValue.isEmpty {
+                            currentGuess = ""
                         }
                     }
-                }
-                
-                // Definition hint
-                Text(currentCard.definition)
-                    .font(.title3)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
-                
-                Spacer()
-                
-                // Instruction text
-                VStack(spacing: 8) {
-                    Text("Type letters to guess the word")
-                        .font(.headline)
-                        .foregroundColor(.blue)
-                    
-                    Text("Tap anywhere to bring up keyboard")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-                .padding(.bottom, 20)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             
-            // Hidden text field for keyboard input
-            TextField("", text: $currentGuess)
-                .focused($isKeyboardFocused)
-                .opacity(0.01) // Nearly invisible but still functional
-                .disableAutocorrection(true)
-                .textInputAutocapitalization(.never)
-                .keyboardType(.alphabet)
-                .onChange(of: currentGuess) { oldValue, newValue in
-                    // Process new letters
-                    let newLetters = Set(newValue.lowercased())
-                    let oldLetters = Set(oldValue.lowercased())
-                    let addedLetters = newLetters.subtracting(oldLetters)
-                    
-                    for letter in addedLetters {
-                        if letter.isLetter && !guessedLetters.contains(letter) {
-                            guessLetter(letter)
-                        }
+            // Bottom Navigation Bar
+            HStack {
+                Button(action: {
+                    if !guessedLetters.isEmpty && !showingGameOver {
+                        showingCloseConfirmation = true
+                    } else {
+                        dismiss()
                     }
-                    
-                    // Clear the text field to allow repeated letters
-                    if !newValue.isEmpty {
-                        currentGuess = ""
+                }) {
+                    VStack {
+                        Image(systemName: "chevron.backward")
+                        Text("Back")
                     }
                 }
+                .frame(maxWidth: .infinity)
+                
+                Button(action: {
+                    resetGame()
+                }) {
+                    VStack {
+                        Image(systemName: "arrow.clockwise")
+                        Text("Reset")
+                    }
+                }
+                .frame(maxWidth: .infinity)
+            }
+            .padding()
+            .background(Color(.systemBackground))
+            .overlay(
+                Rectangle()
+                    .frame(height: 1)
+                    .foregroundColor(.gray)
+                    .opacity(0.2),
+                alignment: .top
+            )
         }
-        .navigationTitle("Hangman")
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarHidden(true)
         .onAppear {
             // Focus the keyboard when view appears
             isKeyboardFocused = true
@@ -201,7 +257,7 @@ struct HangmanView: View {
                 resetGame()
             }
             Button("Exit", role: .cancel) {
-                dismiss()
+                dismissToRoot()
             }
         } message: {
             if gameWon {
@@ -209,6 +265,14 @@ struct HangmanView: View {
             } else {
                 Text("Sorry! The word was: \(word)")
             }
+        }
+        .alert("Close Game?", isPresented: $showingCloseConfirmation) {
+            Button("Close", role: .destructive) {
+                dismissToRoot()
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("Are you sure you want to close? Your progress will be lost.")
         }
         .onChange(of: showingNextWord) { oldValue, newValue in
             if newValue {

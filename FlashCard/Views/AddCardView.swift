@@ -4,6 +4,7 @@ import os
 struct AddCardView: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject var viewModel: FlashCardViewModel
+    let defaultDeck: Deck?
     
     @State private var word: String = ""
     @State private var definition: String = ""
@@ -28,8 +29,61 @@ struct AddCardView: View {
         !definition.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
     
+    init(viewModel: FlashCardViewModel, defaultDeck: Deck? = nil) {
+        self.viewModel = viewModel
+        self.defaultDeck = defaultDeck
+    }
+    
     var body: some View {
-        NavigationView {
+        VStack(spacing: 0) {
+            // Custom navigation bar
+            HStack {
+                Button("Cancel") {
+                    logger.debug("Cancel button tapped")
+                    // Clean up any temporary audio recording
+                    AudioManager.shared.deleteAudio(for: temporaryCardId)
+                    dismiss()
+                }
+                .foregroundColor(.blue)
+                
+                Spacer()
+                
+                Text("Add Card")
+                    .font(.headline)
+                    .bold()
+                
+                Spacer()
+                
+                HStack(spacing: 16) {
+                    Button("Save & Add Another") {
+                        logger.debug("Save & Add Another button tapped")
+                        saveCurrentCard()
+                        resetForm()
+                    }
+                    .disabled(!canSave)
+                    .foregroundColor(canSave ? .blue : .gray)
+                    
+                    Button("Save") {
+                        logger.debug("Save button tapped")
+                        saveCurrentCard()
+                        dismiss()
+                    }
+                    .disabled(!canSave)
+                    .foregroundColor(canSave ? .blue : .gray)
+                    .fontWeight(.semibold)
+                }
+            }
+            .padding()
+            .background(Color(.systemBackground))
+            .overlay(
+                Rectangle()
+                    .frame(height: 1)
+                    .foregroundColor(.gray)
+                    .opacity(0.2),
+                alignment: .bottom
+            )
+            
+            // Main content
             Form {
                 Section(header: Text("Card Details")) {
                     TextField("Word", text: $word)
@@ -152,56 +206,62 @@ struct AddCardView: View {
                     }
                 }
             }
-            .navigationTitle("Add Card")
-            .navigationBarItems(
-                leading: Button("Cancel") {
-                    logger.debug("Cancel button tapped")
-                    // Clean up any temporary audio recording
-                    AudioManager.shared.deleteAudio(for: temporaryCardId)
-                    dismiss()
-                },
-                trailing: HStack {
-                    Button("Save & Add Another") {
-                        logger.debug("Save & Add Another button tapped")
-                        saveCurrentCard()
-                        resetForm()
+        }
+        .navigationBarHidden(true)
+        .sheet(isPresented: $showingNewDeckSheet) {
+            VStack(spacing: 0) {
+                // Custom navigation bar for sheet
+                HStack {
+                    Button("Cancel") {
+                        showingNewDeckSheet = false
                     }
-                    .disabled(!canSave)
+                    .foregroundColor(.blue)
                     
-                    Button("Save") {
-                        logger.debug("Save button tapped")
-                        saveCurrentCard()
-                        dismiss()
+                    Spacer()
+                    
+                    Text("Create Deck")
+                        .font(.headline)
+                        .bold()
+                    
+                    Spacer()
+                    
+                    Button("Create") {
+                        logger.debug("Creating new deck: \(newDeckName)")
+                        let newDeck = viewModel.createDeck(name: newDeckName.trimmingCharacters(in: .whitespacesAndNewlines))
+                        selectedDeckIds.insert(newDeck.id)
+                        showingNewDeckSheet = false
+                        newDeckName = ""
                     }
-                    .disabled(!canSave)
+                    .disabled(newDeckName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    .foregroundColor(newDeckName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .gray : .blue)
+                    .fontWeight(.semibold)
                 }
-            )
-            .sheet(isPresented: $showingNewDeckSheet) {
-                NavigationView {
-                    Form {
-                        Section(header: Text("New Deck")) {
-                            TextField("Deck Name", text: $newDeckName)
-                        }
+                .padding()
+                .background(Color(.systemBackground))
+                .overlay(
+                    Rectangle()
+                        .frame(height: 1)
+                        .foregroundColor(.gray)
+                        .opacity(0.2),
+                    alignment: .bottom
+                )
+                
+                Form {
+                    Section(header: Text("New Deck")) {
+                        TextField("Deck Name", text: $newDeckName)
                     }
-                    .navigationTitle("Create Deck")
-                    .navigationBarItems(
-                        leading: Button("Cancel") {
-                            showingNewDeckSheet = false
-                        },
-                        trailing: Button("Create") {
-                            logger.debug("Creating new deck: \(newDeckName)")
-                            let newDeck = viewModel.createDeck(name: newDeckName.trimmingCharacters(in: .whitespacesAndNewlines))
-                            selectedDeckIds.insert(newDeck.id)
-                            showingNewDeckSheet = false
-                            newDeckName = ""
-                        }
-                        .disabled(newDeckName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                    )
                 }
             }
+            .navigationBarHidden(true)
         }
         .onAppear {
             logger.debug("AddCardView appeared")
+            
+            // Auto-select the default deck if provided
+            if let defaultDeck = defaultDeck {
+                selectedDeckIds.insert(defaultDeck.id)
+                logger.debug("Auto-selected default deck: \(defaultDeck.name)")
+            }
         }
         .onDisappear {
             logger.debug("AddCardView disappeared")

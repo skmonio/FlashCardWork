@@ -11,7 +11,15 @@ struct StudyView: View {
     @State private var isShowingExample = false
     @State private var dragOffset: CGFloat = 0
     @State private var nextCardActive = false
+    @State private var selectedCardForEdit: FlashCard?
+    @State private var showingCloseConfirmation = false
+    @State private var refreshID = UUID()
     @Environment(\.dismiss) private var dismiss
+    
+    // Computed property to check if user has seen any cards
+    private var hasSeenCards: Bool {
+        return !knownCards.isEmpty || !unknownCards.isEmpty
+    }
     
     init(viewModel: FlashCardViewModel, cards: [FlashCard]) {
         self.viewModel = viewModel
@@ -19,21 +27,26 @@ struct StudyView: View {
     }
     
     var body: some View {
-        VStack {
+        VStack(spacing: 0) {
             if cards.isEmpty {
                 emptyStateView
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if showingResults {
                 resultsView
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 studyView
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            
-            Spacer()
             
             // Bottom Navigation Bar
             HStack {
                 Button(action: {
-                    dismiss()
+                    if hasSeenCards && !showingResults {
+                        showingCloseConfirmation = true
+                    } else {
+                        dismiss()
+                    }
                 }) {
                     VStack {
                         Image(systemName: "chevron.backward")
@@ -43,23 +56,7 @@ struct StudyView: View {
                 .frame(maxWidth: .infinity)
                 
                 Button(action: {
-                    dismiss()
-                }) {
-                    VStack {
-                        Image(systemName: "house")
-                        Text("Home")
-                    }
-                }
-                .frame(maxWidth: .infinity)
-                
-                Button(action: {
-                    knownCards.removeAll()
-                    unknownCards.removeAll()
-                    currentIndex = 0
-                    showingResults = false
-                    isShowingFront = true
-                    isShowingExample = false
-                    nextCardActive = false
+                    setupStudySession()
                 }) {
                     VStack {
                         Image(systemName: "arrow.clockwise")
@@ -79,6 +76,30 @@ struct StudyView: View {
             )
         }
         .navigationBarHidden(true)
+        .alert("Close Study Session?", isPresented: $showingCloseConfirmation) {
+            Button("Close", role: .destructive) {
+                saveProgressAndDismiss()
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("Are you sure you want to close? Your progress will be saved.")
+        }
+        .sheet(item: $selectedCardForEdit) { card in
+            EditCardView(viewModel: viewModel, card: card)
+        }
+        .onChange(of: selectedCardForEdit) { oldValue, newValue in
+            // Refresh the cards when returning from EditCardView
+            if oldValue != nil && newValue == nil {
+                // Update the current card with the latest data from viewModel
+                if currentIndex < cards.count {
+                    let cardId = cards[currentIndex].id
+                    if let updatedCard = viewModel.flashCards.first(where: { $0.id == cardId }) {
+                        cards[currentIndex] = updatedCard
+                        refreshID = UUID() // Force CardView refresh
+                    }
+                }
+            }
+        }
     }
     
     private var studyView: some View {
@@ -95,13 +116,26 @@ struct StudyView: View {
                 .opacity(dragOffset < 0 ? min(-dragOffset / 500, 0.3) : 0)
                 .ignoresSafeArea()
             
-            VStack {
-                // Progress indicator
+            VStack(spacing: 20) {
+                // Progress indicator with edit button - with top padding for status bar
                 HStack {
                     Text("\(currentIndex + 1) of \(cards.count)")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                     Spacer()
+                    
+                    // Edit button
+                    if currentIndex < cards.count {
+                        Button(action: {
+                            selectedCardForEdit = cards[currentIndex]
+                        }) {
+                            Image(systemName: "pencil")
+                                .foregroundColor(.blue)
+                                .font(.title3)
+                        }
+                        .padding(.trailing, 8)
+                    }
+                    
                     HStack(spacing: 20) {
                         Label("\(knownCards.count)", systemImage: "checkmark.circle.fill")
                             .foregroundColor(.green)
@@ -110,6 +144,7 @@ struct StudyView: View {
                     }
                 }
                 .padding(.horizontal)
+                .padding(.top, 50) // Add top padding for status bar
                 
                 Spacer()
                 
@@ -133,7 +168,7 @@ struct StudyView: View {
                         insertion: .opacity.combined(with: .move(edge: .bottom)),
                         removal: .opacity.combined(with: .offset(x: dragOffset, y: 0))
                     ))
-                    .id(currentIndex)
+                    .id("\(currentIndex)-\(refreshID)")
                 }
                 
                 Spacer()
@@ -230,7 +265,7 @@ struct StudyView: View {
                     for cardId in unknownCards {
                         viewModel.setCardStatus(cardId: cardId, status: .unknown)
                     }
-                    dismiss()
+                    dismissToRoot()
                 }) {
                     Text("Done")
                         .font(.headline)
@@ -251,6 +286,29 @@ struct StudyView: View {
         nextCardActive = false
         knownCards.removeAll()
         unknownCards.removeAll()
+    }
+    
+    private func setupStudySession() {
+        currentIndex = 0
+        showingResults = false
+        isShowingFront = true
+        isShowingExample = false
+        dragOffset = 0
+        nextCardActive = false
+        knownCards.removeAll()
+        unknownCards.removeAll()
+        cards = cards.shuffled() // Reshuffle cards for new session
+    }
+    
+    private func saveProgressAndDismiss() {
+        // Save the status of all cards
+        for cardId in knownCards {
+            viewModel.setCardStatus(cardId: cardId, status: .known)
+        }
+        for cardId in unknownCards {
+            viewModel.setCardStatus(cardId: cardId, status: .unknown)
+        }
+        dismissToRoot()
     }
     
     private func handleSwipeRight() {
@@ -287,6 +345,22 @@ struct StudyView: View {
             HapticManager.shared.gameComplete() // Strong haptic for session completion
             withAnimation {
                 showingResults = true
+            }
+        }
+    }
+    
+    private func dismissToRoot() {
+        // Send notification to dismiss all views
+        NotificationCenter.default.post(name: NSNotification.Name("DismissToRoot"), object: nil)
+        
+        // Also trigger ViewModel navigation
+        viewModel.navigateToRoot()
+        
+        // Fallback with multiple dismissals
+        dismiss()
+        for i in 1...8 {
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.15) {
+                dismiss()
             }
         }
     }

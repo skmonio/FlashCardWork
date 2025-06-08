@@ -5,11 +5,9 @@ struct DeckSelectionView: View {
     @ObservedObject var viewModel: FlashCardViewModel
     let mode: StudyMode
     @State private var selectedDeckIds: Set<UUID> = []
-    @State private var showingDestination = false
-    @State private var selectedCards: [FlashCard] = []
     
     enum StudyMode {
-        case study, test, game, truefalse, hangman, dehet, lookcovercheck
+        case study, test, game, truefalse, hangman, dehet, lookcovercheck, writing
         
         var title: String {
             switch self {
@@ -20,6 +18,7 @@ struct DeckSelectionView: View {
             case .hangman: return "Hangman"
             case .dehet: return "de of het"
             case .lookcovercheck: return "Look Cover Check"
+            case .writing: return "Write Your Card"
             }
         }
     }
@@ -50,7 +49,6 @@ struct DeckSelectionView: View {
                         } else {
                             selectedDeckIds = Set(viewModel.getAllDecksHierarchical().map { $0.id })
                         }
-                        selectedCards = availableCards
                     }) {
                         HStack {
                             Text(selectedDeckIds.isEmpty ? "Select All Decks" : "Deselect All")
@@ -68,7 +66,6 @@ struct DeckSelectionView: View {
                             } else {
                                 selectedDeckIds.insert(deck.id)
                             }
-                            selectedCards = availableCards
                         }) {
                             HStack {
                                 // Show indentation for sub-decks
@@ -96,16 +93,13 @@ struct DeckSelectionView: View {
                 
                 if !selectedDeckIds.isEmpty && !availableCards.isEmpty {
                     Section {
-                        Button(action: {
-                            selectedCards = availableCards
-                            showingDestination = true
-                        }) {
+                        NavigationLink(destination: destinationView) {
                             HStack {
                                 Text("Start \(mode.title)")
                                     .foregroundColor(.blue)
                                     .font(.headline)
                                 Spacer()
-                                Text("\(selectedCards.count) cards")
+                                Text("\(availableCards.count) cards")
                                     .foregroundColor(.secondary)
                             }
                         }
@@ -128,16 +122,6 @@ struct DeckSelectionView: View {
                     }
                 }
                 .frame(maxWidth: .infinity)
-                
-                Button(action: {
-                    dismiss()
-                }) {
-                    VStack {
-                        Image(systemName: "house")
-                        Text("Home")
-                    }
-                }
-                .frame(maxWidth: .infinity)
             }
             .padding()
             .background(Color(.systemBackground))
@@ -149,26 +133,31 @@ struct DeckSelectionView: View {
                 alignment: .top
             )
         }
-        .sheet(isPresented: $showingDestination) {
-            let _ = print("Showing mode: \(mode)")
-            Group {
-                switch mode {
-                case .study:
-                    StudyView(viewModel: viewModel, cards: selectedCards)
-                case .test:
-                    TestView(viewModel: viewModel, cards: selectedCards)
-                case .game:
-                    GameView(viewModel: viewModel, cards: selectedCards)
-                case .truefalse:
-                    TrueFalseView(viewModel: viewModel, cards: selectedCards)
-                case .hangman:
-                    HangmanView(viewModel: viewModel, cards: selectedCards)
-                case .dehet:
-                    DeHetGameView(viewModel: viewModel, cards: selectedCards)
-                case .lookcovercheck:
-                    LookCoverCheckView(viewModel: viewModel, cards: selectedCards)
-                }
-            }
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("DismissToRoot"))) { _ in
+            // Dismiss this view when dismiss to root is requested
+            dismiss()
+        }
+    }
+    
+    @ViewBuilder
+    private var destinationView: some View {
+        switch mode {
+        case .study:
+            StudyView(viewModel: viewModel, cards: availableCards)
+        case .test:
+            TestView(viewModel: viewModel, cards: availableCards)
+        case .game:
+            GameView(viewModel: viewModel, cards: availableCards)
+        case .truefalse:
+            TrueFalseView(viewModel: viewModel, cards: availableCards)
+        case .hangman:
+            HangmanView(viewModel: viewModel, cards: availableCards)
+        case .dehet:
+            DeHetGameView(viewModel: viewModel, cards: availableCards)
+        case .lookcovercheck:
+            LookCoverCheckView(viewModel: viewModel, cards: availableCards)
+        case .writing:
+            WritingView(viewModel: viewModel, cards: availableCards)
         }
     }
 } 
