@@ -13,7 +13,6 @@ struct GameSaveState: Codable {
         case test
         case memoryGame
         case trueFalse
-        case hangman
         case dehet
         case lookCoverCheck
         case writing
@@ -24,7 +23,6 @@ struct GameSaveState: Codable {
             case .test: return "Test Mode"
             case .memoryGame: return "Memory Game"
             case .trueFalse: return "True or False"
-            case .hangman: return "Hangman"
             case .dehet: return "de of het"
             case .lookCoverCheck: return "Look Cover Check"
             case .writing: return "Write Your Card"
@@ -37,7 +35,6 @@ struct GameSaveState: Codable {
             case .test: return "checkmark.circle.fill"
             case .memoryGame: return "brain.fill"
             case .trueFalse: return "questionmark.circle.fill"
-            case .hangman: return "person.fill"
             case .dehet: return "questionmark.diamond.fill"
             case .lookCoverCheck: return "eye.fill"
             case .writing: return "pencil.and.scribble"
@@ -107,17 +104,6 @@ struct LookCoverCheckGameState: Codable {
     let totalAnswers: Int
     let cards: [FlashCard]
     let gamePhase: String // "look", "cover", "check"
-}
-
-struct HangmanGameState: Codable {
-    let currentIndex: Int
-    let score: Int
-    let lives: Int
-    let guessedLetters: Set<Character>
-    let currentWordProgress: [Character?]
-    let isCurrentWordComplete: Bool
-    let cards: [FlashCard]
-    let currentWord: String
 }
 
 struct DeHetGameState: Codable {

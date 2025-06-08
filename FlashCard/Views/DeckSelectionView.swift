@@ -31,10 +31,11 @@ struct DeckSelectionView: View {
             case .test: return .test
             case .game: return .memoryGame
             case .truefalse: return .trueFalse
-            case .hangman: return .hangman
             case .dehet: return .dehet
             case .lookcovercheck: return .lookCoverCheck
             case .writing: return .writing
+            case .hangman:
+                fatalError("Hangman game does not support save states")
             }
         }
     }
@@ -56,6 +57,12 @@ struct DeckSelectionView: View {
     
     private var hasSaveState: Bool {
         guard !selectedDeckIds.isEmpty else { return false }
+        
+        // Skip save state for Hangman game
+        if mode == .hangman {
+            return false
+        }
+        
         return SaveStateManager.shared.hasSaveState(
             gameType: mode.saveStateType,
             deckIds: Array(selectedDeckIds)
@@ -207,6 +214,13 @@ struct DeckSelectionView: View {
     }
     
     private func handleStartGame() {
+        // Skip save state check for Hangman
+        if mode == .hangman {
+            shouldContinueGame = false
+            shouldStartGame = true
+            return
+        }
+        
         if hasSaveState {
             showingContinueGameOverlay = true
         } else {
@@ -350,12 +364,8 @@ struct HangmanViewWithSaveState: View {
     let shouldContinue: Bool
     
     var body: some View {
+        // Hangman doesn't support save states, so just use regular view
         HangmanView(viewModel: viewModel, cards: cards)
-            .onAppear {
-                if shouldContinue {
-                    // Load saved state logic will be implemented in HangmanView
-                }
-            }
     }
 }
 
