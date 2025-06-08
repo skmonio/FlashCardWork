@@ -3,6 +3,7 @@ import SwiftUI
 struct HomeView: View {
     @ObservedObject var viewModel: FlashCardViewModel
     @State private var showingExportImport = false
+    @State private var showingSavedGames = false
     
     // Navigation state for full-screen forms
     @State private var showingAddCardView = false
@@ -42,6 +43,12 @@ struct HomeView: View {
                                     Divider()
                                     
                                     Button(action: {
+                                        showingSavedGames = true
+                                    }) {
+                                        Label("Saved Games", systemImage: "bookmark.fill")
+                                    }
+                                    
+                                    Button(action: {
                                         showingExportImport = true
                                     }) {
                                         Label("Export & Import", systemImage: "square.and.arrow.up.on.square")
@@ -58,6 +65,9 @@ struct HomeView: View {
         .sheet(isPresented: $showingExportImport) {
             ExportImportView(viewModel: viewModel)
         }
+        .sheet(isPresented: $showingSavedGames) {
+            SavedGamesView(viewModel: viewModel)
+        }
         .sheet(isPresented: $showingAddCardView) {
             AddCardView(viewModel: viewModel)
         }
@@ -71,6 +81,7 @@ struct HomeView: View {
             showingAddCardView = false
             showingAddDeckView = false
             showingExportImport = false
+            showingSavedGames = false
         }
         .onChange(of: viewModel.shouldNavigateToRoot) { oldValue, newValue in
             if newValue {

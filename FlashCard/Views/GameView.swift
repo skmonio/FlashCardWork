@@ -31,11 +31,27 @@ struct GameView: View {
     @State private var reviewCards: [FlashCard] = []
     @State private var showingCloseConfirmation = false
     
+    // Save state properties
+    private var deckIds: [UUID]
+    private var shouldLoadSaveState: Bool
+    
+    // Computed property to check if there's significant progress to save
+    private var hasSignificantProgress: Bool {
+        return moves > 0 || score > 0
+    }
+    
     private let columns = [
         GridItem(.flexible()),
         GridItem(.flexible())
     ]
     
+    init(viewModel: FlashCardViewModel, cards: [FlashCard], deckIds: [UUID] = [], shouldLoadSaveState: Bool = false) {
+        self.viewModel = viewModel
+        self.cards = cards
+        self.deckIds = deckIds
+        self.shouldLoadSaveState = shouldLoadSaveState
+    }
+
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
@@ -50,11 +66,7 @@ struct GameView: View {
                 // Bottom Navigation Bar
                 HStack {
                     Button(action: {
-                        if moves > 0 && !showingGameOver {
-                            showingCloseConfirmation = true
-                        } else {
-                            dismiss()
-                        }
+                        handleBackButton()
                     }) {
                         VStack {
                             Image(systemName: "chevron.backward")
@@ -72,6 +84,20 @@ struct GameView: View {
                         }
                     }
                     .frame(maxWidth: .infinity)
+                    
+                    // Save progress button
+                    if hasSignificantProgress && !showingGameOver {
+                        Button(action: {
+                            saveCurrentProgress()
+                            HapticManager.shared.successNotification()
+                        }) {
+                            VStack {
+                                Image(systemName: "bookmark.fill")
+                                Text("Save")
+                            }
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
                 }
                 .padding()
                 .background(Color(.systemBackground))
@@ -143,15 +169,165 @@ struct GameView: View {
             }
         }
         .navigationBarHidden(true)
-        .onAppear(perform: setupGame)
+        .onAppear {
+            if shouldLoadSaveState {
+                loadSavedProgress()
+            } else {
+                setupGame()
+            }
+        }
+        .onDisappear {
+            // Auto-save when view disappears
+            if hasSignificantProgress && !showingGameOver {
+                saveCurrentProgress()
+            }
+        }
         .alert("Close Game?", isPresented: $showingCloseConfirmation) {
-            Button("Close", role: .destructive) {
+            Button("Save & Close", role: .destructive) {
+                saveProgressAndDismiss()
+            }
+            Button("Close Without Saving") {
                 dismissToRoot()
             }
             Button("Cancel", role: .cancel) { }
         } message: {
-            Text("Are you sure you want to close? Your progress will be lost.")
+            Text(hasSignificantProgress ? 
+                "Would you like to save your progress?" : 
+                "Are you sure you want to close?")
         }
+    }
+    
+    private func handleBackButton() {
+        if hasSignificantProgress && !showingGameOver {
+            showingCloseConfirmation = true
+        } else {
+            dismiss()
+        }
+    }
+    
+    private func saveCurrentProgress() {
+        guard !deckIds.isEmpty && hasSignificantProgress else { return }
+        
+        let savedCards = gameCards.map { card in
+            MemoryGameState.SavedCard(
+                id: card.id,
+                content: card.content,
+                cardType: card.type == .word ? "word" : "definition",
+                originalCardId: card.originalCard.id,
+                isMatched: card.isMatched,
+                isSelected: card.isSelected
+            )
+        }
+        
+        let displayedSavedCards = displayedCards.map { card in
+            MemoryGameState.SavedCard(
+                id: card.id,
+                content: card.content,
+                cardType: card.type == .word ? "word" : "definition",
+                originalCardId: card.originalCard.id,
+                isMatched: card.isMatched,
+                isSelected: card.isSelected
+            )
+        }
+        
+        let remainingSavedCards = remainingCards.map { card in
+            MemoryGameState.SavedCard(
+                id: card.id,
+                content: card.content,
+                cardType: card.type == .word ? "word" : "definition",
+                originalCardId: card.originalCard.id,
+                isMatched: card.isMatched,
+                isSelected: card.isSelected
+            )
+        }
+        
+        let gameState = MemoryGameState(
+            gameCards: savedCards,
+            displayedCards: displayedSavedCards,
+            remainingCards: remainingSavedCards,
+            selectedCardId: selectedCard?.id,
+            score: score,
+            moves: moves,
+            incorrectMatches: Set(incorrectMatches.map { $0.id })
+        )
+        
+        SaveStateManager.shared.saveGameState(
+            gameType: .memoryGame,
+            deckIds: deckIds,
+            gameData: gameState
+        )
+        
+        print("💾 Memory game progress saved - Score: \(score), Moves: \(moves)")
+    }
+    
+    private func loadSavedProgress() {
+        guard !deckIds.isEmpty else { 
+            setupGame()
+            return 
+        }
+        
+        if let savedState = SaveStateManager.shared.loadGameState(
+            gameType: .memoryGame,
+            deckIds: deckIds,
+            as: MemoryGameState.self
+        ) {
+            // Helper function to convert saved cards back to Card objects
+            func convertSavedCard(_ savedCard: MemoryGameState.SavedCard) -> Card? {
+                guard let originalCard = cards.first(where: { $0.id == savedCard.originalCardId }) else {
+                    return nil
+                }
+                
+                var card = Card(
+                    content: savedCard.content,
+                    type: savedCard.cardType == "word" ? .word : .definition,
+                    originalCard: originalCard
+                )
+                card.isMatched = savedCard.isMatched
+                card.isSelected = savedCard.isSelected
+                
+                return card
+            }
+            
+            // Restore game state
+            score = savedState.score
+            moves = savedState.moves
+            
+            // Convert saved cards back to Card objects
+            gameCards = savedState.gameCards.compactMap(convertSavedCard)
+            displayedCards = savedState.displayedCards.compactMap(convertSavedCard)
+            remainingCards = savedState.remainingCards.compactMap(convertSavedCard)
+            
+            // Restore selected card
+            if let selectedId = savedState.selectedCardId {
+                selectedCard = displayedCards.first { $0.id == selectedId }
+            }
+            
+            // Restore incorrect matches
+            incorrectMatches = Set(savedState.incorrectMatches.compactMap { cardId in
+                cards.first { $0.id == cardId }
+            })
+            
+            print("🧠 Memory game progress loaded - Score: \(score), Moves: \(moves)")
+            HapticManager.shared.successNotification()
+        } else {
+            setupGame()
+        }
+    }
+    
+    private func clearSavedProgress() {
+        guard !deckIds.isEmpty else { return }
+        
+        SaveStateManager.shared.deleteSaveState(
+            gameType: .memoryGame,
+            deckIds: deckIds
+        )
+    }
+    
+    private func saveProgressAndDismiss() {
+        if hasSignificantProgress && !showingGameOver {
+            saveCurrentProgress()
+        }
+        dismissToRoot()
     }
     
     private var emptyStateView: some View {
@@ -206,6 +382,9 @@ struct GameView: View {
         score = 0
         moves = 0
         selectedCard = nil
+        
+        // Clear any saved progress when starting fresh
+        clearSavedProgress()
         
         // Create pairs of cards (word and definition)
         var allPairs: [(Card, Card)] = cards.map { flashCard in
@@ -283,6 +462,11 @@ struct GameView: View {
         // This is the second card
         moves += 1
         
+        // Auto-save progress periodically (every 10 moves)
+        if moves % 10 == 0 {
+            saveCurrentProgress()
+        }
+        
         if let selectedIndex = displayedCards.firstIndex(where: { $0.id == selectedCard?.id }) {
             if selectedCard?.originalCard.id == tappedCard.originalCard.id &&
                selectedCard?.type != tappedCard.type {
@@ -307,6 +491,10 @@ struct GameView: View {
                         let unmatchedCards = displayedCards.filter { !$0.isMatched }
                         if unmatchedCards.isEmpty && remainingCards.isEmpty {
                             HapticManager.shared.gameComplete() // Double haptic for game completion
+                            
+                            // Clear saved progress since game is complete
+                            clearSavedProgress()
+                            
                             showingGameOver = true
                         }
                     }

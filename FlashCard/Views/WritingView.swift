@@ -15,14 +15,25 @@ struct WritingView: View {
     @FocusState private var isKeyboardFocused: Bool
     @Environment(\.dismiss) private var dismiss
     
+    // Save state properties
+    private var deckIds: [UUID]
+    private var shouldLoadSaveState: Bool
+    
+    // Computed property to check if there's significant progress to save
+    private var hasSignificantProgress: Bool {
+        return currentIndex > 0 || totalAnswers > 0
+    }
+    
     private var currentCard: FlashCard? {
         guard currentIndex < cards.count else { return nil }
         return cards[currentIndex]
     }
     
-    init(viewModel: FlashCardViewModel, cards: [FlashCard]) {
+    init(viewModel: FlashCardViewModel, cards: [FlashCard], deckIds: [UUID] = [], shouldLoadSaveState: Bool = false) {
         self.viewModel = viewModel
         _cards = State(initialValue: cards.shuffled())
+        self.deckIds = deckIds
+        self.shouldLoadSaveState = shouldLoadSaveState
     }
     
     var body: some View {
@@ -42,13 +53,29 @@ struct WritingView: View {
             bottomNavigationBar
         }
         .navigationBarHidden(true)
+        .onAppear {
+            if shouldLoadSaveState {
+                loadSavedProgress()
+            }
+        }
+        .onDisappear {
+            // Auto-save when view disappears
+            if hasSignificantProgress && !showingResults {
+                saveCurrentProgress()
+            }
+        }
         .alert("Close Game?", isPresented: $showingCloseConfirmation) {
-            Button("Close", role: .destructive) {
+            Button("Save & Close", role: .destructive) {
+                saveProgressAndDismiss()
+            }
+            Button("Close Without Saving") {
                 dismissToRoot()
             }
             Button("Cancel", role: .cancel) { }
         } message: {
-            Text("Are you sure you want to close? Your progress will be lost.")
+            Text(hasSignificantProgress ? 
+                "Would you like to save your progress?" : 
+                "Are you sure you want to close?")
         }
     }
     
@@ -289,11 +316,7 @@ struct WritingView: View {
     private var bottomNavigationBar: some View {
         HStack {
             Button(action: {
-                if totalAnswers > 0 && !showingResults {
-                    showingCloseConfirmation = true
-                } else {
-                    dismiss()
-                }
+                handleBackButton()
             }) {
                 VStack {
                     Image(systemName: "chevron.backward")
@@ -311,6 +334,20 @@ struct WritingView: View {
                 }
             }
             .frame(maxWidth: .infinity)
+            
+            // Save progress button
+            if hasSignificantProgress && !showingResults {
+                Button(action: {
+                    saveCurrentProgress()
+                    HapticManager.shared.successNotification()
+                }) {
+                    VStack {
+                        Image(systemName: "bookmark.fill")
+                        Text("Save")
+                    }
+                }
+                .frame(maxWidth: .infinity)
+            }
         }
         .padding()
         .background(Color(.systemBackground))
@@ -366,14 +403,19 @@ struct WritingView: View {
     }
     
     private func nextCard() {
-        HapticManager.shared.questionAdvance()
+        // Auto-save progress periodically (every 5 cards)
+        if currentIndex % 5 == 0 && currentIndex > 0 {
+            saveCurrentProgress()
+        }
         
         if currentIndex < cards.count - 1 {
             currentIndex += 1
             resetForNextCard()
         } else {
+            // Clear saved progress since game is complete
+            clearSavedProgress()
+            
             showingResults = true
-            HapticManager.shared.gameComplete()
         }
     }
     
@@ -392,6 +434,86 @@ struct WritingView: View {
         totalAnswers = 0
         showingResults = false
         resetForNextCard()
+        
+        // Clear any saved progress when resetting
+        clearSavedProgress()
+    }
+    
+    private func handleBackButton() {
+        if hasSignificantProgress && !showingResults {
+            showingCloseConfirmation = true
+        } else {
+            dismiss()
+        }
+    }
+    
+    private func saveCurrentProgress() {
+        guard !deckIds.isEmpty && hasSignificantProgress else { return }
+        
+        let gameState = WritingGameState(
+            currentIndex: currentIndex,
+            correctAnswers: correctAnswers,
+            totalAnswers: totalAnswers,
+            cards: cards
+        )
+        
+        SaveStateManager.shared.saveGameState(
+            gameType: .writing,
+            deckIds: deckIds,
+            gameData: gameState
+        )
+        
+        print("💾 Writing practice progress saved - Index: \(currentIndex), Score: \(correctAnswers)/\(totalAnswers)")
+    }
+    
+    private func loadSavedProgress() {
+        guard !deckIds.isEmpty else { return }
+        
+        if let savedState = SaveStateManager.shared.loadGameState(
+            gameType: .writing,
+            deckIds: deckIds,
+            as: WritingGameState.self
+        ) {
+            // Restore state
+            currentIndex = savedState.currentIndex
+            correctAnswers = savedState.correctAnswers
+            totalAnswers = savedState.totalAnswers
+            
+            // Update cards to match saved order if they exist
+            if !savedState.cards.isEmpty {
+                // Filter to only include cards that still exist in the current deck selection
+                let currentCardIds = Set(cards.map { $0.id })
+                let savedCards = savedState.cards.filter { currentCardIds.contains($0.id) }
+                
+                if !savedCards.isEmpty {
+                    cards = savedCards
+                }
+            }
+            
+            // Ensure currentIndex is valid
+            if currentIndex >= cards.count {
+                currentIndex = max(0, cards.count - 1)
+            }
+            
+            print("✏️ Writing practice progress loaded - Index: \(currentIndex), Score: \(correctAnswers)/\(totalAnswers)")
+            HapticManager.shared.successNotification()
+        }
+    }
+    
+    private func clearSavedProgress() {
+        guard !deckIds.isEmpty else { return }
+        
+        SaveStateManager.shared.deleteSaveState(
+            gameType: .writing,
+            deckIds: deckIds
+        )
+    }
+    
+    private func saveProgressAndDismiss() {
+        if hasSignificantProgress && !showingResults {
+            saveCurrentProgress()
+        }
+        dismissToRoot()
     }
     
     private func dismissToRoot() {

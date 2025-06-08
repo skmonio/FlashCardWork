@@ -16,14 +16,25 @@ struct StudyView: View {
     @State private var refreshID = UUID()
     @Environment(\.dismiss) private var dismiss
     
+    // Save state properties
+    private var deckIds: [UUID]
+    private var shouldLoadSaveState: Bool
+    
     // Computed property to check if user has seen any cards
     private var hasSeenCards: Bool {
         return !knownCards.isEmpty || !unknownCards.isEmpty
     }
     
-    init(viewModel: FlashCardViewModel, cards: [FlashCard]) {
+    // Computed property to check if there's significant progress to save
+    private var hasSignificantProgress: Bool {
+        return currentIndex > 0 || hasSeenCards
+    }
+    
+    init(viewModel: FlashCardViewModel, cards: [FlashCard], deckIds: [UUID] = [], shouldLoadSaveState: Bool = false) {
         self.viewModel = viewModel
         _cards = State(initialValue: cards)
+        self.deckIds = deckIds
+        self.shouldLoadSaveState = shouldLoadSaveState
     }
     
     var body: some View {
@@ -42,11 +53,7 @@ struct StudyView: View {
             // Bottom Navigation Bar
             HStack {
                 Button(action: {
-                    if hasSeenCards && !showingResults {
-                        showingCloseConfirmation = true
-                    } else {
-                        dismiss()
-                    }
+                    handleBackButton()
                 }) {
                     VStack {
                         Image(systemName: "chevron.backward")
@@ -64,6 +71,20 @@ struct StudyView: View {
                     }
                 }
                 .frame(maxWidth: .infinity)
+                
+                // Save progress button
+                if hasSignificantProgress && !showingResults {
+                    Button(action: {
+                        saveCurrentProgress()
+                        HapticManager.shared.successNotification()
+                    }) {
+                        VStack {
+                            Image(systemName: "bookmark.fill")
+                            Text("Save")
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                }
             }
             .padding()
             .background(Color(.systemBackground))
@@ -77,12 +98,17 @@ struct StudyView: View {
         }
         .navigationBarHidden(true)
         .alert("Close Study Session?", isPresented: $showingCloseConfirmation) {
-            Button("Close", role: .destructive) {
+            Button("Save & Close", role: .destructive) {
                 saveProgressAndDismiss()
+            }
+            Button("Close Without Saving") {
+                dismissToRoot()
             }
             Button("Cancel", role: .cancel) { }
         } message: {
-            Text("Are you sure you want to close? Your progress will be saved.")
+            Text(hasSignificantProgress ? 
+                "Would you like to save your progress?" : 
+                "Are you sure you want to close?")
         }
         .sheet(item: $selectedCardForEdit) { card in
             EditCardView(viewModel: viewModel, card: card)
@@ -98,6 +124,17 @@ struct StudyView: View {
                         refreshID = UUID() // Force CardView refresh
                     }
                 }
+            }
+        }
+        .onAppear {
+            if shouldLoadSaveState {
+                loadSavedProgress()
+            }
+        }
+        .onDisappear {
+            // Auto-save when view disappears (if user navigates away without using back button)
+            if hasSignificantProgress && !showingResults {
+                saveCurrentProgress()
             }
         }
     }
@@ -277,6 +314,81 @@ struct StudyView: View {
         .padding()
     }
     
+    private func handleBackButton() {
+        if hasSeenCards && !showingResults {
+            showingCloseConfirmation = true
+        } else {
+            dismiss()
+        }
+    }
+    
+    private func saveCurrentProgress() {
+        guard !deckIds.isEmpty && hasSignificantProgress else { return }
+        
+        let gameState = StudyGameState(
+            currentIndex: currentIndex,
+            knownCards: knownCards,
+            unknownCards: unknownCards,
+            isShowingFront: isShowingFront,
+            isShowingExample: isShowingExample,
+            cards: cards
+        )
+        
+        SaveStateManager.shared.saveGameState(
+            gameType: .study,
+            deckIds: deckIds,
+            gameData: gameState
+        )
+        
+        print("💾 Study progress saved - Index: \(currentIndex), Known: \(knownCards.count), Unknown: \(unknownCards.count)")
+    }
+    
+    private func loadSavedProgress() {
+        guard !deckIds.isEmpty else { return }
+        
+        if let savedState = SaveStateManager.shared.loadGameState(
+            gameType: .study,
+            deckIds: deckIds,
+            as: StudyGameState.self
+        ) {
+            // Restore state
+            currentIndex = savedState.currentIndex
+            knownCards = savedState.knownCards
+            unknownCards = savedState.unknownCards
+            isShowingFront = savedState.isShowingFront
+            isShowingExample = savedState.isShowingExample
+            
+            // Update cards to match saved order if they exist
+            if !savedState.cards.isEmpty {
+                // Filter to only include cards that still exist in the current deck selection
+                let currentCardIds = Set(cards.map { $0.id })
+                let savedCards = savedState.cards.filter { currentCardIds.contains($0.id) }
+                
+                if !savedCards.isEmpty {
+                    cards = savedCards
+                }
+            }
+            
+            // Ensure currentIndex is valid
+            if currentIndex >= cards.count {
+                currentIndex = max(0, cards.count - 1)
+            }
+            
+            print("📖 Study progress loaded - Index: \(currentIndex), Known: \(knownCards.count), Unknown: \(unknownCards.count)")
+            
+            HapticManager.shared.successNotification()
+        }
+    }
+    
+    private func clearSavedProgress() {
+        guard !deckIds.isEmpty else { return }
+        
+        SaveStateManager.shared.deleteSaveState(
+            gameType: .study,
+            deckIds: deckIds
+        )
+    }
+    
     private func resetForNewSession() {
         currentIndex = 0
         showingResults = false
@@ -286,6 +398,9 @@ struct StudyView: View {
         nextCardActive = false
         knownCards.removeAll()
         unknownCards.removeAll()
+        
+        // Clear any saved progress when starting fresh
+        clearSavedProgress()
     }
     
     private func setupStudySession() {
@@ -298,6 +413,9 @@ struct StudyView: View {
         knownCards.removeAll()
         unknownCards.removeAll()
         cards = cards.shuffled() // Reshuffle cards for new session
+        
+        // Clear any saved progress when resetting
+        clearSavedProgress()
     }
     
     private func saveProgressAndDismiss() {
@@ -308,6 +426,12 @@ struct StudyView: View {
         for cardId in unknownCards {
             viewModel.setCardStatus(cardId: cardId, status: .unknown)
         }
+        
+        // Save current progress
+        if hasSignificantProgress && !showingResults {
+            saveCurrentProgress()
+        }
+        
         dismissToRoot()
     }
     
@@ -340,9 +464,18 @@ struct StudyView: View {
                 isShowingFront = true
                 isShowingExample = false
                 dragOffset = 0
+                
+                // Auto-save progress periodically (every 5 cards)
+                if currentIndex % 5 == 0 {
+                    saveCurrentProgress()
+                }
             }
         } else {
             HapticManager.shared.gameComplete() // Strong haptic for session completion
+            
+            // Clear saved progress since session is complete
+            clearSavedProgress()
+            
             withAnimation {
                 showingResults = true
             }
