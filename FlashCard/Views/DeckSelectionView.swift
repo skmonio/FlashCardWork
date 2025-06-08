@@ -131,16 +131,16 @@ struct DeckSelectionView: View {
                     
                     if !selectedDeckIds.isEmpty && !availableCards.isEmpty {
                         Section {
-                            Button(action: {
-                                handleStartGame()
-                            }) {
-                                HStack {
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text("Start \(mode.title)")
-                                            .foregroundColor(.blue)
-                                            .font(.headline)
-                                        
-                                        if hasSaveState {
+                            if hasSaveState {
+                                Button(action: {
+                                    handleStartGame()
+                                }) {
+                                    HStack {
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text("Start \(mode.title)")
+                                                .foregroundColor(.blue)
+                                                .font(.headline)
+                                            
                                             HStack {
                                                 Image(systemName: "clock.fill")
                                                     .foregroundColor(.green)
@@ -150,12 +150,39 @@ struct DeckSelectionView: View {
                                                     .foregroundColor(.green)
                                             }
                                         }
+                                        Spacer()
+                                        Text("\(availableCards.count) cards")
+                                            .foregroundColor(.secondary)
                                     }
-                                    Spacer()
-                                    Text("\(availableCards.count) cards")
-                                        .foregroundColor(.secondary)
+                                }
+                            } else {
+                                NavigationLink(destination: destinationView) {
+                                    HStack {
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text("Start \(mode.title)")
+                                                .foregroundColor(.blue)
+                                                .font(.headline)
+                                        }
+                                        Spacer()
+                                        Text("\(availableCards.count) cards")
+                                            .foregroundColor(.secondary)
+                                    }
+                                }
+                                .onTapGesture {
+                                    print("🔗 Direct NavigationLink tapped for \(mode.title)")
+                                    print("📊 Cards: \(availableCards.count), Decks: \(selectedDeckIds.count)")
                                 }
                             }
+                            
+                            // Hidden NavigationLink for programmatic navigation
+                            NavigationLink(
+                                destination: destinationView,
+                                isActive: $shouldStartGame
+                            ) {
+                                EmptyView()
+                            }
+                            .opacity(0)
+                            .frame(height: 0)
                         }
                     }
                 }
@@ -214,9 +241,6 @@ struct DeckSelectionView: View {
                 )
             }
         }
-        .navigationDestination(isPresented: $shouldStartGame) {
-            destinationView
-        }
         .onChange(of: shouldStartGame) { oldValue, newValue in
             if newValue {
                 print("🎮 Starting game: \(mode.title), Continue: \(shouldContinueGame), Decks: \(selectedDeckIds.count)")
@@ -262,61 +286,63 @@ struct DeckSelectionView: View {
     
     @ViewBuilder
     private var destinationView: some View {
+        let deckIdArray = Array(selectedDeckIds)
+        
         switch mode {
         case .study:
             StudyViewWithSaveState(
                 viewModel: viewModel, 
                 cards: availableCards,
-                deckIds: Array(selectedDeckIds),
+                deckIds: deckIdArray,
                 shouldContinue: shouldContinueGame
             )
         case .test:
             TestViewWithSaveState(
                 viewModel: viewModel, 
                 cards: availableCards,
-                deckIds: Array(selectedDeckIds),
+                deckIds: deckIdArray,
                 shouldContinue: shouldContinueGame
             )
         case .game:
             GameViewWithSaveState(
                 viewModel: viewModel, 
                 cards: availableCards,
-                deckIds: Array(selectedDeckIds),
+                deckIds: deckIdArray,
                 shouldContinue: shouldContinueGame
             )
         case .truefalse:
             TrueFalseViewWithSaveState(
                 viewModel: viewModel, 
                 cards: availableCards,
-                deckIds: Array(selectedDeckIds),
+                deckIds: deckIdArray,
                 shouldContinue: shouldContinueGame
             )
         case .hangman:
             HangmanViewWithSaveState(
                 viewModel: viewModel, 
                 cards: availableCards,
-                deckIds: Array(selectedDeckIds),
+                deckIds: deckIdArray,
                 shouldContinue: shouldContinueGame
             )
         case .dehet:
             DeHetGameViewWithSaveState(
                 viewModel: viewModel, 
                 cards: availableCards,
-                deckIds: Array(selectedDeckIds),
+                deckIds: deckIdArray,
                 shouldContinue: shouldContinueGame
             )
         case .lookcovercheck:
             LookCoverCheckViewWithSaveState(
                 viewModel: viewModel, 
                 cards: availableCards,
-                deckIds: Array(selectedDeckIds),
+                deckIds: deckIdArray,
                 shouldContinue: shouldContinueGame
             )
         case .writing:
             WritingViewWithSaveState(
                 viewModel: viewModel, 
                 cards: availableCards,
-                deckIds: Array(selectedDeckIds),
+                deckIds: deckIdArray,
                 shouldContinue: shouldContinueGame
             )
         }
