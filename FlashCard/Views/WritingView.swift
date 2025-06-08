@@ -56,6 +56,9 @@ struct WritingView: View {
         .onAppear {
             if shouldLoadSaveState {
                 loadSavedProgress()
+            } else {
+                // Initialize normally - reset to first card and prepare for input
+                resetForNextCard()
             }
         }
         .onDisappear {
@@ -467,7 +470,11 @@ struct WritingView: View {
     }
     
     private func loadSavedProgress() {
-        guard !deckIds.isEmpty else { return }
+        guard !deckIds.isEmpty else { 
+            // If no deckIds, just start normally
+            resetForNextCard()
+            return 
+        }
         
         if let savedState = SaveStateManager.shared.loadGameState(
             gameType: .writing,
@@ -497,6 +504,10 @@ struct WritingView: View {
             
             print("✏️ Writing practice progress loaded - Index: \(currentIndex), Score: \(correctAnswers)/\(totalAnswers)")
             HapticManager.shared.successNotification()
+        } else {
+            // No saved state found, start normally
+            print("✏️ No saved state found, starting fresh writing practice")
+            resetForNextCard()
         }
     }
     

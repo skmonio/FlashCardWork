@@ -129,6 +129,9 @@ struct StudyView: View {
         .onAppear {
             if shouldLoadSaveState {
                 loadSavedProgress()
+            } else {
+                // Initialize normally if not loading save state
+                setupStudySession()
             }
         }
         .onDisappear {
@@ -344,7 +347,11 @@ struct StudyView: View {
     }
     
     private func loadSavedProgress() {
-        guard !deckIds.isEmpty else { return }
+        guard !deckIds.isEmpty else { 
+            // If no deckIds, just start normally
+            setupStudySession()
+            return 
+        }
         
         if let savedState = SaveStateManager.shared.loadGameState(
             gameType: .study,
@@ -377,6 +384,10 @@ struct StudyView: View {
             print("📖 Study progress loaded - Index: \(currentIndex), Known: \(knownCards.count), Unknown: \(unknownCards.count)")
             
             HapticManager.shared.successNotification()
+        } else {
+            // No saved state found, start normally
+            print("📖 No saved state found, starting fresh study session")
+            setupStudySession()
         }
     }
     

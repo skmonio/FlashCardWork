@@ -310,6 +310,8 @@ struct GameView: View {
             print("🧠 Memory game progress loaded - Score: \(score), Moves: \(moves)")
             HapticManager.shared.successNotification()
         } else {
+            // No saved state found, start normally
+            print("🧠 No saved state found, starting fresh memory game")
             setupGame()
         }
     }

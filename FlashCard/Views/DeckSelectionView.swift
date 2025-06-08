@@ -211,6 +211,11 @@ struct DeckSelectionView: View {
         .navigationDestination(isPresented: $shouldStartGame) {
             destinationView
         }
+        .onChange(of: shouldStartGame) { oldValue, newValue in
+            if newValue {
+                print("🎮 Starting game: \(mode.title), Continue: \(shouldContinueGame), Decks: \(selectedDeckIds.count)")
+            }
+        }
     }
     
     private func handleStartGame() {
