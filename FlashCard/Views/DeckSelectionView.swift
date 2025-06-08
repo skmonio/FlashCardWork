@@ -42,16 +42,22 @@ struct DeckSelectionView: View {
     
     var availableCards: [FlashCard] {
         if selectedDeckIds.isEmpty {
+            print("⚠️ No decks selected - returning empty cards array")
             return []  // Return empty array when no decks are selected
         } else {
             // Get unique cards that belong to any of the selected decks
             var uniqueCards: Set<FlashCard> = []
             for deckId in selectedDeckIds {
                 if let deck = viewModel.decks.first(where: { $0.id == deckId }) {
+                    print("📦 Found deck '\(deck.name)' with \(deck.cards.count) cards")
                     uniqueCards.formUnion(deck.cards)
+                } else {
+                    print("❌ Deck with ID \(deckId) not found")
                 }
             }
-            return Array(uniqueCards)
+            let finalCards = Array(uniqueCards)
+            print("🎯 Total unique cards available: \(finalCards.count)")
+            return finalCards
         }
     }
     
@@ -214,21 +220,41 @@ struct DeckSelectionView: View {
         .onChange(of: shouldStartGame) { oldValue, newValue in
             if newValue {
                 print("🎮 Starting game: \(mode.title), Continue: \(shouldContinueGame), Decks: \(selectedDeckIds.count)")
+                print("📊 Available cards: \(availableCards.count)")
+                print("🔗 Deck IDs: \(Array(selectedDeckIds))")
             }
+            if oldValue && !newValue {
+                print("🔄 Game navigation state reset")
+            }
+        }
+        .onAppear {
+            // Reset navigation state when view appears
+            shouldStartGame = false
+            shouldContinueGame = false
+            showingContinueGameOverlay = false
         }
     }
     
     private func handleStartGame() {
+        print("🚀 handleStartGame called for \(mode.title)")
+        print("📋 Selected decks: \(selectedDeckIds.count), Available cards: \(availableCards.count)")
+        
         // Skip save state check for Hangman
         if mode == .hangman {
+            print("🎯 Hangman mode - starting directly")
             shouldContinueGame = false
             shouldStartGame = true
             return
         }
         
-        if hasSaveState {
+        let hasExistingSave = hasSaveState
+        print("💾 Has existing save: \(hasExistingSave)")
+        
+        if hasExistingSave {
+            print("🔄 Showing continue game overlay")
             showingContinueGameOverlay = true
         } else {
+            print("✨ Starting fresh game")
             shouldContinueGame = false
             shouldStartGame = true
         }
@@ -311,6 +337,9 @@ struct StudyViewWithSaveState: View {
             deckIds: deckIds,
             shouldLoadSaveState: shouldContinue
         )
+        .onAppear {
+            print("📖 StudyViewWithSaveState appearing - Cards: \(cards.count), DeckIds: \(deckIds.count), ShouldContinue: \(shouldContinue)")
+        }
     }
 }
 
@@ -323,6 +352,7 @@ struct TestViewWithSaveState: View {
     var body: some View {
         TestView(viewModel: viewModel, cards: cards)
             .onAppear {
+                print("✅ TestViewWithSaveState appearing - Cards: \(cards.count), DeckIds: \(deckIds.count), ShouldContinue: \(shouldContinue)")
                 if shouldContinue {
                     // Load saved state logic will be implemented in TestView
                 }
@@ -343,6 +373,9 @@ struct GameViewWithSaveState: View {
             deckIds: deckIds,
             shouldLoadSaveState: shouldContinue
         )
+        .onAppear {
+            print("🧠 GameViewWithSaveState appearing - Cards: \(cards.count), DeckIds: \(deckIds.count), ShouldContinue: \(shouldContinue)")
+        }
     }
 }
 
@@ -419,5 +452,8 @@ struct WritingViewWithSaveState: View {
             deckIds: deckIds,
             shouldLoadSaveState: shouldContinue
         )
+        .onAppear {
+            print("✏️ WritingViewWithSaveState appearing - Cards: \(cards.count), DeckIds: \(deckIds.count), ShouldContinue: \(shouldContinue)")
+        }
     }
 } 
