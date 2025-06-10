@@ -101,20 +101,8 @@ struct HomeView: View {
                             MenuButton(title: "Test Your Cards", icon: "checkmark.circle.fill")
                         }
                         
-                        NavigationLink(destination: DeckSelectionView(viewModel: viewModel, mode: .game)) {
-                            MenuButton(title: "Remember Your Cards", icon: "brain.fill")
-                        }
-                        
                         NavigationLink(destination: DeckSelectionView(viewModel: viewModel, mode: .truefalse)) {
                             MenuButton(title: "True or False", icon: "questionmark.circle.fill")
-                        }
-                        
-                        NavigationLink(destination: DeckSelectionView(viewModel: viewModel, mode: .hangman)) {
-                            MenuButton(title: "Hangman", icon: "person.fill")
-                        }
-                        
-                        NavigationLink(destination: DeckSelectionView(viewModel: viewModel, mode: .dehet)) {
-                            MenuButton(title: "de of het", icon: "questionmark.diamond.fill")
                         }
                         
                         NavigationLink(destination: DeckSelectionView(viewModel: viewModel, mode: .lookcovercheck)) {
@@ -123,6 +111,10 @@ struct HomeView: View {
                         
                         NavigationLink(destination: DeckSelectionView(viewModel: viewModel, mode: .writing)) {
                             MenuButton(title: "Write Your Card", icon: "pencil.and.scribble")
+                        }
+                        
+                        NavigationLink(destination: MoreGamesView(viewModel: viewModel)) {
+                            MenuButton(title: "More Games", icon: "gamecontroller.fill")
                         }
                     }
                 }
