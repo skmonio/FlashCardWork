@@ -243,12 +243,21 @@ class FlashCardViewModel: ObservableObject {
             decks[index].cards = []
         }
         
+        // Get uncategorized deck ID
+        let uncategorizedDeckId = decks.first(where: { $0.name == "Uncategorized" })?.id
+        
         // Reassign cards to appropriate decks
-        for card in flashCards {
+        for cardIndex in flashCards.indices {
+            let card = flashCards[cardIndex]
+            
             if card.deckIds.isEmpty {
-                // Add to uncategorized if no decks
+                // Add to uncategorized if no decks and set the uncategorized deck ID
+                if let uncategorizedId = uncategorizedDeckId {
+                    flashCards[cardIndex].deckIds.insert(uncategorizedId)
+                    print("Card '\(card.word)' assigned to Uncategorized deck")
+                }
                 if let uncategorizedIndex = decks.firstIndex(where: { $0.name == "Uncategorized" }) {
-                    decks[uncategorizedIndex].cards.append(card)
+                    decks[uncategorizedIndex].cards.append(flashCards[cardIndex])
                 }
             } else {
                 // Add to all assigned decks
@@ -266,11 +275,22 @@ class FlashCardViewModel: ObservableObject {
     
     func addCard(word: String, definition: String, example: String, deckIds: Set<UUID>, article: String? = nil, pastTense: String? = nil, futureTense: String? = nil, cardId: UUID? = nil) -> FlashCard {
         print("Adding new card")
+        
+        var finalDeckIds = deckIds
+        
+        // If no decks specified, assign to Uncategorized
+        if finalDeckIds.isEmpty {
+            if let uncategorizedDeck = decks.first(where: { $0.name == "Uncategorized" }) {
+                finalDeckIds.insert(uncategorizedDeck.id)
+                print("Card '\(word)' assigned to Uncategorized deck")
+            }
+        }
+        
         let newCard = FlashCard(
             word: word, 
             definition: definition, 
             example: example, 
-            deckIds: deckIds,
+            deckIds: finalDeckIds,
             article: article,
             pastTense: pastTense,
             futureTense: futureTense,
@@ -424,7 +444,12 @@ class FlashCardViewModel: ObservableObject {
     }
     
     func getSelectableDecks() -> [Deck] {
-        return getAllDecksHierarchical().filter { $0.name != "Uncategorized" && $0.isEditable }
+        return getAllDecksHierarchical().filter { 
+            $0.name != "Uncategorized" && 
+            $0.name != "📖 Learning" && 
+            $0.name != "📚 Learnt" && 
+            $0.isEditable 
+        }
     }
     
     // MARK: - Export Functionality
@@ -1009,6 +1034,18 @@ class FlashCardViewModel: ObservableObject {
     /// Returns all fully learned cards (80%+ accuracy with 5+ attempts)
     func getFullyLearnedCards() -> [FlashCard] {
         return flashCards.filter { $0.isFullyLearned }
+    }
+    
+    /// Debug method to print card deck assignments
+    func debugCardDeckAssignments() {
+        print("=== Card Deck Assignments Debug ===")
+        for card in flashCards {
+            let deckNames = card.deckIds.compactMap { deckId in
+                decks.first(where: { $0.id == deckId })?.name
+            }
+            print("Card '\(card.word)': \(deckNames.joined(separator: ", "))")
+        }
+        print("===================================")
     }
 }
 
