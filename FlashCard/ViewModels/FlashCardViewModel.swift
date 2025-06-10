@@ -874,9 +874,9 @@ class FlashCardViewModel: ObservableObject {
             let card = flashCards[index]
             print("Card '\(card.word)' answered correctly. Times correct: \(card.timesCorrect)/\(card.timesShown)")
             
-            // Check if card has reached 100% learning
+            // Check if card should move to Learnt deck (80% accuracy with 5+ attempts)
             if card.isFullyLearned {
-                print("Card '\(card.word)' is fully learned! Moving to 'Learnt' deck.")
+                print("Card '\(card.word)' is fully learned (80%+ accuracy)! Moving to 'Learnt' deck.")
                 moveCardToLearntDeck(card)
             } else if let percentage = card.learningPercentage {
                 print("Card '\(card.word)' learning percentage: \(String(format: "%.1f", percentage))%")
@@ -894,8 +894,23 @@ class FlashCardViewModel: ObservableObject {
             // timesCorrect stays the same since this was incorrect
             
             let card = flashCards[index]
+            
+            // Check if card should move back to Learning deck
             if let percentage = card.learningPercentage {
                 print("Card '\(card.word)' answered incorrectly. Learning percentage: \(String(format: "%.1f", percentage))%")
+                
+                // If card was in Learnt deck or accuracy dropped below 70%, move back to Learning
+                let learntDeck = getLearntDeck()
+                let wasInLearntDeck = card.deckIds.contains(learntDeck.id)
+                
+                if wasInLearntDeck || percentage < 70.0 {
+                    print("Card '\(card.word)' moving back to Learning deck (accuracy below 70% or was answered wrong in Learnt)")
+                    moveCardBackToLearningDeck(card)
+                } else {
+                    updateCardInLearningDeck(card)
+                }
+            } else {
+                // First time shown, add to Learning deck
                 updateCardInLearningDeck(card)
             }
             
@@ -945,9 +960,27 @@ class FlashCardViewModel: ObservableObject {
         updateCardDeckAssociations()
     }
     
-    /// Updates a card in the "Learning" deck (for cards that have been shown but aren't 100% yet)
+    /// Moves a card back to the "Learning" deck (when accuracy drops or wrong answer in Learnt)
+    private func moveCardBackToLearningDeck(_ card: FlashCard) {
+        let learningDeck = getLearningDeck()
+        let learntDeck = getLearntDeck()
+        
+        // Add card to learning deck if not already there
+        if let cardIndex = flashCards.firstIndex(where: { $0.id == card.id }) {
+            flashCards[cardIndex].deckIds.insert(learningDeck.id)
+        }
+        
+        // Remove from learnt deck if present
+        if let cardIndex = flashCards.firstIndex(where: { $0.id == card.id }) {
+            flashCards[cardIndex].deckIds.remove(learntDeck.id)
+        }
+        
+        updateCardDeckAssociations()
+    }
+    
+    /// Updates a card in the "Learning" deck (for cards that have been shown but aren't 80% yet)
     private func updateCardInLearningDeck(_ card: FlashCard) {
-        guard !card.isFullyLearned else { return } // Fully learned cards go to learnt deck
+        guard !card.isFullyLearned else { return } // Fully learned cards (80%+) go to learnt deck
         guard card.timesShown > 0 else { return } // Don't add new cards
         
         let learningDeck = getLearningDeck()
@@ -966,14 +999,14 @@ class FlashCardViewModel: ObservableObject {
         return String(format: "%.0f%%", percentage)
     }
     
-    /// Returns all cards currently being learned (have been shown but not 100%)
+    /// Returns all cards currently being learned (have been shown but not 80%+ accuracy)
     func getCardsInProgress() -> [FlashCard] {
         return flashCards.filter { card in
             card.timesShown > 0 && !card.isFullyLearned
         }
     }
     
-    /// Returns all fully learned cards
+    /// Returns all fully learned cards (80%+ accuracy with 5+ attempts)
     func getFullyLearnedCards() -> [FlashCard] {
         return flashCards.filter { $0.isFullyLearned }
     }
