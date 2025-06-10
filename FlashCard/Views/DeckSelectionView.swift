@@ -62,17 +62,30 @@ struct DeckSelectionView: View {
     }
     
     private var hasSaveState: Bool {
-        guard !selectedDeckIds.isEmpty else { return false }
+        guard !selectedDeckIds.isEmpty else { 
+            print("💾 No decks selected - no save state")
+            return false 
+        }
         
         // Skip save state for Hangman game
         if mode == .hangman {
+            print("💾 Hangman mode - no save state support")
             return false
         }
         
-        return SaveStateManager.shared.hasSaveState(
+        let saveExists = SaveStateManager.shared.hasSaveState(
             gameType: mode.saveStateType,
             deckIds: Array(selectedDeckIds)
         )
+        
+        print("💾 Save state check for \(mode.title): \(saveExists)")
+        if saveExists {
+            if let info = SaveStateManager.shared.getSaveStateInfo(gameType: mode.saveStateType, deckIds: Array(selectedDeckIds)) {
+                print("💾 Save info: saved \(info.date), \(info.deckCount) decks")
+            }
+        }
+        
+        return saveExists
     }
 
     var body: some View {
@@ -131,16 +144,16 @@ struct DeckSelectionView: View {
                     
                     if !selectedDeckIds.isEmpty && !availableCards.isEmpty {
                         Section {
-                            if hasSaveState {
-                                Button(action: {
-                                    handleStartGame()
-                                }) {
-                                    HStack {
-                                        VStack(alignment: .leading, spacing: 4) {
-                                            Text("Start \(mode.title)")
-                                                .foregroundColor(.blue)
-                                                .font(.headline)
-                                            
+                            Button(action: {
+                                handleStartGame()
+                            }) {
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text("Start \(mode.title)")
+                                            .foregroundColor(.blue)
+                                            .font(.headline)
+                                        
+                                        if hasSaveState {
                                             HStack {
                                                 Image(systemName: "clock.fill")
                                                     .foregroundColor(.green)
@@ -150,29 +163,13 @@ struct DeckSelectionView: View {
                                                     .foregroundColor(.green)
                                             }
                                         }
-                                        Spacer()
-                                        Text("\(availableCards.count) cards")
-                                            .foregroundColor(.secondary)
                                     }
-                                }
-                            } else {
-                                NavigationLink(destination: destinationView) {
-                                    HStack {
-                                        VStack(alignment: .leading, spacing: 4) {
-                                            Text("Start \(mode.title)")
-                                                .foregroundColor(.blue)
-                                                .font(.headline)
-                                        }
-                                        Spacer()
-                                        Text("\(availableCards.count) cards")
-                                            .foregroundColor(.secondary)
-                                    }
-                                }
-                                .onTapGesture {
-                                    print("🔗 Direct NavigationLink tapped for \(mode.title)")
-                                    print("📊 Cards: \(availableCards.count), Decks: \(selectedDeckIds.count)")
+                                    Spacer()
+                                    Text("\(availableCards.count) cards")
+                                        .foregroundColor(.secondary)
                                 }
                             }
+                            .buttonStyle(PlainButtonStyle())
                             
                             // Hidden NavigationLink for programmatic navigation
                             NavigationLink(
@@ -225,10 +222,12 @@ struct DeckSelectionView: View {
                     deckIds: Array(selectedDeckIds),
                     cardCount: availableCards.count,
                     onContinue: {
+                        print("🎮 User chose to continue game")
                         shouldContinueGame = true
                         shouldStartGame = true
                     },
                     onStartFresh: {
+                        print("🆕 User chose to start fresh")
                         // Delete the save state and start fresh
                         SaveStateManager.shared.deleteSaveState(
                             gameType: mode.saveStateType,
@@ -239,6 +238,12 @@ struct DeckSelectionView: View {
                     },
                     isPresented: $showingContinueGameOverlay
                 )
+                .onAppear {
+                    print("🎨 ContinueGameOverlay appeared")
+                }
+                .onDisappear {
+                    print("🎨 ContinueGameOverlay disappeared")
+                }
             }
         }
         .onChange(of: shouldStartGame) { oldValue, newValue in
@@ -251,6 +256,9 @@ struct DeckSelectionView: View {
                 print("🔄 Game navigation state reset")
             }
         }
+        .onChange(of: showingContinueGameOverlay) { oldValue, newValue in
+            print("🎨 showingContinueGameOverlay changed from \(oldValue) to \(newValue)")
+        }
         .onAppear {
             // Reset navigation state when view appears
             shouldStartGame = false
@@ -262,6 +270,7 @@ struct DeckSelectionView: View {
     private func handleStartGame() {
         print("🚀 handleStartGame called for \(mode.title)")
         print("📋 Selected decks: \(selectedDeckIds.count), Available cards: \(availableCards.count)")
+        print("🔍 Checking save state...")
         
         // Skip save state check for Hangman
         if mode == .hangman {
@@ -273,10 +282,12 @@ struct DeckSelectionView: View {
         
         let hasExistingSave = hasSaveState
         print("💾 Has existing save: \(hasExistingSave)")
+        print("💾 Current showingContinueGameOverlay: \(showingContinueGameOverlay)")
         
         if hasExistingSave {
             print("🔄 Showing continue game overlay")
             showingContinueGameOverlay = true
+            print("💾 Set showingContinueGameOverlay to: \(showingContinueGameOverlay)")
         } else {
             print("✨ Starting fresh game")
             shouldContinueGame = false
@@ -376,13 +387,15 @@ struct TestViewWithSaveState: View {
     let shouldContinue: Bool
     
     var body: some View {
-        TestView(viewModel: viewModel, cards: cards)
-            .onAppear {
-                print("✅ TestViewWithSaveState appearing - Cards: \(cards.count), DeckIds: \(deckIds.count), ShouldContinue: \(shouldContinue)")
-                if shouldContinue {
-                    // Load saved state logic will be implemented in TestView
-                }
-            }
+        TestView(
+            viewModel: viewModel, 
+            cards: cards,
+            deckIds: deckIds,
+            shouldLoadSaveState: shouldContinue
+        )
+        .onAppear {
+            print("✅ TestViewWithSaveState appearing - Cards: \(cards.count), DeckIds: \(deckIds.count), ShouldContinue: \(shouldContinue)")
+        }
     }
 }
 
@@ -412,12 +425,15 @@ struct TrueFalseViewWithSaveState: View {
     let shouldContinue: Bool
     
     var body: some View {
-        TrueFalseView(viewModel: viewModel, cards: cards)
-            .onAppear {
-                if shouldContinue {
-                    // Load saved state logic will be implemented in TrueFalseView
-                }
-            }
+        TrueFalseView(
+            viewModel: viewModel, 
+            cards: cards,
+            deckIds: deckIds,
+            shouldLoadSaveState: shouldContinue
+        )
+        .onAppear {
+            print("🔥 TrueFalseViewWithSaveState appearing - Cards: \(cards.count), DeckIds: \(deckIds.count), ShouldContinue: \(shouldContinue)")
+        }
     }
 }
 
@@ -456,12 +472,15 @@ struct LookCoverCheckViewWithSaveState: View {
     let shouldContinue: Bool
     
     var body: some View {
-        LookCoverCheckView(viewModel: viewModel, cards: cards)
-            .onAppear {
-                if shouldContinue {
-                    // Load saved state logic will be implemented in LookCoverCheckView
-                }
-            }
+        LookCoverCheckView(
+            viewModel: viewModel, 
+            cards: cards,
+            deckIds: deckIds,
+            shouldLoadSaveState: shouldContinue
+        )
+        .onAppear {
+            print("👁️ LookCoverCheckViewWithSaveState appearing - Cards: \(cards.count), DeckIds: \(deckIds.count), ShouldContinue: \(shouldContinue)")
+        }
     }
 }
 

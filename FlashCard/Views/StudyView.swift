@@ -41,13 +41,10 @@ struct StudyView: View {
         VStack(spacing: 0) {
             if cards.isEmpty {
                 emptyStateView
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if showingResults {
                 resultsView
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 studyView
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
             
             // Bottom Navigation Bar
@@ -112,26 +109,38 @@ struct StudyView: View {
         }
         .sheet(item: $selectedCardForEdit) { card in
             EditCardView(viewModel: viewModel, card: card)
+                .onAppear {
+                    print("📝 Edit sheet appeared for card: \(card.word)")
+                }
+                .onDisappear {
+                    print("📝 Edit sheet disappeared")
+                }
         }
         .onChange(of: selectedCardForEdit) { oldValue, newValue in
-            // Refresh the cards when returning from EditCardView
+            // Just print when edit is done - don't try to update game state
             if oldValue != nil && newValue == nil {
-                // Update the current card with the latest data from viewModel
-                if currentIndex < cards.count {
-                    let cardId = cards[currentIndex].id
-                    if let updatedCard = viewModel.flashCards.first(where: { $0.id == cardId }) {
-                        cards[currentIndex] = updatedCard
-                        refreshID = UUID() // Force CardView refresh
-                    }
-                }
+                print("📝 Edit completed - card saved in viewModel")
             }
+        }
+        .onChange(of: cards) { oldCards, newCards in
+            print("📚 Cards array changed - Count: \(newCards.count), Current card: \(currentIndex < newCards.count ? newCards[currentIndex].word : "N/A")")
         }
         .onAppear {
             if shouldLoadSaveState {
-                loadSavedProgress()
+                loadSavedProgress()  
             } else {
                 // Initialize normally if not loading save state
-                setupStudySession()
+                // Don't call setupStudySession() as it deletes save states
+                currentIndex = 0
+                showingResults = false
+                isShowingFront = true
+                isShowingExample = false
+                dragOffset = 0
+                nextCardActive = false
+                knownCards.removeAll()
+                unknownCards.removeAll()
+                cards = cards.shuffled() // Reshuffle cards for new session
+                // Don't clear saved progress here - only when explicitly resetting
             }
         }
         .onDisappear {
@@ -164,18 +173,6 @@ struct StudyView: View {
                         .foregroundColor(.secondary)
                     Spacer()
                     
-                    // Edit button
-                    if currentIndex < cards.count {
-                        Button(action: {
-                            selectedCardForEdit = cards[currentIndex]
-                        }) {
-                            Image(systemName: "pencil")
-                                .foregroundColor(.blue)
-                                .font(.title3)
-                        }
-                        .padding(.trailing, 8)
-                    }
-                    
                     HStack(spacing: 20) {
                         Label("\(knownCards.count)", systemImage: "checkmark.circle.fill")
                             .foregroundColor(.green)
@@ -190,25 +187,31 @@ struct StudyView: View {
                 
                 // Single card view
                 if currentIndex < cards.count {
-                    CardView(
-                        card: cards[currentIndex],
-                        isShowingFront: $isShowingFront,
-                        isShowingExample: $isShowingExample,
-                        onSwipeLeft: {
-                            handleSwipeLeft()
-                        },
-                        onSwipeRight: {
-                            handleSwipeRight()
-                        },
-                        onDragChanged: { offset in
-                            dragOffset = offset
+                    ZStack {
+                        CardView(
+                            card: cards[currentIndex],
+                            isShowingFront: $isShowingFront,
+                            isShowingExample: $isShowingExample,
+                            onSwipeLeft: {
+                                handleSwipeLeft()
+                            },
+                            onSwipeRight: {
+                                handleSwipeRight()
+                            },
+                            onDragChanged: { offset in
+                                dragOffset = offset
+                            }
+                        )
+                        .transition(AnyTransition.asymmetric(
+                            insertion: .opacity.combined(with: .move(edge: .bottom)),
+                            removal: .opacity.combined(with: .offset(x: dragOffset, y: 0))
+                        ))
+                        .id("\(cards[currentIndex].id)-\(refreshID)")
+                        .onAppear {
+                            print("🎴 CardView appeared - Showing: \(cards[currentIndex].word) - \(cards[currentIndex].definition)")
                         }
-                    )
-                    .transition(AnyTransition.asymmetric(
-                        insertion: .opacity.combined(with: .move(edge: .bottom)),
-                        removal: .opacity.combined(with: .offset(x: dragOffset, y: 0))
-                    ))
-                    .id("\(currentIndex)-\(refreshID)")
+                        .blur(radius: 0)
+                    }
                 }
                 
                 Spacer()

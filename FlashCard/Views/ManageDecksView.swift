@@ -353,22 +353,28 @@ struct MoveDeckSheet: View {
                 }
             }
             .navigationTitle("Move Deck")
-            .navigationBarItems(
-                leading: Button("Cancel") {
-                    dismiss()
-                },
-                trailing: Button("Move") {
-                    moveDeck()
-                    onComplete()
-                    dismiss()
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
                 }
-                .disabled(!hasChanges())
-            )
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Move") {
+                        moveDeck()
+                        onComplete()
+                        dismiss()
+                    }
+                    .disabled(!hasChanges())
+                }
+            }
             .onAppear {
                 // Initialize with current parent
                 selectedParentId = deck.parentId
             }
         }
+        .presentationDetents([.medium, .large])
     }
     
     private func hasChanges() -> Bool {

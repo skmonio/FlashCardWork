@@ -57,10 +57,8 @@ struct GameView: View {
             VStack(spacing: 0) {
                 if cards.isEmpty {
                     emptyStateView
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
                     gameView
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
                 
                 // Bottom Navigation Bar
@@ -173,7 +171,33 @@ struct GameView: View {
             if shouldLoadSaveState {
                 loadSavedProgress()
             } else {
-                setupGame()
+                // Initialize normally if not loading save state
+                // Don't call setupGame() as it deletes save states
+                // Reset game state
+                score = 0
+                moves = 0
+                selectedCard = nil
+                
+                // Don't clear saved progress here - only when explicitly resetting
+                
+                // Create pairs of cards (word and definition)
+                var allPairs: [(Card, Card)] = cards.map { flashCard in
+                    let wordCard = Card(content: flashCard.word, type: .word, originalCard: flashCard)
+                    let defCard = Card(content: flashCard.definition, type: .definition, originalCard: flashCard)
+                    return (wordCard, defCard)
+                }
+                
+                // Shuffle the pairs
+                allPairs.shuffle()
+                
+                // Take first 4 pairs for display (8 cards total)
+                displayedCards = Array(allPairs.prefix(4)).flatMap { [$0.0, $0.1] }
+                // Store remaining pairs
+                remainingCards = Array(allPairs.dropFirst(4)).flatMap { [$0.0, $0.1] }
+                // Shuffle the displayed cards
+                displayedCards.shuffle()
+                
+                gameCards = displayedCards + remainingCards
             }
         }
         .onDisappear {
@@ -345,7 +369,7 @@ struct GameView: View {
     }
     
     private var gameView: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 15) {
             // Score and moves - with top padding for status bar
             HStack {
                 Text("Matches: \(score)")
@@ -375,7 +399,8 @@ struct GameView: View {
                 }
                 .padding(.horizontal)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            
+            Spacer()
         }
     }
     

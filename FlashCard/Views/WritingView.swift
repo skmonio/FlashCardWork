@@ -40,13 +40,10 @@ struct WritingView: View {
         VStack(spacing: 0) {
             if cards.isEmpty {
                 emptyStateView
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if showingResults {
                 resultsView
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 gameView
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
             
             // Bottom Navigation Bar
@@ -100,7 +97,7 @@ struct WritingView: View {
     }
     
     private var gameView: some View {
-        VStack(spacing: 40) {
+        VStack(spacing: 25) {
             // Progress indicator - with top padding for status bar
             HStack {
                 Text("Card \(currentIndex + 1) of \(cards.count)")
@@ -115,7 +112,7 @@ struct WritingView: View {
             
             if let card = currentCard {
                 // Definition display
-                VStack(spacing: 25) {
+                VStack(spacing: 20) {
                     Text("What is the word for:")
                         .font(.title3)
                         .foregroundColor(.secondary)
@@ -132,7 +129,7 @@ struct WritingView: View {
                 }
                 
                 // Input section
-                VStack(spacing: 20) {
+                VStack(spacing: 15) {
                     TextField("Type your answer here...", text: $userInput)
                         .textFieldStyle(RoundedBorderTextFieldStyle())
                         .font(.title3)

@@ -32,13 +32,10 @@ struct DeHetGameView: View {
         VStack(spacing: 0) {
             if filteredCards.isEmpty {
                 emptyStateView
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if showingResults {
                 resultsView
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 gameView
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
             
             // Bottom Navigation Bar
@@ -73,7 +70,7 @@ struct DeHetGameView: View {
     }
     
     private var gameView: some View {
-        VStack(spacing: 50) {
+        VStack(spacing: 30) {
             // Progress indicator - with top padding for status bar
             HStack {
                 Text("Question \(currentIndex + 1) of \(filteredCards.count)")
@@ -88,9 +85,9 @@ struct DeHetGameView: View {
             
             // Card word display
             if let card = currentCard {
-                VStack(spacing: 30) {
+                VStack(spacing: 25) {
                     Text(card.word)
-                        .font(.system(size: 48, weight: .bold))
+                        .font(.system(size: 42, weight: .bold))
                         .multilineTextAlignment(.center)
                         .padding()
                         .frame(maxWidth: .infinity)
@@ -144,14 +141,14 @@ struct DeHetGameView: View {
                     .padding(.horizontal)
                 } else {
                     // Answer buttons
-                    HStack(spacing: 60) {
+                    HStack(spacing: 50) {
                         Button(action: {
                             checkAnswer("de")
                         }) {
                             Text("de")
-                                .font(.system(size: 36, weight: .bold))
+                                .font(.system(size: 32, weight: .bold))
                                 .foregroundColor(.white)
-                                .frame(width: 120, height: 80)
+                                .frame(width: 110, height: 70)
                                 .background(
                                     RoundedRectangle(cornerRadius: 20)
                                         .fill(Color.blue)
@@ -162,9 +159,9 @@ struct DeHetGameView: View {
                             checkAnswer("het")
                         }) {
                             Text("het")
-                                .font(.system(size: 36, weight: .bold))
+                                .font(.system(size: 32, weight: .bold))
                                 .foregroundColor(.white)
-                                .frame(width: 120, height: 80)
+                                .frame(width: 110, height: 70)
                                 .background(
                                     RoundedRectangle(cornerRadius: 20)
                                         .fill(Color.orange)

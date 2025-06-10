@@ -114,7 +114,7 @@ struct HangmanView: View {
     var body: some View {
         VStack(spacing: 0) {
             ZStack {
-                VStack(spacing: 30) {
+                VStack(spacing: 20) {
                     // Progress and attempts - with top padding for status bar
                     HStack {
                         Text("Word \(currentCardIndex + 1) of \(cards.count)")
@@ -129,19 +129,19 @@ struct HangmanView: View {
                     
                     // Hangman drawing
                     HangmanDrawing(remainingAttempts: remainingAttempts)
-                        .frame(height: 200)
+                        .frame(height: 180)
                     
                     // Word to guess - larger and more spaced
-                    VStack(spacing: 20) {
+                    VStack(spacing: 15) {
                         Text(maskedWord)
-                            .font(.system(size: 36, weight: .bold, design: .monospaced))
+                            .font(.system(size: 32, weight: .bold, design: .monospaced))
                             .multilineTextAlignment(.center)
                             .lineLimit(nil)
                             .padding(.horizontal)
                         
                         // Show guessed letters
                         if !guessedLetters.isEmpty {
-                            VStack(spacing: 8) {
+                            VStack(spacing: 6) {
                                 Text("Guessed letters:")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
@@ -163,7 +163,7 @@ struct HangmanView: View {
                     Spacer()
                     
                     // Instruction text
-                    VStack(spacing: 8) {
+                    VStack(spacing: 6) {
                         Text("Type letters to guess the word")
                             .font(.headline)
                             .foregroundColor(.blue)
@@ -200,7 +200,6 @@ struct HangmanView: View {
                         }
                     }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
             
             // Bottom Navigation Bar
             HStack {
@@ -261,7 +260,7 @@ struct HangmanView: View {
             }
         } message: {
             if gameWon {
-                Text("Congratulations! You guessed the word!")
+                Text("Congratulations! You guessed the word: \(word)")
             } else {
                 Text("Sorry! The word was: \(word)")
             }

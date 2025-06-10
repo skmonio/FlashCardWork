@@ -13,7 +13,16 @@ struct LookCoverCheckView: View {
     @State private var showingCloseConfirmation = false
     @Environment(\.dismiss) private var dismiss
     
-    enum GamePhase {
+    // Save state properties
+    private var deckIds: [UUID]
+    private var shouldLoadSaveState: Bool
+    
+    // Computed property to check if there's significant progress to save
+    private var hasSignificantProgress: Bool {
+        return currentIndex > 0 || totalAnswers > 0
+    }
+    
+    enum GamePhase: String {
         case look      // Show the word
         case cover     // Hide word, show input field
         case check     // Show result and comparison
@@ -24,35 +33,53 @@ struct LookCoverCheckView: View {
         return cards[currentIndex]
     }
     
-    init(viewModel: FlashCardViewModel, cards: [FlashCard]) {
+    init(viewModel: FlashCardViewModel, cards: [FlashCard], deckIds: [UUID] = [], shouldLoadSaveState: Bool = false) {
         self.viewModel = viewModel
         _cards = State(initialValue: cards.shuffled())
+        self.deckIds = deckIds
+        self.shouldLoadSaveState = shouldLoadSaveState
     }
     
     var body: some View {
         VStack(spacing: 0) {
             if cards.isEmpty {
                 emptyStateView
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if showingResults {
                 resultsView
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 gameView
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
             
             // Bottom Navigation Bar
             bottomNavigationBar
         }
         .navigationBarHidden(true)
+        .onAppear {
+            if shouldLoadSaveState {
+                loadSavedProgress()
+            }
+        }
+        .onDisappear {
+            // Auto-save when view disappears
+            if hasSignificantProgress && !showingResults {
+                saveCurrentProgress()
+            }
+        }
         .alert("Close Game?", isPresented: $showingCloseConfirmation) {
-            Button("Close", role: .destructive) {
+            Button("Save & Close", role: .destructive) {
+                if hasSignificantProgress && !showingResults {
+                    saveCurrentProgress()
+                }
+                dismissToRoot()
+            }
+            Button("Close Without Saving") {
                 dismissToRoot()
             }
             Button("Cancel", role: .cancel) { }
         } message: {
-            Text("Are you sure you want to close? Your progress will be lost.")
+            Text(hasSignificantProgress ? 
+                "Would you like to save your progress?" : 
+                "Are you sure you want to close?")
         }
     }
     
@@ -74,7 +101,7 @@ struct LookCoverCheckView: View {
     }
     
     private var gameView: some View {
-        VStack(spacing: 50) {
+        VStack(spacing: 30) {
             // Progress indicator - with top padding for status bar
             HStack {
                 Text("Card \(currentIndex + 1) of \(cards.count)")
@@ -128,15 +155,6 @@ struct LookCoverCheckView: View {
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal)
-                
-                if !card.example.isEmpty {
-                    Text("Example: \(card.example)")
-                        .font(.body)
-                        .foregroundColor(.secondary)
-                        .italic()
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal)
-                }
             }
             
             Button("Cover") {
@@ -304,6 +322,20 @@ struct LookCoverCheckView: View {
                 }
             }
             .frame(maxWidth: .infinity)
+            
+            // Save progress button
+            if hasSignificantProgress && !showingResults {
+                Button(action: {
+                    saveCurrentProgress()
+                    HapticManager.shared.successNotification()
+                }) {
+                    VStack {
+                        Image(systemName: "bookmark.fill")
+                        Text("Save")
+                    }
+                }
+                .frame(maxWidth: .infinity)
+            }
         }
         .padding()
         .background(Color(.systemBackground))
@@ -337,10 +369,17 @@ struct LookCoverCheckView: View {
     }
     
     private func nextCard() {
+        // Auto-save progress periodically (every 5 cards)
+        if currentIndex % 5 == 0 && currentIndex > 0 {
+            saveCurrentProgress()
+        }
+        
         if currentIndex < cards.count - 1 {
             currentIndex += 1
             resetForNextCard()
         } else {
+            // Clear saved progress since game is complete
+            clearSavedProgress()
             showingResults = true
             HapticManager.shared.gameComplete()
         }
@@ -359,6 +398,90 @@ struct LookCoverCheckView: View {
         totalAnswers = 0
         showingResults = false
         resetForNextCard()
+        
+        // Clear any saved progress when resetting
+        clearSavedProgress()
+    }
+    
+    private func saveCurrentProgress() {
+        guard !deckIds.isEmpty && hasSignificantProgress else { return }
+        
+        let gameState = LookCoverCheckGameState(
+            currentIndex: currentIndex,
+            correctAnswers: correctAnswers,
+            totalAnswers: totalAnswers,
+            cards: cards,
+            gamePhase: gamePhase.rawValue
+        )
+        
+        SaveStateManager.shared.saveGameState(
+            gameType: .lookCoverCheck,
+            deckIds: deckIds,
+            gameData: gameState
+        )
+        
+        print("💾 Look Cover Check progress saved - Index: \(currentIndex), Score: \(correctAnswers)/\(totalAnswers)")
+    }
+    
+    private func loadSavedProgress() {
+        guard !deckIds.isEmpty else { 
+            resetGame()
+            return 
+        }
+        
+        if let savedState = SaveStateManager.shared.loadGameState(
+            gameType: .lookCoverCheck,
+            deckIds: deckIds,
+            as: LookCoverCheckGameState.self
+        ) {
+            // Restore state
+            currentIndex = savedState.currentIndex
+            correctAnswers = savedState.correctAnswers
+            totalAnswers = savedState.totalAnswers
+            
+            // Restore game phase
+            if let phase = GamePhase(rawValue: savedState.gamePhase) {
+                gamePhase = phase
+            } else {
+                gamePhase = .look
+            }
+            
+            // Reset userInput since we don't save it (user can re-enter)
+            userInput = ""
+            isCorrect = nil
+            
+            // Update cards to match saved order if they exist
+            if !savedState.cards.isEmpty {
+                // Filter to only include cards that still exist in the current deck selection
+                let currentCardIds = Set(cards.map { $0.id })
+                let savedCards = savedState.cards.filter { currentCardIds.contains($0.id) }
+                
+                if !savedCards.isEmpty {
+                    cards = savedCards
+                }
+            }
+            
+            // Ensure currentIndex is valid
+            if currentIndex >= cards.count {
+                currentIndex = max(0, cards.count - 1)
+            }
+            
+            print("👁️ Look Cover Check progress loaded - Index: \(currentIndex), Score: \(correctAnswers)/\(totalAnswers)")
+            HapticManager.shared.successNotification()
+        } else {
+            // No saved state found, start normally
+            print("👁️ No saved state found, starting fresh Look Cover Check")
+            resetGame()
+        }
+    }
+    
+    private func clearSavedProgress() {
+        guard !deckIds.isEmpty else { return }
+        
+        SaveStateManager.shared.deleteSaveState(
+            gameType: .lookCoverCheck,
+            deckIds: deckIds
+        )
     }
     
     private func dismissToRoot() {

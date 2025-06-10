@@ -13,9 +13,20 @@ struct TestView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var incorrectCards: Set<UUID> = []
     
-    init(viewModel: FlashCardViewModel, cards: [FlashCard]) {
+    // Save state properties
+    private var deckIds: [UUID]
+    private var shouldLoadSaveState: Bool
+    
+    // Computed property to check if there's significant progress to save
+    private var hasSignificantProgress: Bool {
+        return currentIndex > 0 || correctAnswers > 0
+    }
+    
+    init(viewModel: FlashCardViewModel, cards: [FlashCard], deckIds: [UUID] = [], shouldLoadSaveState: Bool = false) {
         self.viewModel = viewModel
         _cards = State(initialValue: cards.shuffled())
+        self.deckIds = deckIds
+        self.shouldLoadSaveState = shouldLoadSaveState
     }
     
     private var currentCard: FlashCard {
@@ -82,8 +93,17 @@ struct TestView: View {
             selectedAnswer = nil
             hasAnswered = false
             shuffledOptions = generateOptions()
+            
+            // Auto-save progress periodically (every 5 questions)
+            if currentIndex % 5 == 0 {
+                saveCurrentProgress()
+            }
         } else {
             HapticManager.shared.gameComplete()
+            
+            // Clear saved progress since test is complete
+            clearSavedProgress()
+            
             showingResults = true
         }
     }
@@ -101,6 +121,9 @@ struct TestView: View {
         hasAnswered = false
         incorrectCards.removeAll()
         shuffledOptions = generateOptions()
+        
+        // Clear any saved progress when resetting
+        clearSavedProgress()
     }
     
     private func dismissToRoot() {
@@ -123,23 +146,16 @@ struct TestView: View {
         VStack(spacing: 0) {
             if cards.isEmpty {
                 emptyStateView
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if showingResults {
                 resultsView
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 testView
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
             
             // Bottom Navigation Bar
             HStack {
                 Button(action: {
-                    if currentIndex > 0 && !showingResults {
-                        showingCloseConfirmation = true
-                    } else {
-                        dismiss()
-                    }
+                    handleBackButton()
                 }) {
                     VStack {
                         Image(systemName: "chevron.backward")
@@ -149,11 +165,7 @@ struct TestView: View {
                 .frame(maxWidth: .infinity)
                 
                 Button(action: {
-                    currentIndex = 0
-                    showingResults = false
-                    correctAnswers = 0
-                    incorrectCards.removeAll()
-                    cards = cards.shuffled()
+                    resetTest()
                 }) {
                     VStack {
                         Image(systemName: "arrow.clockwise")
@@ -161,6 +173,20 @@ struct TestView: View {
                     }
                 }
                 .frame(maxWidth: .infinity)
+                
+                // Save progress button
+                if hasSignificantProgress && !showingResults {
+                    Button(action: {
+                        saveCurrentProgress()
+                        HapticManager.shared.successNotification()
+                    }) {
+                        VStack {
+                            Image(systemName: "bookmark.fill")
+                            Text("Save")
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                }
             }
             .padding()
             .background(Color(.systemBackground))
@@ -175,18 +201,33 @@ struct TestView: View {
         .navigationBarHidden(true)
         .alert(isPresented: $showingCloseConfirmation) {
             Alert(
-                title: Text("Are you sure you want to exit?"),
-                message: Text("You will lose your progress."),
-                primaryButton: .destructive(Text("Exit")) {
-                    dismissToRoot()
+                title: Text("Close Test?"),
+                message: Text(hasSignificantProgress ? 
+                    "Would you like to save your progress?" : 
+                    "Are you sure you want to close?"),
+                primaryButton: .destructive(Text("Save & Close")) {
+                    saveProgressAndDismiss()
                 },
                 secondaryButton: .cancel()
             )
         }
+        .onAppear {
+            if shouldLoadSaveState {
+                loadSavedProgress()
+            } else {
+                shuffledOptions = generateOptions()
+            }
+        }
+        .onDisappear {
+            // Auto-save when view disappears
+            if hasSignificantProgress && !showingResults {
+                saveCurrentProgress()
+            }
+        }
     }
     
     private var testView: some View {
-        VStack(spacing: 30) {
+        VStack(spacing: 20) {
             // Progress - with top padding for status bar
             HStack {
                 Text("\(currentIndex + 1) of \(cards.count)")
@@ -201,7 +242,7 @@ struct TestView: View {
             .padding(.top, 50) // Add top padding for status bar
             
             // Question
-            VStack(spacing: 20) {
+            VStack(spacing: 15) {
                 Text("What does this word mean?")
                     .font(.headline)
                     .foregroundColor(.secondary)
@@ -221,7 +262,7 @@ struct TestView: View {
                     .foregroundColor(.secondary)
                 
                 // Answer options
-                VStack(spacing: 12) {
+                VStack(spacing: 10) {
                     ForEach(shuffledOptions, id: \.self) { option in
                         Button(action: {
                             handleAnswer(option)
@@ -253,10 +294,8 @@ struct TestView: View {
                 }
                 .padding(.horizontal)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        }
-        .onAppear {
-            shuffledOptions = generateOptions()
+            
+            Spacer()
         }
     }
     
@@ -326,5 +365,95 @@ struct TestView: View {
             Text("Add some cards to get started!")
                 .foregroundColor(.secondary)
         }
+    }
+    
+    private func handleBackButton() {
+        if hasSignificantProgress && !showingResults {
+            showingCloseConfirmation = true
+        } else {
+            dismiss()
+        }
+    }
+    
+    private func saveCurrentProgress() {
+        guard !deckIds.isEmpty && hasSignificantProgress else { return }
+        
+        let gameState = TestGameState(
+            currentIndex: currentIndex,
+            correctAnswers: correctAnswers,
+            incorrectCards: incorrectCards,
+            cards: cards,
+            selectedAnswer: selectedAnswer,
+            hasAnswered: hasAnswered
+        )
+        
+        SaveStateManager.shared.saveGameState(
+            gameType: .test,
+            deckIds: deckIds,
+            gameData: gameState
+        )
+        
+        print("💾 Test progress saved - Index: \(currentIndex), Correct: \(correctAnswers)")
+    }
+    
+    private func loadSavedProgress() {
+        guard !deckIds.isEmpty else { 
+            shuffledOptions = generateOptions()
+            return 
+        }
+        
+        if let savedState = SaveStateManager.shared.loadGameState(
+            gameType: .test,
+            deckIds: deckIds,
+            as: TestGameState.self
+        ) {
+            // Restore state
+            currentIndex = savedState.currentIndex
+            correctAnswers = savedState.correctAnswers
+            incorrectCards = savedState.incorrectCards
+            selectedAnswer = savedState.selectedAnswer
+            hasAnswered = savedState.hasAnswered
+            
+            // Update cards to match saved order if they exist
+            if !savedState.cards.isEmpty {
+                // Filter to only include cards that still exist in the current deck selection
+                let currentCardIds = Set(cards.map { $0.id })
+                let savedCards = savedState.cards.filter { currentCardIds.contains($0.id) }
+                
+                if !savedCards.isEmpty {
+                    cards = savedCards
+                }
+            }
+            
+            // Ensure currentIndex is valid
+            if currentIndex >= cards.count {
+                currentIndex = max(0, cards.count - 1)
+            }
+            
+            shuffledOptions = generateOptions()
+            
+            print("📝 Test progress loaded - Index: \(currentIndex), Correct: \(correctAnswers)")
+            HapticManager.shared.successNotification()
+        } else {
+            // No saved state found, start normally
+            print("📝 No saved state found, starting fresh test")
+            shuffledOptions = generateOptions()
+        }
+    }
+    
+    private func clearSavedProgress() {
+        guard !deckIds.isEmpty else { return }
+        
+        SaveStateManager.shared.deleteSaveState(
+            gameType: .test,
+            deckIds: deckIds
+        )
+    }
+    
+    private func saveProgressAndDismiss() {
+        if hasSignificantProgress && !showingResults {
+            saveCurrentProgress()
+        }
+        dismissToRoot()
     }
 } 
