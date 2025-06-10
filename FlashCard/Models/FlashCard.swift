@@ -9,6 +9,10 @@ struct FlashCard: Identifiable, Codable, Hashable {
     var successCount: Int = 0
     var dateCreated: Date = Date()
     
+    // Statistics for learning percentage
+    var timesShown: Int = 0      // Total times card has been shown in any game
+    var timesCorrect: Int = 0    // Total times answered correctly
+    
     // Dutch language features
     var article: String? = nil       // "het" or "de"
     var pastTense: String? = nil     // Past tense form
@@ -23,10 +27,24 @@ struct FlashCard: Identifiable, Codable, Hashable {
         self.example = example
         self.deckIds = deckIds
         self.successCount = 0
+        self.timesShown = 0
+        self.timesCorrect = 0
         self.article = article
         self.pastTense = pastTense
         self.futureTense = futureTense
         self.dateCreated = dateCreated ?? Date()
+    }
+    
+    // Computed property for learning percentage
+    var learningPercentage: Double? {
+        guard timesShown > 0 else { return nil } // Don't show % if word is new
+        return (Double(timesCorrect) / Double(timesShown)) * 100.0
+    }
+    
+    // Helper property to check if card is fully learned (100%)
+    var isFullyLearned: Bool {
+        guard let percentage = learningPercentage else { return false }
+        return percentage >= 100.0
     }
     
     // Implement Hashable

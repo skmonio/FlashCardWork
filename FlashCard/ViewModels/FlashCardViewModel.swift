@@ -838,6 +838,130 @@ class FlashCardViewModel: ObservableObject {
         
         print("No saved decks found or error decoding")
     }
+    
+    // MARK: - Statistics Tracking
+    
+    /// Records that a card was shown to the user
+    func recordCardShown(_ cardId: UUID) {
+        if let index = flashCards.firstIndex(where: { $0.id == cardId }) {
+            flashCards[index].timesShown += 1
+            print("Card '\(flashCards[index].word)' shown. Times shown: \(flashCards[index].timesShown)")
+            saveCards()
+        }
+    }
+    
+    /// Records that a card was answered correctly
+    func recordCardCorrect(_ cardId: UUID) {
+        if let index = flashCards.firstIndex(where: { $0.id == cardId }) {
+            flashCards[index].timesCorrect += 1
+            flashCards[index].successCount += 1 // Keep existing success count for backward compatibility
+            
+            let card = flashCards[index]
+            print("Card '\(card.word)' answered correctly. Times correct: \(card.timesCorrect)/\(card.timesShown)")
+            
+            // Check if card has reached 100% learning
+            if card.isFullyLearned {
+                print("Card '\(card.word)' is fully learned! Moving to 'Learnt' deck.")
+                moveCardToLearntDeck(card)
+            } else if let percentage = card.learningPercentage {
+                print("Card '\(card.word)' learning percentage: \(String(format: "%.1f", percentage))%")
+                updateCardInLearningDeck(card)
+            }
+            
+            saveCards()
+        }
+    }
+    
+    /// Records that a card was answered incorrectly
+    func recordCardIncorrect(_ cardId: UUID) {
+        if let index = flashCards.firstIndex(where: { $0.id == cardId }) {
+            // timesShown is already incremented when card is shown
+            // timesCorrect stays the same since this was incorrect
+            
+            let card = flashCards[index]
+            if let percentage = card.learningPercentage {
+                print("Card '\(card.word)' answered incorrectly. Learning percentage: \(String(format: "%.1f", percentage))%")
+                updateCardInLearningDeck(card)
+            }
+            
+            saveCards()
+        }
+    }
+    
+    /// Gets or creates the "Learnt" deck for cards at 100%
+    private func getLearntDeck() -> Deck {
+        if let existingDeck = decks.first(where: { $0.name == "📚 Learnt" }) {
+            return existingDeck
+        }
+        
+        let learntDeck = Deck(name: "📚 Learnt", isEditable: false)
+        decks.append(learntDeck)
+        print("Created 'Learnt' deck for fully learned cards")
+        return learntDeck
+    }
+    
+    /// Gets or creates the "Learning" deck for cards in progress
+    private func getLearningDeck() -> Deck {
+        if let existingDeck = decks.first(where: { $0.name == "📖 Learning" }) {
+            return existingDeck
+        }
+        
+        let learningDeck = Deck(name: "📖 Learning", isEditable: false)
+        decks.append(learningDeck)
+        print("Created 'Learning' deck for cards in progress")
+        return learningDeck
+    }
+    
+    /// Moves a fully learned card to the "Learnt" deck
+    private func moveCardToLearntDeck(_ card: FlashCard) {
+        let learntDeck = getLearntDeck()
+        
+        // Add card to learnt deck if not already there
+        if let cardIndex = flashCards.firstIndex(where: { $0.id == card.id }) {
+            flashCards[cardIndex].deckIds.insert(learntDeck.id)
+        }
+        
+        // Remove from learning deck if present
+        let learningDeck = getLearningDeck()
+        if let cardIndex = flashCards.firstIndex(where: { $0.id == card.id }) {
+            flashCards[cardIndex].deckIds.remove(learningDeck.id)
+        }
+        
+        updateCardDeckAssociations()
+    }
+    
+    /// Updates a card in the "Learning" deck (for cards that have been shown but aren't 100% yet)
+    private func updateCardInLearningDeck(_ card: FlashCard) {
+        guard !card.isFullyLearned else { return } // Fully learned cards go to learnt deck
+        guard card.timesShown > 0 else { return } // Don't add new cards
+        
+        let learningDeck = getLearningDeck()
+        
+        // Add card to learning deck if not already there
+        if let cardIndex = flashCards.firstIndex(where: { $0.id == card.id }) {
+            flashCards[cardIndex].deckIds.insert(learningDeck.id)
+        }
+        
+        updateCardDeckAssociations()
+    }
+    
+    /// Returns formatted learning percentage string for display
+    func getLearningPercentageString(for card: FlashCard) -> String? {
+        guard let percentage = card.learningPercentage else { return nil }
+        return String(format: "%.0f%%", percentage)
+    }
+    
+    /// Returns all cards currently being learned (have been shown but not 100%)
+    func getCardsInProgress() -> [FlashCard] {
+        return flashCards.filter { card in
+            card.timesShown > 0 && !card.isFullyLearned
+        }
+    }
+    
+    /// Returns all fully learned cards
+    func getFullyLearnedCards() -> [FlashCard] {
+        return flashCards.filter { $0.isFullyLearned }
+    }
 }
 
 // Add this struct for migration purposes at the end of the file

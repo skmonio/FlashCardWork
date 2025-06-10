@@ -378,11 +378,16 @@ struct WritingView: View {
         hasAnswered = true
         totalAnswers += 1
         
+        // Track statistics
+        viewModel.recordCardShown(card.id)
+        
         if answersMatch {
             correctAnswers += 1
+            viewModel.recordCardCorrect(card.id)
             HapticManager.shared.correctAnswer()
             viewModel.setCardStatus(cardId: card.id, status: .known)
         } else {
+            viewModel.recordCardIncorrect(card.id)
             HapticManager.shared.wrongAnswer()
             viewModel.setCardStatus(cardId: card.id, status: .unknown)
         }
@@ -397,6 +402,7 @@ struct WritingView: View {
         if isCorrect == false {
             correctAnswers += 1
             isCorrect = true
+            viewModel.recordCardCorrect(card.id)
             HapticManager.shared.correctAnswer()
             viewModel.setCardStatus(cardId: card.id, status: .known)
         }

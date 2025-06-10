@@ -71,11 +71,17 @@ struct TestView: View {
         if !hasAnswered {
             selectedAnswer = option
             hasAnswered = true
+            
+            // Track statistics
+            viewModel.recordCardShown(currentCard.id)
+            
             if option == currentCard.definition {
                 correctAnswers += 1
+                viewModel.recordCardCorrect(currentCard.id)
                 HapticManager.shared.correctAnswer()
             } else {
                 incorrectCards.insert(currentCard.id)
+                viewModel.recordCardIncorrect(currentCard.id)
                 HapticManager.shared.wrongAnswer()
             }
             

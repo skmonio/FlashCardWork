@@ -7,6 +7,7 @@ struct CardView: View {
     @State private var offset: CGSize = .zero
     @State private var exitSide: ExitSide = .none
     @State private var hasAudio: Bool = false
+    @ObservedObject var viewModel: FlashCardViewModel
     
     let onSwipeLeft: (() -> Void)?
     let onSwipeRight: (() -> Void)?
@@ -23,12 +24,14 @@ struct CardView: View {
     init(card: FlashCard, 
          isShowingFront: Binding<Bool>,
          isShowingExample: Binding<Bool>,
+         viewModel: FlashCardViewModel,
          onSwipeLeft: (() -> Void)? = nil,
          onSwipeRight: (() -> Void)? = nil,
          onDragChanged: ((CGFloat) -> Void)? = nil) {
         self.card = card
         self._isShowingFront = isShowingFront
         self._isShowingExample = isShowingExample
+        self.viewModel = viewModel
         self.onSwipeLeft = onSwipeLeft
         self.onSwipeRight = onSwipeRight
         self.onDragChanged = onDragChanged
@@ -168,33 +171,72 @@ struct CardView: View {
             .fill(Color.white)
             .shadow(radius: 5)
             .overlay(
-                VStack(spacing: 16) {
-                    // Word with optional article
-                    VStack(spacing: 4) {
-                        if let article = card.article {
-                            Text(article)
-                                .font(.caption)
-                                .foregroundColor(.blue)
+                ZStack {
+                    VStack(spacing: 16) {
+                        // Word with optional article
+                        VStack(spacing: 4) {
+                            if let article = card.article {
+                                Text(article)
+                                    .font(.caption)
+                                    .foregroundColor(.blue)
+                                    .bold()
+                            }
+                            Text(card.word)
+                                .font(.title)
                                 .bold()
+                                .foregroundColor(.black)
                         }
-                        Text(card.word)
-                            .font(.title)
-                            .bold()
-                            .foregroundColor(.black)
+                        
+                        if !card.example.isEmpty && isShowingExample {
+                            Divider()
+                            Text(card.example)
+                                .font(.body)
+                                .italic()
+                                .multilineTextAlignment(.center)
+                                .foregroundColor(.gray)
+                                .transition(.opacity)
+                        }
                     }
+                    .padding()
                     
-                    if !card.example.isEmpty && isShowingExample {
-                        Divider()
-                        Text(card.example)
-                            .font(.body)
-                            .italic()
-                            .multilineTextAlignment(.center)
-                            .foregroundColor(.gray)
-                            .transition(.opacity)
+                    // Learning percentage indicator
+                    if let percentageString = viewModel.getLearningPercentageString(for: card) {
+                        VStack {
+                            HStack {
+                                Spacer()
+                                Text(percentageString)
+                                    .font(.caption)
+                                    .bold()
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 10)
+                                            .fill(learningPercentageColor)
+                                    )
+                                    .padding(.trailing, 16)
+                                    .padding(.top, 16)
+                            }
+                            Spacer()
+                        }
                     }
                 }
-                .padding()
             )
+    }
+    
+    // Helper computed property for percentage color
+    private var learningPercentageColor: Color {
+        guard let percentage = card.learningPercentage else { return .gray }
+        
+        if percentage >= 100 {
+            return .green
+        } else if percentage >= 75 {
+            return .blue
+        } else if percentage >= 50 {
+            return .orange
+        } else {
+            return .red
+        }
     }
     
     private var backView: some View {

@@ -192,6 +192,7 @@ struct StudyView: View {
                             card: cards[currentIndex],
                             isShowingFront: $isShowingFront,
                             isShowingExample: $isShowingExample,
+                            viewModel: viewModel,
                             onSwipeLeft: {
                                 handleSwipeLeft()
                             },

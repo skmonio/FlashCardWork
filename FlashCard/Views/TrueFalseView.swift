@@ -372,15 +372,20 @@ struct TrueFalseView: View {
         questionsAnswered += 1
         let isCorrect = answer == question.isCorrect
         
+        // Track statistics for the original card
+        viewModel.recordCardShown(question.originalCard.id)
+        
         if isCorrect {
             score += 1
             feedback = "Correct! 🎉"
             feedbackColor = .green
             correctAnswers += 1
+            viewModel.recordCardCorrect(question.originalCard.id)
         } else {
             feedback = "Wrong! Try again!"
             feedbackColor = .red
             incorrectAnswers += 1
+            viewModel.recordCardIncorrect(question.originalCard.id)
         }
         
         showingFeedback = true
