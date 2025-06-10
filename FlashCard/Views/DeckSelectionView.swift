@@ -7,6 +7,7 @@ struct DeckSelectionView: View {
     @State private var selectedDeckIds: Set<UUID> = []
     @State private var shouldStartGame = false
     @State private var shouldContinueGame = false
+    @State private var showingNewGameWarning = false
     
     enum StudyMode {
         case study, test, game, truefalse, hangman, dehet, lookcovercheck, writing
@@ -253,11 +254,31 @@ struct DeckSelectionView: View {
             shouldStartGame = false
             shouldContinueGame = false
         }
+        .alert("Clear Saved Game?", isPresented: $showingNewGameWarning) {
+            Button("Start New Game", role: .destructive) {
+                startFreshGame()
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("Starting a new game will clear your current saved progress. Are you sure you want to continue?")
+        }
     }
     
     private func handleStartGame() {
         print("🚀 handleStartGame called for \(mode.title)")
         print("📋 Selected decks: \(selectedDeckIds.count), Available cards: \(availableCards.count)")
+        
+        // Check if there's existing save state and warn user
+        if hasSaveState {
+            print("⚠️ Existing save state found - showing warning")
+            showingNewGameWarning = true
+        } else {
+            print("🔍 No existing save state - starting fresh game")
+            startFreshGame()
+        }
+    }
+    
+    private func startFreshGame() {
         print("🔍 Starting fresh game...")
         
         // Always start fresh when using Start Game button

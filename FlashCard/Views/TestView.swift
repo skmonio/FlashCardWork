@@ -205,17 +205,18 @@ struct TestView: View {
             )
         }
         .navigationBarHidden(true)
-        .alert(isPresented: $showingCloseConfirmation) {
-            Alert(
-                title: Text("Close Test?"),
-                message: Text(hasSignificantProgress ? 
-                    "Would you like to save your progress?" : 
-                    "Are you sure you want to close?"),
-                primaryButton: .destructive(Text("Save & Close")) {
-                    saveProgressAndDismiss()
-                },
-                secondaryButton: .cancel()
-            )
+        .alert("Close Test?", isPresented: $showingCloseConfirmation) {
+            Button("Save & Close", role: .destructive) {
+                saveProgressAndDismiss()
+            }
+            Button("Close Without Saving") {
+                dismissToRoot()
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text(hasSignificantProgress ? 
+                "Would you like to save your progress?" : 
+                "Are you sure you want to close?")
         }
         .onAppear {
             if shouldLoadSaveState {
