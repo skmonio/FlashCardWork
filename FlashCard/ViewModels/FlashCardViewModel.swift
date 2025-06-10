@@ -291,6 +291,7 @@ class FlashCardViewModel: ObservableObject {
         saveDecks()
     }
     
+    @discardableResult
     func addCard(word: String, definition: String, example: String, deckIds: Set<UUID>, article: String? = nil, pastTense: String? = nil, futureTense: String? = nil, cardId: UUID? = nil) -> FlashCard {
         print("Adding new card")
         
@@ -654,7 +655,6 @@ class FlashCardViewModel: ObservableObject {
             UserDefaults.standard.set(encoded, forKey: userDefaultsKey)
             
             // Create backup with timestamp
-            let timestamp = DateFormatter().string(from: Date())
             let backupKey = "\(userDefaultsKey)_backup_\(Int(Date().timeIntervalSince1970))"
             UserDefaults.standard.set(encoded, forKey: backupKey)
             
@@ -1208,6 +1208,43 @@ class FlashCardViewModel: ObservableObject {
         }
         
         return (recoveredCards, recoveredDecks)
+    }
+    
+    /// Reset all learning statistics for all cards
+    func resetAllStatistics() {
+        print("🔄 Resetting all learning statistics...")
+        
+        var resetCount = 0
+        for index in flashCards.indices {
+            if flashCards[index].timesShown > 0 || flashCards[index].timesCorrect > 0 {
+                flashCards[index].timesShown = 0
+                flashCards[index].timesCorrect = 0
+                flashCards[index].successCount = 0 // Also reset legacy success count
+                resetCount += 1
+            }
+        }
+        
+        // Remove all cards from Learning and Learnt system decks
+        let learningDeck = getLearningDeck()
+        let learntDeck = getLearntDeck()
+        
+        for index in flashCards.indices {
+            flashCards[index].deckIds.remove(learningDeck.id)
+            flashCards[index].deckIds.remove(learntDeck.id)
+        }
+        
+        // Update deck associations and save
+        updateCardDeckAssociations()
+        saveCards()
+        
+        print("✅ Reset statistics for \(resetCount) cards")
+        print("🗂️ Removed all cards from Learning and Learnt decks")
+        
+        // Clear card status as well
+        cardStatus.removeAll()
+        saveCardStatus()
+        
+        print("🧹 Cleared all card status data")
     }
 }
 

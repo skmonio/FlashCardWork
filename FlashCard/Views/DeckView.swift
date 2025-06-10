@@ -209,25 +209,39 @@ struct DeckView: View {
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     HStack {
-                        if !isSelectionMode {
+                        if isSelectionMode {
+                            Button("Select All") {
+                                if selectedCards.count == filteredAndSortedCards.count {
+                                    // If all are selected, deselect all
+                                    selectedCards.removeAll()
+                                } else {
+                                    // Select all visible cards
+                                    selectedCards = Set(filteredAndSortedCards.map { $0.id })
+                                }
+                                HapticManager.shared.multiSelectToggle()
+                            }
+                            .foregroundColor(.blue)
+                        } else {
                             Button("Select") {
                                 isSelectionMode = true
                             }
                         }
                         
-                        Menu {
-                            Picker("Sort", selection: $sortOption) {
-                                Label("Default", systemImage: "list.bullet")
-                                    .tag(SortOption.default)
-                                Label("A-Z", systemImage: "arrow.up")
-                                    .tag(SortOption.alphabeticalByWord)
-                                Label("Z-A", systemImage: "arrow.down")
-                                    .tag(SortOption.reverseAlphabeticalByWord)
+                        if !isSelectionMode {
+                            Menu {
+                                Picker("Sort", selection: $sortOption) {
+                                    Label("Default", systemImage: "list.bullet")
+                                        .tag(SortOption.default)
+                                    Label("A-Z", systemImage: "arrow.up")
+                                        .tag(SortOption.alphabeticalByWord)
+                                    Label("Z-A", systemImage: "arrow.down")
+                                        .tag(SortOption.reverseAlphabeticalByWord)
+                                }
+                            } label: {
+                                Image(systemName: "arrow.up.arrow.down")
                             }
-                        } label: {
-                            Image(systemName: "arrow.up.arrow.down")
+                            .disabled(isSelectionMode)
                         }
-                        .disabled(isSelectionMode)
                     }
                 }
             }
@@ -323,22 +337,25 @@ struct DeckView: View {
         }
         
         // Navigation destinations
-        NavigationLink(destination: AddCardView(viewModel: viewModel, defaultDeck: deck), isActive: $showingAddCardView) {
+        NavigationLink(value: showingAddCardView ? "addCard" : nil) {
             EmptyView()
         }
         .hidden()
+        .navigationDestination(isPresented: $showingAddCardView) {
+            AddCardView(viewModel: viewModel, defaultDeck: deck)
+        }
         
-        NavigationLink(destination: 
-            Group {
-                if let card = selectedCard {
-                    EditCardView(viewModel: viewModel, card: card)
-                } else {
-                    EmptyView()
-                }
-            }, isActive: $showingEditCardView) {
+        NavigationLink(value: showingEditCardView ? "editCard" : nil) {
             EmptyView()
         }
         .hidden()
+        .navigationDestination(isPresented: $showingEditCardView) {
+            if let card = selectedCard {
+                EditCardView(viewModel: viewModel, card: card)
+            } else {
+                EmptyView()
+            }
+        }
         .onChange(of: showingEditCardView) { oldValue, newValue in
             // Refresh the view when returning from EditCardView
             if oldValue && !newValue {

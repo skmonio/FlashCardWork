@@ -281,7 +281,7 @@ struct AddCardView: View {
         logger.debug("Adding card - Word: \(trimmedWord), Definition: \(trimmedDefinition)")
         
         // Create the card with the temporary ID so audio gets associated correctly
-        let newCard = viewModel.addCard(
+        _ = viewModel.addCard(
             word: trimmedWord,
             definition: trimmedDefinition,
             example: trimmedExample,

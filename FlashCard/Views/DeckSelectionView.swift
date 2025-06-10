@@ -195,15 +195,15 @@ struct DeckSelectionView: View {
                             .disabled(!hasSaveState)
                             .buttonStyle(PlainButtonStyle())
                             
-                            // Hidden NavigationLink for programmatic navigation
-                            NavigationLink(
-                                destination: destinationView,
-                                isActive: $shouldStartGame
-                            ) {
+                            // Navigation destination for programmatic navigation
+                            NavigationLink(value: shouldStartGame ? "startGame" : nil) {
                                 EmptyView()
                             }
                             .opacity(0)
                             .frame(height: 0)
+                            .navigationDestination(isPresented: $shouldStartGame) {
+                                destinationView
+                            }
                         }
                     }
                 }

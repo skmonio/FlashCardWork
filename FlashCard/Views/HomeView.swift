@@ -8,6 +8,11 @@ struct HomeView: View {
     @State private var showingAddCardView = false
     @State private var showingAddDeckView = false
     
+    @State private var showingExportShare = false
+    @State private var showingImportPicker = false
+    @State private var showingRecoverData = false
+    @State private var showingResetStatistics = false
+    
     var body: some View {
         NavigationView {
             // Add loading check - show loading only for a brief moment during initialization
@@ -53,6 +58,13 @@ struct HomeView: View {
                                     }
                                     
                                     Button(action: {
+                                        showingResetStatistics = true
+                                    }) {
+                                        Label("Reset Statistics", systemImage: "chart.bar.xaxis")
+                                            .foregroundColor(.red)
+                                    }
+                                    
+                                    Button(action: {
                                         showingExportImport = true
                                     }) {
                                         Label("Export & Import", systemImage: "square.and.arrow.up.on.square")
@@ -92,6 +104,28 @@ struct HomeView: View {
         .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("DismissToRoot"))) { _ in
             // Reset any navigation state when dismiss to root is requested
             viewModel.resetNavigationToRoot()
+        }
+        .alert("Data Recovery", isPresented: $showingRecoverData) {
+            Button("Recover", role: .destructive) {
+                let (recoveredCards, recoveredDecks) = viewModel.scanForLostData()
+                if recoveredCards > 0 || recoveredDecks > 0 {
+                    viewModel.attemptDataRecovery()
+                    HapticManager.shared.successNotification()
+                }
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            let (recoveredCards, recoveredDecks) = viewModel.scanForLostData()
+            Text("Found \(recoveredCards) lost cards and \(recoveredDecks) lost decks. Would you like to recover them?")
+        }
+        .alert("Reset All Statistics?", isPresented: $showingResetStatistics) {
+            Button("Reset", role: .destructive) {
+                viewModel.resetAllStatistics()
+                HapticManager.shared.successNotification()
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("This will reset all learning progress and statistics for all cards. This action cannot be undone.")
         }
     }
     

@@ -219,7 +219,7 @@ struct ExportImportView: View {
             guard let url = urls.first else { return }
             
             do {
-                let csvContent = try String(contentsOf: url)
+                let csvContent = try String(contentsOf: url, encoding: .utf8)
                 importResult = viewModel.importCardsFromCSV(csvContent)
                 showingImportAlert = true
             } catch {
@@ -269,7 +269,10 @@ struct ShareSheet: UIViewControllerRepresentable {
         
         // For iPad - prevent crash by setting source
         if let popover = controller.popoverPresentationController {
-            popover.sourceView = UIApplication.shared.windows.first?.rootViewController?.view
+            if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+               let window = windowScene.windows.first {
+                popover.sourceView = window.rootViewController?.view
+            }
             popover.sourceRect = CGRect(x: UIScreen.main.bounds.width / 2, y: UIScreen.main.bounds.height / 2, width: 0, height: 0)
             popover.permittedArrowDirections = []
         }

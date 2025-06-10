@@ -181,7 +181,7 @@ struct AddMultipleCardsView: View {
                     
                     logger.debug("Adding card - Word: \(trimmedWord), Definition: \(trimmedDefinition)")
                     
-                    viewModel.addCard(
+                    _ = viewModel.addCard(
                         word: trimmedWord,
                         definition: trimmedDefinition,
                         example: trimmedExample,

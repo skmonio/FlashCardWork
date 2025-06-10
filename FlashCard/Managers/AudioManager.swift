@@ -13,17 +13,9 @@ class AudioManager: NSObject, ObservableObject {
             return instance
         }
         
-        do {
-            let instance = AudioManager()
-            _shared = instance
-            return instance
-        } catch {
-            print("AudioManager: Failed to initialize - creating disabled instance")
-            let disabledInstance = AudioManager()
-            disabledInstance.isDisabled = true
-            _shared = disabledInstance
-            return disabledInstance
-        }
+        let instance = AudioManager()
+        _shared = instance
+        return instance
     }
     
     private var audioRecorder: AVAudioRecorder?
@@ -61,10 +53,9 @@ class AudioManager: NSObject, ObservableObject {
         if !isSimulator {
             // Ensure setup happens on main thread
             DispatchQueue.main.async { [weak self] in
+                guard let strongSelf = self else { return }
                 do {
-                    if let strongSelf = self {
-                        try strongSelf.setupRecordingSession()
-                    }
+                    try strongSelf.setupRecordingSession()
                 } catch {
                     print("AudioManager: Failed to setup recording session - disabling")
                     self?.isDisabled = true
@@ -89,13 +80,26 @@ class AudioManager: NSObject, ObservableObject {
             // Don't activate the session immediately - wait until we need to record
             print("AudioManager: Audio session category configured")
             
-            recordingSession.requestRecordPermission { [weak self] allowed in
-                DispatchQueue.main.async {
-                    self?.hasPermission = allowed
-                    if allowed {
-                        print("AudioManager: Recording permission granted")
-                    } else {
-                        print("AudioManager: Recording permission denied")
+            if #available(iOS 17.0, *) {
+                AVAudioApplication.requestRecordPermission { [weak self] allowed in
+                    DispatchQueue.main.async {
+                        self?.hasPermission = allowed
+                        if allowed {
+                            print("AudioManager: Recording permission granted")
+                        } else {
+                            print("AudioManager: Recording permission denied")
+                        }
+                    }
+                }
+            } else {
+                recordingSession.requestRecordPermission { [weak self] allowed in
+                    DispatchQueue.main.async {
+                        self?.hasPermission = allowed
+                        if allowed {
+                            print("AudioManager: Recording permission granted")
+                        } else {
+                            print("AudioManager: Recording permission denied")
+                        }
                     }
                 }
             }
@@ -136,13 +140,8 @@ class AudioManager: NSObject, ObservableObject {
             return false
         }
         
-        do {
-            let url = getAudioURL(for: cardId)
-            return FileManager.default.fileExists(atPath: url.path)
-        } catch {
-            print("AudioManager: Error checking if audio exists: \(error)")
-            return false
-        }
+        let url = getAudioURL(for: cardId)
+        return FileManager.default.fileExists(atPath: url.path)
     }
     
     func deleteAudio(for cardId: UUID) {

@@ -252,17 +252,17 @@ struct ManageDecksView: View {
         }
         
         // Navigation destinations
-        NavigationLink(destination: 
-            Group {
-                if let card = selectedCardForEdit {
-                    EditCardView(viewModel: viewModel, card: card)
-                } else {
-                    EmptyView()
-                }
-            }, isActive: $showingEditCardView) {
+        NavigationLink(value: showingEditCardView ? "editCard" : nil) {
             EmptyView()
         }
         .hidden()
+        .navigationDestination(isPresented: $showingEditCardView) {
+            if let card = selectedCardForEdit {
+                EditCardView(viewModel: viewModel, card: card)
+            } else {
+                EmptyView()
+            }
+        }
         .onChange(of: showingEditCardView) { oldValue, newValue in
             // Refresh search results when returning from EditCardView
             if oldValue && !newValue {

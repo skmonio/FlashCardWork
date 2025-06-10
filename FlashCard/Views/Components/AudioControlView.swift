@@ -80,12 +80,7 @@ struct AudioControlView: View {
         .onAppear {
             // Safely initialize AudioManager
             DispatchQueue.main.async {
-                do {
-                    audioManager = AudioManager.shared
-                } catch {
-                    print("AudioControlView: Failed to initialize AudioManager: \(error)")
-                    audioManager = nil
-                }
+                audioManager = AudioManager.shared
             }
         }
         .onDisappear {

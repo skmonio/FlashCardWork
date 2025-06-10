@@ -2,11 +2,19 @@ import Foundation
 
 // MARK: - Save State Models
 struct GameSaveState: Codable {
-    let id = UUID()
+    let id: UUID
     let gameType: SavedGameType
     let deckIds: [UUID]
     let savedAt: Date
     var gameData: Data
+    
+    init(gameType: SavedGameType, deckIds: [UUID], savedAt: Date, gameData: Data) {
+        self.id = UUID()
+        self.gameType = gameType
+        self.deckIds = deckIds
+        self.savedAt = savedAt
+        self.gameData = gameData
+    }
     
     enum SavedGameType: String, Codable {
         case study
