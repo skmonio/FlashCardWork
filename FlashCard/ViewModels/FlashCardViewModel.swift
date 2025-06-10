@@ -73,6 +73,24 @@ class FlashCardViewModel: ObservableObject {
             createExampleDutchCards()
         }
         
+        // Check for data loss and attempt recovery
+        let expectedSystemDecks = ["Uncategorized", "📖 Learning", "📚 Learnt"]
+        let missingSystemDecks = expectedSystemDecks.filter { deckName in
+            !decks.contains(where: { $0.name == deckName })
+        }
+        
+        if !missingSystemDecks.isEmpty {
+            print("⚠️ MISSING SYSTEM DECKS: \(missingSystemDecks)")
+            print("🔍 Scanning for lost data...")
+            scanForLostData()
+            
+            // Attempt automatic recovery
+            let recovery = attemptDataRecovery()
+            if recovery.recoveredCards > 0 || recovery.recoveredDecks > 0 {
+                print("🎉 Data recovery successful!")
+            }
+        }
+        
         // Update cards and decks
         updateCardDeckAssociations()
     }
@@ -632,8 +650,24 @@ class FlashCardViewModel: ObservableObject {
     private func saveCards() {
         print("Saving cards to UserDefaults")
         if let encoded = try? JSONEncoder().encode(flashCards) {
+            // Save to primary key
             UserDefaults.standard.set(encoded, forKey: userDefaultsKey)
-            print("Cards saved successfully")
+            
+            // Create backup with timestamp
+            let timestamp = DateFormatter().string(from: Date())
+            let backupKey = "\(userDefaultsKey)_backup_\(Int(Date().timeIntervalSince1970))"
+            UserDefaults.standard.set(encoded, forKey: backupKey)
+            
+            // Keep only last 5 backups
+            let allKeys = UserDefaults.standard.dictionaryRepresentation().keys
+            let backupKeys = allKeys.filter { $0.hasPrefix("\(userDefaultsKey)_backup_") }.sorted()
+            if backupKeys.count > 5 {
+                for key in backupKeys.dropLast(5) {
+                    UserDefaults.standard.removeObject(forKey: key)
+                }
+            }
+            
+            print("Cards saved successfully with backup")
         } else {
             print("Error: Failed to encode cards")
         }
@@ -834,8 +868,23 @@ class FlashCardViewModel: ObservableObject {
     private func saveDecks() {
         print("Saving decks to UserDefaults")
         if let encoded = try? JSONEncoder().encode(decks) {
+            // Save to primary key
             UserDefaults.standard.set(encoded, forKey: decksDefaultsKey)
-            print("Decks saved successfully")
+            
+            // Create backup with timestamp
+            let backupKey = "\(decksDefaultsKey)_backup_\(Int(Date().timeIntervalSince1970))"
+            UserDefaults.standard.set(encoded, forKey: backupKey)
+            
+            // Keep only last 5 backups
+            let allKeys = UserDefaults.standard.dictionaryRepresentation().keys
+            let backupKeys = allKeys.filter { $0.hasPrefix("\(decksDefaultsKey)_backup_") }.sorted()
+            if backupKeys.count > 5 {
+                for key in backupKeys.dropLast(5) {
+                    UserDefaults.standard.removeObject(forKey: key)
+                }
+            }
+            
+            print("Decks saved successfully with backup")
         } else {
             print("Error: Failed to encode decks")
         }
@@ -1046,6 +1095,119 @@ class FlashCardViewModel: ObservableObject {
             print("Card '\(card.word)': \(deckNames.joined(separator: ", "))")
         }
         print("===================================")
+    }
+    
+    /// Data recovery method - scans for all possible saved data
+    func scanForLostData() {
+        print("🔍 SCANNING FOR LOST DATA...")
+        
+        let allKeys = UserDefaults.standard.dictionaryRepresentation().keys
+        print("📋 All UserDefaults keys: \(allKeys.count)")
+        
+        // Look for any keys that might contain our data
+        let flashCardKeys = allKeys.filter { 
+            $0.lowercased().contains("card") || 
+            $0.lowercased().contains("flash") || 
+            $0.lowercased().contains("deck") ||
+            $0.lowercased().contains("saved")
+        }
+        
+        print("🔍 Found potential data keys: \(flashCardKeys)")
+        
+        // Try to load from each potential key
+        for key in flashCardKeys {
+            if let data = UserDefaults.standard.data(forKey: key) {
+                print("📦 Key '\(key)' contains \(data.count) bytes of data")
+                
+                // Try to peek at the data
+                if let jsonString = String(data: data, encoding: .utf8) {
+                    let preview = String(jsonString.prefix(200))
+                    print("   Preview: \(preview)...")
+                }
+                
+                // Try to decode as cards
+                if let cards = try? JSONDecoder().decode([FlashCard].self, from: data) {
+                    print("   ✅ Contains \(cards.count) cards!")
+                }
+                
+                // Try to decode as decks
+                if let decks = try? JSONDecoder().decode([Deck].self, from: data) {
+                    print("   ✅ Contains \(decks.count) decks!")
+                }
+            }
+        }
+        
+        print("🔍 Scan complete.")
+    }
+    
+    /// Emergency data recovery method
+    func attemptDataRecovery() -> (recoveredCards: Int, recoveredDecks: Int) {
+        print("🚨 ATTEMPTING DATA RECOVERY...")
+        
+        var recoveredCards = 0
+        var recoveredDecks = 0
+        
+        let allKeys = UserDefaults.standard.dictionaryRepresentation().keys
+        let potentialKeys = allKeys.filter { 
+            $0.lowercased().contains("card") || 
+            $0.lowercased().contains("flash") || 
+            $0.lowercased().contains("deck") ||
+            $0.lowercased().contains("saved")
+        }
+        
+        // Try to recover cards from any key
+        for key in potentialKeys {
+            if let data = UserDefaults.standard.data(forKey: key) {
+                // Try different card formats
+                if let cards = try? JSONDecoder().decode([FlashCard].self, from: data) {
+                    print("📦 Found \(cards.count) cards in key '\(key)'")
+                    
+                    for card in cards {
+                        if !flashCards.contains(where: { $0.id == card.id }) {
+                            flashCards.append(card)
+                            recoveredCards += 1
+                        }
+                    }
+                } else if let oldCards = try? JSONDecoder().decode([OldFlashCard].self, from: data) {
+                    print("📦 Found \(oldCards.count) old format cards in key '\(key)'")
+                    
+                    for oldCard in oldCards {
+                        if !flashCards.contains(where: { $0.id == oldCard.id }) {
+                            var newCard = FlashCard(
+                                word: oldCard.word,
+                                definition: oldCard.definition,
+                                example: oldCard.example,
+                                deckIds: oldCard.deckId.map { Set([$0]) } ?? []
+                            )
+                            newCard.id = oldCard.id
+                            newCard.successCount = oldCard.successCount
+                            flashCards.append(newCard)
+                            recoveredCards += 1
+                        }
+                    }
+                } else if let decks = try? JSONDecoder().decode([Deck].self, from: data) {
+                    print("📦 Found \(decks.count) decks in key '\(key)'")
+                    
+                    for deck in decks {
+                        if !self.decks.contains(where: { $0.id == deck.id }) {
+                            self.decks.append(deck)
+                            recoveredDecks += 1
+                        }
+                    }
+                }
+            }
+        }
+        
+        if recoveredCards > 0 || recoveredDecks > 0 {
+            print("✅ Recovery successful! Cards: \(recoveredCards), Decks: \(recoveredDecks)")
+            updateCardDeckAssociations()
+            saveCards()
+            saveDecks()
+        } else {
+            print("❌ No data could be recovered")
+        }
+        
+        return (recoveredCards, recoveredDecks)
     }
 }
 

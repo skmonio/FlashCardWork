@@ -39,6 +39,19 @@ struct HomeView: View {
                                         Label("Add Deck", systemImage: "folder.badge.plus")
                                     }
                                     
+                                    Divider()
+                                    
+                                    Button(action: {
+                                        // Attempt data recovery
+                                        let result = viewModel.attemptDataRecovery()
+                                        if result.recoveredCards > 0 || result.recoveredDecks > 0 {
+                                            // Show success feedback
+                                            HapticManager.shared.successNotification()
+                                        }
+                                    }) {
+                                        Label("Recover Lost Data", systemImage: "arrow.clockwise.circle")
+                                    }
+                                    
                                     Button(action: {
                                         showingExportImport = true
                                     }) {
