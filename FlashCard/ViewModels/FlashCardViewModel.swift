@@ -942,7 +942,7 @@ class FlashCardViewModel: ObservableObject {
         return learningDeck
     }
     
-    /// Moves a fully learned card to the "Learnt" deck
+    /// Copies a fully learned card to the "Learnt" deck (keeps in original decks)
     private func moveCardToLearntDeck(_ card: FlashCard) {
         let learntDeck = getLearntDeck()
         
@@ -951,7 +951,7 @@ class FlashCardViewModel: ObservableObject {
             flashCards[cardIndex].deckIds.insert(learntDeck.id)
         }
         
-        // Remove from learning deck if present
+        // Remove from learning deck if present (but keep in original decks)
         let learningDeck = getLearningDeck()
         if let cardIndex = flashCards.firstIndex(where: { $0.id == card.id }) {
             flashCards[cardIndex].deckIds.remove(learningDeck.id)
@@ -960,7 +960,7 @@ class FlashCardViewModel: ObservableObject {
         updateCardDeckAssociations()
     }
     
-    /// Moves a card back to the "Learning" deck (when accuracy drops or wrong answer in Learnt)
+    /// Copies a card back to the "Learning" deck (keeps in original decks)
     private func moveCardBackToLearningDeck(_ card: FlashCard) {
         let learningDeck = getLearningDeck()
         let learntDeck = getLearntDeck()
@@ -970,7 +970,7 @@ class FlashCardViewModel: ObservableObject {
             flashCards[cardIndex].deckIds.insert(learningDeck.id)
         }
         
-        // Remove from learnt deck if present
+        // Remove from learnt deck if present (but keep in original decks)
         if let cardIndex = flashCards.firstIndex(where: { $0.id == card.id }) {
             flashCards[cardIndex].deckIds.remove(learntDeck.id)
         }
@@ -978,7 +978,7 @@ class FlashCardViewModel: ObservableObject {
         updateCardDeckAssociations()
     }
     
-    /// Updates a card in the "Learning" deck (for cards that have been shown but aren't 80% yet)
+    /// Copies a card to the "Learning" deck (for cards that have been shown but aren't 80% yet)
     private func updateCardInLearningDeck(_ card: FlashCard) {
         guard !card.isFullyLearned else { return } // Fully learned cards (80%+) go to learnt deck
         guard card.timesShown > 0 else { return } // Don't add new cards
