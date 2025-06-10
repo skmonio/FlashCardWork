@@ -184,7 +184,7 @@ struct DeckView: View {
                                     showingEditCardView = true
                                 }
                             }) {
-                                CardRow(card: currentCard)
+                                CardRow(card: currentCard, viewModel: viewModel)
                                     .frame(maxWidth: .infinity, alignment: .leading)
                                     .contentShape(Rectangle()) // Make entire area tappable
                             }
