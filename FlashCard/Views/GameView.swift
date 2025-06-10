@@ -502,6 +502,10 @@ struct GameView: View {
                 score += 1
                 displayedCards[index].isSelected = true
                 
+                // Track progress - successful match means correct answer
+                viewModel.recordCardShown(tappedCard.originalCard.id)
+                viewModel.recordCardCorrect(tappedCard.originalCard.id)
+                
                 // After a brief delay, mark them as matched
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
                     // Clear selection and set matched state
@@ -534,6 +538,12 @@ struct GameView: View {
                 // Track incorrect matches
                 incorrectMatches.insert(selectedCard!.originalCard)
                 incorrectMatches.insert(tappedCard.originalCard)
+                
+                // Track progress - mismatch means incorrect answer for both cards
+                viewModel.recordCardShown(selectedCard!.originalCard.id)
+                viewModel.recordCardIncorrect(selectedCard!.originalCard.id)
+                viewModel.recordCardShown(tappedCard.originalCard.id)
+                viewModel.recordCardIncorrect(tappedCard.originalCard.id)
                 
                 // Reset both cards after a brief delay
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {

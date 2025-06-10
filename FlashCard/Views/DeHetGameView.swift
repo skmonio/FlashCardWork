@@ -252,10 +252,15 @@ struct DeHetGameView: View {
         lastAnswerCorrect = isCorrect
         totalAnswers += 1
         
+        // Track progress
+        viewModel.recordCardShown(card.id)
+        
         if isCorrect {
             correctAnswers += 1
+            viewModel.recordCardCorrect(card.id)
             HapticManager.shared.correctAnswer()
         } else {
+            viewModel.recordCardIncorrect(card.id)
             HapticManager.shared.wrongAnswer()
         }
         

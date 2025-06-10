@@ -455,7 +455,12 @@ struct StudyView: View {
         let cardId = cards[currentIndex].id
         knownCards.insert(cardId)
         unknownCards.remove(cardId)
+        
+        // Track progress - swipe right means correct answer
+        viewModel.recordCardShown(cardId)
+        viewModel.recordCardCorrect(cardId)
         viewModel.setCardStatus(cardId: cardId, status: .known)
+        
         withAnimation(.easeOut(duration: 0.3)) {
             moveToNextCard()
         }
@@ -466,7 +471,12 @@ struct StudyView: View {
         let cardId = cards[currentIndex].id
         unknownCards.insert(cardId)
         knownCards.remove(cardId)
+        
+        // Track progress - swipe left means incorrect answer
+        viewModel.recordCardShown(cardId)
+        viewModel.recordCardIncorrect(cardId)
         viewModel.setCardStatus(cardId: cardId, status: .unknown)
+        
         withAnimation(.easeOut(duration: 0.3)) {
             moveToNextCard()
         }

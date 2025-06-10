@@ -358,10 +358,15 @@ struct LookCoverCheckView: View {
         isCorrect = correct
         totalAnswers += 1
         
+        // Track progress
+        viewModel.recordCardShown(card.id)
+        
         if correct {
             correctAnswers += 1
+            viewModel.recordCardCorrect(card.id)
             HapticManager.shared.correctAnswer()
         } else {
+            viewModel.recordCardIncorrect(card.id)
             HapticManager.shared.wrongAnswer()
         }
         

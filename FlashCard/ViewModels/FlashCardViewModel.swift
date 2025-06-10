@@ -55,6 +55,19 @@ class FlashCardViewModel: ObservableObject {
             uncategorizedDeckId = decks.first(where: { $0.name == "Uncategorized" })?.id
         }
         
+        // Create system decks if they don't exist
+        if !decks.contains(where: { $0.name == "📖 Learning" }) {
+            let learningDeck = Deck(name: "📖 Learning", isEditable: false)
+            decks.append(learningDeck)
+            print("Created 'Learning' system deck")
+        }
+        
+        if !decks.contains(where: { $0.name == "📚 Learnt" }) {
+            let learntDeck = Deck(name: "📚 Learnt", isEditable: false)
+            decks.append(learntDeck)
+            print("Created 'Learnt' system deck")
+        }
+        
         // Add example Dutch cards if no cards exist
         if flashCards.isEmpty {
             createExampleDutchCards()
@@ -364,7 +377,7 @@ class FlashCardViewModel: ObservableObject {
     
     func deleteDeck(_ deck: Deck) {
         print("Deleting deck: \(deck.name)")
-        if deck.name != "Uncategorized" {
+        if deck.name != "Uncategorized" && deck.isEditable {
             // If this is a parent deck, delete all its sub-decks first
             if !deck.subDeckIds.isEmpty {
                 let subDecks = decks.filter { deck.subDeckIds.contains($0.id) }
@@ -389,6 +402,8 @@ class FlashCardViewModel: ObservableObject {
             
             // Update associations
             updateCardDeckAssociations()
+        } else {
+            print("Cannot delete system deck: \(deck.name)")
         }
     }
     
@@ -409,7 +424,7 @@ class FlashCardViewModel: ObservableObject {
     }
     
     func getSelectableDecks() -> [Deck] {
-        return getAllDecksHierarchical().filter { $0.name != "Uncategorized" }
+        return getAllDecksHierarchical().filter { $0.name != "Uncategorized" && $0.isEditable }
     }
     
     // MARK: - Export Functionality

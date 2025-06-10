@@ -41,10 +41,10 @@ struct FlashCard: Identifiable, Codable, Hashable {
         return (Double(timesCorrect) / Double(timesShown)) * 100.0
     }
     
-    // Helper property to check if card is fully learned (100%)
+    // Helper property to check if card is fully learned (100% with at least 5 attempts)
     var isFullyLearned: Bool {
         guard let percentage = learningPercentage else { return false }
-        return percentage >= 100.0
+        return percentage >= 100.0 && timesShown >= 5
     }
     
     // Implement Hashable

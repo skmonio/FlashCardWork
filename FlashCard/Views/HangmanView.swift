@@ -57,6 +57,11 @@ struct HangmanView: View {
             if remainingAttempts == 0 {
                 gameWon = false
                 HapticManager.shared.errorNotification()
+                
+                // Track progress - game lost means incorrect answer
+                viewModel.recordCardShown(currentCard.id)
+                viewModel.recordCardIncorrect(currentCard.id)
+                
                 showingGameOver = true
             }
         } else {
@@ -65,6 +70,11 @@ struct HangmanView: View {
             if isWordGuessed {
                 gameWon = true
                 HapticManager.shared.gameComplete()
+                
+                // Track progress - word guessed means correct answer
+                viewModel.recordCardShown(currentCard.id)
+                viewModel.recordCardCorrect(currentCard.id)
+                
                 showingGameOver = true
                 // Update success count for the card
                 if let cardIndex = viewModel.flashCards.firstIndex(where: { $0.id == currentCard.id }) {
