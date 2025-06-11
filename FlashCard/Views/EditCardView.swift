@@ -122,18 +122,25 @@ struct EditCardView: View {
             Form {
                 Section(header: Text("Card Details")) {
                     VStack(alignment: .leading, spacing: 8) {
-                        TextField("Word (Dutch)", text: $word)
-                            .onChange(of: word) { oldValue, newValue in
-                                logger.debug("Word changed from '\(oldValue)' to '\(newValue)'")
-                                // Trigger translation suggestion for Dutch words
-                                if !newValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-                                   newValue != lastTranslatedWord {
-                                    triggerTranslationSuggestion(for: newValue)
-                                } else if newValue.isEmpty {
-                                    showTranslationSuggestion = false
-                                    suggestedTranslation = ""
+                        // Word field with speech controls
+                        HStack(spacing: 8) {
+                            TextField("Word (Dutch)", text: $word)
+                                .onChange(of: word) { oldValue, newValue in
+                                    logger.debug("Word changed from '\(oldValue)' to '\(newValue)'")
+                                    // Trigger translation suggestion for Dutch words
+                                    if !newValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+                                       newValue != lastTranslatedWord {
+                                        triggerTranslationSuggestion(for: newValue)
+                                    } else if newValue.isEmpty {
+                                        showTranslationSuggestion = false
+                                        suggestedTranslation = ""
+                                    }
                                 }
+                            
+                            if !word.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                                DutchSpeechControlView(text: word, mode: .minimal)
                             }
+                        }
                         
                         // Translation suggestion
                         if showTranslationSuggestion && !suggestedTranslation.isEmpty {
@@ -184,10 +191,36 @@ struct EditCardView: View {
                             logger.debug("Definition changed from '\(oldValue)' to '\(newValue)'")
                         }
                     
-                    TextField("Example (Optional)", text: $example)
-                        .onChange(of: example) { oldValue, newValue in
-                            logger.debug("Example changed from '\(oldValue)' to '\(newValue)'")
+                    // Example field with speech controls
+                    HStack(spacing: 8) {
+                        TextField("Example (Optional)", text: $example)
+                            .onChange(of: example) { oldValue, newValue in
+                                logger.debug("Example changed from '\(oldValue)' to '\(newValue)'")
+                            }
+                        
+                        if !example.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                            DutchSpeechControlView(text: example, mode: .minimal)
                         }
+                    }
+                }
+                
+                // New section for Dutch Pronunciation
+                Section(header: Text("Dutch Pronunciation")) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Listen to pronunciation while you edit")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        
+                        // Compact speech controls for the main word
+                        if !word.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                            DutchSpeechControlView(text: word, mode: .compact)
+                        } else {
+                            Text("Enter a Dutch word above to hear pronunciation")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .italic()
+                        }
+                    }
                 }
                 
                 Section(header: Text("Pronunciation (Optional)")) {
@@ -248,9 +281,22 @@ struct EditCardView: View {
                         }
                     }
                     
-                    // Tense fields
-                    TextField("Past Tense (Optional)", text: $pastTense)
-                    TextField("Future Tense (Optional)", text: $futureTense)
+                    // Tense fields with speech controls
+                    HStack(spacing: 8) {
+                        TextField("Past Tense (Optional)", text: $pastTense)
+                        
+                        if !pastTense.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                            DutchSpeechControlView(text: pastTense, mode: .minimal)
+                        }
+                    }
+                    
+                    HStack(spacing: 8) {
+                        TextField("Future Tense (Optional)", text: $futureTense)
+                        
+                        if !futureTense.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                            DutchSpeechControlView(text: futureTense, mode: .minimal)
+                        }
+                    }
                 }
 
                 Section(header: Text("Decks (Select one or more)")) {
