@@ -397,7 +397,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = Q2WFR8D428;
+				DEVELOPMENT_TEAM = 33JRS76UKD;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This app needs access to the microphone to record pronunciation for your flashcards. This helps you practice speaking and pronunciation of foreign words.";
@@ -426,7 +426,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = Q2WFR8D428;
+				DEVELOPMENT_TEAM = 33JRS76UKD;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This app needs access to the microphone to record pronunciation for your flashcards. This helps you practice speaking and pronunciation of foreign words.";
