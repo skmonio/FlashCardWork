@@ -247,15 +247,30 @@ struct TestView: View {
                     .font(.headline)
                     .foregroundColor(.secondary)
                 
-                Text(currentCard.word)
-                    .font(.title)
-                    .bold()
-                    .multilineTextAlignment(.center)
+                ZStack {
+                    VStack {
+                        Text(currentCard.word)
+                            .font(.title)
+                            .bold()
+                            .multilineTextAlignment(.center)
+                    }
                     .padding()
                     .frame(maxWidth: .infinity)
                     .background(Color(.systemBackground))
                     .cornerRadius(15)
                     .shadow(radius: 5)
+                    
+                    // Learning percentage in top right
+                    VStack {
+                        HStack {
+                            Spacer()
+                            LearningPercentageView(percentage: currentCard.learningPercentage)
+                                .padding(.top, 16)
+                                .padding(.trailing, 16)
+                        }
+                        Spacer()
+                    }
+                }
                 
                 Text("Choose one of the following:")
                     .font(.subheadline)

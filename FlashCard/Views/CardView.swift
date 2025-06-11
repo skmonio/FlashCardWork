@@ -168,32 +168,45 @@ struct CardView: View {
             .fill(Color.white)
             .shadow(radius: 5)
             .overlay(
-                VStack(spacing: 16) {
-                    // Word with optional article
-                    VStack(spacing: 4) {
-                        if let article = card.article {
-                            Text(article)
-                                .font(.caption)
-                                .foregroundColor(.blue)
+                ZStack {
+                    VStack(spacing: 16) {
+                        // Word with optional article
+                        VStack(spacing: 4) {
+                            if let article = card.article {
+                                Text(article)
+                                    .font(.caption)
+                                    .foregroundColor(.blue)
+                                    .bold()
+                            }
+                            Text(card.word)
+                                .font(.title)
                                 .bold()
+                                .foregroundColor(.black)
                         }
-                        Text(card.word)
-                            .font(.title)
-                            .bold()
-                            .foregroundColor(.black)
+                        
+                        if !card.example.isEmpty && isShowingExample {
+                            Divider()
+                            Text(card.example)
+                                .font(.body)
+                                .italic()
+                                .multilineTextAlignment(.center)
+                                .foregroundColor(.gray)
+                                .transition(.opacity)
+                        }
                     }
+                    .padding()
                     
-                    if !card.example.isEmpty && isShowingExample {
-                        Divider()
-                        Text(card.example)
-                            .font(.body)
-                            .italic()
-                            .multilineTextAlignment(.center)
-                            .foregroundColor(.gray)
-                            .transition(.opacity)
+                    // Learning percentage in top right
+                    VStack {
+                        HStack {
+                            Spacer()
+                            LearningPercentageView(percentage: card.learningPercentage)
+                                .padding(.top, 16)
+                                .padding(.trailing, 16)
+                        }
+                        Spacer()
                     }
                 }
-                .padding()
             )
     }
     
@@ -202,43 +215,56 @@ struct CardView: View {
             .fill(Color.white)
             .shadow(radius: 5)
             .overlay(
-                VStack(spacing: 16) {
-                    Text(card.definition)
-                        .font(.body)
-                        .multilineTextAlignment(.center)
-                        .foregroundColor(.black)
-                    
-                    // Show tenses if available
-                    if card.pastTense != nil || card.futureTense != nil {
-                        Divider()
-                        VStack(spacing: 8) {
-                            if let pastTense = card.pastTense {
-                                HStack {
-                                    Text("Past:")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                    Text(pastTense)
-                                        .font(.callout)
-                                        .bold()
-                                    Spacer()
+                ZStack {
+                    VStack(spacing: 16) {
+                        Text(card.definition)
+                            .font(.body)
+                            .multilineTextAlignment(.center)
+                            .foregroundColor(.black)
+                        
+                        // Show tenses if available
+                        if card.pastTense != nil || card.futureTense != nil {
+                            Divider()
+                            VStack(spacing: 8) {
+                                if let pastTense = card.pastTense {
+                                    HStack {
+                                        Text("Past:")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                        Text(pastTense)
+                                            .font(.callout)
+                                            .bold()
+                                        Spacer()
+                                    }
+                                }
+                                if let futureTense = card.futureTense {
+                                    HStack {
+                                        Text("Future:")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                        Text(futureTense)
+                                            .font(.callout)
+                                            .bold()
+                                        Spacer()
+                                    }
                                 }
                             }
-                            if let futureTense = card.futureTense {
-                                HStack {
-                                    Text("Future:")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                    Text(futureTense)
-                                        .font(.callout)
-                                        .bold()
-                                    Spacer()
-                                }
-                            }
+                            .padding(.horizontal, 8)
                         }
-                        .padding(.horizontal, 8)
+                    }
+                    .padding()
+                    
+                    // Learning percentage in top right
+                    VStack {
+                        HStack {
+                            Spacer()
+                            LearningPercentageView(percentage: card.learningPercentage)
+                                .padding(.top, 16)
+                                .padding(.trailing, 16)
+                        }
+                        Spacer()
                     }
                 }
-                .padding()
             )
     }
 } 

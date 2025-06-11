@@ -455,6 +455,10 @@ struct StudyView: View {
         knownCards.insert(cardId)
         unknownCards.remove(cardId)
         viewModel.setCardStatus(cardId: cardId, status: .known)
+        
+        // Record learning statistics - card was shown and answered correctly
+        viewModel.recordCardShown(cardId, isCorrect: true)
+        
         withAnimation(.easeOut(duration: 0.3)) {
             moveToNextCard()
         }
@@ -466,6 +470,10 @@ struct StudyView: View {
         unknownCards.insert(cardId)
         knownCards.remove(cardId)
         viewModel.setCardStatus(cardId: cardId, status: .unknown)
+        
+        // Record learning statistics - card was shown and answered incorrectly
+        viewModel.recordCardShown(cardId, isCorrect: false)
+        
         withAnimation(.easeOut(duration: 0.3)) {
             moveToNextCard()
         }

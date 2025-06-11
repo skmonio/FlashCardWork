@@ -12,6 +12,7 @@ struct ExportImportView: View {
     @State private var exportContent = ""
     @State private var selectedExportOption: ExportOption = .allCards
     @State private var showingSimulatorAlert = false
+    @State private var showingResetAlert = false
     
     enum ExportOption: Hashable, Equatable {
         case allCards
@@ -88,7 +89,7 @@ struct ExportImportView: View {
                     }
                 }
                 
-                Section(header: Text("Import"), footer: Text("Import CSV files with columns: Word, Definition, Example, Article, Past Tense, Future Tense, Decks, Success Count")) {
+                Section(header: Text("Import"), footer: Text("Import CSV files with columns: Word, Definition, Example, Article, Past Tense, Future Tense, Decks, Success Count, Times Shown, Times Correct")) {
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Import flashcards from CSV format")
                             .font(.subheadline)
@@ -103,6 +104,25 @@ struct ExportImportView: View {
                             }
                             .foregroundColor(.blue)
                         }
+                    }
+                }
+                
+                Section(header: Text("Learning Statistics")) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Reset all learning progress and statistics")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        
+                        Button(action: {
+                            showingResetAlert = true
+                        }) {
+                            HStack {
+                                Image(systemName: "chart.bar.xaxis")
+                                Text("Reset All Statistics")
+                            }
+                            .foregroundColor(.red)
+                        }
+                        .disabled(viewModel.flashCards.isEmpty)
                     }
                 }
                 
@@ -121,7 +141,9 @@ struct ExportImportView: View {
                                 "Past Tense (optional)",
                                 "Future Tense (optional)",
                                 "Decks (optional: separated by ;)",
-                                "Success Count (optional)"
+                                "Success Count (optional)",
+                                "Times Shown (optional)",
+                                "Times Correct (optional)"
                             ], id: \.self) { field in
                                 Text("• \(field)")
                                     .font(.caption)
@@ -135,9 +157,9 @@ struct ExportImportView: View {
                             .padding(.top, 8)
                         
                         Text("""
-                        Word,Definition,Example,Article,Past Tense,Future Tense,Decks,Success Count
-                        Hallo,Hello,"Hallo, hoe gaat het?",,,,"A1 - Basics",5
-                        Brood,Bread,"Ik eet brood met kaas",het,,,"A1 - Food & Drinks; Basics",3
+                        Word,Definition,Example,Article,Past Tense,Future Tense,Decks,Success Count,Times Shown,Times Correct
+                        Hallo,Hello,"Hallo, hoe gaat het?",,,,"A1 - Basics",5,10,8
+                        Brood,Bread,"Ik eet brood met kaas",het,,,"A1 - Food & Drinks; Basics",3,5,3
                         """)
                             .font(.caption)
                             .fontDesign(.monospaced)
@@ -172,6 +194,14 @@ struct ExportImportView: View {
                 Button("OK") { }
             } message: {
                 Text("File sharing is limited in iOS Simulator. The CSV content has been printed to the console. On a real device, you would be able to save or share the file normally.")
+            }
+            .alert("Reset Learning Statistics", isPresented: $showingResetAlert) {
+                Button("Reset", role: .destructive) {
+                    viewModel.resetLearningStatistics()
+                }
+                Button("Cancel", role: .cancel) { }
+            } message: {
+                Text("This will reset all learning progress and percentages for all cards. This action cannot be undone.")
             }
         }
     }

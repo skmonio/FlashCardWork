@@ -18,18 +18,25 @@ struct CardRow: View {
     let card: FlashCard
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(card.word)
-                .font(.headline)
-            Text(card.definition)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-            if !card.example.isEmpty {
-                Text("Example: \(card.example)")
-                    .font(.caption)
+        HStack {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(card.word)
+                    .font(.headline)
+                Text(card.definition)
+                    .font(.subheadline)
                     .foregroundColor(.secondary)
+                if !card.example.isEmpty {
+                    Text("Example: \(card.example)")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
             }
+            .padding(.vertical, 8)
+            
+            Spacer()
+            
+            // Learning percentage on the right
+            LearningPercentageView(percentage: card.learningPercentage)
         }
-        .padding(.vertical, 8)
     }
 } 
