@@ -992,6 +992,13 @@ class FlashCardViewModel: ObservableObject {
         // Prevent renaming of special learning decks
         return deck.name != "Uncategorized" && deck.name != "Learnt" && deck.name != "Learning"
     }
+    
+    func saveAllData() {
+        saveCards()
+        saveDecks()
+        saveCardStatus()
+        print("💾 All ViewModel data saved to UserDefaults")
+    }
 }
 
 // Add this struct for migration purposes at the end of the file

@@ -290,6 +290,14 @@ struct LookCoverCheckView: View {
             }
             
             Button("Practice Again") {
+                // Explicitly save all ViewModel data to ensure statistics persist
+                viewModel.saveAllData()
+                
+                // Force UI refresh
+                DispatchQueue.main.async {
+                    viewModel.objectWillChange.send()
+                }
+                
                 resetGame()
             }
             .buttonStyle(.borderedProminent)

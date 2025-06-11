@@ -291,7 +291,17 @@ struct WritingView: View {
             
             // Action buttons
             VStack(spacing: 12) {
-                Button(action: resetGame) {
+                Button(action: {
+                    // Explicitly save all ViewModel data to ensure statistics persist
+                    viewModel.saveAllData()
+                    
+                    // Force UI refresh
+                    DispatchQueue.main.async {
+                        viewModel.objectWillChange.send()
+                    }
+                    
+                    resetGame()
+                }) {
                     Text("Practice Again")
                         .font(.headline)
                         .foregroundColor(.white)

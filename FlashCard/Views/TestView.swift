@@ -344,6 +344,14 @@ struct TestView: View {
             
             VStack(spacing: 16) {
                 Button(action: {
+                    // Explicitly save all ViewModel data to ensure statistics persist
+                    viewModel.saveAllData()
+                    
+                    // Force UI refresh
+                    DispatchQueue.main.async {
+                        viewModel.objectWillChange.send()
+                    }
+                    
                     resetTest()
                 }) {
                     Text("Test All Cards Again")
@@ -357,6 +365,14 @@ struct TestView: View {
                 
                 if !incorrectCards.isEmpty {
                     Button(action: {
+                        // Explicitly save all ViewModel data to ensure statistics persist
+                        viewModel.saveAllData()
+                        
+                        // Force UI refresh
+                        DispatchQueue.main.async {
+                            viewModel.objectWillChange.send()
+                        }
+                        
                         resetTest(onlyIncorrect: true)
                     }) {
                         Text("Review Incorrect Answers (\(incorrectCards.count))")

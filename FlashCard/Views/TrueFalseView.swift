@@ -155,6 +155,14 @@ struct TrueFalseView: View {
                 // Action buttons
                 VStack(spacing: 15) {
                     Button(action: {
+                        // Explicitly save all ViewModel data to ensure statistics persist
+                        viewModel.saveAllData()
+                        
+                        // Force UI refresh
+                        DispatchQueue.main.async {
+                            viewModel.objectWillChange.send()
+                        }
+                        
                         resetGame()
                         showingGameOver = false
                     }) {
@@ -303,6 +311,14 @@ struct TrueFalseView: View {
             
             VStack(spacing: 16) {
                 Button(action: {
+                    // Explicitly save all ViewModel data to ensure statistics persist
+                    viewModel.saveAllData()
+                    
+                    // Force UI refresh
+                    DispatchQueue.main.async {
+                        viewModel.objectWillChange.send()
+                    }
+                    
                     resetGame()
                     showingResults = false
                 }) {

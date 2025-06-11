@@ -264,6 +264,14 @@ struct StudyView: View {
                         viewModel.setCardStatus(cardId: cardId, status: .unknown)
                     }
                     
+                    // Explicitly save all ViewModel data to ensure statistics persist
+                    viewModel.saveAllData()
+                    
+                    // Force UI refresh
+                    DispatchQueue.main.async {
+                        viewModel.objectWillChange.send()
+                    }
+                    
                     // Reset all states for new session
                     resetForNewSession()
                 }) {
@@ -284,6 +292,14 @@ struct StudyView: View {
                         }
                         for cardId in unknownCards {
                             viewModel.setCardStatus(cardId: cardId, status: .unknown)
+                        }
+                        
+                        // Explicitly save all ViewModel data to ensure statistics persist
+                        viewModel.saveAllData()
+                        
+                        // Force UI refresh
+                        DispatchQueue.main.async {
+                            viewModel.objectWillChange.send()
                         }
                         
                         // Filter cards to only unknown ones and restart

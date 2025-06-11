@@ -129,6 +129,14 @@ struct GameView: View {
                     // Action buttons
                     VStack(spacing: 15) {
                         Button(action: {
+                            // Explicitly save all ViewModel data to ensure statistics persist
+                            viewModel.saveAllData()
+                            
+                            // Force UI refresh
+                            DispatchQueue.main.async {
+                                viewModel.objectWillChange.send()
+                            }
+                            
                             setupGame()
                             showingGameOver = false
                         }) {
