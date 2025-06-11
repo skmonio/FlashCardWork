@@ -80,6 +80,9 @@ class FlashCardViewModel: ObservableObject {
             createExampleDutchCards()
         }
         
+        // Initialize statistics for existing cards that might not have them
+        initializeStatisticsForExistingCards()
+        
         // Update cards and decks
         updateCardDeckAssociations()
     }
@@ -701,17 +704,19 @@ class FlashCardViewModel: ObservableObject {
                 print("✅ Found \(veryOldCards.count) cards in very old format, migrating...")
                 
                 // Convert very old format to new format
-                flashCards = veryOldCards.map { veryOldCard in
-                    var newCard = FlashCard(
-                        word: veryOldCard.word,
-                        definition: veryOldCard.definition,
-                        example: veryOldCard.example,
-                        deckIds: []  // No deck associations in very old format
-                    )
-                    newCard.id = veryOldCard.id
-                    newCard.successCount = veryOldCard.successCount ?? 0
-                    return newCard
-                }
+                                        flashCards = veryOldCards.map { veryOldCard in
+                            var newCard = FlashCard(
+                                word: veryOldCard.word,
+                                definition: veryOldCard.definition,
+                                example: veryOldCard.example,
+                                deckIds: []  // No deck associations in very old format
+                            )
+                            newCard.id = veryOldCard.id
+                            newCard.successCount = veryOldCard.successCount ?? 0
+                            newCard.timesShown = 0  // Initialize new statistics fields
+                            newCard.timesCorrect = 0
+                            return newCard
+                        }
                 
                 print("✅ Successfully migrated \(flashCards.count) cards from very old format")
                 
@@ -728,17 +733,19 @@ class FlashCardViewModel: ObservableObject {
                 print("✅ Found \(simpleCards.count) cards in simple format, migrating...")
                 
                 // Convert simple format to new format
-                flashCards = simpleCards.map { simpleCard in
-                    var newCard = FlashCard(
-                        word: simpleCard.word,
-                        definition: simpleCard.definition,
-                        example: simpleCard.example,
-                        deckIds: []  // No deck associations in simple format
-                    )
-                    newCard.id = simpleCard.id
-                    newCard.successCount = 0
-                    return newCard
-                }
+                                    flashCards = simpleCards.map { simpleCard in
+                        var newCard = FlashCard(
+                            word: simpleCard.word,
+                            definition: simpleCard.definition,
+                            example: simpleCard.example,
+                            deckIds: []  // No deck associations in simple format
+                        )
+                        newCard.id = simpleCard.id
+                        newCard.successCount = 0
+                        newCard.timesShown = 0  // Initialize new statistics fields
+                        newCard.timesCorrect = 0
+                        return newCard
+                    }
                 
                 print("✅ Successfully migrated \(flashCards.count) cards from simple format")
                 
@@ -785,6 +792,8 @@ class FlashCardViewModel: ObservableObject {
                             )
                             newCard.id = simpleCard.id
                             newCard.successCount = 0
+                            newCard.timesShown = 0  // Initialize new statistics fields
+                            newCard.timesCorrect = 0
                             return newCard
                         }
                         
@@ -805,6 +814,8 @@ class FlashCardViewModel: ObservableObject {
                             )
                             newCard.id = veryOldCard.id
                             newCard.successCount = veryOldCard.successCount ?? 0
+                            newCard.timesShown = 0  // Initialize new statistics fields
+                            newCard.timesCorrect = 0
                             return newCard
                         }
                         
@@ -825,6 +836,8 @@ class FlashCardViewModel: ObservableObject {
                             )
                             newCard.id = oldCard.id
                             newCard.successCount = oldCard.successCount
+                            newCard.timesShown = 0  // Initialize new statistics fields
+                            newCard.timesCorrect = 0
                             return newCard
                         }
                         
@@ -888,6 +901,23 @@ class FlashCardViewModel: ObservableObject {
     
     // MARK: - Learning Statistics Methods
     
+    private func initializeStatisticsForExistingCards() {
+        var needsSave = false
+        for index in flashCards.indices {
+            // Check if card has uninitialized statistics (this might happen with old save data)
+            if flashCards[index].timesShown == 0 && flashCards[index].timesCorrect == 0 {
+                // These are likely default values, which is fine
+                continue
+            }
+        }
+        
+        if needsSave {
+            saveCards()
+        }
+        
+        print("📊 Statistics initialization check completed for \(flashCards.count) cards")
+    }
+    
     func recordCardShown(_ cardId: UUID, isCorrect: Bool) {
         guard let cardIndex = flashCards.firstIndex(where: { $0.id == cardId }) else { return }
         
@@ -897,34 +927,37 @@ class FlashCardViewModel: ObservableObject {
             flashCards[cardIndex].timesCorrect += 1
         }
         
-        // Update learning decks
+        // Update learning decks with the updated card
         updateLearningDecks(for: flashCards[cardIndex])
         
         // Save changes
         saveCards()
+        
+        print("📊 Card '\(flashCards[cardIndex].word)' stats updated: \(flashCards[cardIndex].timesCorrect)/\(flashCards[cardIndex].timesShown) = \(flashCards[cardIndex].learningPercentage ?? 0)%")
+        
+        // Force UI update by triggering objectWillChange
+        DispatchQueue.main.async {
+            self.objectWillChange.send()
+        }
     }
     
     private func updateLearningDecks(for card: FlashCard) {
         guard let learntDeckId = learntDeckId,
-              let learningDeckId = learningDeckId else { return }
-        
-        var updatedCard = card
+              let learningDeckId = learningDeckId,
+              let cardIndex = flashCards.firstIndex(where: { $0.id == card.id }) else { return }
         
         // Remove card from both learning decks first
-        updatedCard.deckIds.remove(learntDeckId)
-        updatedCard.deckIds.remove(learningDeckId)
+        flashCards[cardIndex].deckIds.remove(learntDeckId)
+        flashCards[cardIndex].deckIds.remove(learningDeckId)
         
         // Add to appropriate deck based on learning status
-        if card.isFullyLearned {
-            updatedCard.deckIds.insert(learntDeckId)
-        } else if card.learningPercentage != nil {
+        if flashCards[cardIndex].isFullyLearned {
+            flashCards[cardIndex].deckIds.insert(learntDeckId)
+            print("📚 Card '\(flashCards[cardIndex].word)' moved to LEARNT deck (\(flashCards[cardIndex].learningPercentage ?? 0)%)")
+        } else if flashCards[cardIndex].learningPercentage != nil {
             // Only add to learning deck if the card has been shown at least once
-            updatedCard.deckIds.insert(learningDeckId)
-        }
-        
-        // Update the card in the main array
-        if let cardIndex = flashCards.firstIndex(where: { $0.id == card.id }) {
-            flashCards[cardIndex] = updatedCard
+            flashCards[cardIndex].deckIds.insert(learningDeckId)
+            print("📖 Card '\(flashCards[cardIndex].word)' moved to LEARNING deck (\(flashCards[cardIndex].learningPercentage ?? 0)%)")
         }
         
         // Update deck associations

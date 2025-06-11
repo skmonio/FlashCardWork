@@ -24,9 +24,10 @@ struct FlashCard: Identifiable, Codable, Hashable {
         return Int((Double(timesCorrect) / Double(timesShown)) * 100)
     }
     
-    // Check if card is fully learned (3+ correct answers)
+    // Check if card is fully learned (80%+ correct)
     var isFullyLearned: Bool {
-        return timesCorrect >= 3
+        guard let percentage = learningPercentage else { return false }
+        return percentage >= 80
     }
     
     init(word: String = "", definition: String = "", example: String = "", deckIds: Set<UUID> = [], article: String? = nil, pastTense: String? = nil, futureTense: String? = nil, cardId: UUID? = nil, dateCreated: Date? = nil) {
