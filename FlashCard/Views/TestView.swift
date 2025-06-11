@@ -71,13 +71,17 @@ struct TestView: View {
         if !hasAnswered {
             selectedAnswer = option
             hasAnswered = true
-            if option == currentCard.definition {
+            let isCorrect = option == currentCard.definition
+            if isCorrect {
                 correctAnswers += 1
                 HapticManager.shared.correctAnswer()
             } else {
                 incorrectCards.insert(currentCard.id)
                 HapticManager.shared.wrongAnswer()
             }
+            
+            // Record learning statistics - card was shown and answered correctly/incorrectly
+            viewModel.recordCardShown(currentCard.id, isCorrect: isCorrect)
             
             // Automatically move to next question after a short delay
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
@@ -199,17 +203,25 @@ struct TestView: View {
             )
         }
         .navigationBarHidden(true)
-        .alert(isPresented: $showingCloseConfirmation) {
-            Alert(
-                title: Text("Close Test?"),
-                message: Text(hasSignificantProgress ? 
-                    "Would you like to save your progress?" : 
-                    "Are you sure you want to close?"),
-                primaryButton: .destructive(Text("Save & Close")) {
+        .alert("Close Test?", isPresented: $showingCloseConfirmation) {
+            if hasSignificantProgress {
+                Button("Save & Close") {
                     saveProgressAndDismiss()
-                },
-                secondaryButton: .cancel()
-            )
+                }
+                Button("Close Without Saving", role: .destructive) {
+                    dismissToRoot()
+                }
+                Button("Cancel", role: .cancel) { }
+            } else {
+                Button("Close", role: .destructive) {
+                    dismissToRoot()
+                }
+                Button("Cancel", role: .cancel) { }
+            }
+        } message: {
+            Text(hasSignificantProgress ? 
+                "Would you like to save your progress or close without saving?" : 
+                "Are you sure you want to close?")
         }
         .onAppear {
             if shouldLoadSaveState {

@@ -8,6 +8,7 @@ struct DeckSelectionView: View {
     @State private var showingContinueGameOverlay = false
     @State private var shouldStartGame = false
     @State private var shouldContinueGame = false
+    @State private var showingSaveOverwriteWarning = false
     
     enum StudyMode {
         case study, test, game, truefalse, hangman, dehet, lookcovercheck, writing
@@ -144,32 +145,52 @@ struct DeckSelectionView: View {
                     
                     if !selectedDeckIds.isEmpty && !availableCards.isEmpty {
                         Section {
+                            // Start Game Button
                             Button(action: {
                                 handleStartGame()
                             }) {
                                 HStack {
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text("Start \(mode.title)")
-                                            .foregroundColor(.blue)
                                             .font(.headline)
-                                        
-                                        if hasSaveState {
-                                            HStack {
-                                                Image(systemName: "clock.fill")
-                                                    .foregroundColor(.green)
-                                                    .font(.caption)
-                                                Text("Saved game available")
-                                                    .font(.caption)
-                                                    .foregroundColor(.green)
-                                            }
-                                        }
                                     }
                                     Spacer()
                                     Text("\(availableCards.count) cards")
                                         .foregroundColor(.secondary)
                                 }
                             }
+                            .foregroundColor(selectedDeckIds.isEmpty || availableCards.isEmpty ? .gray : .blue)
+                            .disabled(selectedDeckIds.isEmpty || availableCards.isEmpty)
                             .buttonStyle(PlainButtonStyle())
+                            
+                            // Continue Game Button (if save state exists)
+                            if hasSaveState {
+                                Button(action: {
+                                    shouldContinueGame = true
+                                    shouldStartGame = true
+                                }) {
+                                    HStack {
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text("Continue Saved Game")
+                                                .font(.headline)
+                                                .foregroundColor(.green)
+                                            
+                                            HStack {
+                                                Image(systemName: "clock.fill")
+                                                    .foregroundColor(.green)
+                                                    .font(.caption)
+                                                Text("Pick up where you left off")
+                                                    .font(.caption)
+                                                    .foregroundColor(.green)
+                                            }
+                                        }
+                                        Spacer()
+                                        Image(systemName: "arrow.clockwise")
+                                            .foregroundColor(.green)
+                                    }
+                                }
+                                .buttonStyle(PlainButtonStyle())
+                            }
                             
                             // Hidden NavigationLink for programmatic navigation
                             NavigationLink(
@@ -180,6 +201,20 @@ struct DeckSelectionView: View {
                             }
                             .opacity(0)
                             .frame(height: 0)
+                        }
+                    } else {
+                        Section {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Start \(mode.title)")
+                                        .font(.headline)
+                                        .foregroundColor(.gray)
+                                }
+                                Spacer()
+                                Text("Select decks to continue")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
                         }
                     }
                 }
@@ -259,11 +294,26 @@ struct DeckSelectionView: View {
         .onChange(of: showingContinueGameOverlay) { oldValue, newValue in
             print("🎨 showingContinueGameOverlay changed from \(oldValue) to \(newValue)")
         }
+        .alert("Overwrite Saved Game?", isPresented: $showingSaveOverwriteWarning) {
+            Button("Start New Game", role: .destructive) {
+                // Delete the save state and start fresh
+                SaveStateManager.shared.deleteSaveState(
+                    gameType: mode.saveStateType,
+                    deckIds: Array(selectedDeckIds)
+                )
+                shouldContinueGame = false
+                shouldStartGame = true
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("Starting a new game will overwrite your current saved progress. Are you sure you want to continue?")
+        }
         .onAppear {
             // Reset navigation state when view appears
             shouldStartGame = false
             shouldContinueGame = false
             showingContinueGameOverlay = false
+            showingSaveOverwriteWarning = false
         }
     }
     
@@ -282,12 +332,10 @@ struct DeckSelectionView: View {
         
         let hasExistingSave = hasSaveState
         print("💾 Has existing save: \(hasExistingSave)")
-        print("💾 Current showingContinueGameOverlay: \(showingContinueGameOverlay)")
         
         if hasExistingSave {
-            print("🔄 Showing continue game overlay")
-            showingContinueGameOverlay = true
-            print("💾 Set showingContinueGameOverlay to: \(showingContinueGameOverlay)")
+            print("⚠️ Showing save overwrite warning")
+            showingSaveOverwriteWarning = true
         } else {
             print("✨ Starting fresh game")
             shouldContinueGame = false

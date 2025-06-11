@@ -12,7 +12,7 @@ struct ExportImportView: View {
     @State private var exportContent = ""
     @State private var selectedExportOption: ExportOption = .allCards
     @State private var showingSimulatorAlert = false
-    @State private var showingResetAlert = false
+
     
     enum ExportOption: Hashable, Equatable {
         case allCards
@@ -107,25 +107,6 @@ struct ExportImportView: View {
                     }
                 }
                 
-                Section(header: Text("Learning Statistics")) {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Reset all learning progress and statistics")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                        
-                        Button(action: {
-                            showingResetAlert = true
-                        }) {
-                            HStack {
-                                Image(systemName: "chart.bar.xaxis")
-                                Text("Reset All Statistics")
-                            }
-                            .foregroundColor(.red)
-                        }
-                        .disabled(viewModel.flashCards.isEmpty)
-                    }
-                }
-                
                 Section(header: Text("CSV Format")) {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("CSV Structure")
@@ -195,14 +176,7 @@ struct ExportImportView: View {
             } message: {
                 Text("File sharing is limited in iOS Simulator. The CSV content has been printed to the console. On a real device, you would be able to save or share the file normally.")
             }
-            .alert("Reset Learning Statistics", isPresented: $showingResetAlert) {
-                Button("Reset", role: .destructive) {
-                    viewModel.resetLearningStatistics()
-                }
-                Button("Cancel", role: .cancel) { }
-            } message: {
-                Text("This will reset all learning progress and percentages for all cards. This action cannot be undone.")
-            }
+
         }
     }
     

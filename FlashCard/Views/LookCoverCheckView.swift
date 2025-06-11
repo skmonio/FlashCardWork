@@ -365,6 +365,9 @@ struct LookCoverCheckView: View {
             HapticManager.shared.wrongAnswer()
         }
         
+        // Record learning statistics
+        viewModel.recordCardShown(card.id, isCorrect: correct)
+        
         gamePhase = .check
     }
     

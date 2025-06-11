@@ -383,6 +383,11 @@ struct TrueFalseView: View {
             incorrectAnswers += 1
         }
         
+        // Record learning statistics - only count when the question shows the correct definition
+        if question.isCorrect {
+            viewModel.recordCardShown(question.originalCard.id, isCorrect: isCorrect)
+        }
+        
         showingFeedback = true
         
         // Auto-save progress periodically (every 5 questions)

@@ -3,7 +3,7 @@ import SwiftUI
 struct HomeView: View {
     @ObservedObject var viewModel: FlashCardViewModel
     @State private var showingExportImport = false
-    @State private var showingSavedGames = false
+    @State private var showingResetAlert = false
     
     // Navigation state for full-screen forms
     @State private var showingAddCardView = false
@@ -43,15 +43,17 @@ struct HomeView: View {
                                     Divider()
                                     
                                     Button(action: {
-                                        showingSavedGames = true
-                                    }) {
-                                        Label("Saved Games", systemImage: "bookmark.fill")
-                                    }
-                                    
-                                    Button(action: {
                                         showingExportImport = true
                                     }) {
                                         Label("Export & Import", systemImage: "square.and.arrow.up.on.square")
+                                    }
+                                    
+                                    Divider()
+                                    
+                                    Button(action: {
+                                        showingResetAlert = true
+                                    }) {
+                                        Label("Reset Statistics", systemImage: "chart.bar.xaxis")
                                     }
                                 } label: {
                                     Image(systemName: "plus")
@@ -65,14 +67,19 @@ struct HomeView: View {
         .sheet(isPresented: $showingExportImport) {
             ExportImportView(viewModel: viewModel)
         }
-        .sheet(isPresented: $showingSavedGames) {
-            SavedGamesView(viewModel: viewModel)
-        }
         .sheet(isPresented: $showingAddCardView) {
             AddCardView(viewModel: viewModel)
         }
         .sheet(isPresented: $showingAddDeckView) {
             AddDeckView(viewModel: viewModel)
+        }
+        .alert("Reset Learning Statistics", isPresented: $showingResetAlert) {
+            Button("Reset", role: .destructive) {
+                viewModel.resetLearningStatistics()
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("This will reset all learning progress and percentages for all cards. This action cannot be undone.")
         }
         .onAppear {
             // Reset navigation state when returning to home
@@ -81,7 +88,7 @@ struct HomeView: View {
             showingAddCardView = false
             showingAddDeckView = false
             showingExportImport = false
-            showingSavedGames = false
+            showingResetAlert = false
         }
         .onChange(of: viewModel.shouldNavigateToRoot) { oldValue, newValue in
             if newValue {
@@ -106,6 +113,7 @@ struct HomeView: View {
                         .padding(.horizontal)
                     
                     VStack(spacing: 12) {
+                        // Main study modes
                         NavigationLink(destination: DeckSelectionView(viewModel: viewModel, mode: .study)) {
                             MenuButton(title: "Study Your Cards", icon: "book.fill")
                         }
@@ -114,20 +122,8 @@ struct HomeView: View {
                             MenuButton(title: "Test Your Cards", icon: "checkmark.circle.fill")
                         }
                         
-                        NavigationLink(destination: DeckSelectionView(viewModel: viewModel, mode: .game)) {
-                            MenuButton(title: "Remember Your Cards", icon: "brain.fill")
-                        }
-                        
                         NavigationLink(destination: DeckSelectionView(viewModel: viewModel, mode: .truefalse)) {
                             MenuButton(title: "True or False", icon: "questionmark.circle.fill")
-                        }
-                        
-                        NavigationLink(destination: DeckSelectionView(viewModel: viewModel, mode: .hangman)) {
-                            MenuButton(title: "Hangman", icon: "person.fill")
-                        }
-                        
-                        NavigationLink(destination: DeckSelectionView(viewModel: viewModel, mode: .dehet)) {
-                            MenuButton(title: "de of het", icon: "questionmark.diamond.fill")
                         }
                         
                         NavigationLink(destination: DeckSelectionView(viewModel: viewModel, mode: .lookcovercheck)) {
@@ -137,6 +133,25 @@ struct HomeView: View {
                         NavigationLink(destination: DeckSelectionView(viewModel: viewModel, mode: .writing)) {
                             MenuButton(title: "Write Your Card", icon: "pencil.and.scribble")
                         }
+                        
+                        // More Games section
+                        DisclosureGroup("More Games") {
+                            VStack(spacing: 12) {
+                                NavigationLink(destination: DeckSelectionView(viewModel: viewModel, mode: .game)) {
+                                    MenuButton(title: "Remember Your Cards", icon: "brain.fill")
+                                }
+                                
+                                NavigationLink(destination: DeckSelectionView(viewModel: viewModel, mode: .hangman)) {
+                                    MenuButton(title: "Hangman", icon: "person.fill")
+                                }
+                                
+                                NavigationLink(destination: DeckSelectionView(viewModel: viewModel, mode: .dehet)) {
+                                    MenuButton(title: "de of het", icon: "questionmark.diamond.fill")
+                                }
+                            }
+                            .padding(.top, 8)
+                        }
+                        .accentColor(.blue)
                     }
                 }
                 .padding(.top)

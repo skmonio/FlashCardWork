@@ -510,6 +510,9 @@ struct GameView: View {
                     displayedCards[selectedIndex].isMatched = true
                     displayedCards[index].isMatched = true
                     
+                    // Record successful match as correct answer
+                    viewModel.recordCardShown(tappedCard.originalCard.id, isCorrect: true)
+                    
                     // Replace matched cards after fade out
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                         replaceMatchedCards()
@@ -534,6 +537,9 @@ struct GameView: View {
                 // Track incorrect matches
                 incorrectMatches.insert(selectedCard!.originalCard)
                 incorrectMatches.insert(tappedCard.originalCard)
+                
+                // Record incorrect match
+                viewModel.recordCardShown(tappedCard.originalCard.id, isCorrect: false)
                 
                 // Reset both cards after a brief delay
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {

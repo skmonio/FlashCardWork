@@ -259,6 +259,9 @@ struct DeHetGameView: View {
             HapticManager.shared.wrongAnswer()
         }
         
+        // Record learning statistics
+        viewModel.recordCardShown(card.id, isCorrect: isCorrect)
+        
         showingAnswer = true
     }
     

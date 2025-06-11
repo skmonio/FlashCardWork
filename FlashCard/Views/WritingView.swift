@@ -387,6 +387,9 @@ struct WritingView: View {
             viewModel.setCardStatus(cardId: card.id, status: .unknown)
         }
         
+        // Record learning statistics
+        viewModel.recordCardShown(card.id, isCorrect: answersMatch)
+        
         isKeyboardFocused = false
     }
     
@@ -399,6 +402,9 @@ struct WritingView: View {
             isCorrect = true
             HapticManager.shared.correctAnswer()
             viewModel.setCardStatus(cardId: card.id, status: .known)
+            
+            // Record corrected answer as correct
+            viewModel.recordCardShown(card.id, isCorrect: true)
         }
     }
     

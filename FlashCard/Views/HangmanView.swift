@@ -58,6 +58,8 @@ struct HangmanView: View {
                 gameWon = false
                 HapticManager.shared.errorNotification()
                 showingGameOver = true
+                // Record failed word attempt
+                viewModel.recordCardShown(currentCard.id, isCorrect: false)
             }
         } else {
             HapticManager.shared.lightImpact()
@@ -66,12 +68,8 @@ struct HangmanView: View {
                 gameWon = true
                 HapticManager.shared.gameComplete()
                 showingGameOver = true
-                // Update success count for the card
-                if let cardIndex = viewModel.flashCards.firstIndex(where: { $0.id == currentCard.id }) {
-                    var updatedCards = viewModel.flashCards
-                    updatedCards[cardIndex].successCount += 1
-                    viewModel.flashCards = updatedCards
-                }
+                // Record successful word completion
+                viewModel.recordCardShown(currentCard.id, isCorrect: true)
             }
         }
     }
