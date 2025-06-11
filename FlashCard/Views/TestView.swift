@@ -103,12 +103,30 @@ struct TestView: View {
                 saveCurrentProgress()
             }
         } else {
-            HapticManager.shared.gameComplete()
-            
-            // Clear saved progress since test is complete
-            clearSavedProgress()
-            
-            showingResults = true
+            // End of current round - check if there are incorrect cards to replay
+            if !incorrectCards.isEmpty {
+                // Auto-replay incorrect cards
+                let incorrectCardsList = cards.filter { incorrectCards.contains($0.id) }
+                cards = incorrectCardsList.shuffled()
+                currentIndex = 0
+                selectedAnswer = nil
+                hasAnswered = false
+                incorrectCards.removeAll() // Reset for next round
+                shuffledOptions = generateOptions()
+                
+                HapticManager.shared.mediumImpact() // Feedback for round transition
+                
+                // Optional: Show a brief message that we're replaying incorrect cards
+                // For now, just continue seamlessly
+            } else {
+                // All cards answered correctly - show completion
+                HapticManager.shared.gameComplete()
+                
+                // Clear saved progress since test is complete
+                clearSavedProgress()
+                
+                showingResults = true
+            }
         }
     }
     
@@ -164,16 +182,6 @@ struct TestView: View {
                     VStack {
                         Image(systemName: "chevron.backward")
                         Text("Back")
-                    }
-                }
-                .frame(maxWidth: .infinity)
-                
-                Button(action: {
-                    resetTest()
-                }) {
-                    VStack {
-                        Image(systemName: "arrow.clockwise")
-                        Text("Reset")
                     }
                 }
                 .frame(maxWidth: .infinity)
@@ -361,28 +369,6 @@ struct TestView: View {
                         .padding()
                         .background(Color.blue)
                         .cornerRadius(10)
-                }
-                
-                if !incorrectCards.isEmpty {
-                    Button(action: {
-                        // Explicitly save all ViewModel data to ensure statistics persist
-                        viewModel.saveAllData()
-                        
-                        // Force UI refresh
-                        DispatchQueue.main.async {
-                            viewModel.objectWillChange.send()
-                        }
-                        
-                        resetTest(onlyIncorrect: true)
-                    }) {
-                        Text("Review Incorrect Answers (\(incorrectCards.count))")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.red)
-                            .cornerRadius(10)
-                    }
                 }
                 
                 Button(action: {

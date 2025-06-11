@@ -294,6 +294,29 @@ struct DeckView: View {
                         .foregroundColor(.blue)
                     }
                     .frame(maxWidth: .infinity)
+                } else if isSelectionMode {
+                    // Show Select All when in selection mode but no cards selected
+                    Button(action: {
+                        selectedCards = Set(filteredAndSortedCards.map { $0.id })
+                        HapticManager.shared.mediumImpact()
+                    }) {
+                        VStack {
+                            Image(systemName: "checkmark.circle")
+                            Text("Select All")
+                        }
+                        .foregroundColor(.blue)
+                    }
+                    .frame(maxWidth: .infinity)
+                    
+                    Button(action: {
+                        dismiss()
+                    }) {
+                        VStack {
+                            Image(systemName: "chevron.backward")
+                            Text("Back")
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
                 } else {
                     Button(action: {
                         dismiss()

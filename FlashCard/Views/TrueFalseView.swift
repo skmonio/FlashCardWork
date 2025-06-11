@@ -56,7 +56,7 @@ struct TrueFalseView: View {
             // Bottom Navigation Bar
             HStack {
                 Button(action: {
-                    if questionsAnswered > 0 && !showingResults {
+                    if hasSignificantProgress && !showingResults {
                         showingCloseConfirmation = true
                     } else {
                         dismiss()
@@ -65,16 +65,6 @@ struct TrueFalseView: View {
                     VStack {
                         Image(systemName: "chevron.backward")
                         Text("Back")
-                    }
-                }
-                .frame(maxWidth: .infinity)
-                
-                Button(action: {
-                    resetGame()
-                }) {
-                    VStack {
-                        Image(systemName: "arrow.clockwise")
-                        Text("Reset")
                     }
                 }
                 .frame(maxWidth: .infinity)

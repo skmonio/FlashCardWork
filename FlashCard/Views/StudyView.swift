@@ -59,16 +59,6 @@ struct StudyView: View {
                 }
                 .frame(maxWidth: .infinity)
                 
-                Button(action: {
-                    setupStudySession()
-                }) {
-                    VStack {
-                        Image(systemName: "arrow.clockwise")
-                        Text("Reset")
-                    }
-                }
-                .frame(maxWidth: .infinity)
-                
                 // Save progress button
                 if hasSignificantProgress && !showingResults {
                     Button(action: {
