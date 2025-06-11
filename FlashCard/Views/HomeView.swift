@@ -2,56 +2,184 @@ import SwiftUI
 
 struct HomeView: View {
     @ObservedObject var viewModel: FlashCardViewModel
-    @State private var showingAddDeck = false
-    @State private var showingAddCard = false
+    @State private var showingExportImport = false
+    
+    // Navigation state for full-screen forms
+    @State private var showingAddCardView = false
+    @State private var showingAddDeckView = false
+    
+    @State private var showingExportShare = false
+    @State private var showingImportPicker = false
+    @State private var showingRecoverData = false
+    @State private var showingResetStatistics = false
     
     var body: some View {
         NavigationView {
-            ScrollView {
-                VStack(spacing: 24) {
-                    // Game Modes Section
-                    VStack(alignment: .leading, spacing: 16) {
-                        Text("Study Modes")
-                            .font(.headline)
-                            .foregroundColor(.secondary)
-                            .padding(.horizontal)
-                        
-                        VStack(spacing: 12) {
-                            NavigationLink(destination: DeckSelectionView(viewModel: viewModel, mode: .study)) {
-                                MenuButton(title: "Study Your Cards", icon: "book.fill")
-                            }
-                            
-                            NavigationLink(destination: DeckSelectionView(viewModel: viewModel, mode: .test)) {
-                                MenuButton(title: "Test Your Cards", icon: "checkmark.circle.fill")
-                            }
-                            
-                            NavigationLink(destination: DeckSelectionView(viewModel: viewModel, mode: .game)) {
-                                MenuButton(title: "Remember Your Cards", icon: "brain.fill")
-                            }
-                            
-                            NavigationLink(destination: DeckSelectionView(viewModel: viewModel, mode: .truefalse)) {
-                                MenuButton(title: "True or False", icon: "questionmark.circle.fill")
+            // Add loading check - show loading only for a brief moment during initialization
+            Group {
+                if viewModel.decks.isEmpty && viewModel.flashCards.isEmpty {
+                    // Show loading state briefly
+                    VStack {
+                        ProgressView()
+                        Text("Loading FlashCards...")
+                            .padding(.top)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    // Show main content
+                    mainContent
+                        .navigationTitle("FlashCards")
+                        .toolbar {
+                            ToolbarItem(placement: .navigationBarTrailing) {
+                                Menu {
+                                    Button(action: {
+                                        showingAddCardView = true
+                                    }) {
+                                        Label("Add Card", systemImage: "plus.rectangle.fill")
+                                    }
+                                    
+                                    Button(action: {
+                                        showingAddDeckView = true
+                                    }) {
+                                        Label("Add Deck", systemImage: "folder.badge.plus")
+                                    }
+                                    
+                                    Divider()
+                                    
+                                    Button(action: {
+                                        // Attempt data recovery
+                                        let result = viewModel.attemptDataRecovery()
+                                        if result.recoveredCards > 0 || result.recoveredDecks > 0 {
+                                            // Show success feedback
+                                            HapticManager.shared.successNotification()
+                                        }
+                                    }) {
+                                        Label("Recover Lost Data", systemImage: "arrow.clockwise.circle")
+                                    }
+                                    
+                                    Button(action: {
+                                        showingResetStatistics = true
+                                    }) {
+                                        Label("Reset Statistics", systemImage: "chart.bar.xaxis")
+                                            .foregroundColor(.red)
+                                    }
+                                    
+                                    Button(action: {
+                                        showingExportImport = true
+                                    }) {
+                                        Label("Export & Import", systemImage: "square.and.arrow.up.on.square")
+                                    }
+                                } label: {
+                                    Image(systemName: "plus")
+                                }
                             }
                         }
-                    }
-                    .padding(.top)
+                }
+            }
+            .background(Color(.systemGroupedBackground))
+        }
+        .sheet(isPresented: $showingExportImport) {
+            ExportImportView(viewModel: viewModel)
+        }
+        .sheet(isPresented: $showingAddCardView) {
+            AddCardView(viewModel: viewModel)
+        }
+        .sheet(isPresented: $showingAddDeckView) {
+            AddDeckView(viewModel: viewModel)
+        }
+        .onAppear {
+            // Reset navigation state when returning to home
+            viewModel.resetNavigationToRoot()
+            // Explicitly reset all modal states
+            showingAddCardView = false
+            showingAddDeckView = false
+            showingExportImport = false
+        }
+        .onChange(of: viewModel.shouldNavigateToRoot) { oldValue, newValue in
+            if newValue {
+                // Navigation to root is handled by dismissing all presented views
+                // The state will be reset when we return to HomeView
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("DismissToRoot"))) { _ in
+            // Reset any navigation state when dismiss to root is requested
+            viewModel.resetNavigationToRoot()
+        }
+        .alert("Data Recovery", isPresented: $showingRecoverData) {
+            Button("Recover", role: .destructive) {
+                let (recoveredCards, recoveredDecks) = viewModel.scanForLostData()
+                if recoveredCards > 0 || recoveredDecks > 0 {
+                    viewModel.attemptDataRecovery()
+                    HapticManager.shared.successNotification()
+                }
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            let (recoveredCards, recoveredDecks) = viewModel.scanForLostData()
+            Text("Found \(recoveredCards) lost cards and \(recoveredDecks) lost decks. Would you like to recover them?")
+        }
+        .alert("Reset All Statistics?", isPresented: $showingResetStatistics) {
+            Button("Reset", role: .destructive) {
+                viewModel.resetAllStatistics()
+                HapticManager.shared.successNotification()
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("This will reset all learning progress and statistics for all cards. This action cannot be undone.")
+        }
+    }
+    
+    private var mainContent: some View {
+        ScrollView {
+            VStack(spacing: 24) {
+                // Game Modes Section
+                VStack(alignment: .leading, spacing: 16) {
+                    Text("Study Modes")
+                        .font(.headline)
+                        .foregroundColor(.secondary)
+                        .padding(.horizontal)
                     
-                    // Card Management Section
-                    VStack(alignment: .leading, spacing: 16) {
-                        Text("Manage Cards")
-                            .font(.headline)
-                            .foregroundColor(.secondary)
-                            .padding(.horizontal)
+                    VStack(spacing: 12) {
+                        NavigationLink(destination: DeckSelectionView(viewModel: viewModel, mode: .study)) {
+                            MenuButton(title: "Study Your Cards", icon: "book.fill")
+                        }
                         
-                        NavigationLink(destination: ManageDecksView(viewModel: viewModel)) {
-                            MenuButton(title: "View Your Cards", icon: "folder.fill")
+                        NavigationLink(destination: DeckSelectionView(viewModel: viewModel, mode: .test)) {
+                            MenuButton(title: "Test Your Cards", icon: "checkmark.circle.fill")
+                        }
+                        
+                        NavigationLink(destination: DeckSelectionView(viewModel: viewModel, mode: .truefalse)) {
+                            MenuButton(title: "True or False", icon: "questionmark.circle.fill")
+                        }
+                        
+                        NavigationLink(destination: DeckSelectionView(viewModel: viewModel, mode: .lookcovercheck)) {
+                            MenuButton(title: "Look Cover Check", icon: "eye.slash.fill")
+                        }
+                        
+                        NavigationLink(destination: DeckSelectionView(viewModel: viewModel, mode: .writing)) {
+                            MenuButton(title: "Write Your Card", icon: "pencil.and.scribble")
+                        }
+                        
+                        NavigationLink(destination: MoreGamesView(viewModel: viewModel)) {
+                            MenuButton(title: "More Games", icon: "gamecontroller.fill")
                         }
                     }
                 }
-                .padding(.horizontal)
+                .padding(.top)
+                
+                // Card Management Section
+                VStack(alignment: .leading, spacing: 16) {
+                    Text("Manage Cards")
+                        .font(.headline)
+                        .foregroundColor(.secondary)
+                        .padding(.horizontal)
+                    
+                    NavigationLink(destination: ManageDecksView(viewModel: viewModel)) {
+                        MenuButton(title: "View Your Cards", icon: "folder.fill")
+                    }
+                }
             }
-            .navigationTitle("FlashCards")
-            .background(Color(.systemGroupedBackground))
+            .padding(.horizontal)
         }
     }
 }

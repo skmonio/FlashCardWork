@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 
 class FlashCardViewModel: ObservableObject {
     @Published var flashCards: [FlashCard] = [] {
@@ -15,10 +16,16 @@ class FlashCardViewModel: ObservableObject {
         }
     }
     
+    // Navigation state
+    @Published var shouldNavigateToRoot = false
+    @Published var navigationPath: [String] = []
+    
     private let userDefaultsKey = "SavedFlashCards"
     private let decksDefaultsKey = "SavedDecks"
     private let cardStatusKey = "CardStatus"
     private var uncategorizedDeckId: UUID?
+    private var learningDeckId: UUID?
+    private var learnedDeckId: UUID?
     
     enum CardStatus: String, Codable {
         case unknown
@@ -33,11 +40,16 @@ class FlashCardViewModel: ObservableObject {
     
     init() {
         print("ViewModel init - Loading data")
+        
+        // Reset navigation state first
+        shouldNavigateToRoot = false
+        navigationPath = []
+        
         loadCards()
         loadDecks()
         loadCardStatus()
         
-        // Create "Uncategorized" deck if it doesn't exist
+        // Create system decks if they don't exist
         if !decks.contains(where: { $0.name == "Uncategorized" }) {
             let uncategorizedDeck = Deck(name: "Uncategorized")
             uncategorizedDeckId = uncategorizedDeck.id
@@ -46,9 +58,43 @@ class FlashCardViewModel: ObservableObject {
             uncategorizedDeckId = decks.first(where: { $0.name == "Uncategorized" })?.id
         }
         
+        if !decks.contains(where: { $0.name == "Learning" }) {
+            let learningDeck = Deck(name: "Learning")
+            learningDeckId = learningDeck.id
+            decks.append(learningDeck)
+        } else {
+            learningDeckId = decks.first(where: { $0.name == "Learning" })?.id
+        }
+        
+        if !decks.contains(where: { $0.name == "Learned" }) {
+            let learnedDeck = Deck(name: "Learned")
+            learnedDeckId = learnedDeck.id
+            decks.append(learnedDeck)
+        } else {
+            learnedDeckId = decks.first(where: { $0.name == "Learned" })?.id
+        }
+        
         // Add example Dutch cards if no cards exist
         if flashCards.isEmpty {
             createExampleDutchCards()
+        }
+        
+        // Check for data loss and attempt recovery
+        let expectedSystemDecks = ["Uncategorized", "Learning", "Learned"]
+        let missingSystemDecks = expectedSystemDecks.filter { deckName in
+            !decks.contains(where: { $0.name == deckName })
+        }
+        
+        if !missingSystemDecks.isEmpty {
+            print("⚠️ MISSING SYSTEM DECKS: \(missingSystemDecks)")
+            print("🔍 Scanning for lost data...")
+            scanForLostData()
+            
+            // Attempt automatic recovery
+            let recovery = attemptDataRecovery()
+            if recovery.recoveredCards > 0 || recovery.recoveredDecks > 0 {
+                print("🎉 Data recovery successful!")
+            }
         }
         
         // Update cards and decks
@@ -193,6 +239,14 @@ class FlashCardViewModel: ObservableObject {
         cardStatus[cardId] = status
     }
     
+    func navigateToRoot() {
+        shouldNavigateToRoot = true
+    }
+    
+    func resetNavigationToRoot() {
+        shouldNavigateToRoot = false
+    }
+    
     private func saveCardStatus() {
         if let encoded = try? JSONEncoder().encode(cardStatus) {
             UserDefaults.standard.set(encoded, forKey: cardStatusKey)
@@ -206,7 +260,7 @@ class FlashCardViewModel: ObservableObject {
         }
     }
     
-    private func updateCardDeckAssociations() {
+    func updateCardDeckAssociations() {
         print("Updating card-deck associations")
         // Clear all deck cards
         for index in decks.indices {
@@ -234,44 +288,45 @@ class FlashCardViewModel: ObservableObject {
         saveDecks()
     }
     
-    func addCard(word: String, definition: String, example: String, deckIds: Set<UUID>) {
+    @discardableResult
+    func addCard(word: String, definition: String, example: String, deckIds: Set<UUID>, article: String? = nil, pastTense: String? = nil, futureTense: String? = nil, cardId: UUID? = nil) -> FlashCard {
         print("Adding new card")
-        let newCard = FlashCard(word: word, definition: definition, example: example, deckIds: deckIds)
+        
+        var finalDeckIds = deckIds
+        
+        // If no decks specified, assign to Uncategorized
+        if finalDeckIds.isEmpty {
+            if let uncategorizedDeck = decks.first(where: { $0.name == "Uncategorized" }) {
+                finalDeckIds.insert(uncategorizedDeck.id)
+                print("Card '\(word)' assigned to Uncategorized deck")
+            }
+        }
+        
+        let newCard = FlashCard(
+            word: word, 
+            definition: definition, 
+            example: example, 
+            deckIds: finalDeckIds,
+            article: article,
+            pastTense: pastTense,
+            futureTense: futureTense,
+            cardId: cardId
+        )
         flashCards.append(newCard)
         updateCardDeckAssociations()
+        return newCard
     }
     
-    func updateCard(_ card: FlashCard, word: String, definition: String, example: String, deckIds: Set<UUID>) {
-        print("Updating card: \(card.id)")
-        print("Before update - flashCards count: \(flashCards.count)")
-        
-        if let cardIndex = flashCards.firstIndex(where: { $0.id == card.id }) {
-            print("Found card at index: \(cardIndex)")
-            
-            // Create updated card
-            var updatedCard = card
-            updatedCard.word = word
-            updatedCard.definition = definition
-            updatedCard.example = example
-            updatedCard.deckIds = deckIds
-            
-            // Update in flashCards array
-            flashCards[cardIndex] = updatedCard
-            
-            print("Card updated - New word: \(updatedCard.word)")
-            
-            // Force a save of the cards
-            saveCards()
-            
-            // Update deck associations
+    func updateCard(_ card: FlashCard, word: String, definition: String, example: String, deckIds: Set<UUID>, article: String? = nil, pastTense: String? = nil, futureTense: String? = nil) {
+        if let index = flashCards.firstIndex(where: { $0.id == card.id }) {
+            flashCards[index].word = word
+            flashCards[index].definition = definition
+            flashCards[index].example = example
+            flashCards[index].deckIds = deckIds
+            flashCards[index].article = article
+            flashCards[index].pastTense = pastTense
+            flashCards[index].futureTense = futureTense
             updateCardDeckAssociations()
-            
-            // Force UserDefaults to synchronize
-            UserDefaults.standard.synchronize()
-            
-            print("After update - flashCards count: \(flashCards.count)")
-        } else {
-            print("Error: Card not found in flashCards array")
         }
     }
     
@@ -321,9 +376,58 @@ class FlashCardViewModel: ObservableObject {
         return newDeck
     }
     
+    func createSubDeck(name: String, parentId: UUID) -> Deck {
+        print("Creating new sub-deck: \(name) under parent: \(parentId)")
+        let newSubDeck = Deck(name: name, parentId: parentId)
+        decks.append(newSubDeck)
+        
+        // Update parent deck to include this sub-deck
+        if let parentIndex = decks.firstIndex(where: { $0.id == parentId }) {
+            decks[parentIndex].subDeckIds.insert(newSubDeck.id)
+        }
+        
+        return newSubDeck
+    }
+    
+    func getTopLevelDecks() -> [Deck] {
+        return decks.filter { $0.parentId == nil }
+    }
+    
+    func getSubDecks(for parentId: UUID) -> [Deck] {
+        return decks.filter { $0.parentId == parentId }
+    }
+    
+    func getAllDecksHierarchical() -> [Deck] {
+        // Returns all decks organized hierarchically (parents first, then their children)
+        var result: [Deck] = []
+        let topLevel = getTopLevelDecks().sorted { $0.name < $1.name }
+        
+        for deck in topLevel {
+            result.append(deck)
+            let subDecks = getSubDecks(for: deck.id).sorted { $0.name < $1.name }
+            result.append(contentsOf: subDecks)
+        }
+        
+        return result
+    }
+    
     func deleteDeck(_ deck: Deck) {
         print("Deleting deck: \(deck.name)")
-        if deck.name != "Uncategorized" {
+        if deck.name != "Uncategorized" && deck.isEditable {
+            // If this is a parent deck, delete all its sub-decks first
+            if !deck.subDeckIds.isEmpty {
+                let subDecks = decks.filter { deck.subDeckIds.contains($0.id) }
+                for subDeck in subDecks {
+                    deleteDeck(subDeck)
+                }
+            }
+            
+            // If this is a sub-deck, remove it from parent's subDeckIds
+            if let parentId = deck.parentId,
+               let parentIndex = decks.firstIndex(where: { $0.id == parentId }) {
+                decks[parentIndex].subDeckIds.remove(deck.id)
+            }
+            
             // Remove deck from all cards that reference it
             for index in flashCards.indices {
                 flashCards[index].deckIds.remove(deck.id)
@@ -334,18 +438,233 @@ class FlashCardViewModel: ObservableObject {
             
             // Update associations
             updateCardDeckAssociations()
+        } else {
+            print("Cannot delete system deck: \(deck.name)")
+        }
+    }
+    
+    func renameDeck(_ deck: Deck, newName: String) {
+        let trimmedName = newName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedName.isEmpty && trimmedName != deck.name else { return }
+        
+        // Check if name already exists
+        if decks.contains(where: { $0.name == trimmedName && $0.id != deck.id }) {
+            return // Name already exists
+        }
+        
+        // Update the deck name
+        if let index = decks.firstIndex(where: { $0.id == deck.id }) {
+            decks[index].name = trimmedName
+            saveDecks()
         }
     }
     
     func getSelectableDecks() -> [Deck] {
-        return decks.filter { $0.name != "Uncategorized" }
+        return getAllDecksHierarchical().filter { 
+            $0.name != "Uncategorized" && 
+            $0.name != "Learning" && 
+            $0.name != "Learned" && 
+            $0.isEditable 
+        }
+    }
+    
+    // MARK: - Export Functionality
+    
+    func exportCardsToCSV() -> String {
+        let headers = ["Word", "Definition", "Example", "Article", "Past Tense", "Future Tense", "Decks", "Success Count"]
+        var csvContent = headers.joined(separator: ",") + "\n"
+        
+        for card in flashCards {
+            let deckNames = getDeckNamesForCard(card).joined(separator: "; ")
+            
+            let row = [
+                escapeCSVField(card.word),
+                escapeCSVField(card.definition),
+                escapeCSVField(card.example),
+                escapeCSVField(card.article ?? ""),
+                escapeCSVField(card.pastTense ?? ""),
+                escapeCSVField(card.futureTense ?? ""),
+                escapeCSVField(deckNames),
+                String(card.successCount)
+            ]
+            
+            csvContent += row.joined(separator: ",") + "\n"
+        }
+        
+        return csvContent
+    }
+    
+    func exportDeckToCSV(_ deck: Deck) -> String {
+        let headers = ["Word", "Definition", "Example", "Article", "Past Tense", "Future Tense", "Success Count"]
+        var csvContent = headers.joined(separator: ",") + "\n"
+        
+        for card in deck.cards {
+            let row = [
+                escapeCSVField(card.word),
+                escapeCSVField(card.definition),
+                escapeCSVField(card.example),
+                escapeCSVField(card.article ?? ""),
+                escapeCSVField(card.pastTense ?? ""),
+                escapeCSVField(card.futureTense ?? ""),
+                String(card.successCount)
+            ]
+            
+            csvContent += row.joined(separator: ",") + "\n"
+        }
+        
+        return csvContent
+    }
+    
+    private func getDeckNamesForCard(_ card: FlashCard) -> [String] {
+        var deckNames: [String] = []
+        
+        for deckId in card.deckIds {
+            if let deck = decks.first(where: { $0.id == deckId }) {
+                deckNames.append(deck.name)
+            }
+        }
+        
+        // If no decks found, add to uncategorized
+        if deckNames.isEmpty {
+            deckNames.append("Uncategorized")
+        }
+        
+        return deckNames.sorted()
+    }
+    
+    private func escapeCSVField(_ field: String) -> String {
+        // Escape commas, quotes, and newlines in CSV fields
+        let escapedField = field.replacingOccurrences(of: "\"", with: "\"\"")
+        
+        if field.contains(",") || field.contains("\"") || field.contains("\n") {
+            return "\"\(escapedField)\""
+        }
+        
+        return escapedField
+    }
+    
+    // MARK: - Import Functionality
+    
+    func importCardsFromCSV(_ csvContent: String) -> (success: Int, errors: [String]) {
+        let lines = csvContent.components(separatedBy: .newlines).filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+        
+        guard lines.count > 1 else {
+            return (0, ["CSV file appears to be empty or invalid"])
+        }
+        
+        var successCount = 0
+        var errors: [String] = []
+        
+        // Skip header row
+        for (index, line) in lines.dropFirst().enumerated() {
+            let lineNumber = index + 2 // +2 because we dropped first and want 1-based indexing
+            
+            let fields = parseCSVLine(line)
+            
+            // Validate minimum required fields
+            guard fields.count >= 2, 
+                  !fields[0].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                  !fields[1].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                errors.append("Line \(lineNumber): Missing required word or definition")
+                continue
+            }
+            
+            let word = fields[0].trimmingCharacters(in: .whitespacesAndNewlines)
+            let definition = fields[1].trimmingCharacters(in: .whitespacesAndNewlines)
+            let example = fields.count > 2 ? fields[2].trimmingCharacters(in: .whitespacesAndNewlines) : ""
+            let article = fields.count > 3 ? (fields[3].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : fields[3].trimmingCharacters(in: .whitespacesAndNewlines)) : nil
+            let pastTense = fields.count > 4 ? (fields[4].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : fields[4].trimmingCharacters(in: .whitespacesAndNewlines)) : nil
+            let futureTense = fields.count > 5 ? (fields[5].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : fields[5].trimmingCharacters(in: .whitespacesAndNewlines)) : nil
+            
+            // Handle deck names (if provided)
+            var deckIds: Set<UUID> = []
+            if fields.count > 6 && !fields[6].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                let deckNamesString = fields[6].trimmingCharacters(in: .whitespacesAndNewlines)
+                let deckNames = deckNamesString.components(separatedBy: ";").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                
+                for deckName in deckNames {
+                    if let existingDeck = decks.first(where: { $0.name == deckName }) {
+                        deckIds.insert(existingDeck.id)
+                    } else if deckName != "Uncategorized" {
+                        // Create new deck if it doesn't exist
+                        let newDeck = createDeck(name: deckName)
+                        deckIds.insert(newDeck.id)
+                    }
+                }
+            }
+            
+            // Create the card
+            let _ = addCard(
+                word: word,
+                definition: definition,
+                example: example,
+                deckIds: deckIds,
+                article: article,
+                pastTense: pastTense,
+                futureTense: futureTense
+            )
+            
+            successCount += 1
+        }
+        
+        return (successCount, errors)
+    }
+    
+    private func parseCSVLine(_ line: String) -> [String] {
+        var fields: [String] = []
+        var currentField = ""
+        var insideQuotes = false
+        var i = line.startIndex
+        
+        while i < line.endIndex {
+            let char = line[i]
+            
+            if char == "\"" {
+                if insideQuotes && i < line.index(before: line.endIndex) && line[line.index(after: i)] == "\"" {
+                    // Escaped quote
+                    currentField += "\""
+                    i = line.index(after: i) // Skip next quote
+                } else {
+                    // Toggle quote state
+                    insideQuotes.toggle()
+                }
+            } else if char == "," && !insideQuotes {
+                // Field separator
+                fields.append(currentField)
+                currentField = ""
+            } else {
+                currentField += String(char)
+            }
+            
+            i = line.index(after: i)
+        }
+        
+        // Add final field
+        fields.append(currentField)
+        
+        return fields
     }
     
     private func saveCards() {
         print("Saving cards to UserDefaults")
         if let encoded = try? JSONEncoder().encode(flashCards) {
+            // Save to primary key
             UserDefaults.standard.set(encoded, forKey: userDefaultsKey)
-            print("Cards saved successfully")
+            
+            // Create backup with timestamp
+            let backupKey = "\(userDefaultsKey)_backup_\(Int(Date().timeIntervalSince1970))"
+            UserDefaults.standard.set(encoded, forKey: backupKey)
+            
+            // Keep only last 5 backups
+            let allKeys = UserDefaults.standard.dictionaryRepresentation().keys
+            let backupKeys = allKeys.filter { $0.hasPrefix("\(userDefaultsKey)_backup_") }.sorted()
+            if backupKeys.count > 5 {
+                for key in backupKeys.dropLast(5) {
+                    UserDefaults.standard.removeObject(forKey: key)
+                }
+            }
+            
+            print("Cards saved successfully with backup")
         } else {
             print("Error: Failed to encode cards")
         }
@@ -353,20 +672,216 @@ class FlashCardViewModel: ObservableObject {
     
     private func loadCards() {
         print("Loading cards from UserDefaults")
-        if let savedCards = UserDefaults.standard.data(forKey: userDefaultsKey),
-           let decodedCards = try? JSONDecoder().decode([FlashCard].self, from: savedCards) {
+        
+        // Check if there's any data at all
+        if let savedCards = UserDefaults.standard.data(forKey: userDefaultsKey) {
+            print("Found saved data: \(savedCards.count) bytes")
+            
+            // Try to see what the raw data looks like
+            if let jsonString = String(data: savedCards, encoding: .utf8) {
+                print("Raw saved data: \(jsonString.prefix(500))...")
+            }
+            
+            // First try to decode with new format (Set<UUID> for deckIds)
+            do {
+                let decodedCards = try JSONDecoder().decode([FlashCard].self, from: savedCards)
             flashCards = decodedCards
-            print("Loaded \(flashCards.count) cards")
+                print("✅ Successfully loaded \(flashCards.count) cards with new format")
+                return
+            } catch {
+                print("❌ Failed to decode with new format: \(error)")
+            }
+            
+            // If that fails, try to decode with old format (single deckId)
+            do {
+                let oldCards = try JSONDecoder().decode([OldFlashCard].self, from: savedCards)
+                print("✅ Found \(oldCards.count) cards in old format, migrating...")
+                
+                // Convert old format to new format
+                flashCards = oldCards.map { oldCard in
+                    var newCard = FlashCard(
+                        word: oldCard.word,
+                        definition: oldCard.definition,
+                        example: oldCard.example,
+                        deckIds: oldCard.deckId.map { Set([$0]) } ?? []
+                    )
+                    newCard.id = oldCard.id
+                    newCard.successCount = oldCard.successCount
+                    return newCard
+                }
+                
+                print("✅ Successfully migrated \(flashCards.count) cards to new format")
+                
+                // Save in new format immediately
+                saveCards()
+                return
+            } catch {
+                print("❌ Failed to decode with old format: \(error)")
+            }
+            
+            // Try very old format without deckId
+            do {
+                let veryOldCards = try JSONDecoder().decode([VeryOldFlashCard].self, from: savedCards)
+                print("✅ Found \(veryOldCards.count) cards in very old format, migrating...")
+                
+                // Convert very old format to new format
+                flashCards = veryOldCards.map { veryOldCard in
+                    var newCard = FlashCard(
+                        word: veryOldCard.word,
+                        definition: veryOldCard.definition,
+                        example: veryOldCard.example,
+                        deckIds: []  // No deck associations in very old format
+                    )
+                    newCard.id = veryOldCard.id
+                    newCard.successCount = veryOldCard.successCount ?? 0
+                    return newCard
+                }
+                
+                print("✅ Successfully migrated \(flashCards.count) cards from very old format")
+                
+                // Save in new format immediately
+                saveCards()
+                return
+            } catch {
+                print("❌ Failed to decode with very old format: \(error)")
+            }
+            
+            // Try simple format without successCount or deckId
+            do {
+                let simpleCards = try JSONDecoder().decode([SimpleFlashCard].self, from: savedCards)
+                print("✅ Found \(simpleCards.count) cards in simple format, migrating...")
+                
+                // Convert simple format to new format
+                flashCards = simpleCards.map { simpleCard in
+                    var newCard = FlashCard(
+                        word: simpleCard.word,
+                        definition: simpleCard.definition,
+                        example: simpleCard.example,
+                        deckIds: []  // No deck associations in simple format
+                    )
+                    newCard.id = simpleCard.id
+                    newCard.successCount = 0
+                    return newCard
+                }
+                
+                print("✅ Successfully migrated \(flashCards.count) cards from simple format")
+                
+                // Save in new format immediately
+                saveCards()
+                return
+            } catch {
+                print("❌ Failed to decode with simple format: \(error)")
+            }
+            
+            // If both fail, try to see if there are any other possible formats
+            print("❌ Failed to decode data in any known format")
+            
         } else {
-            print("No saved cards found or error decoding")
+            print("❌ No saved data found in UserDefaults for key: \(userDefaultsKey)")
         }
+        
+        // Also check for any other possible keys that might have been used
+        let allKeys = UserDefaults.standard.dictionaryRepresentation().keys
+        let cardKeys = allKeys.filter { $0.lowercased().contains("card") || $0.lowercased().contains("flash") }
+        if !cardKeys.isEmpty {
+            print("Found other potential card-related keys: \(cardKeys)")
+            
+            // Try loading from alternative keys
+            for key in cardKeys {
+                if key != userDefaultsKey, let altData = UserDefaults.standard.data(forKey: key) {
+                    print("Trying to load from alternative key: \(key)")
+                    
+                    // Try the same migration process with this alternative data
+                    if let jsonString = String(data: altData, encoding: .utf8) {
+                        print("Alternative data: \(jsonString.prefix(200))...")
+                    }
+                    
+                    // Try simple format first (most likely to work)
+                    if let simpleCards = try? JSONDecoder().decode([SimpleFlashCard].self, from: altData) {
+                        print("✅ Found \(simpleCards.count) cards under key '\(key)' in simple format!")
+                        
+                        flashCards = simpleCards.map { simpleCard in
+                            var newCard = FlashCard(
+                                word: simpleCard.word,
+                                definition: simpleCard.definition,
+                                example: simpleCard.example,
+                                deckIds: []
+                            )
+                            newCard.id = simpleCard.id
+                            newCard.successCount = 0
+                            return newCard
+                        }
+                        
+                        saveCards() // Save under correct key
+                        return
+                    }
+                    
+                    // Try very old format
+                    if let veryOldCards = try? JSONDecoder().decode([VeryOldFlashCard].self, from: altData) {
+                        print("✅ Found \(veryOldCards.count) cards under key '\(key)' in very old format!")
+                        
+                        flashCards = veryOldCards.map { veryOldCard in
+                            var newCard = FlashCard(
+                                word: veryOldCard.word,
+                                definition: veryOldCard.definition,
+                                example: veryOldCard.example,
+                                deckIds: []
+                            )
+                            newCard.id = veryOldCard.id
+                            newCard.successCount = veryOldCard.successCount ?? 0
+                            return newCard
+                        }
+                        
+                        saveCards() // Save under correct key
+                        return
+                    }
+                    
+                    // Try old format with deckId
+                    if let oldCards = try? JSONDecoder().decode([OldFlashCard].self, from: altData) {
+                        print("✅ Found \(oldCards.count) cards under key '\(key)' in old format!")
+                        
+                        flashCards = oldCards.map { oldCard in
+                            var newCard = FlashCard(
+                                word: oldCard.word,
+                                definition: oldCard.definition,
+                                example: oldCard.example,
+                                deckIds: oldCard.deckId.map { Set([$0]) } ?? []
+                            )
+                            newCard.id = oldCard.id
+                            newCard.successCount = oldCard.successCount
+                            return newCard
+                        }
+                        
+                        saveCards() // Save under correct key
+                        return
+                    }
+                }
+            }
+        }
+        
+        print("No saved cards found or error decoding")
     }
     
     private func saveDecks() {
         print("Saving decks to UserDefaults")
         if let encoded = try? JSONEncoder().encode(decks) {
+            // Save to primary key
             UserDefaults.standard.set(encoded, forKey: decksDefaultsKey)
-            print("Decks saved successfully")
+            
+            // Create backup with timestamp
+            let backupKey = "\(decksDefaultsKey)_backup_\(Int(Date().timeIntervalSince1970))"
+            UserDefaults.standard.set(encoded, forKey: backupKey)
+            
+            // Keep only last 5 backups
+            let allKeys = UserDefaults.standard.dictionaryRepresentation().keys
+            let backupKeys = allKeys.filter { $0.hasPrefix("\(decksDefaultsKey)_backup_") }.sorted()
+            if backupKeys.count > 5 {
+                for key in backupKeys.dropLast(5) {
+                    UserDefaults.standard.removeObject(forKey: key)
+                }
+            }
+            
+            print("Decks saved successfully with backup")
         } else {
             print("Error: Failed to encode decks")
         }
@@ -374,12 +889,392 @@ class FlashCardViewModel: ObservableObject {
     
     private func loadDecks() {
         print("Loading decks from UserDefaults")
-        if let savedDecks = UserDefaults.standard.data(forKey: decksDefaultsKey),
-           let decodedDecks = try? JSONDecoder().decode([Deck].self, from: savedDecks) {
-            decks = decodedDecks
-            print("Loaded \(decks.count) decks")
-        } else {
-            print("No saved decks found or error decoding")
+        if let savedDecks = UserDefaults.standard.data(forKey: decksDefaultsKey) {
+            // Try to decode with new format first
+            do {
+                let decodedDecks = try JSONDecoder().decode([Deck].self, from: savedDecks)
+                decks = decodedDecks
+                print("✅ Successfully loaded \(decks.count) decks with new format")
+                return
+            } catch {
+                print("❌ Failed to decode with new format: \(error)")
+            }
+            
+            // Try to decode with old format (without parentId and subDeckIds)
+            do {
+                let oldDecks = try JSONDecoder().decode([OldDeck].self, from: savedDecks)
+                print("✅ Found \(oldDecks.count) decks in old format, migrating...")
+                
+                // Convert old format to new format
+                decks = oldDecks.map { oldDeck in
+                    var newDeck = Deck(name: oldDeck.name, cards: oldDeck.cards, parentId: nil)
+                    newDeck.id = oldDeck.id
+                    return newDeck
+                }
+                
+                print("✅ Successfully migrated \(decks.count) decks to new format")
+                
+                // Save in new format immediately
+                saveDecks()
+                return
+            } catch {
+                print("❌ Failed to decode with old format: \(error)")
+            }
+        }
+        
+        print("No saved decks found or error decoding")
+    }
+    
+    // MARK: - Statistics Tracking
+    
+    /// Records that a card was shown to the user
+    func recordCardShown(_ cardId: UUID) {
+        if let index = flashCards.firstIndex(where: { $0.id == cardId }) {
+            flashCards[index].timesShown += 1
+            print("Card '\(flashCards[index].word)' shown. Times shown: \(flashCards[index].timesShown)")
+            saveCards()
         }
     }
+    
+    /// Records that a card was answered correctly
+    func recordCardCorrect(_ cardId: UUID) {
+        if let index = flashCards.firstIndex(where: { $0.id == cardId }) {
+            flashCards[index].timesCorrect += 1
+            flashCards[index].successCount += 1 // Keep existing success count for backward compatibility
+            
+            let card = flashCards[index]
+            print("Card '\(card.word)' answered correctly. Times correct: \(card.timesCorrect)/\(card.timesShown)")
+            
+            // Check if card should move to Learned deck (80% accuracy with 5+ attempts)
+            if card.isFullyLearned {
+                print("Card '\(card.word)' is fully learned (80%+ accuracy)! Moving to 'Learned' deck.")
+                moveCardToLearnedDeck(card)
+            } else if let percentage = card.learningPercentage {
+                print("Card '\(card.word)' learning percentage: \(String(format: "%.1f", percentage))%")
+                updateCardInLearningDeck(card)
+            }
+            
+            saveCards()
+        }
+    }
+    
+    /// Records that a card was answered incorrectly
+    func recordCardIncorrect(_ cardId: UUID) {
+        if let index = flashCards.firstIndex(where: { $0.id == cardId }) {
+            // timesShown is already incremented when card is shown
+            // timesCorrect stays the same since this was incorrect
+            
+            let card = flashCards[index]
+            
+            // Check if card should move back to Learning deck
+            if let percentage = card.learningPercentage {
+                print("Card '\(card.word)' answered incorrectly. Learning percentage: \(String(format: "%.1f", percentage))%")
+                
+                // If card was in Learned deck or accuracy dropped below 70%, move back to Learning
+                let learnedDeck = getLearnedDeck()
+                let wasInLearnedDeck = card.deckIds.contains(learnedDeck.id)
+                
+                if wasInLearnedDeck || percentage < 70.0 {
+                    print("Card '\(card.word)' moving back to Learning deck (accuracy below 70% or was answered wrong in Learned)")
+                    moveCardBackToLearningDeck(card)
+                } else {
+                    updateCardInLearningDeck(card)
+                }
+            } else {
+                // First time shown, add to Learning deck
+                updateCardInLearningDeck(card)
+            }
+            
+            saveCards()
+        }
+    }
+    
+    /// Gets or creates the "Learned" deck for cards at 100%
+    private func getLearnedDeck() -> Deck {
+        if let existingDeck = decks.first(where: { $0.name == "Learned" }) {
+            return existingDeck
+        }
+        
+        let learnedDeck = Deck(name: "Learned", isEditable: false)
+        decks.append(learnedDeck)
+        print("Created 'Learned' deck for fully learned cards")
+        return learnedDeck
+    }
+    
+    /// Gets or creates the "Learning" deck for cards in progress
+    private func getLearningDeck() -> Deck {
+        if let existingDeck = decks.first(where: { $0.name == "Learning" }) {
+            return existingDeck
+        }
+        
+        let learningDeck = Deck(name: "Learning", isEditable: false)
+        decks.append(learningDeck)
+        print("Created 'Learning' deck for cards in progress")
+        return learningDeck
+    }
+    
+    /// Copies a fully learned card to the "Learned" deck (keeps in original decks)
+    private func moveCardToLearnedDeck(_ card: FlashCard) {
+        let learnedDeck = getLearnedDeck()
+        
+        // Add card to learned deck if not already there
+        if let cardIndex = flashCards.firstIndex(where: { $0.id == card.id }) {
+            flashCards[cardIndex].deckIds.insert(learnedDeck.id)
+        }
+        
+        // Remove from learning deck if present (but keep in original decks)
+        let learningDeck = getLearningDeck()
+        if let cardIndex = flashCards.firstIndex(where: { $0.id == card.id }) {
+            flashCards[cardIndex].deckIds.remove(learningDeck.id)
+        }
+        
+        updateCardDeckAssociations()
+    }
+    
+    /// Copies a card back to the "Learning" deck (keeps in original decks)
+    private func moveCardBackToLearningDeck(_ card: FlashCard) {
+        let learningDeck = getLearningDeck()
+        let learnedDeck = getLearnedDeck()
+        
+        // Add card to learning deck if not already there
+        if let cardIndex = flashCards.firstIndex(where: { $0.id == card.id }) {
+            flashCards[cardIndex].deckIds.insert(learningDeck.id)
+        }
+        
+        // Remove from learned deck if present (but keep in original decks)
+        if let cardIndex = flashCards.firstIndex(where: { $0.id == card.id }) {
+            flashCards[cardIndex].deckIds.remove(learnedDeck.id)
+        }
+        
+        updateCardDeckAssociations()
+    }
+    
+    /// Copies a card to the "Learning" deck (for cards that have been shown but aren't 80% yet)
+    private func updateCardInLearningDeck(_ card: FlashCard) {
+        guard !card.isFullyLearned else { return } // Fully learned cards (80%+) go to learned deck
+        guard card.timesShown > 0 else { return } // Don't add new cards
+        
+        let learningDeck = getLearningDeck()
+        
+        // Add card to learning deck if not already there
+        if let cardIndex = flashCards.firstIndex(where: { $0.id == card.id }) {
+            flashCards[cardIndex].deckIds.insert(learningDeck.id)
+        }
+        
+        updateCardDeckAssociations()
+    }
+    
+    /// Returns formatted learning percentage string for display
+    func getLearningPercentageString(for card: FlashCard) -> String? {
+        guard let percentage = card.learningPercentage else { return nil }
+        return String(format: "%.0f%%", percentage)
+    }
+    
+    /// Returns all cards currently being learned (have been shown but not 80%+ accuracy)
+    func getCardsInProgress() -> [FlashCard] {
+        return flashCards.filter { card in
+            card.timesShown > 0 && !card.isFullyLearned
+        }
+    }
+    
+    /// Returns all fully learned cards (80%+ accuracy with 5+ attempts)
+    func getFullyLearnedCards() -> [FlashCard] {
+        return flashCards.filter { $0.isFullyLearned }
+    }
+    
+    /// Debug method to print card deck assignments
+    func debugCardDeckAssignments() {
+        print("=== Card Deck Assignments Debug ===")
+        for card in flashCards {
+            let deckNames = card.deckIds.compactMap { deckId in
+                decks.first(where: { $0.id == deckId })?.name
+            }
+            print("Card '\(card.word)': \(deckNames.joined(separator: ", "))")
+        }
+        print("===================================")
+    }
+    
+    /// Data recovery method - scans for all possible saved data
+    func scanForLostData() {
+        print("🔍 SCANNING FOR LOST DATA...")
+        
+        let allKeys = UserDefaults.standard.dictionaryRepresentation().keys
+        print("📋 All UserDefaults keys: \(allKeys.count)")
+        
+        // Look for any keys that might contain our data
+        let flashCardKeys = allKeys.filter { 
+            $0.lowercased().contains("card") || 
+            $0.lowercased().contains("flash") || 
+            $0.lowercased().contains("deck") ||
+            $0.lowercased().contains("saved")
+        }
+        
+        print("🔍 Found potential data keys: \(flashCardKeys)")
+        
+        // Try to load from each potential key
+        for key in flashCardKeys {
+            if let data = UserDefaults.standard.data(forKey: key) {
+                print("📦 Key '\(key)' contains \(data.count) bytes of data")
+                
+                // Try to peek at the data
+                if let jsonString = String(data: data, encoding: .utf8) {
+                    let preview = String(jsonString.prefix(200))
+                    print("   Preview: \(preview)...")
+                }
+                
+                // Try to decode as cards
+                if let cards = try? JSONDecoder().decode([FlashCard].self, from: data) {
+                    print("   ✅ Contains \(cards.count) cards!")
+                }
+                
+                // Try to decode as decks
+                if let decks = try? JSONDecoder().decode([Deck].self, from: data) {
+                    print("   ✅ Contains \(decks.count) decks!")
+                }
+            }
+        }
+        
+        print("🔍 Scan complete.")
+    }
+    
+    /// Emergency data recovery method
+    func attemptDataRecovery() -> (recoveredCards: Int, recoveredDecks: Int) {
+        print("🚨 ATTEMPTING DATA RECOVERY...")
+        
+        var recoveredCards = 0
+        var recoveredDecks = 0
+        
+        let allKeys = UserDefaults.standard.dictionaryRepresentation().keys
+        let potentialKeys = allKeys.filter { 
+            $0.lowercased().contains("card") || 
+            $0.lowercased().contains("flash") || 
+            $0.lowercased().contains("deck") ||
+            $0.lowercased().contains("saved")
+        }
+        
+        // Try to recover cards from any key
+        for key in potentialKeys {
+            if let data = UserDefaults.standard.data(forKey: key) {
+                // Try different card formats
+                if let cards = try? JSONDecoder().decode([FlashCard].self, from: data) {
+                    print("📦 Found \(cards.count) cards in key '\(key)'")
+                    
+                    for card in cards {
+                        if !flashCards.contains(where: { $0.id == card.id }) {
+                            flashCards.append(card)
+                            recoveredCards += 1
+                        }
+                    }
+                } else if let oldCards = try? JSONDecoder().decode([OldFlashCard].self, from: data) {
+                    print("📦 Found \(oldCards.count) old format cards in key '\(key)'")
+                    
+                    for oldCard in oldCards {
+                        if !flashCards.contains(where: { $0.id == oldCard.id }) {
+                            var newCard = FlashCard(
+                                word: oldCard.word,
+                                definition: oldCard.definition,
+                                example: oldCard.example,
+                                deckIds: oldCard.deckId.map { Set([$0]) } ?? []
+                            )
+                            newCard.id = oldCard.id
+                            newCard.successCount = oldCard.successCount
+                            flashCards.append(newCard)
+                            recoveredCards += 1
+                        }
+                    }
+                } else if let decks = try? JSONDecoder().decode([Deck].self, from: data) {
+                    print("📦 Found \(decks.count) decks in key '\(key)'")
+                    
+                    for deck in decks {
+                        if !self.decks.contains(where: { $0.id == deck.id }) {
+                            self.decks.append(deck)
+                            recoveredDecks += 1
+                        }
+                    }
+                }
+            }
+        }
+        
+        if recoveredCards > 0 || recoveredDecks > 0 {
+            print("✅ Recovery successful! Cards: \(recoveredCards), Decks: \(recoveredDecks)")
+            updateCardDeckAssociations()
+            saveCards()
+            saveDecks()
+        } else {
+            print("❌ No data could be recovered")
+        }
+        
+        return (recoveredCards, recoveredDecks)
+    }
+    
+    /// Reset all learning statistics for all cards
+    func resetAllStatistics() {
+        print("🔄 Resetting all learning statistics...")
+        
+        var resetCount = 0
+        for index in flashCards.indices {
+            if flashCards[index].timesShown > 0 || flashCards[index].timesCorrect > 0 {
+                flashCards[index].timesShown = 0
+                flashCards[index].timesCorrect = 0
+                flashCards[index].successCount = 0 // Also reset legacy success count
+                resetCount += 1
+            }
+        }
+        
+        // Remove all cards from Learning and Learned system decks
+        let learningDeck = getLearningDeck()
+        let learnedDeck = getLearnedDeck()
+        
+        for index in flashCards.indices {
+            flashCards[index].deckIds.remove(learningDeck.id)
+            flashCards[index].deckIds.remove(learnedDeck.id)
+        }
+        
+        // Update deck associations and save
+        updateCardDeckAssociations()
+        saveCards()
+        
+        print("✅ Reset statistics for \(resetCount) cards")
+        print("🗂️ Removed all cards from Learning and Learned decks")
+        
+        // Clear card status as well
+        cardStatus.removeAll()
+        saveCardStatus()
+        
+        print("🧹 Cleared all card status data")
+    }
+}
+
+// Add this struct for migration purposes at the end of the file
+private struct OldFlashCard: Codable {
+    var id: UUID
+    var word: String
+    var definition: String
+    var example: String
+    var deckId: UUID?  // Old single deckId format
+    var successCount: Int
+}
+
+// Try even older format without deckId
+private struct VeryOldFlashCard: Codable {
+    var id: UUID
+    var word: String
+    var definition: String
+    var example: String
+    var successCount: Int?
+}
+
+// Try format without successCount
+private struct SimpleFlashCard: Codable {
+    var id: UUID
+    var word: String
+    var definition: String
+    var example: String
+}
+
+// Old deck format without parentId and subDeckIds
+private struct OldDeck: Codable {
+    var id: UUID
+    var name: String
+    var cards: [FlashCard]
 } 

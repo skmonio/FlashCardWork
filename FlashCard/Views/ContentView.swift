@@ -19,11 +19,29 @@ struct CardRow: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(card.word)
-                .font(.headline)
+            HStack {
+                Text(card.word)
+                    .font(.headline)
+                
+                Spacer()
+                
+                // Show learning progress percentage
+                if let progress = card.learningProgress {
+                    Text(String(format: "%.0f%%", progress))
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(progressColor(progress))
+                        .cornerRadius(8)
+                }
+            }
+            
             Text(card.definition)
                 .font(.subheadline)
                 .foregroundColor(.secondary)
+            
             if !card.example.isEmpty {
                 Text("Example: \(card.example)")
                     .font(.caption)
@@ -31,5 +49,12 @@ struct CardRow: View {
             }
         }
         .padding(.vertical, 8)
+    }
+    
+    private func progressColor(_ progress: Double) -> Color {
+        if progress == 100 { return .green }
+        if progress >= 75 { return .blue }
+        if progress >= 50 { return .orange }
+        return .red
     }
 } 

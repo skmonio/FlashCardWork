@@ -9,13 +9,25 @@ struct TestView: View {
     @State private var selectedAnswer: String?
     @State private var hasAnswered = false
     @State private var shuffledOptions: [String] = []
-    @State private var showingFeedback = false
+    @State private var showingCloseConfirmation = false
     @Environment(\.dismiss) private var dismiss
     @State private var incorrectCards: Set<UUID> = []
+    @State private var showingFeedback = false
     
-    init(viewModel: FlashCardViewModel, cards: [FlashCard]) {
+    // Save state properties
+    private var deckIds: [UUID]
+    private var shouldLoadSaveState: Bool
+    
+    // Computed property to check if there's significant progress to save
+    private var hasSignificantProgress: Bool {
+        return currentIndex > 0 || correctAnswers > 0
+    }
+    
+    init(viewModel: FlashCardViewModel, cards: [FlashCard], deckIds: [UUID] = [], shouldLoadSaveState: Bool = false) {
         self.viewModel = viewModel
         _cards = State(initialValue: cards.shuffled())
+        self.deckIds = deckIds
+        self.shouldLoadSaveState = shouldLoadSaveState
     }
     
     private var currentCard: FlashCard {
@@ -60,22 +72,36 @@ struct TestView: View {
         if !hasAnswered {
             selectedAnswer = option
             hasAnswered = true
-            if option == currentCard.definition {
+            let isCorrect = option == currentCard.definition
+            if isCorrect {
                 correctAnswers += 1
             } else {
                 incorrectCards.insert(currentCard.id)
             }
+            // Record the attempt
+            viewModel.recordAttempt(for: currentCard.id, wasSuccessful: isCorrect)
             showingFeedback = true
         }
     }
     
     private func moveToNextQuestion() {
+        HapticManager.shared.questionAdvance()
         if currentIndex < cards.count - 1 {
             currentIndex += 1
             selectedAnswer = nil
             hasAnswered = false
             shuffledOptions = generateOptions()
+            
+            // Auto-save progress periodically (every 5 questions)
+            if currentIndex % 5 == 0 {
+                saveCurrentProgress()
+            }
         } else {
+            HapticManager.shared.gameComplete()
+            
+            // Clear saved progress since test is complete
+            clearSavedProgress()
+            
             showingResults = true
         }
     }
@@ -93,10 +119,29 @@ struct TestView: View {
         hasAnswered = false
         incorrectCards.removeAll()
         shuffledOptions = generateOptions()
+        
+        // Clear any saved progress when resetting
+        clearSavedProgress()
+    }
+    
+    private func dismissToRoot() {
+        // Send notification to dismiss all views
+        NotificationCenter.default.post(name: NSNotification.Name("DismissToRoot"), object: nil)
+        
+        // Also trigger ViewModel navigation
+        viewModel.navigateToRoot()
+        
+        // Fallback with multiple dismissals
+        dismiss()
+        for i in 1...8 {
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.15) {
+                dismiss()
+            }
+        }
     }
     
     var body: some View {
-        VStack {
+        VStack(spacing: 0) {
             if cards.isEmpty {
                 emptyStateView
             } else if showingResults {
@@ -105,26 +150,14 @@ struct TestView: View {
                 testView
             }
             
-            Spacer()
-            
             // Bottom Navigation Bar
             HStack {
                 Button(action: {
-                    dismiss()
+                    handleBackButton()
                 }) {
                     VStack {
                         Image(systemName: "chevron.backward")
                         Text("Back")
-                    }
-                }
-                .frame(maxWidth: .infinity)
-                
-                Button(action: {
-                    dismiss()
-                }) {
-                    VStack {
-                        Image(systemName: "house")
-                        Text("Home")
                     }
                 }
                 .frame(maxWidth: .infinity)
@@ -138,6 +171,20 @@ struct TestView: View {
                     }
                 }
                 .frame(maxWidth: .infinity)
+                
+                // Save progress button
+                if hasSignificantProgress && !showingResults {
+                    Button(action: {
+                        saveCurrentProgress()
+                        HapticManager.shared.successNotification()
+                    }) {
+                        VStack {
+                            Image(systemName: "bookmark.fill")
+                            Text("Save")
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                }
             }
             .padding()
             .background(Color(.systemBackground))
@@ -150,6 +197,32 @@ struct TestView: View {
             )
         }
         .navigationBarHidden(true)
+        .alert("Close Test?", isPresented: $showingCloseConfirmation) {
+            Button("Save & Close", role: .destructive) {
+                saveProgressAndDismiss()
+            }
+            Button("Close Without Saving") {
+                dismissToRoot()
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text(hasSignificantProgress ? 
+                "Would you like to save your progress?" : 
+                "Are you sure you want to close?")
+        }
+        .onAppear {
+            if shouldLoadSaveState {
+                loadSavedProgress()
+            } else {
+                shuffledOptions = generateOptions()
+            }
+        }
+        .onDisappear {
+            // Auto-save when view disappears
+            if hasSignificantProgress && !showingResults {
+                saveCurrentProgress()
+            }
+        }
     }
     
     private var testView: some View {
@@ -166,22 +239,45 @@ struct TestView: View {
             }
             .padding(.horizontal)
             
-            // Question
+            // Question with progress overlay
             VStack(spacing: 16) {
                 Text("What does this word mean?")
                     .font(.headline)
                     .foregroundColor(.secondary)
                     .padding(.top)
                 
-                Text(currentCard.word)
-                    .font(.title)
-                    .bold()
-                    .multilineTextAlignment(.center)
-                    .padding()
-                    .frame(maxWidth: .infinity)
-                    .background(Color(.systemBackground))
-                    .cornerRadius(15)
-                    .shadow(radius: 5)
+                ZStack {
+                    Text(currentCard.word)
+                        .font(.title)
+                        .bold()
+                        .multilineTextAlignment(.center)
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(Color(.systemBackground))
+                        .cornerRadius(15)
+                        .shadow(radius: 5)
+                    
+                    // Progress percentage overlay on top right
+                    if let progress = currentCard.learningProgress {
+                        VStack {
+                            HStack {
+                                Spacer()
+                                Text(String(format: "%.0f%%", progress))
+                                    .font(.subheadline)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(progressColor(progress))
+                                    .cornerRadius(10)
+                                    .shadow(radius: 2)
+                            }
+                            .padding(.trailing, 16)
+                            .padding(.top, 8)
+                            Spacer()
+                        }
+                    }
+                }
                 
                 Text("Choose one of the following:")
                     .font(.subheadline)
@@ -194,59 +290,85 @@ struct TestView: View {
                         Button(action: {
                             handleAnswer(option)
                         }) {
-                            Text(option)
-                                .font(.body)
-                                .multilineTextAlignment(.center)
-                                .padding()
-                                .frame(maxWidth: .infinity)
-                                .background(
-                                    Group {
-                                        if hasAnswered {
-                                            if option == currentCard.definition {
-                                                Color.green.opacity(0.2)
-                                            } else if option == selectedAnswer {
-                                                Color.red.opacity(0.2)
-                                            } else {
-                                                Color(.systemGray6)
-                                            }
-                                        } else {
-                                            Color(.systemGray6)
-                                        }
+                            HStack {
+                                Text(option)
+                                    .multilineTextAlignment(.leading)
+                                Spacer()
+                                if hasAnswered {
+                                    if option == currentCard.definition {
+                                        Image(systemName: "checkmark.circle.fill")
+                                            .foregroundColor(.green)
+                                    } else if option == selectedAnswer {
+                                        Image(systemName: "xmark.circle.fill")
+                                            .foregroundColor(.red)
                                     }
-                                )
-                                .cornerRadius(10)
+                                }
+                            }
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .background(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .fill(buttonColor(for: option))
+                            )
+                            .foregroundColor(textColor(for: option))
                         }
                         .disabled(hasAnswered)
                     }
                 }
                 .padding(.horizontal)
-            }
-            
-            Spacer()
-        }
-        .onAppear {
-            shuffledOptions = generateOptions()
-        }
-        .alert(isPresented: $showingFeedback) {
-            Alert(
-                title: Text(selectedAnswer == currentCard.definition ? "Correct! 🎉" : "Incorrect"),
-                message: Text(getFeedbackMessage()),
-                dismissButton: .default(Text("Next")) {
-                    moveToNextQuestion()
+                
+                if hasAnswered {
+                    Button(action: {
+                        showingFeedback = false
+                        moveToNextQuestion()
+                    }) {
+                        Text("Next")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.blue)
+                            .cornerRadius(10)
+                    }
+                    .padding(.horizontal)
+                    .padding(.top)
                 }
-            )
+            }
         }
     }
     
-    private func getFeedbackMessage() -> String {
-        if selectedAnswer == currentCard.definition {
-            var message = "'\(currentCard.word)' means:\n\(currentCard.definition)"
-            if !currentCard.example.isEmpty {
-                message += "\n\nExample:\n\(currentCard.example)"
+    private func progressColor(_ progress: Double) -> Color {
+        if progress == 100 { return .green }
+        if progress >= 75 { return .blue }
+        if progress >= 50 { return .orange }
+        return .red
+    }
+    
+    private func buttonColor(for option: String) -> Color {
+        if hasAnswered {
+            if option == currentCard.definition {
+                return .green
+            } else if option == selectedAnswer {
+                return .red
+            } else {
+                return .systemGray6
             }
-            return message
         } else {
-            return "'\(currentCard.word)'\n\nYour answer:\n\(selectedAnswer ?? "")\n\nCorrect answer:\n\(currentCard.definition)"
+            return .systemGray6
+        }
+    }
+    
+    private func textColor(for option: String) -> Color {
+        if hasAnswered {
+            if option == currentCard.definition {
+                return .white
+            } else if option == selectedAnswer {
+                return .white
+            } else {
+                return .primary
+            }
+        } else {
+            return .primary
         }
     }
     
@@ -294,7 +416,7 @@ struct TestView: View {
                 }
                 
                 Button(action: {
-                    dismiss()
+                    dismissToRoot()
                 }) {
                     Text("Done")
                         .font(.headline)
@@ -316,5 +438,95 @@ struct TestView: View {
             Text("Add some cards to get started!")
                 .foregroundColor(.secondary)
         }
+    }
+    
+    private func handleBackButton() {
+        if hasSignificantProgress && !showingResults {
+            showingCloseConfirmation = true
+        } else {
+            dismiss()
+        }
+    }
+    
+    private func saveCurrentProgress() {
+        guard !deckIds.isEmpty && hasSignificantProgress else { return }
+        
+        let gameState = TestGameState(
+            currentIndex: currentIndex,
+            correctAnswers: correctAnswers,
+            incorrectCards: incorrectCards,
+            cards: cards,
+            selectedAnswer: selectedAnswer,
+            hasAnswered: hasAnswered
+        )
+        
+        SaveStateManager.shared.saveGameState(
+            gameType: .test,
+            deckIds: deckIds,
+            gameData: gameState
+        )
+        
+        print("💾 Test progress saved - Index: \(currentIndex), Correct: \(correctAnswers)")
+    }
+    
+    private func loadSavedProgress() {
+        guard !deckIds.isEmpty else { 
+            shuffledOptions = generateOptions()
+            return 
+        }
+        
+        if let savedState = SaveStateManager.shared.loadGameState(
+            gameType: .test,
+            deckIds: deckIds,
+            as: TestGameState.self
+        ) {
+            // Restore state
+            currentIndex = savedState.currentIndex
+            correctAnswers = savedState.correctAnswers
+            incorrectCards = savedState.incorrectCards
+            selectedAnswer = savedState.selectedAnswer
+            hasAnswered = savedState.hasAnswered
+            
+            // Update cards to match saved order if they exist
+            if !savedState.cards.isEmpty {
+                // Filter to only include cards that still exist in the current deck selection
+                let currentCardIds = Set(cards.map { $0.id })
+                let savedCards = savedState.cards.filter { currentCardIds.contains($0.id) }
+                
+                if !savedCards.isEmpty {
+                    cards = savedCards
+                }
+            }
+            
+            // Ensure currentIndex is valid
+            if currentIndex >= cards.count {
+                currentIndex = max(0, cards.count - 1)
+            }
+            
+            shuffledOptions = generateOptions()
+            
+            print("📝 Test progress loaded - Index: \(currentIndex), Correct: \(correctAnswers)")
+            HapticManager.shared.successNotification()
+        } else {
+            // No saved state found, start normally
+            print("📝 No saved state found, starting fresh test")
+            shuffledOptions = generateOptions()
+        }
+    }
+    
+    private func clearSavedProgress() {
+        guard !deckIds.isEmpty else { return }
+        
+        SaveStateManager.shared.deleteSaveState(
+            gameType: .test,
+            deckIds: deckIds
+        )
+    }
+    
+    private func saveProgressAndDismiss() {
+        if hasSignificantProgress && !showingResults {
+            saveCurrentProgress()
+        }
+        dismissToRoot()
     }
 } 
