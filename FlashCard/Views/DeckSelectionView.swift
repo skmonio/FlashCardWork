@@ -163,34 +163,35 @@ struct DeckSelectionView: View {
                             .disabled(selectedDeckIds.isEmpty || availableCards.isEmpty)
                             .buttonStyle(PlainButtonStyle())
                             
-                            // Continue Game Button (if save state exists)
-                            if hasSaveState {
-                                Button(action: {
+                            // Continue Game Button (always present, grayed out if no save state)
+                            Button(action: {
+                                if hasSaveState {
                                     shouldContinueGame = true
                                     shouldStartGame = true
-                                }) {
-                                    HStack {
-                                        VStack(alignment: .leading, spacing: 4) {
-                                            Text("Continue Saved Game")
-                                                .font(.headline)
-                                                .foregroundColor(.green)
-                                            
-                                            HStack {
-                                                Image(systemName: "clock.fill")
-                                                    .foregroundColor(.green)
-                                                    .font(.caption)
-                                                Text("Pick up where you left off")
-                                                    .font(.caption)
-                                                    .foregroundColor(.green)
-                                            }
-                                        }
-                                        Spacer()
-                                        Image(systemName: "arrow.clockwise")
-                                            .foregroundColor(.green)
-                                    }
                                 }
-                                .buttonStyle(PlainButtonStyle())
+                            }) {
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text("Continue Saved Game")
+                                            .font(.headline)
+                                            .foregroundColor(hasSaveState ? .green : .gray)
+                                        
+                                        HStack {
+                                            Image(systemName: "clock.fill")
+                                                .foregroundColor(hasSaveState ? .green : .gray)
+                                                .font(.caption)
+                                            Text(hasSaveState ? "Pick up where you left off" : "No saved game available")
+                                                .font(.caption)
+                                                .foregroundColor(hasSaveState ? .green : .gray)
+                                        }
+                                    }
+                                    Spacer()
+                                    Image(systemName: "arrow.clockwise")
+                                        .foregroundColor(hasSaveState ? .green : .gray)
+                                }
                             }
+                            .disabled(!hasSaveState)
+                            .buttonStyle(PlainButtonStyle())
                             
                             // Hidden NavigationLink for programmatic navigation
                             NavigationLink(
