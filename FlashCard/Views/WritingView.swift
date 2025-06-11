@@ -12,6 +12,7 @@ struct WritingView: View {
     @State private var isCorrect: Bool? = nil
     @State private var showingOverride = false
     @State private var showingCloseConfirmation = false
+    @State private var showingPeek = false
     @FocusState private var isKeyboardFocused: Bool
     @Environment(\.dismiss) private var dismiss
     
@@ -138,17 +139,58 @@ struct WritingView: View {
                         .autocapitalization(.none)
                         .disableAutocorrection(true)
                     
-                    if !hasAnswered {
-                        Button(action: checkAnswer) {
-                            Text("Submit Answer")
-                                .font(.headline)
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
+                    // Peek functionality
+                    if showingPeek && !hasAnswered {
+                        VStack(spacing: 8) {
+                            Text("The answer is:")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Text(card.word)
+                                .font(.title2)
+                                .bold()
+                                .foregroundColor(.blue)
                                 .padding()
-                                .background(userInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? Color.gray : Color.blue)
-                                .cornerRadius(10)
+                                .background(Color.blue.opacity(0.1))
+                                .cornerRadius(8)
                         }
-                        .disabled(userInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                        .transition(.opacity)
+                    }
+                    
+                    HStack(spacing: 12) {
+                        // Peek button
+                        if !hasAnswered {
+                            Button(action: {
+                                withAnimation(.easeInOut(duration: 0.3)) {
+                                    showingPeek.toggle()
+                                }
+                            }) {
+                                Text(showingPeek ? "Hide" : "Peek")
+                                    .font(.subheadline)
+                                    .foregroundColor(.orange)
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 8)
+                                    .background(Color.orange.opacity(0.1))
+                                    .cornerRadius(8)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .stroke(Color.orange, lineWidth: 1)
+                                    )
+                            }
+                        }
+                        
+                        // Submit button
+                        if !hasAnswered {
+                            Button(action: checkAnswer) {
+                                Text("Submit Answer")
+                                    .font(.headline)
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(userInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? Color.gray : Color.blue)
+                                    .cornerRadius(10)
+                            }
+                            .disabled(userInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                        }
                     }
                 }
                 
@@ -440,6 +482,7 @@ struct WritingView: View {
         hasAnswered = false
         isCorrect = nil
         showingOverride = false
+        showingPeek = false
         isKeyboardFocused = true
     }
     

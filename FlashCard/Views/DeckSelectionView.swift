@@ -11,7 +11,7 @@ struct DeckSelectionView: View {
     @State private var showingSaveOverwriteWarning = false
     
     enum StudyMode {
-        case study, test, game, truefalse, hangman, dehet, lookcovercheck, writing
+        case study, test, game, truefalse, hangman, dehet, writing
         
         var title: String {
             switch self {
@@ -21,7 +21,6 @@ struct DeckSelectionView: View {
             case .truefalse: return "True or False"
             case .hangman: return "Hangman"
             case .dehet: return "de of het"
-            case .lookcovercheck: return "Look Cover Check"
             case .writing: return "Write Your Card"
             }
         }
@@ -33,7 +32,6 @@ struct DeckSelectionView: View {
             case .game: return .memoryGame
             case .truefalse: return .trueFalse
             case .dehet: return .dehet
-            case .lookcovercheck: return .lookCoverCheck
             case .writing: return .writing
             case .hangman:
                 fatalError("Hangman game does not support save states")
@@ -216,6 +214,33 @@ struct DeckSelectionView: View {
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             }
+                            
+                            // Continue Game Button (always present, grayed out if no save state or no decks selected)
+                            Button(action: {
+                                // Do nothing when no decks selected
+                            }) {
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text("Continue Saved Game")
+                                            .font(.headline)
+                                            .foregroundColor(.gray)
+                                        
+                                        HStack {
+                                            Image(systemName: "clock.fill")
+                                                .foregroundColor(.gray)
+                                                .font(.caption)
+                                            Text("Select decks to continue")
+                                                .font(.caption)
+                                                .foregroundColor(.gray)
+                                        }
+                                    }
+                                    Spacer()
+                                    Image(systemName: "arrow.clockwise")
+                                        .foregroundColor(.gray)
+                                }
+                            }
+                            .disabled(true)
+                            .buttonStyle(PlainButtonStyle())
                         }
                     }
                 }
@@ -391,13 +416,6 @@ struct DeckSelectionView: View {
                 deckIds: deckIdArray,
                 shouldContinue: shouldContinueGame
             )
-        case .lookcovercheck:
-            LookCoverCheckViewWithSaveState(
-                viewModel: viewModel, 
-                cards: availableCards,
-                deckIds: deckIdArray,
-                shouldContinue: shouldContinueGame
-            )
         case .writing:
             WritingViewWithSaveState(
                 viewModel: viewModel, 
@@ -511,25 +529,6 @@ struct DeHetGameViewWithSaveState: View {
                     // Load saved state logic will be implemented in DeHetGameView
                 }
             }
-    }
-}
-
-struct LookCoverCheckViewWithSaveState: View {
-    @ObservedObject var viewModel: FlashCardViewModel
-    let cards: [FlashCard]
-    let deckIds: [UUID]
-    let shouldContinue: Bool
-    
-    var body: some View {
-        LookCoverCheckView(
-            viewModel: viewModel, 
-            cards: cards,
-            deckIds: deckIds,
-            shouldLoadSaveState: shouldContinue
-        )
-        .onAppear {
-            print("👁️ LookCoverCheckViewWithSaveState appearing - Cards: \(cards.count), DeckIds: \(deckIds.count), ShouldContinue: \(shouldContinue)")
-        }
     }
 }
 

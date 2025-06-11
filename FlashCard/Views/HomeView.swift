@@ -4,6 +4,7 @@ struct HomeView: View {
     @ObservedObject var viewModel: FlashCardViewModel
     @State private var showingExportImport = false
     @State private var showingResetAlert = false
+    @State private var showingMoreGames = false
     
     // Navigation state for full-screen forms
     @State private var showingAddCardView = false
@@ -126,32 +127,14 @@ struct HomeView: View {
                             MenuButton(title: "True or False", icon: "questionmark.circle.fill")
                         }
                         
-                        NavigationLink(destination: DeckSelectionView(viewModel: viewModel, mode: .lookcovercheck)) {
-                            MenuButton(title: "Look Cover Check", icon: "eye.slash.fill")
-                        }
-                        
                         NavigationLink(destination: DeckSelectionView(viewModel: viewModel, mode: .writing)) {
                             MenuButton(title: "Write Your Card", icon: "pencil.and.scribble")
                         }
                         
                         // More Games section
-                        DisclosureGroup("More Games") {
-                            VStack(spacing: 12) {
-                                NavigationLink(destination: DeckSelectionView(viewModel: viewModel, mode: .game)) {
-                                    MenuButton(title: "Remember Your Cards", icon: "brain.fill")
-                                }
-                                
-                                NavigationLink(destination: DeckSelectionView(viewModel: viewModel, mode: .hangman)) {
-                                    MenuButton(title: "Hangman", icon: "person.fill")
-                                }
-                                
-                                NavigationLink(destination: DeckSelectionView(viewModel: viewModel, mode: .dehet)) {
-                                    MenuButton(title: "de of het", icon: "questionmark.diamond.fill")
-                                }
-                            }
-                            .padding(.top, 8)
+                        NavigationLink(destination: MoreGamesView(viewModel: viewModel)) {
+                            MenuButton(title: "More Games", icon: "brain.fill")
                         }
-                        .accentColor(.blue)
                     }
                 }
                 .padding(.top)
@@ -195,5 +178,40 @@ struct MenuButton: View {
         .background(Color(.systemBackground))
         .cornerRadius(12)
         .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 2)
+    }
+}
+
+struct MoreGamesView: View {
+    @ObservedObject var viewModel: FlashCardViewModel
+    
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 24) {
+                VStack(alignment: .leading, spacing: 16) {
+                    Text("Additional Games")
+                        .font(.headline)
+                        .foregroundColor(.secondary)
+                        .padding(.horizontal)
+                    
+                    VStack(spacing: 12) {
+                        NavigationLink(destination: DeckSelectionView(viewModel: viewModel, mode: .game)) {
+                            MenuButton(title: "Remember Your Cards", icon: "brain.fill")
+                        }
+                        
+                        NavigationLink(destination: DeckSelectionView(viewModel: viewModel, mode: .hangman)) {
+                            MenuButton(title: "Hangman", icon: "person.fill")
+                        }
+                        
+                        NavigationLink(destination: DeckSelectionView(viewModel: viewModel, mode: .dehet)) {
+                            MenuButton(title: "de of het", icon: "questionmark.diamond.fill")
+                        }
+                    }
+                }
+                .padding(.top)
+            }
+            .padding(.horizontal)
+        }
+        .navigationTitle("More Games")
+        .navigationBarTitleDisplayMode(.inline)
     }
 } 
