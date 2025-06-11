@@ -61,26 +61,18 @@ struct DeckSelectionView: View {
     }
     
     private var hasSaveState: Bool {
-        guard !selectedDeckIds.isEmpty else { 
-            print("💾 No decks selected - no save state")
-            return false 
-        }
-        
         // Skip save state for Hangman game
         if mode == .hangman {
             print("💾 Hangman mode - no save state support")
             return false
         }
         
-        let saveExists = SaveStateManager.shared.hasSaveState(
-            gameType: mode.saveStateType,
-            deckIds: Array(selectedDeckIds)
-        )
+        let saveExists = SaveStateManager.shared.hasSaveState(gameType: mode.saveStateType)
         
         print("💾 Save state check for \(mode.title): \(saveExists)")
         if saveExists {
-            if let info = SaveStateManager.shared.getSaveStateInfo(gameType: mode.saveStateType, deckIds: Array(selectedDeckIds)) {
-                print("💾 Save info: saved \(info.date), \(info.deckCount) decks")
+            if let saveDate = SaveStateManager.shared.getSaveStateInfo(gameType: mode.saveStateType) {
+                print("💾 Save info: saved \(saveDate)")
             }
         }
         
@@ -290,10 +282,7 @@ struct DeckSelectionView: View {
                     onStartFresh: {
                         print("🆕 User chose to start fresh")
                         // Delete the save state and start fresh
-                        SaveStateManager.shared.deleteSaveState(
-                            gameType: mode.saveStateType,
-                            deckIds: Array(selectedDeckIds)
-                        )
+                        SaveStateManager.shared.deleteSaveState(gameType: mode.saveStateType)
                         shouldContinueGame = false
                         shouldStartGame = true
                     },
@@ -323,10 +312,7 @@ struct DeckSelectionView: View {
         .alert("Overwrite Saved Game?", isPresented: $showingSaveOverwriteWarning) {
             Button("Start New Game", role: .destructive) {
                 // Delete the save state and start fresh
-                SaveStateManager.shared.deleteSaveState(
-                    gameType: mode.saveStateType,
-                    deckIds: Array(selectedDeckIds)
-                )
+                SaveStateManager.shared.deleteSaveState(gameType: mode.saveStateType)
                 shouldContinueGame = false
                 shouldStartGame = true
             }
@@ -346,7 +332,6 @@ struct DeckSelectionView: View {
     private func handleStartGame() {
         print("🚀 handleStartGame called for \(mode.title)")
         print("📋 Selected decks: \(selectedDeckIds.count), Available cards: \(availableCards.count)")
-        print("🔍 Checking save state...")
         
         // Skip save state check for Hangman
         if mode == .hangman {

@@ -1,5 +1,6 @@
 import SwiftUI
 import os
+import Translation
 
 struct AddCardView: View {
     @Environment(\.dismiss) private var dismiss
@@ -21,6 +22,13 @@ struct AddCardView: View {
     
     // Audio recording
     @State private var temporaryCardId: UUID = UUID()
+    
+    // Translation features
+    @State private var translationConfiguration: TranslationSession.Configuration?
+    @State private var suggestedTranslation: String = ""
+    @State private var isTranslating: Bool = false
+    @State private var showTranslationSuggestion: Bool = false
+    @State private var lastTranslatedWord: String = ""
     
     private let logger = Logger(subsystem: "com.flashcards", category: "AddCardView")
     
@@ -86,12 +94,65 @@ struct AddCardView: View {
             // Main content
             Form {
                 Section(header: Text("Card Details")) {
-                    TextField("Word", text: $word)
-                        .onChange(of: word) { oldValue, newValue in
-                            logger.debug("Word changed from '\(oldValue)' to '\(newValue)'")
+                    VStack(alignment: .leading, spacing: 8) {
+                        TextField("Word (Dutch)", text: $word)
+                            .onChange(of: word) { oldValue, newValue in
+                                logger.debug("Word changed from '\(oldValue)' to '\(newValue)'")
+                                // Trigger translation suggestion for Dutch words
+                                if !newValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+                                   newValue != lastTranslatedWord {
+                                    triggerTranslationSuggestion(for: newValue)
+                                } else if newValue.isEmpty {
+                                    showTranslationSuggestion = false
+                                    suggestedTranslation = ""
+                                }
+                            }
+                        
+                        // Translation suggestion
+                        if showTranslationSuggestion && !suggestedTranslation.isEmpty {
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack {
+                                    Image(systemName: "translate")
+                                        .foregroundColor(.blue)
+                                    Text("Suggested translation:")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    
+                                    if isTranslating {
+                                        ProgressView()
+                                            .scaleEffect(0.7)
+                                    }
+                                }
+                                
+                                HStack {
+                                    Text(suggestedTranslation)
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 8)
+                                        .background(Color.blue.opacity(0.1))
+                                        .cornerRadius(8)
+                                        .font(.body)
+                                    
+                                    Button("Use") {
+                                        definition = suggestedTranslation
+                                        showTranslationSuggestion = false
+                                        HapticManager.shared.lightImpact()
+                                    }
+                                    .buttonStyle(.borderedProminent)
+                                    .controlSize(.small)
+                                    
+                                    Button("Dismiss") {
+                                        showTranslationSuggestion = false
+                                        HapticManager.shared.lightImpact()
+                                    }
+                                    .buttonStyle(.bordered)
+                                    .controlSize(.small)
+                                }
+                            }
+                            .padding(.vertical, 8)
                         }
+                    }
                     
-                    TextField("Definition", text: $definition)
+                    TextField("Definition (English)", text: $definition)
                         .onChange(of: definition) { oldValue, newValue in
                             logger.debug("Definition changed from '\(oldValue)' to '\(newValue)'")
                         }
@@ -269,6 +330,27 @@ struct AddCardView: View {
             AudioManager.shared.stopRecording()
             AudioManager.shared.stopPlayback()
         }
+        .translationTask(translationConfiguration) { session in
+            let wordToTranslate = lastTranslatedWord.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !wordToTranslate.isEmpty else { return }
+            
+            do {
+                logger.debug("Translating word: \(wordToTranslate)")
+                let response = try await session.translate(wordToTranslate)
+                
+                await MainActor.run {
+                    suggestedTranslation = response.targetText
+                    isTranslating = false
+                    showTranslationSuggestion = true
+                    logger.debug("Translation completed: \(response.targetText)")
+                }
+            } catch {
+                await MainActor.run {
+                    isTranslating = false
+                    logger.error("Translation failed: \(error.localizedDescription)")
+                }
+            }
+        }
     }
     
     private func saveCurrentCard() {
@@ -309,5 +391,38 @@ struct AddCardView: View {
         
         // Generate new temporary ID for next card
         temporaryCardId = UUID()
+    }
+    
+    private func triggerTranslationSuggestion(for word: String) {
+        let trimmedWord = word.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        // Only translate if word has meaningful content and isn't too short
+        guard trimmedWord.count >= 2 else { return }
+        
+        // Reset state
+        showTranslationSuggestion = false
+        suggestedTranslation = ""
+        isTranslating = true
+        lastTranslatedWord = trimmedWord
+        
+        // Debounce translation requests
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+            // Only proceed if the word hasn't changed
+            guard self.word.trimmingCharacters(in: .whitespacesAndNewlines) == trimmedWord else {
+                self.isTranslating = false
+                return
+            }
+            
+            // Configure translation from Dutch to English
+            if self.translationConfiguration == nil {
+                self.translationConfiguration = TranslationSession.Configuration(
+                    source: Locale.Language(identifier: "nl"), // Dutch
+                    target: Locale.Language(identifier: "en")  // English
+                )
+            } else {
+                // Invalidate to trigger new translation
+                self.translationConfiguration?.invalidate()
+            }
+        }
     }
 } 

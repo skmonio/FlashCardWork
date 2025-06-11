@@ -32,7 +32,8 @@ struct StudyView: View {
     
     init(viewModel: FlashCardViewModel, cards: [FlashCard], deckIds: [UUID] = [], shouldLoadSaveState: Bool = false) {
         self.viewModel = viewModel
-        _cards = State(initialValue: cards)
+        // Apply intelligent ordering: less-known cards first, well-known cards later
+        _cards = State(initialValue: viewModel.sortCardsForLearning(cards))
         self.deckIds = deckIds
         self.shouldLoadSaveState = shouldLoadSaveState
     }
@@ -129,7 +130,7 @@ struct StudyView: View {
                 nextCardActive = false
                 knownCards.removeAll()
                 unknownCards.removeAll()
-                cards = cards.shuffled() // Reshuffle cards for new session
+                cards = viewModel.sortCardsForLearning(cards) // Use intelligent ordering for new session
                 // Don't clear saved progress here - only when explicitly resetting
             }
         }
@@ -335,7 +336,7 @@ struct StudyView: View {
     }
     
     private func saveCurrentProgress() {
-        guard !deckIds.isEmpty && hasSignificantProgress else { return }
+        guard hasSignificantProgress else { return }
         
         let gameState = StudyGameState(
             currentIndex: currentIndex,
@@ -348,7 +349,6 @@ struct StudyView: View {
         
         SaveStateManager.shared.saveGameState(
             gameType: .study,
-            deckIds: deckIds,
             gameData: gameState
         )
         
@@ -356,15 +356,8 @@ struct StudyView: View {
     }
     
     private func loadSavedProgress() {
-        guard !deckIds.isEmpty else { 
-            // If no deckIds, just start normally
-            setupStudySession()
-            return 
-        }
-        
         if let savedState = SaveStateManager.shared.loadGameState(
             gameType: .study,
-            deckIds: deckIds,
             as: StudyGameState.self
         ) {
             // Restore state
@@ -401,12 +394,7 @@ struct StudyView: View {
     }
     
     private func clearSavedProgress() {
-        guard !deckIds.isEmpty else { return }
-        
-        SaveStateManager.shared.deleteSaveState(
-            gameType: .study,
-            deckIds: deckIds
-        )
+        SaveStateManager.shared.deleteSaveState(gameType: .study)
     }
     
     private func resetForNewSession() {
@@ -432,7 +420,7 @@ struct StudyView: View {
         nextCardActive = false
         knownCards.removeAll()
         unknownCards.removeAll()
-        cards = cards.shuffled() // Reshuffle cards for new session
+        cards = viewModel.sortCardsForLearning(cards) // Use intelligent ordering for new session
         
         // Clear any saved progress when resetting
         clearSavedProgress()

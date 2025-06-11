@@ -133,22 +133,20 @@ class SaveStateManager: ObservableObject {
     /// Save a game state
     func saveGameState<T: Codable>(
         gameType: GameSaveState.SavedGameType,
-        deckIds: [UUID],
         gameData: T
     ) {
         do {
             let encodedData = try JSONEncoder().encode(gameData)
             let saveState = GameSaveState(
                 gameType: gameType,
-                deckIds: deckIds,
+                deckIds: [], // No longer tracking specific decks
                 savedAt: Date(),
                 gameData: encodedData
             )
             
-            // Remove existing save state for same game type and decks
+            // Remove existing save state for same game type
             availableSaveStates.removeAll { existingState in
-                existingState.gameType == gameType && 
-                Set(existingState.deckIds) == Set(deckIds)
+                existingState.gameType == gameType
             }
             
             // Add new save state
@@ -170,11 +168,10 @@ class SaveStateManager: ObservableObject {
     /// Load a game state
     func loadGameState<T: Codable>(
         gameType: GameSaveState.SavedGameType,
-        deckIds: [UUID],
         as type: T.Type
     ) -> T? {
         guard let saveState = availableSaveStates.first(where: { 
-            $0.gameType == gameType && Set($0.deckIds) == Set(deckIds)
+            $0.gameType == gameType
         }) else {
             return nil
         }
@@ -189,28 +186,28 @@ class SaveStateManager: ObservableObject {
         }
     }
     
-    /// Check if a save state exists for a specific game and decks
-    func hasSaveState(gameType: GameSaveState.SavedGameType, deckIds: [UUID]) -> Bool {
+    /// Check if a save state exists for a specific game type
+    func hasSaveState(gameType: GameSaveState.SavedGameType) -> Bool {
         return availableSaveStates.contains { 
-            $0.gameType == gameType && Set($0.deckIds) == Set(deckIds)
+            $0.gameType == gameType
         }
     }
     
     /// Get save state info for display
-    func getSaveStateInfo(gameType: GameSaveState.SavedGameType, deckIds: [UUID]) -> (date: Date, deckCount: Int)? {
+    func getSaveStateInfo(gameType: GameSaveState.SavedGameType) -> Date? {
         guard let saveState = availableSaveStates.first(where: { 
-            $0.gameType == gameType && Set($0.deckIds) == Set(deckIds)
+            $0.gameType == gameType
         }) else {
             return nil
         }
         
-        return (date: saveState.savedAt, deckCount: saveState.deckIds.count)
+        return saveState.savedAt
     }
     
     /// Delete a specific save state
-    func deleteSaveState(gameType: GameSaveState.SavedGameType, deckIds: [UUID]) {
+    func deleteSaveState(gameType: GameSaveState.SavedGameType) {
         availableSaveStates.removeAll { 
-            $0.gameType == gameType && Set($0.deckIds) == Set(deckIds)
+            $0.gameType == gameType
         }
         saveSaveStates()
         print("🗑️ Deleted save state for \(gameType.displayName)")

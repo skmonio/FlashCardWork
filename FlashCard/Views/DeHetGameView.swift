@@ -24,8 +24,9 @@ struct DeHetGameView: View {
     
     init(viewModel: FlashCardViewModel, cards: [FlashCard]) {
         self.viewModel = viewModel
+        // Apply intelligent ordering: less-known cards first, well-known cards later
         let articleCards = cards.filter { $0.article != nil }
-        _cards = State(initialValue: articleCards.shuffled())
+        _cards = State(initialValue: viewModel.sortCardsForLearning(articleCards))
     }
     
     var body: some View {
@@ -286,7 +287,7 @@ struct DeHetGameView: View {
     }
     
     private func resetGame() {
-        cards = cards.shuffled()
+        cards = viewModel.sortCardsForLearning(cards)
         currentIndex = 0
         correctAnswers = 0
         totalAnswers = 0

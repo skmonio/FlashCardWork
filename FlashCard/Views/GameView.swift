@@ -27,8 +27,6 @@ struct GameView: View {
     @State private var moves = 0
     @State private var showingGameOver = false
     @State private var incorrectMatches: Set<FlashCard> = []
-    @State private var showingReview = false
-    @State private var reviewCards: [FlashCard] = []
     @State private var showingCloseConfirmation = false
     
     // Save state properties
@@ -47,7 +45,8 @@ struct GameView: View {
     
     init(viewModel: FlashCardViewModel, cards: [FlashCard], deckIds: [UUID] = [], shouldLoadSaveState: Bool = false) {
         self.viewModel = viewModel
-        self.cards = cards
+        // Apply intelligent ordering: less-known cards first, well-known cards later
+        self.cards = viewModel.sortCardsForLearning(cards)
         self.deckIds = deckIds
         self.shouldLoadSaveState = shouldLoadSaveState
     }
@@ -238,7 +237,7 @@ struct GameView: View {
     }
     
     private func saveCurrentProgress() {
-        guard !deckIds.isEmpty && hasSignificantProgress else { return }
+        guard hasSignificantProgress else { return }
         
         let savedCards = gameCards.map { card in
             MemoryGameState.SavedCard(
@@ -285,7 +284,6 @@ struct GameView: View {
         
         SaveStateManager.shared.saveGameState(
             gameType: .memoryGame,
-            deckIds: deckIds,
             gameData: gameState
         )
         
@@ -293,14 +291,8 @@ struct GameView: View {
     }
     
     private func loadSavedProgress() {
-        guard !deckIds.isEmpty else { 
-            setupGame()
-            return 
-        }
-        
         if let savedState = SaveStateManager.shared.loadGameState(
             gameType: .memoryGame,
-            deckIds: deckIds,
             as: MemoryGameState.self
         ) {
             // Helper function to convert saved cards back to Card objects
@@ -349,12 +341,7 @@ struct GameView: View {
     }
     
     private func clearSavedProgress() {
-        guard !deckIds.isEmpty else { return }
-        
-        SaveStateManager.shared.deleteSaveState(
-            gameType: .memoryGame,
-            deckIds: deckIds
-        )
+        SaveStateManager.shared.deleteSaveState(gameType: .memoryGame)
     }
     
     private func saveProgressAndDismiss() {

@@ -32,7 +32,8 @@ struct WritingView: View {
     
     init(viewModel: FlashCardViewModel, cards: [FlashCard], deckIds: [UUID] = [], shouldLoadSaveState: Bool = false) {
         self.viewModel = viewModel
-        _cards = State(initialValue: cards.shuffled())
+        // Apply intelligent ordering: less-known cards first, well-known cards later
+        _cards = State(initialValue: viewModel.sortCardsForLearning(cards))
         self.deckIds = deckIds
         self.shouldLoadSaveState = shouldLoadSaveState
     }
@@ -477,7 +478,7 @@ struct WritingView: View {
     }
     
     private func resetGame() {
-        cards = cards.shuffled()
+        cards = viewModel.sortCardsForLearning(cards)
         currentIndex = 0
         correctAnswers = 0
         totalAnswers = 0
@@ -497,7 +498,7 @@ struct WritingView: View {
     }
     
     private func saveCurrentProgress() {
-        guard !deckIds.isEmpty && hasSignificantProgress else { return }
+        guard hasSignificantProgress else { return }
         
         let gameState = WritingGameState(
             currentIndex: currentIndex,
@@ -508,7 +509,6 @@ struct WritingView: View {
         
         SaveStateManager.shared.saveGameState(
             gameType: .writing,
-            deckIds: deckIds,
             gameData: gameState
         )
         
@@ -516,15 +516,8 @@ struct WritingView: View {
     }
     
     private func loadSavedProgress() {
-        guard !deckIds.isEmpty else { 
-            // If no deckIds, just start normally
-            resetForNextCard()
-            return 
-        }
-        
         if let savedState = SaveStateManager.shared.loadGameState(
             gameType: .writing,
-            deckIds: deckIds,
             as: WritingGameState.self
         ) {
             // Restore state
@@ -558,12 +551,7 @@ struct WritingView: View {
     }
     
     private func clearSavedProgress() {
-        guard !deckIds.isEmpty else { return }
-        
-        SaveStateManager.shared.deleteSaveState(
-            gameType: .writing,
-            deckIds: deckIds
-        )
+        SaveStateManager.shared.deleteSaveState(gameType: .writing)
     }
     
     private func saveProgressAndDismiss() {

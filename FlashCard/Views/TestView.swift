@@ -24,7 +24,8 @@ struct TestView: View {
     
     init(viewModel: FlashCardViewModel, cards: [FlashCard], deckIds: [UUID] = [], shouldLoadSaveState: Bool = false) {
         self.viewModel = viewModel
-        _cards = State(initialValue: cards.shuffled())
+        // Apply intelligent ordering: less-known cards first, well-known cards later
+        self.cards = viewModel.sortCardsForLearning(cards)
         self.deckIds = deckIds
         self.shouldLoadSaveState = shouldLoadSaveState
     }
@@ -105,9 +106,9 @@ struct TestView: View {
         } else {
             // End of current round - check if there are incorrect cards to replay
             if !incorrectCards.isEmpty {
-                // Auto-replay incorrect cards
+                // Auto-replay incorrect cards with intelligent ordering
                 let incorrectCardsList = cards.filter { incorrectCards.contains($0.id) }
-                cards = incorrectCardsList.shuffled()
+                cards = viewModel.sortCardsForLearning(incorrectCardsList)
                 currentIndex = 0
                 selectedAnswer = nil
                 hasAnswered = false
@@ -134,7 +135,7 @@ struct TestView: View {
         if onlyIncorrect {
             cards = cards.filter { incorrectCards.contains($0.id) }
         } else {
-            cards = cards.shuffled()
+            cards = viewModel.sortCardsForLearning(cards)
         }
         currentIndex = 0
         correctAnswers = 0
@@ -405,7 +406,7 @@ struct TestView: View {
     }
     
     private func saveCurrentProgress() {
-        guard !deckIds.isEmpty && hasSignificantProgress else { return }
+        guard hasSignificantProgress else { return }
         
         let gameState = TestGameState(
             currentIndex: currentIndex,
@@ -418,7 +419,6 @@ struct TestView: View {
         
         SaveStateManager.shared.saveGameState(
             gameType: .test,
-            deckIds: deckIds,
             gameData: gameState
         )
         
@@ -426,14 +426,8 @@ struct TestView: View {
     }
     
     private func loadSavedProgress() {
-        guard !deckIds.isEmpty else { 
-            shuffledOptions = generateOptions()
-            return 
-        }
-        
         if let savedState = SaveStateManager.shared.loadGameState(
             gameType: .test,
-            deckIds: deckIds,
             as: TestGameState.self
         ) {
             // Restore state
@@ -471,12 +465,7 @@ struct TestView: View {
     }
     
     private func clearSavedProgress() {
-        guard !deckIds.isEmpty else { return }
-        
-        SaveStateManager.shared.deleteSaveState(
-            gameType: .test,
-            deckIds: deckIds
-        )
+        SaveStateManager.shared.deleteSaveState(gameType: .test)
     }
     
     private func saveProgressAndDismiss() {

@@ -96,10 +96,7 @@ struct SavedGamesView: View {
     }
     
     private func deleteSaveState(_ saveState: GameSaveState) {
-        saveStateManager.deleteSaveState(
-            gameType: saveState.gameType,
-            deckIds: saveState.deckIds
-        )
+        saveStateManager.deleteSaveState(gameType: saveState.gameType)
         HapticManager.shared.lightImpact()
     }
 }
@@ -109,26 +106,10 @@ struct SavedGameRow: View {
     @ObservedObject var viewModel: FlashCardViewModel
     let onDelete: () -> Void
     
-    private var deckNames: String {
-        let names = saveState.deckIds.compactMap { deckId in
-            viewModel.decks.first(where: { $0.id == deckId })?.name
-        }
-        
-        if names.isEmpty {
-            return "Unknown Decks"
-        } else if names.count == 1 {
-            return names[0]
-        } else if names.count <= 3 {
-            return names.joined(separator: ", ")
-        } else {
-            return "\(names.prefix(2).joined(separator: ", ")) and \(names.count - 2) more"
-        }
-    }
-    
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text(deckNames)
+                Text(saveState.gameType.displayName)
                     .font(.headline)
                     .lineLimit(1)
                 
@@ -140,9 +121,9 @@ struct SavedGameRow: View {
             Spacer()
             
             VStack(alignment: .trailing, spacing: 4) {
-                Text("\(saveState.deckIds.count) deck\(saveState.deckIds.count == 1 ? "" : "s")")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                Image(systemName: saveState.gameType.icon)
+                    .font(.title2)
+                    .foregroundColor(.blue)
                 
                 Button(action: onDelete) {
                     Image(systemName: "trash")

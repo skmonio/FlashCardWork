@@ -35,7 +35,8 @@ struct LookCoverCheckView: View {
     
     init(viewModel: FlashCardViewModel, cards: [FlashCard], deckIds: [UUID] = [], shouldLoadSaveState: Bool = false) {
         self.viewModel = viewModel
-        _cards = State(initialValue: cards.shuffled())
+        // Apply intelligent ordering: less-known cards first, well-known cards later
+        _cards = State(initialValue: viewModel.sortCardsForLearning(cards))
         self.deckIds = deckIds
         self.shouldLoadSaveState = shouldLoadSaveState
     }
@@ -403,7 +404,7 @@ struct LookCoverCheckView: View {
     }
     
     private func resetGame() {
-        cards = cards.shuffled()
+        cards = viewModel.sortCardsForLearning(cards)
         currentIndex = 0
         correctAnswers = 0
         totalAnswers = 0
@@ -415,7 +416,7 @@ struct LookCoverCheckView: View {
     }
     
     private func saveCurrentProgress() {
-        guard !deckIds.isEmpty && hasSignificantProgress else { return }
+        guard hasSignificantProgress else { return }
         
         let gameState = LookCoverCheckGameState(
             currentIndex: currentIndex,
@@ -427,7 +428,6 @@ struct LookCoverCheckView: View {
         
         SaveStateManager.shared.saveGameState(
             gameType: .lookCoverCheck,
-            deckIds: deckIds,
             gameData: gameState
         )
         
@@ -435,14 +435,8 @@ struct LookCoverCheckView: View {
     }
     
     private func loadSavedProgress() {
-        guard !deckIds.isEmpty else { 
-            resetGame()
-            return 
-        }
-        
         if let savedState = SaveStateManager.shared.loadGameState(
             gameType: .lookCoverCheck,
-            deckIds: deckIds,
             as: LookCoverCheckGameState.self
         ) {
             // Restore state
@@ -487,12 +481,7 @@ struct LookCoverCheckView: View {
     }
     
     private func clearSavedProgress() {
-        guard !deckIds.isEmpty else { return }
-        
-        SaveStateManager.shared.deleteSaveState(
-            gameType: .lookCoverCheck,
-            deckIds: deckIds
-        )
+        SaveStateManager.shared.deleteSaveState(gameType: .lookCoverCheck)
     }
     
     private func dismissToRoot() {

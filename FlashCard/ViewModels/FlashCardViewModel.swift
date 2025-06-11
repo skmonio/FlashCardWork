@@ -983,6 +983,44 @@ class FlashCardViewModel: ObservableObject {
         saveCards()
     }
     
+    /// Sort cards intelligently for games: less-known cards first, well-known cards later
+    func sortCardsForLearning(_ cards: [FlashCard]) -> [FlashCard] {
+        return cards.sorted { card1, card2 in
+            // Calculate learning scores (lower score = should appear earlier)
+            let score1 = calculateLearningScore(for: card1)
+            let score2 = calculateLearningScore(for: card2)
+            
+            // If scores are equal, randomize to avoid predictable patterns
+            if score1 == score2 {
+                return Bool.random()
+            }
+            
+            return score1 < score2
+        }
+    }
+    
+    /// Calculate a learning score for card ordering (0-1000, lower = needs more practice)
+    private func calculateLearningScore(for card: FlashCard) -> Int {
+        // Base score from learning percentage (0-100)
+        let percentageScore = card.learningPercentage ?? 0
+        
+        // Bonus for times shown (more exposure = later in deck)
+        let exposureBonus = min(card.timesShown * 10, 100)
+        
+        // Bonus for consecutive correct answers
+        let correctBonus = min(card.timesCorrect * 20, 200)
+        
+        // Penalty for recent failures (if percentage is low despite attempts)
+        let failurePenalty = card.timesShown > 0 && card.learningPercentage != nil && card.learningPercentage! < 50 ? -50 : 0
+        
+        // Cards never shown get priority (score 0)
+        if card.timesShown == 0 {
+            return 0
+        }
+        
+        return percentageScore + exposureBonus + correctBonus + failurePenalty
+    }
+    
     func canDeleteDeck(_ deck: Deck) -> Bool {
         // Prevent deletion of special learning decks
         return deck.name != "Uncategorized" && deck.name != "Learnt" && deck.name != "Learning"

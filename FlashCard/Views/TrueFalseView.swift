@@ -37,8 +37,10 @@ struct TrueFalseView: View {
     
     init(viewModel: FlashCardViewModel, cards: [FlashCard], deckIds: [UUID] = [], shouldLoadSaveState: Bool = false) {
         self.viewModel = viewModel
-        self.cards = cards
-        _remainingCards = State(initialValue: cards)
+        // Apply intelligent ordering: less-known cards first, well-known cards later
+        let sortedCards = viewModel.sortCardsForLearning(cards)
+        self.cards = sortedCards
+        _remainingCards = State(initialValue: sortedCards)
         self.deckIds = deckIds
         self.shouldLoadSaveState = shouldLoadSaveState
     }
@@ -445,7 +447,7 @@ struct TrueFalseView: View {
     }
     
     private func saveCurrentProgress() {
-        guard !deckIds.isEmpty && hasSignificantProgress else { return }
+        guard hasSignificantProgress else { return }
         
         let gameState = TrueFalseGameState(
             currentIndex: currentIndex,
@@ -459,7 +461,6 @@ struct TrueFalseView: View {
         
         SaveStateManager.shared.saveGameState(
             gameType: .trueFalse,
-            deckIds: deckIds,
             gameData: gameState
         )
         
@@ -467,14 +468,8 @@ struct TrueFalseView: View {
     }
     
     private func loadSavedProgress() {
-        guard !deckIds.isEmpty else { 
-            resetGame()
-            return 
-        }
-        
         if let savedState = SaveStateManager.shared.loadGameState(
             gameType: .trueFalse,
-            deckIds: deckIds,
             as: TrueFalseGameState.self
         ) {
             // Restore state
@@ -515,12 +510,7 @@ struct TrueFalseView: View {
     }
     
     private func clearSavedProgress() {
-        guard !deckIds.isEmpty else { return }
-        
-        SaveStateManager.shared.deleteSaveState(
-            gameType: .trueFalse,
-            deckIds: deckIds
-        )
+        SaveStateManager.shared.deleteSaveState(gameType: .trueFalse)
     }
 }
 

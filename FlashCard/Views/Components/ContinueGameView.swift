@@ -8,7 +8,7 @@ struct ContinueGameView: View {
     let onStartFresh: () -> Void
     let onCancel: () -> Void
     
-    @State private var saveStateInfo: (date: Date, deckCount: Int)?
+    @State private var saveDate: Date?
     
     var body: some View {
         VStack(spacing: 20) {
@@ -29,12 +29,12 @@ struct ContinueGameView: View {
             .padding(.top)
             
             // Save State Info
-            if let info = saveStateInfo {
+            if let date = saveDate {
                 VStack(spacing: 8) {
                     HStack {
                         Image(systemName: "clock")
                             .foregroundColor(.secondary)
-                        Text("Last played: \(formatDate(info.date))")
+                        Text("Last played: \(formatDate(date))")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                     }
@@ -42,7 +42,7 @@ struct ContinueGameView: View {
                     HStack {
                         Image(systemName: "rectangle.stack")
                             .foregroundColor(.secondary)
-                        Text("\(cardCount) cards from \(info.deckCount) deck\(info.deckCount == 1 ? "" : "s")")
+                        Text("\(cardCount) cards selected")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                     }
@@ -119,10 +119,7 @@ struct ContinueGameView: View {
     }
     
     private func loadSaveStateInfo() {
-        saveStateInfo = SaveStateManager.shared.getSaveStateInfo(
-            gameType: gameType,
-            deckIds: deckIds
-        )
+        saveDate = SaveStateManager.shared.getSaveStateInfo(gameType: gameType)
     }
     
     private func formatDate(_ date: Date) -> String {
