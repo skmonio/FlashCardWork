@@ -1,0 +1,26 @@
+<key>CFBundleDocumentTypes</key>
+<array>
+  <dict>
+    <key>CFBundleTypeName</key>
+    <string>CSV Document</string>
+    <key>LSHandlerRank</key>
+    <string>Alternate</string>
+    <key>LSItemContentTypes</key>
+    <array>
+      <string>public.comma-separated-values-text</string>
+      <string>public.text</string>
+    </array>
+  </dict>
+</array>
+
+<key>LSSupportsOpeningDocumentsInPlace</key>
+<true/>
+
+<key>UIFileSharingEnabled</key>
+<true/>
+
+<key>NSDocumentsFolderUsageDescription</key>
+<string>Access is needed to import and export flashcard data</string>
+
+<key>NSDownloadsFolderUsageDescription</key>
+<string>Access is needed to import flashcard data from your downloads</string> 

@@ -14,11 +14,12 @@ struct EditCardView: View {
     @State private var showingNewDeckSheet = false
     @State private var newDeckName = ""
     
-    // Dutch language features
+    // New verb form structure
+    @State private var selectedVerbForm: VerbForm = .infinitive
+    
+    // Dutch language features (keeping article for nouns)
     @State private var isDeSelected: Bool = false
     @State private var isHetSelected: Bool = false
-    @State private var pastTense: String = ""
-    @State private var futureTense: String = ""
     
     // Translation features
     @State private var translationConfiguration: TranslationSession.Configuration?
@@ -38,11 +39,12 @@ struct EditCardView: View {
         _example = State(initialValue: card.example)
         _selectedDeckIds = State(initialValue: card.deckIds)
         
+        // Initialize new verb form field
+        _selectedVerbForm = State(initialValue: card.verbForm)
+        
         // Initialize Dutch language fields
         _isDeSelected = State(initialValue: card.article == "de")
         _isHetSelected = State(initialValue: card.article == "het")
-        _pastTense = State(initialValue: card.pastTense ?? "")
-        _futureTense = State(initialValue: card.futureTense ?? "")
     }
     
     private var card: FlashCard? {
@@ -79,10 +81,8 @@ struct EditCardView: View {
                     let trimmedWord = word.trimmingCharacters(in: .whitespacesAndNewlines)
                     let trimmedDefinition = definition.trimmingCharacters(in: .whitespacesAndNewlines)
                     let trimmedExample = example.trimmingCharacters(in: .whitespacesAndNewlines)
-                    let trimmedPastTense = pastTense.trimmingCharacters(in: .whitespacesAndNewlines)
-                    let trimmedFutureTense = futureTense.trimmingCharacters(in: .whitespacesAndNewlines)
                     
-                    logger.debug("Updating card with values - Word: \(trimmedWord), Definition: \(trimmedDefinition)")
+                    logger.debug("Updating card with values - Word: \(trimmedWord), Definition: \(trimmedDefinition), Verb Form: \(selectedVerbForm.description)")
                     
                     // Update the card
                     viewModel.updateCard(
@@ -91,9 +91,8 @@ struct EditCardView: View {
                         definition: trimmedDefinition,
                         example: trimmedExample,
                         deckIds: selectedDeckIds,
-                        article: isDeSelected ? "de" : (isHetSelected ? "het" : nil),
-                        pastTense: trimmedPastTense.isEmpty ? nil : trimmedPastTense,
-                        futureTense: trimmedFutureTense.isEmpty ? nil : trimmedFutureTense
+                        verbForm: selectedVerbForm,
+                        article: isDeSelected ? "de" : (isHetSelected ? "het" : nil)
                     )
                     
                     // Force a save to UserDefaults
@@ -121,10 +120,27 @@ struct EditCardView: View {
             // Main content
             Form {
                 Section(header: Text("Card Details")) {
+                    // Verb Form Picker
                     VStack(alignment: .leading, spacing: 8) {
-                        // Word field with speech controls
+                        Text("Word Type")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        
+                        Picker("Verb Form", selection: $selectedVerbForm) {
+                            ForEach(VerbForm.allCases, id: \.self) { form in
+                                Text(form.description).tag(form)
+                            }
+                        }
+                        .pickerStyle(MenuPickerStyle())
+                        .onChange(of: selectedVerbForm) { oldValue, newValue in
+                            logger.debug("Verb form changed from \(oldValue.description) to \(newValue.description)")
+                        }
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 8) {
+                        // Word field with speech controls and dynamic placeholder
                         HStack(spacing: 8) {
-                            TextField("Word (Dutch)", text: $word)
+                            TextField(selectedVerbForm.placeholder, text: $word)
                                 .onChange(of: word) { oldValue, newValue in
                                     logger.debug("Word changed from '\(oldValue)' to '\(newValue)'")
                                     // Trigger translation suggestion for Dutch words
@@ -186,14 +202,14 @@ struct EditCardView: View {
                         }
                     }
                     
-                    TextField("Definition (English)", text: $definition)
+                    TextField(selectedVerbForm.translationPlaceholder, text: $definition)
                         .onChange(of: definition) { oldValue, newValue in
                             logger.debug("Definition changed from '\(oldValue)' to '\(newValue)'")
                         }
                     
-                    // Example field with speech controls
+                    // Example field with speech controls and dynamic placeholder
                     HStack(spacing: 8) {
-                        TextField("Example (Optional)", text: $example)
+                        TextField(selectedVerbForm.examplePlaceholder, text: $example)
                             .onChange(of: example) { oldValue, newValue in
                                 logger.debug("Example changed from '\(oldValue)' to '\(newValue)'")
                             }
@@ -234,67 +250,52 @@ struct EditCardView: View {
                 }
                 
                 Section(header: Text("Dutch Language Features (Optional)")) {
-                    // Article selection
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Article")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                        
-                        HStack(spacing: 20) {
-                            // De checkbox
-                            Button(action: {
-                                if isDeSelected {
-                                    isDeSelected = false // Uncheck if already selected
-                                } else {
-                                    isDeSelected = true
-                                    isHetSelected = false // Uncheck het if de is selected
-                                }
-                            }) {
-                                HStack {
-                                    Image(systemName: isDeSelected ? "checkmark.square.fill" : "square")
-                                        .foregroundColor(isDeSelected ? .blue : .gray)
-                                    Text("de")
-                                        .foregroundColor(.primary)
-                                }
-                            }
-                            .buttonStyle(PlainButtonStyle())
+                    // Article selection (only show for nouns/infinitives)
+                    if selectedVerbForm == .infinitive {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Article (for nouns)")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
                             
-                            // Het checkbox
-                            Button(action: {
-                                if isHetSelected {
-                                    isHetSelected = false // Uncheck if already selected
-                                } else {
-                                    isHetSelected = true
-                                    isDeSelected = false // Uncheck de if het is selected
+                            HStack(spacing: 20) {
+                                // De checkbox
+                                Button(action: {
+                                    if isDeSelected {
+                                        isDeSelected = false // Uncheck if already selected
+                                    } else {
+                                        isDeSelected = true
+                                        isHetSelected = false // Uncheck het if de is selected
+                                    }
+                                }) {
+                                    HStack {
+                                        Image(systemName: isDeSelected ? "checkmark.square.fill" : "square")
+                                            .foregroundColor(isDeSelected ? .blue : .gray)
+                                        Text("de")
+                                            .foregroundColor(.primary)
+                                    }
                                 }
-                            }) {
-                                HStack {
-                                    Image(systemName: isHetSelected ? "checkmark.square.fill" : "square")
-                                        .foregroundColor(isHetSelected ? .blue : .gray)
-                                    Text("het")
-                                        .foregroundColor(.primary)
+                                .buttonStyle(PlainButtonStyle())
+                                
+                                // Het checkbox
+                                Button(action: {
+                                    if isHetSelected {
+                                        isHetSelected = false // Uncheck if already selected
+                                    } else {
+                                        isHetSelected = true
+                                        isDeSelected = false // Uncheck de if het is selected
+                                    }
+                                }) {
+                                    HStack {
+                                        Image(systemName: isHetSelected ? "checkmark.square.fill" : "square")
+                                            .foregroundColor(isHetSelected ? .blue : .gray)
+                                        Text("het")
+                                            .foregroundColor(.primary)
+                                    }
                                 }
+                                .buttonStyle(PlainButtonStyle())
+                                
+                                Spacer()
                             }
-                            .buttonStyle(PlainButtonStyle())
-                            
-                            Spacer()
-                        }
-                    }
-                    
-                    // Tense fields with speech controls
-                    HStack(spacing: 8) {
-                        TextField("Past Tense (Optional)", text: $pastTense)
-                        
-                        if !pastTense.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                            DutchSpeechControlView(text: pastTense, mode: .minimal)
-                        }
-                    }
-                    
-                    HStack(spacing: 8) {
-                        TextField("Future Tense (Optional)", text: $futureTense)
-                        
-                        if !futureTense.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                            DutchSpeechControlView(text: futureTense, mode: .minimal)
                         }
                     }
                 }
@@ -432,24 +433,18 @@ struct EditCardView: View {
         isTranslating = true
         lastTranslatedWord = trimmedWord
         
-        // Debounce translation requests
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-            // Only proceed if the word hasn't changed
-            guard self.word.trimmingCharacters(in: .whitespacesAndNewlines) == trimmedWord else {
-                self.isTranslating = false
-                return
-            }
-            
-            // Configure translation from Dutch to English
-            if self.translationConfiguration == nil {
-                self.translationConfiguration = TranslationSession.Configuration(
-                    source: Locale.Language(identifier: "nl"), // Dutch
-                    target: Locale.Language(identifier: "en")  // English
-                )
-            } else {
-                // Invalidate to trigger new translation
-                self.translationConfiguration?.invalidate()
-            }
-        }
+        // Set up translation configuration
+        translationConfiguration = TranslationSession.Configuration(
+            source: Locale.Language(identifier: "nl"),
+            target: Locale.Language(identifier: "en")
+        )
+    }
+}
+
+struct EditCardView_Previews: PreviewProvider {
+    static var previews: some View {
+        let viewModel = FlashCardViewModel()
+        let sampleCard = FlashCard(word: "eten", definition: "to eat", example: "Ik wil eten.")
+        EditCardView(viewModel: viewModel, card: sampleCard)
     }
 } 

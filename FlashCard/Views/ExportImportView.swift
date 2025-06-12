@@ -161,7 +161,12 @@ struct ExportImportView: View {
             }
             .fileImporter(
                 isPresented: $showingImportPicker,
-                allowedContentTypes: [.commaSeparatedText, .plainText],
+                allowedContentTypes: [
+                    UTType.commaSeparatedText,
+                    UTType.plainText,
+                    UTType.text,
+                    UTType.data
+                ],
                 allowsMultipleSelection: false
             ) { result in
                 handleImport(result: result)
@@ -190,7 +195,7 @@ struct ExportImportView: View {
             }
             
             if importResult.errors.count > 5 {
-                message += "\n• ... and \(importResult.errors.count - 5) more errors"
+                message += "\n... and \(importResult.errors.count - 5) more errors"
             }
         }
         
@@ -220,14 +225,26 @@ struct ExportImportView: View {
     private func handleImport(result: Result<[URL], Error>) {
         switch result {
         case .success(let urls):
-            guard let url = urls.first else { return }
+            guard let url = urls.first else { 
+                importResult = (0, ["No file selected"])
+                showingImportAlert = true
+                return 
+            }
+            
+            // Start accessing security-scoped resource
+            let accessing = url.startAccessingSecurityScopedResource()
+            defer {
+                if accessing {
+                    url.stopAccessingSecurityScopedResource()
+                }
+            }
             
             do {
-                let csvContent = try String(contentsOf: url)
+                let csvContent = try String(contentsOf: url, encoding: .utf8)
                 importResult = viewModel.importCardsFromCSV(csvContent)
                 showingImportAlert = true
             } catch {
-                importResult = (0, ["Failed to read file: \(error.localizedDescription)"])
+                importResult = (0, ["Failed to read file: \(error.localizedDescription). Make sure the file is a valid text file and you have permission to access it."])
                 showingImportAlert = true
             }
             

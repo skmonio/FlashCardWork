@@ -101,19 +101,22 @@ class FlashCardViewModel: ObservableObject {
             word: "Hallo",
             definition: "Hello",
             example: "Hallo, hoe gaat het?",
-            deckIds: [basicsDeck.id]
+            deckIds: [basicsDeck.id],
+            verbForm: .infinitive
         )
         addCard(
             word: "Dank je wel",
             definition: "Thank you",
             example: "Dank je wel voor je hulp.",
-            deckIds: [basicsDeck.id]
+            deckIds: [basicsDeck.id],
+            verbForm: .infinitive
         )
         addCard(
             word: "Alsjeblieft",
             definition: "Please / Here you are",
             example: "Mag ik een kopje koffie, alsjeblieft?",
-            deckIds: [basicsDeck.id]
+            deckIds: [basicsDeck.id],
+            verbForm: .infinitive
         )
         
         // Family (A1)
@@ -121,19 +124,25 @@ class FlashCardViewModel: ObservableObject {
             word: "Familie",
             definition: "Family",
             example: "Mijn familie woont in Amsterdam.",
-            deckIds: [familyDeck.id]
+            deckIds: [familyDeck.id],
+            verbForm: .infinitive,
+            article: "de"
         )
         addCard(
             word: "Ouders",
             definition: "Parents",
             example: "Mijn ouders komen uit Nederland.",
-            deckIds: [familyDeck.id]
+            deckIds: [familyDeck.id],
+            verbForm: .infinitive,
+            article: "de"
         )
         addCard(
             word: "Broer",
             definition: "Brother",
             example: "Ik heb één broer.",
-            deckIds: [familyDeck.id]
+            deckIds: [familyDeck.id],
+            verbForm: .infinitive,
+            article: "de"
         )
         
         // Food & Drinks (A1)
@@ -141,19 +150,25 @@ class FlashCardViewModel: ObservableObject {
             word: "Brood",
             definition: "Bread",
             example: "Ik eet brood met kaas.",
-            deckIds: [foodDeck.id]
+            deckIds: [foodDeck.id],
+            verbForm: .infinitive,
+            article: "het"
         )
         addCard(
             word: "Koffie",
             definition: "Coffee",
             example: "Wil je een kopje koffie?",
-            deckIds: [foodDeck.id]
+            deckIds: [foodDeck.id],
+            verbForm: .infinitive,
+            article: "de"
         )
         addCard(
             word: "Water",
             definition: "Water",
             example: "Mag ik een glas water?",
-            deckIds: [foodDeck.id]
+            deckIds: [foodDeck.id],
+            verbForm: .infinitive,
+            article: "het"
         )
         
         // Numbers & Time (A1)
@@ -161,39 +176,63 @@ class FlashCardViewModel: ObservableObject {
             word: "Een",
             definition: "One",
             example: "Ik heb een kat.",
-            deckIds: [numbersDeck.id]
+            deckIds: [numbersDeck.id],
+            verbForm: .infinitive
         )
         addCard(
             word: "Tijd",
             definition: "Time",
             example: "Hoe laat is het?",
-            deckIds: [numbersDeck.id]
+            deckIds: [numbersDeck.id],
+            verbForm: .infinitive,
+            article: "de"
         )
         addCard(
             word: "Uur",
             definition: "Hour",
             example: "Het is twee uur.",
-            deckIds: [numbersDeck.id]
+            deckIds: [numbersDeck.id],
+            verbForm: .infinitive,
+            article: "het"
         )
         
-        // Daily Life (A2)
+        // Daily Life (A2) - Including verb examples
         addCard(
-            word: "Werken",
-            definition: "To work",
+            word: "werken",
+            definition: "to work",
+            example: "Ik wil werken in een kantoor.",
+            deckIds: [dailyDeck.id],
+            verbForm: .infinitive
+        )
+        addCard(
+            word: "werk",
+            definition: "work / works",
             example: "Ik werk in een kantoor.",
-            deckIds: [dailyDeck.id]
+            deckIds: [dailyDeck.id],
+            verbForm: .present
+        )
+        addCard(
+            word: "werkte",
+            definition: "worked",
+            example: "Ik werkte gisteren laat.",
+            deckIds: [dailyDeck.id],
+            verbForm: .pastTense
         )
         addCard(
             word: "Boodschappen",
             definition: "Groceries",
             example: "Ik ga boodschappen doen.",
-            deckIds: [dailyDeck.id]
+            deckIds: [dailyDeck.id],
+            verbForm: .infinitive,
+            article: "de"
         )
         addCard(
             word: "Afspraak",
             definition: "Appointment",
             example: "Ik heb een afspraak met de dokter.",
-            deckIds: [dailyDeck.id]
+            deckIds: [dailyDeck.id],
+            verbForm: .infinitive,
+            article: "de"
         )
         
         // Weather (A2)
@@ -201,19 +240,24 @@ class FlashCardViewModel: ObservableObject {
             word: "Weer",
             definition: "Weather",
             example: "Het weer is mooi vandaag.",
-            deckIds: [weatherDeck.id]
+            deckIds: [weatherDeck.id],
+            verbForm: .infinitive,
+            article: "het"
         )
         addCard(
             word: "Regen",
             definition: "Rain",
             example: "Het regent vandaag.",
-            deckIds: [weatherDeck.id]
+            deckIds: [weatherDeck.id],
+            verbForm: .infinitive,
+            article: "de"
         )
         addCard(
             word: "Zonnig",
             definition: "Sunny",
             example: "Het is zonnig buiten.",
-            deckIds: [weatherDeck.id]
+            deckIds: [weatherDeck.id],
+            verbForm: .infinitive
         )
     }
     
@@ -274,16 +318,15 @@ class FlashCardViewModel: ObservableObject {
         saveDecks()
     }
     
-    func addCard(word: String, definition: String, example: String, deckIds: Set<UUID>, article: String? = nil, pastTense: String? = nil, futureTense: String? = nil, cardId: UUID? = nil) -> FlashCard {
+    func addCard(word: String, definition: String, example: String, deckIds: Set<UUID>, verbForm: VerbForm = .infinitive, article: String? = nil, cardId: UUID? = nil) -> FlashCard {
         print("Adding new card")
         let newCard = FlashCard(
             word: word, 
             definition: definition, 
             example: example, 
             deckIds: deckIds,
+            verbForm: verbForm,
             article: article,
-            pastTense: pastTense,
-            futureTense: futureTense,
             cardId: cardId
         )
         flashCards.append(newCard)
@@ -291,15 +334,14 @@ class FlashCardViewModel: ObservableObject {
         return newCard
     }
     
-    func updateCard(_ card: FlashCard, word: String, definition: String, example: String, deckIds: Set<UUID>, article: String? = nil, pastTense: String? = nil, futureTense: String? = nil) {
+    func updateCard(_ card: FlashCard, word: String, definition: String, example: String, deckIds: Set<UUID>, verbForm: VerbForm = .infinitive, article: String? = nil) {
         if let index = flashCards.firstIndex(where: { $0.id == card.id }) {
             flashCards[index].word = word
             flashCards[index].definition = definition
             flashCards[index].example = example
             flashCards[index].deckIds = deckIds
+            flashCards[index].verbForm = verbForm
             flashCards[index].article = article
-            flashCards[index].pastTense = pastTense
-            flashCards[index].futureTense = futureTense
             updateCardDeckAssociations()
         }
     }
