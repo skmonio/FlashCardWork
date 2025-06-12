@@ -67,10 +67,12 @@ class HapticManager {
     /// Test/Quiz interactions
     func correctAnswer() {
         successNotification()
+        SoundManager.shared.playCorrectSound() // Add tick sound for correct answers
     }
     
     func wrongAnswer() {
         errorNotification()
+        SoundManager.shared.playIncorrectSound() // Add tock sound for incorrect answers
     }
     
     func questionAdvance() {
@@ -89,6 +91,7 @@ class HapticManager {
     func gameComplete() {
         // Double success for emphasis
         successNotification()
+        SoundManager.shared.playSuccessSound() // Add success sound for game completion
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             self.heavyImpact()
         }
