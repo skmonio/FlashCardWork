@@ -476,10 +476,65 @@ class FlashCardViewModel: ObservableObject {
     // MARK: - Export Functionality
     
     func exportCardsToCSV() -> String {
+        print("🔍 Export Debug: Starting exportCardsToCSV")
+        print("🔍 Export Debug: flashCards.count = \(flashCards.count)")
+        
         let headers = ["Word", "Translation", "Example", "Article", "Plural", "Past Tense", "Future Tense", "Past Participle", "Decks", "Success Count", "Times Shown", "Times Correct"]
         var csvContent = headers.joined(separator: ",") + "\n"
         
-        for card in flashCards {
+        print("🔍 Export Debug: Headers added, csvContent length = \(csvContent.count)")
+        
+        for (index, card) in flashCards.enumerated() {
+            let deckNames = getDeckNamesForCard(card).joined(separator: "; ")
+            
+            let row = [
+                escapeCSVField(card.word),
+                escapeCSVField(card.definition),
+                escapeCSVField(card.example),
+                escapeCSVField(card.article),
+                escapeCSVField(card.plural),
+                escapeCSVField(card.pastTense),
+                escapeCSVField(card.futureTense),
+                escapeCSVField(card.pastParticiple),
+                escapeCSVField(deckNames),
+                String(card.successCount),
+                String(card.timesShown),
+                String(card.timesCorrect)
+            ]
+            
+            csvContent += row.joined(separator: ",") + "\n"
+            
+            if index < 3 { // Log first 3 cards for debugging
+                print("🔍 Export Debug: Card \(index + 1): \(card.word) -> \(card.definition)")
+            }
+        }
+        
+        print("🔍 Export Debug: Final csvContent length = \(csvContent.count)")
+        print("🔍 Export Debug: First 200 chars: \(String(csvContent.prefix(200)))")
+        
+        return csvContent
+    }
+    
+    func exportDeckToCSV(_ deck: Deck) -> String {
+        let headers = ["Word", "Translation", "Example", "Article", "Plural", "Past Tense", "Future Tense", "Past Participle", "Decks", "Success Count", "Times Shown", "Times Correct"]
+        var csvContent = headers.joined(separator: ",") + "\n"
+        
+        // Collect all cards from this deck and its sub-decks
+        var allCards: Set<FlashCard> = []
+        
+        // Add cards from this deck
+        allCards.formUnion(Set(deck.cards))
+        
+        // Add cards from all sub-decks
+        let subDecks = getSubDecks(for: deck.id)
+        for subDeck in subDecks {
+            allCards.formUnion(Set(subDeck.cards))
+        }
+        
+        // Convert to sorted array for consistent output
+        let sortedCards = Array(allCards).sorted { $0.word.localizedCaseInsensitiveCompare($1.word) == .orderedAscending }
+        
+        for card in sortedCards {
             let deckNames = getDeckNamesForCard(card).joined(separator: "; ")
             
             let row = [
@@ -503,11 +558,32 @@ class FlashCardViewModel: ObservableObject {
         return csvContent
     }
     
-    func exportDeckToCSV(_ deck: Deck) -> String {
-        let headers = ["Word", "Translation", "Example", "Article", "Plural", "Past Tense", "Future Tense", "Past Participle", "Success Count", "Times Shown", "Times Correct"]
+    func exportMultipleDecksToCSV(_ deckIds: Set<UUID>) -> String {
+        let headers = ["Word", "Translation", "Example", "Article", "Plural", "Past Tense", "Future Tense", "Past Participle", "Decks", "Success Count", "Times Shown", "Times Correct"]
         var csvContent = headers.joined(separator: ",") + "\n"
         
-        for card in deck.cards {
+        // Collect all cards from selected decks (including hierarchy)
+        var allCards: Set<FlashCard> = []
+        
+        for deckId in deckIds {
+            if let deck = decks.first(where: { $0.id == deckId }) {
+                // Add cards from this deck
+                allCards.formUnion(Set(deck.cards))
+                
+                // Add cards from all sub-decks
+                let subDecks = getSubDecks(for: deck.id)
+                for subDeck in subDecks {
+                    allCards.formUnion(Set(subDeck.cards))
+                }
+            }
+        }
+        
+        // Convert to sorted array for consistent output
+        let sortedCards = Array(allCards).sorted { $0.word.localizedCaseInsensitiveCompare($1.word) == .orderedAscending }
+        
+        for card in sortedCards {
+            let deckNames = getDeckNamesForCard(card).joined(separator: "; ")
+            
             let row = [
                 escapeCSVField(card.word),
                 escapeCSVField(card.definition),
@@ -517,6 +593,7 @@ class FlashCardViewModel: ObservableObject {
                 escapeCSVField(card.pastTense),
                 escapeCSVField(card.futureTense),
                 escapeCSVField(card.pastParticiple),
+                escapeCSVField(deckNames),
                 String(card.successCount),
                 String(card.timesShown),
                 String(card.timesCorrect)
@@ -526,6 +603,18 @@ class FlashCardViewModel: ObservableObject {
         }
         
         return csvContent
+    }
+    
+    func getTotalCardsInDeckHierarchy(_ deck: Deck) -> Int {
+        var totalCards = deck.cards.count
+        
+        // Add cards from all sub-decks
+        let subDecks = getSubDecks(for: deck.id)
+        for subDeck in subDecks {
+            totalCards += subDeck.cards.count
+        }
+        
+        return totalCards
     }
     
     private func getDeckNamesForCard(_ card: FlashCard) -> [String] {

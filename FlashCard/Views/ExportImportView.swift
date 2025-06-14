@@ -12,11 +12,14 @@ struct ExportImportView: View {
     @State private var exportContent = ""
     @State private var selectedExportOption: ExportOption = .allCards
     @State private var showingSimulatorAlert = false
+    @State private var selectedDeckIds: Set<UUID> = []
+    @State private var showingMultiDeckSelection = false
 
     
     enum ExportOption: Hashable, Equatable {
         case allCards
         case specificDeck(Deck)
+        case multipleDecks
         
         var title: String {
             switch self {
@@ -24,6 +27,8 @@ struct ExportImportView: View {
                 return "All Cards"
             case .specificDeck(let deck):
                 return deck.name
+            case .multipleDecks:
+                return "Multiple Decks"
             }
         }
         
@@ -35,6 +40,8 @@ struct ExportImportView: View {
             case .specificDeck(let deck):
                 hasher.combine("specificDeck")
                 hasher.combine(deck.id)
+            case .multipleDecks:
+                hasher.combine("multipleDecks")
             }
         }
         
@@ -45,6 +52,8 @@ struct ExportImportView: View {
                 return true
             case (.specificDeck(let deck1), .specificDeck(let deck2)):
                 return deck1.id == deck2.id
+            case (.multipleDecks, .multipleDecks):
+                return true
             default:
                 return false
             }
@@ -63,14 +72,43 @@ struct ExportImportView: View {
                         Picker("Export Options", selection: $selectedExportOption) {
                             Text("All Cards (\(viewModel.flashCards.count) cards)").tag(ExportOption.allCards)
                             
+                            Text("Multiple Decks (Select...)").tag(ExportOption.multipleDecks)
+                            
                             ForEach(viewModel.getAllDecksHierarchical()) { deck in
                                 if deck.name != "Uncategorized" {
-                                    Text("\(deck.displayName) (\(deck.cards.count) cards)")
+                                    let cardCount = viewModel.getTotalCardsInDeckHierarchy(deck)
+                                    let displayName = deck.isSubDeck ? "    ↳ \(deck.name)" : deck.name
+                                    Text("\(displayName) (\(cardCount) cards)")
                                         .tag(ExportOption.specificDeck(deck))
                                 }
                             }
                         }
                         .pickerStyle(MenuPickerStyle())
+                        
+                        // Multi-deck selection button
+                        if selectedExportOption == .multipleDecks {
+                            Button(action: {
+                                showingMultiDeckSelection = true
+                            }) {
+                                HStack {
+                                    Image(systemName: "checkmark.square")
+                                    if selectedDeckIds.isEmpty {
+                                        Text("Select Decks to Export")
+                                    } else {
+                                        Text("\(selectedDeckIds.count) Decks Selected")
+                                    }
+                                    Spacer()
+                                    Image(systemName: "chevron.right")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                                .foregroundColor(.blue)
+                                .padding(.vertical, 8)
+                                .padding(.horizontal, 12)
+                                .background(Color.blue.opacity(0.1))
+                                .cornerRadius(8)
+                            }
+                        }
                         
                         Button(action: {
                             exportToCSV()
@@ -85,7 +123,8 @@ struct ExportImportView: View {
                             }
                             .foregroundColor(.blue)
                         }
-                        .disabled(viewModel.flashCards.isEmpty)
+                        .disabled(viewModel.flashCards.isEmpty || 
+                                 (selectedExportOption == .multipleDecks && selectedDeckIds.isEmpty))
                     }
                 }
                 
@@ -161,6 +200,12 @@ struct ExportImportView: View {
             .sheet(isPresented: $showingExportSheet) {
                 ShareSheet(activityItems: [exportContent])
             }
+            .sheet(isPresented: $showingMultiDeckSelection) {
+                MultiDeckSelectionView(
+                    viewModel: viewModel,
+                    selectedDeckIds: $selectedDeckIds
+                )
+            }
             .fileImporter(
                 isPresented: $showingImportPicker,
                 allowedContentTypes: [
@@ -205,12 +250,22 @@ struct ExportImportView: View {
     }
     
     private func exportToCSV() {
+        print("🔍 UI Export Debug: Starting export with option: \(selectedExportOption)")
+        
         switch selectedExportOption {
         case .allCards:
+            print("🔍 UI Export Debug: Exporting all cards")
             exportContent = viewModel.exportCardsToCSV()
         case .specificDeck(let deck):
+            print("🔍 UI Export Debug: Exporting deck: \(deck.name)")
             exportContent = viewModel.exportDeckToCSV(deck)
+        case .multipleDecks:
+            print("🔍 UI Export Debug: Exporting multiple decks: \(selectedDeckIds.count) selected")
+            exportContent = viewModel.exportMultipleDecksToCSV(selectedDeckIds)
         }
+        
+        print("🔍 UI Export Debug: Export content length: \(exportContent.count)")
+        print("🔍 UI Export Debug: Export content preview: \(String(exportContent.prefix(200)))")
         
         #if targetEnvironment(simulator)
         // In simulator, just show the content and inform user
@@ -326,5 +381,95 @@ struct MonospacedFontModifier: ViewModifier {
 struct ExportImportView_Previews: PreviewProvider {
     static var previews: some View {
         ExportImportView(viewModel: FlashCardViewModel())
+    }
+}
+
+// MARK: - Multi-Deck Selection View
+
+struct MultiDeckSelectionView: View {
+    @ObservedObject var viewModel: FlashCardViewModel
+    @Binding var selectedDeckIds: Set<UUID>
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        NavigationStack {
+            List {
+                Section(header: Text("Select Decks to Export")) {
+                    ForEach(viewModel.getAllDecksHierarchical()) { deck in
+                        if deck.name != "Uncategorized" {
+                            Button(action: {
+                                if selectedDeckIds.contains(deck.id) {
+                                    selectedDeckIds.remove(deck.id)
+                                } else {
+                                    selectedDeckIds.insert(deck.id)
+                                }
+                            }) {
+                                HStack {
+                                    if deck.isSubDeck {
+                                        HStack(spacing: 4) {
+                                            Text("    ↳")
+                                                .foregroundColor(.secondary)
+                                            Text(deck.name)
+                                        }
+                                    } else {
+                                        Text(deck.name)
+                                    }
+                                    
+                                    Spacer()
+                                    
+                                    let cardCount = viewModel.getTotalCardsInDeckHierarchy(deck)
+                                    Text("\(cardCount) cards")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    
+                                    if selectedDeckIds.contains(deck.id) {
+                                        Image(systemName: "checkmark.circle.fill")
+                                            .foregroundColor(.blue)
+                                    } else {
+                                        Image(systemName: "circle")
+                                            .foregroundColor(.gray)
+                                    }
+                                }
+                            }
+                            .foregroundColor(.primary)
+                        }
+                    }
+                }
+                
+                if !selectedDeckIds.isEmpty {
+                    Section {
+                        let totalCards = selectedDeckIds.reduce(0) { total, deckId in
+                            if let deck = viewModel.decks.first(where: { $0.id == deckId }) {
+                                return total + viewModel.getTotalCardsInDeckHierarchy(deck)
+                            }
+                            return total
+                        }
+                        
+                        HStack {
+                            Text("Total cards to export:")
+                            Spacer()
+                            Text("\(totalCards)")
+                                .fontWeight(.semibold)
+                        }
+                        .foregroundColor(.blue)
+                    }
+                }
+            }
+            .navigationTitle("Select Decks")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                    .fontWeight(.semibold)
+                }
+            }
+        }
     }
 } 
