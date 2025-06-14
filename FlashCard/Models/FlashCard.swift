@@ -1,66 +1,8 @@
 import Foundation
 
-// Enum for different verb forms
-enum VerbForm: String, CaseIterable, Codable {
-    case infinitive = "Infinitive"
-    case present = "Present"
-    case pastTense = "Past tense"
-    case futureTense = "Future tense"
-    case pastParticiple = "Past participle"
-    
-    var description: String {
-        return self.rawValue
-    }
-    
-    var placeholder: String {
-        switch self {
-        case .infinitive:
-            return "e.g., eten"
-        case .present:
-            return "e.g., eet (ik/jij)"
-        case .pastTense:
-            return "e.g., at"
-        case .futureTense:
-            return "e.g., zal eten"
-        case .pastParticiple:
-            return "e.g., gegeten"
-        }
-    }
-    
-    var translationPlaceholder: String {
-        switch self {
-        case .infinitive:
-            return "e.g., to eat"
-        case .present:
-            return "e.g., eat / eats"
-        case .pastTense:
-            return "e.g., ate"
-        case .futureTense:
-            return "e.g., will eat"
-        case .pastParticiple:
-            return "e.g., eaten"
-        }
-    }
-    
-    var examplePlaceholder: String {
-        switch self {
-        case .infinitive:
-            return "e.g., Ik wil eten."
-        case .present:
-            return "e.g., Ik eet een appel."
-        case .pastTense:
-            return "e.g., Ik at een appel."
-        case .futureTense:
-            return "e.g., Ik zal eten om zes uur."
-        case .pastParticiple:
-            return "e.g., Ik heb een appel gegeten."
-        }
-    }
-}
-
 struct FlashCard: Identifiable, Codable, Hashable {
     var id = UUID()
-    var word: String // Now represents the infinitive/stem form
+    var word: String
     var definition: String // Translation
     var example: String
     var deckIds: Set<UUID>
@@ -71,11 +13,12 @@ struct FlashCard: Identifiable, Codable, Hashable {
     var timesShown: Int = 0
     var timesCorrect: Int = 0
     
-    // New verb form structure
-    var verbForm: VerbForm = .infinitive // Default to infinitive
-    
-    // Dutch language features (keeping article for nouns)
-    var article: String? = nil // "het" or "de" for nouns
+    // Additional grammatical fields
+    var article: String = "" // "het" or "de" for nouns
+    var plural: String = "" // Plural form for nouns
+    var pastTense: String = "" // Past tense form
+    var futureTense: String = "" // Future tense form
+    var pastParticiple: String = "" // Past participle form
     
     // Computed property for learning percentage
     var learningPercentage: Int? {
@@ -88,7 +31,7 @@ struct FlashCard: Identifiable, Codable, Hashable {
         return timesCorrect >= 5
     }
     
-    init(word: String = "", definition: String = "", example: String = "", deckIds: Set<UUID> = [], verbForm: VerbForm = .infinitive, article: String? = nil, cardId: UUID? = nil, dateCreated: Date? = nil) {
+    init(word: String = "", definition: String = "", example: String = "", deckIds: Set<UUID> = [], article: String = "", plural: String = "", pastTense: String = "", futureTense: String = "", pastParticiple: String = "", cardId: UUID? = nil, dateCreated: Date? = nil) {
         if let cardId = cardId {
             self.id = cardId
         }
@@ -96,15 +39,18 @@ struct FlashCard: Identifiable, Codable, Hashable {
         self.definition = definition
         self.example = example
         self.deckIds = deckIds
-        self.verbForm = verbForm
+        self.article = article
+        self.plural = plural
+        self.pastTense = pastTense
+        self.futureTense = futureTense
+        self.pastParticiple = pastParticiple
         self.successCount = 0
         self.timesShown = 0
         self.timesCorrect = 0
-        self.article = article
         self.dateCreated = dateCreated ?? Date()
     }
     
-    // Migration initializer to handle old cards with pastTense/futureTense
+    // Migration initializer to handle old cards
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
@@ -117,18 +63,18 @@ struct FlashCard: Identifiable, Codable, Hashable {
         dateCreated = try container.decodeIfPresent(Date.self, forKey: .dateCreated) ?? Date()
         timesShown = try container.decodeIfPresent(Int.self, forKey: .timesShown) ?? 0
         timesCorrect = try container.decodeIfPresent(Int.self, forKey: .timesCorrect) ?? 0
-        article = try container.decodeIfPresent(String.self, forKey: .article)
         
-        // Handle new verbForm field
-        verbForm = try container.decodeIfPresent(VerbForm.self, forKey: .verbForm) ?? .infinitive
-        
-        // Handle migration from old pastTense/futureTense fields (ignore them)
-        // These fields are no longer used but might exist in old data
+        // Handle new fields with defaults for backward compatibility
+        article = try container.decodeIfPresent(String.self, forKey: .article) ?? ""
+        plural = try container.decodeIfPresent(String.self, forKey: .plural) ?? ""
+        pastTense = try container.decodeIfPresent(String.self, forKey: .pastTense) ?? ""
+        futureTense = try container.decodeIfPresent(String.self, forKey: .futureTense) ?? ""
+        pastParticiple = try container.decodeIfPresent(String.self, forKey: .pastParticiple) ?? ""
     }
     
     private enum CodingKeys: String, CodingKey {
         case id, word, definition, example, deckIds, successCount, dateCreated
-        case timesShown, timesCorrect, article, verbForm
+        case timesShown, timesCorrect, article, plural, pastTense, futureTense, pastParticiple
     }
     
     // Implement Hashable

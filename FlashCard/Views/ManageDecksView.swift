@@ -182,8 +182,7 @@ struct ManageDecksView: View {
                     }
                 }
             }
-            .navigationTitle("View Your Cards")
-            .navigationBarTitleDisplayMode(.large)
+            .navigationTitle("Manage Decks")
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     if isSelectionMode {

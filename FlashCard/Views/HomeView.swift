@@ -9,6 +9,7 @@ struct HomeView: View {
     // Navigation state for full-screen forms
     @State private var showingAddCardView = false
     @State private var showingAddDeckView = false
+    @State private var showingImageImportView = false
     
     var body: some View {
         NavigationView {
@@ -39,6 +40,12 @@ struct HomeView: View {
                                         showingAddDeckView = true
                                     }) {
                                         Label("Add Deck", systemImage: "folder.badge.plus")
+                                    }
+                                    
+                                    Button(action: {
+                                        showingImageImportView = true
+                                    }) {
+                                        Label("Import from Image", systemImage: "photo.on.rectangle.angled")
                                     }
                                     
                                     Divider()
@@ -74,6 +81,9 @@ struct HomeView: View {
         .sheet(isPresented: $showingAddDeckView) {
             AddDeckView(viewModel: viewModel)
         }
+        .sheet(isPresented: $showingImageImportView) {
+            ImageImportView(viewModel: viewModel)
+        }
         .alert("Reset Learning Statistics", isPresented: $showingResetAlert) {
             Button("Reset", role: .destructive) {
                 viewModel.resetLearningStatistics()
@@ -88,6 +98,7 @@ struct HomeView: View {
             // Explicitly reset all modal states
             showingAddCardView = false
             showingAddDeckView = false
+            showingImageImportView = false
             showingExportImport = false
             showingResetAlert = false
         }
@@ -146,8 +157,16 @@ struct HomeView: View {
                         .foregroundColor(.secondary)
                         .padding(.horizontal)
                     
-                    NavigationLink(destination: ManageDecksView(viewModel: viewModel)) {
-                        MenuButton(title: "View Your Cards", icon: "folder.fill")
+                    VStack(spacing: 12) {
+                        Button(action: {
+                            showingImageImportView = true
+                        }) {
+                            MenuButton(title: "Import from Image", icon: "photo.on.rectangle.angled")
+                        }
+                        
+                        NavigationLink(destination: ManageDecksView(viewModel: viewModel)) {
+                            MenuButton(title: "View Your Cards", icon: "folder.fill")
+                        }
                     }
                 }
             }

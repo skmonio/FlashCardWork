@@ -9,6 +9,10 @@ struct AddMultipleCardsView: View {
     @State private var showingNewDeckSheet = false
     @State private var newDeckName = ""
     
+    // Duplicate handling
+    @State private var duplicateResults: [Int: FlashCardViewModel.DuplicateCheckResult] = [:]
+    @State private var showingDuplicateSummary = false
+    
     private let logger = Logger(subsystem: "com.flashcards", category: "AddMultipleCardsView")
     
     private var canSave: Bool {
@@ -33,65 +37,42 @@ struct AddMultipleCardsView: View {
                             logger.debug("Word changed for card \(index): \(newValue)")
                         }
                     
-                    TextField("Definition", text: $cardEntries[index].definition)
+                    TextField("Translation", text: $cardEntries[index].definition)
                         .onChange(of: cardEntries[index].definition) { _, newValue in
-                            logger.debug("Definition changed for card \(index): \(newValue)")
+                            logger.debug("Translation changed for card \(index): \(newValue)")
                         }
                     
                     TextField("Example (Optional)", text: $cardEntries[index].example)
                         .onChange(of: cardEntries[index].example) { _, newValue in
                             logger.debug("Example changed for card \(index): \(newValue)")
                         }
-                    
-                    // Dutch language features
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Article (Optional)")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                        
-                        HStack(spacing: 20) {
-                            // De checkbox
-                            Button(action: {
-                                if cardEntries[index].isDeSelected {
-                                    cardEntries[index].isDeSelected = false
-                                } else {
-                                    cardEntries[index].isDeSelected = true
-                                    cardEntries[index].isHetSelected = false
-                                }
-                            }) {
-                                HStack {
-                                    Image(systemName: cardEntries[index].isDeSelected ? "checkmark.square.fill" : "square")
-                                        .foregroundColor(cardEntries[index].isDeSelected ? .blue : .gray)
-                                    Text("de")
-                                        .foregroundColor(.primary)
-                                }
-                            }
-                            .buttonStyle(PlainButtonStyle())
-                            
-                            // Het checkbox
-                            Button(action: {
-                                if cardEntries[index].isHetSelected {
-                                    cardEntries[index].isHetSelected = false
-                                } else {
-                                    cardEntries[index].isHetSelected = true
-                                    cardEntries[index].isDeSelected = false
-                                }
-                            }) {
-                                HStack {
-                                    Image(systemName: cardEntries[index].isHetSelected ? "checkmark.square.fill" : "square")
-                                        .foregroundColor(cardEntries[index].isHetSelected ? .blue : .gray)
-                                    Text("het")
-                                        .foregroundColor(.primary)
-                                }
-                            }
-                            .buttonStyle(PlainButtonStyle())
-                            
-                            Spacer()
+                }
+                
+                Section(header: Text("Additional Grammar (Optional)")) {
+                    TextField("Article (de/het)", text: $cardEntries[index].article)
+                        .onChange(of: cardEntries[index].article) { _, newValue in
+                            logger.debug("Article changed for card \(index): \(newValue)")
                         }
-                    }
                     
-                    TextField("Past Tense (Optional)", text: $cardEntries[index].pastTense)
-                    TextField("Future Tense (Optional)", text: $cardEntries[index].futureTense)
+                    TextField("Plural form", text: $cardEntries[index].plural)
+                        .onChange(of: cardEntries[index].plural) { _, newValue in
+                            logger.debug("Plural changed for card \(index): \(newValue)")
+                        }
+                    
+                    TextField("Past tense", text: $cardEntries[index].pastTense)
+                        .onChange(of: cardEntries[index].pastTense) { _, newValue in
+                            logger.debug("Past tense changed for card \(index): \(newValue)")
+                        }
+                    
+                    TextField("Future tense", text: $cardEntries[index].futureTense)
+                        .onChange(of: cardEntries[index].futureTense) { _, newValue in
+                            logger.debug("Future tense changed for card \(index): \(newValue)")
+                        }
+                    
+                    TextField("Past participle", text: $cardEntries[index].pastParticiple)
+                        .onChange(of: cardEntries[index].pastParticiple) { _, newValue in
+                            logger.debug("Past participle changed for card \(index): \(newValue)")
+                        }
                     
                     if cardEntries.count > 1 {
                         Button(role: .destructive, action: {
@@ -171,32 +152,7 @@ struct AddMultipleCardsView: View {
             },
             trailing: Button("Save") {
                 logger.debug("Save button tapped with \(cardEntries.count) cards")
-                
-                for entry in cardEntries {
-                    let trimmedWord = entry.word.trimmingCharacters(in: .whitespacesAndNewlines)
-                    let trimmedDefinition = entry.definition.trimmingCharacters(in: .whitespacesAndNewlines)
-                    let trimmedExample = entry.example.trimmingCharacters(in: .whitespacesAndNewlines)
-                    let trimmedPastTense = entry.pastTense.trimmingCharacters(in: .whitespacesAndNewlines)
-                    let trimmedFutureTense = entry.futureTense.trimmingCharacters(in: .whitespacesAndNewlines)
-                    
-                    logger.debug("Adding card - Word: \(trimmedWord), Definition: \(trimmedDefinition)")
-                    
-                    viewModel.addCard(
-                        word: trimmedWord,
-                        definition: trimmedDefinition,
-                        example: trimmedExample,
-                        deckIds: selectedDeckIds,
-                        article: entry.isDeSelected ? "de" : (entry.isHetSelected ? "het" : nil),
-                        pastTense: trimmedPastTense.isEmpty ? nil : trimmedPastTense,
-                        futureTense: trimmedFutureTense.isEmpty ? nil : trimmedFutureTense
-                    )
-                }
-                
-                // Force a save to UserDefaults
-                UserDefaults.standard.synchronize()
-                logger.debug("UserDefaults synchronized")
-                
-                dismiss()
+                checkForDuplicatesAndSave()
             }
             .disabled(!canSave)
         )
@@ -223,11 +179,97 @@ struct AddMultipleCardsView: View {
                 )
             }
         }
+        .sheet(isPresented: $showingDuplicateSummary) {
+            DuplicateSummaryView(
+                viewModel: viewModel,
+                cardEntries: cardEntries,
+                duplicateResults: duplicateResults,
+                selectedDeckIds: selectedDeckIds
+            ) { finalEntries in
+                saveFinalCards(finalEntries)
+                dismiss()
+            }
+        }
         .onAppear {
             logger.debug("AddMultipleCardsView appeared")
         }
         .onDisappear {
             logger.debug("AddMultipleCardsView disappeared")
         }
+    }
+    
+    private func checkForDuplicatesAndSave() {
+        var duplicatesFound = false
+        duplicateResults.removeAll()
+        
+        for (index, entry) in cardEntries.enumerated() {
+            let trimmedWord = entry.word.trimmingCharacters(in: .whitespacesAndNewlines)
+            let trimmedDefinition = entry.definition.trimmingCharacters(in: .whitespacesAndNewlines)
+            let trimmedExample = entry.example.trimmingCharacters(in: .whitespacesAndNewlines)
+            let trimmedArticle = entry.article.trimmingCharacters(in: .whitespacesAndNewlines)
+            let trimmedPlural = entry.plural.trimmingCharacters(in: .whitespacesAndNewlines)
+            let trimmedPastTense = entry.pastTense.trimmingCharacters(in: .whitespacesAndNewlines)
+            let trimmedFutureTense = entry.futureTense.trimmingCharacters(in: .whitespacesAndNewlines)
+            let trimmedPastParticiple = entry.pastParticiple.trimmingCharacters(in: .whitespacesAndNewlines)
+            
+            let result = viewModel.checkForDuplicateCard(
+                word: trimmedWord,
+                definition: trimmedDefinition,
+                example: trimmedExample,
+                article: trimmedArticle,
+                plural: trimmedPlural,
+                pastTense: trimmedPastTense,
+                futureTense: trimmedFutureTense,
+                pastParticiple: trimmedPastParticiple
+            )
+            
+            switch result {
+            case .noDuplicate:
+                // No action needed for non-duplicates
+                break
+            case .exactMatch, .partialMatch:
+                duplicateResults[index] = result
+                duplicatesFound = true
+            }
+        }
+        
+        if duplicatesFound {
+            showingDuplicateSummary = true
+        } else {
+            // No duplicates, save all cards directly
+            saveFinalCards(cardEntries)
+            dismiss()
+        }
+    }
+    
+    private func saveFinalCards(_ entries: [CardEntry]) {
+        for entry in entries {
+            let trimmedWord = entry.word.trimmingCharacters(in: .whitespacesAndNewlines)
+            let trimmedDefinition = entry.definition.trimmingCharacters(in: .whitespacesAndNewlines)
+            let trimmedExample = entry.example.trimmingCharacters(in: .whitespacesAndNewlines)
+            let trimmedArticle = entry.article.trimmingCharacters(in: .whitespacesAndNewlines)
+            let trimmedPlural = entry.plural.trimmingCharacters(in: .whitespacesAndNewlines)
+            let trimmedPastTense = entry.pastTense.trimmingCharacters(in: .whitespacesAndNewlines)
+            let trimmedFutureTense = entry.futureTense.trimmingCharacters(in: .whitespacesAndNewlines)
+            let trimmedPastParticiple = entry.pastParticiple.trimmingCharacters(in: .whitespacesAndNewlines)
+            
+            logger.debug("Adding card - Word: \(trimmedWord), Translation: \(trimmedDefinition)")
+            
+            viewModel.addCard(
+                word: trimmedWord,
+                definition: trimmedDefinition,
+                example: trimmedExample,
+                deckIds: selectedDeckIds,
+                article: trimmedArticle,
+                plural: trimmedPlural,
+                pastTense: trimmedPastTense,
+                futureTense: trimmedFutureTense,
+                pastParticiple: trimmedPastParticiple
+            )
+        }
+        
+        // Force a save to UserDefaults
+        UserDefaults.standard.synchronize()
+        logger.debug("UserDefaults synchronized")
     }
 } 

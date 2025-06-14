@@ -101,163 +101,153 @@ class FlashCardViewModel: ObservableObject {
             word: "Hallo",
             definition: "Hello",
             example: "Hallo, hoe gaat het?",
-            deckIds: [basicsDeck.id],
-            verbForm: .infinitive
+            deckIds: [basicsDeck.id]
         )
         addCard(
             word: "Dank je wel",
             definition: "Thank you",
             example: "Dank je wel voor je hulp.",
-            deckIds: [basicsDeck.id],
-            verbForm: .infinitive
+            deckIds: [basicsDeck.id]
         )
         addCard(
             word: "Alsjeblieft",
             definition: "Please / Here you are",
             example: "Mag ik een kopje koffie, alsjeblieft?",
-            deckIds: [basicsDeck.id],
-            verbForm: .infinitive
+            deckIds: [basicsDeck.id]
         )
         
-        // Family (A1)
+        // Family (A1) - Nouns with articles
         addCard(
-            word: "Familie",
-            definition: "Family",
+            word: "familie",
+            definition: "family",
             example: "Mijn familie woont in Amsterdam.",
             deckIds: [familyDeck.id],
-            verbForm: .infinitive,
-            article: "de"
+            article: "de",
+            plural: "families"
         )
         addCard(
-            word: "Ouders",
-            definition: "Parents",
+            word: "ouder",
+            definition: "parent",
             example: "Mijn ouders komen uit Nederland.",
             deckIds: [familyDeck.id],
-            verbForm: .infinitive,
-            article: "de"
+            article: "de",
+            plural: "ouders"
         )
         addCard(
-            word: "Broer",
-            definition: "Brother",
+            word: "broer",
+            definition: "brother",
             example: "Ik heb één broer.",
             deckIds: [familyDeck.id],
-            verbForm: .infinitive,
-            article: "de"
+            article: "de",
+            plural: "broers"
         )
         
-        // Food & Drinks (A1)
+        // Food & Drinks (A1) - Nouns with articles
         addCard(
-            word: "Brood",
-            definition: "Bread",
+            word: "brood",
+            definition: "bread",
             example: "Ik eet brood met kaas.",
             deckIds: [foodDeck.id],
-            verbForm: .infinitive,
-            article: "het"
+            article: "het",
+            plural: "broden"
         )
         addCard(
-            word: "Koffie",
-            definition: "Coffee",
+            word: "koffie",
+            definition: "coffee",
             example: "Wil je een kopje koffie?",
             deckIds: [foodDeck.id],
-            verbForm: .infinitive,
-            article: "de"
+            article: "de",
+            plural: "koffies"
         )
         addCard(
-            word: "Water",
-            definition: "Water",
+            word: "water",
+            definition: "water",
             example: "Mag ik een glas water?",
             deckIds: [foodDeck.id],
-            verbForm: .infinitive,
-            article: "het"
+            article: "het",
+            plural: "waters"
         )
         
         // Numbers & Time (A1)
         addCard(
-            word: "Een",
-            definition: "One",
+            word: "een",
+            definition: "one",
             example: "Ik heb een kat.",
-            deckIds: [numbersDeck.id],
-            verbForm: .infinitive
+            deckIds: [numbersDeck.id]
         )
         addCard(
-            word: "Tijd",
-            definition: "Time",
+            word: "tijd",
+            definition: "time",
             example: "Hoe laat is het?",
             deckIds: [numbersDeck.id],
-            verbForm: .infinitive,
-            article: "de"
+            article: "de",
+            plural: "tijden"
         )
         addCard(
-            word: "Uur",
-            definition: "Hour",
+            word: "uur",
+            definition: "hour",
             example: "Het is twee uur.",
             deckIds: [numbersDeck.id],
-            verbForm: .infinitive,
-            article: "het"
+            article: "het",
+            plural: "uren"
         )
         
-        // Daily Life (A2) - Including verb examples
+        // Daily Life (A2) - Including verb examples with tenses
         addCard(
             word: "werken",
             definition: "to work",
             example: "Ik wil werken in een kantoor.",
             deckIds: [dailyDeck.id],
-            verbForm: .infinitive
+            pastTense: "werkte",
+            futureTense: "zal werken",
+            pastParticiple: "gewerkt"
         )
         addCard(
-            word: "werk",
-            definition: "work / works",
-            example: "Ik werk in een kantoor.",
+            word: "eten",
+            definition: "to eat",
+            example: "Ik wil eten om zes uur.",
             deckIds: [dailyDeck.id],
-            verbForm: .present
+            pastTense: "at",
+            futureTense: "zal eten",
+            pastParticiple: "gegeten"
         )
         addCard(
-            word: "werkte",
-            definition: "worked",
-            example: "Ik werkte gisteren laat.",
-            deckIds: [dailyDeck.id],
-            verbForm: .pastTense
-        )
-        addCard(
-            word: "Boodschappen",
-            definition: "Groceries",
+            word: "boodschap",
+            definition: "grocery / message",
             example: "Ik ga boodschappen doen.",
             deckIds: [dailyDeck.id],
-            verbForm: .infinitive,
-            article: "de"
+            article: "de",
+            plural: "boodschappen"
         )
         addCard(
-            word: "Afspraak",
-            definition: "Appointment",
+            word: "afspraak",
+            definition: "appointment",
             example: "Ik heb een afspraak met de dokter.",
             deckIds: [dailyDeck.id],
-            verbForm: .infinitive,
-            article: "de"
+            article: "de",
+            plural: "afspraken"
         )
         
         // Weather (A2)
         addCard(
-            word: "Weer",
-            definition: "Weather",
+            word: "weer",
+            definition: "weather",
             example: "Het weer is mooi vandaag.",
             deckIds: [weatherDeck.id],
-            verbForm: .infinitive,
             article: "het"
         )
         addCard(
-            word: "Regen",
-            definition: "Rain",
+            word: "regen",
+            definition: "rain",
             example: "Het regent vandaag.",
             deckIds: [weatherDeck.id],
-            verbForm: .infinitive,
             article: "de"
         )
         addCard(
-            word: "Zonnig",
-            definition: "Sunny",
+            word: "zonnig",
+            definition: "sunny",
             example: "Het is zonnig buiten.",
-            deckIds: [weatherDeck.id],
-            verbForm: .infinitive
+            deckIds: [weatherDeck.id]
         )
     }
     
@@ -318,15 +308,18 @@ class FlashCardViewModel: ObservableObject {
         saveDecks()
     }
     
-    func addCard(word: String, definition: String, example: String, deckIds: Set<UUID>, verbForm: VerbForm = .infinitive, article: String? = nil, cardId: UUID? = nil) -> FlashCard {
+    func addCard(word: String, definition: String, example: String, deckIds: Set<UUID>, article: String = "", plural: String = "", pastTense: String = "", futureTense: String = "", pastParticiple: String = "", cardId: UUID? = nil) -> FlashCard {
         print("Adding new card")
         let newCard = FlashCard(
             word: word, 
             definition: definition, 
             example: example, 
             deckIds: deckIds,
-            verbForm: verbForm,
             article: article,
+            plural: plural,
+            pastTense: pastTense,
+            futureTense: futureTense,
+            pastParticiple: pastParticiple,
             cardId: cardId
         )
         flashCards.append(newCard)
@@ -334,14 +327,17 @@ class FlashCardViewModel: ObservableObject {
         return newCard
     }
     
-    func updateCard(_ card: FlashCard, word: String, definition: String, example: String, deckIds: Set<UUID>, verbForm: VerbForm = .infinitive, article: String? = nil) {
+    func updateCard(_ card: FlashCard, word: String, definition: String, example: String, deckIds: Set<UUID>, article: String = "", plural: String = "", pastTense: String = "", futureTense: String = "", pastParticiple: String = "") {
         if let index = flashCards.firstIndex(where: { $0.id == card.id }) {
             flashCards[index].word = word
             flashCards[index].definition = definition
             flashCards[index].example = example
             flashCards[index].deckIds = deckIds
-            flashCards[index].verbForm = verbForm
             flashCards[index].article = article
+            flashCards[index].plural = plural
+            flashCards[index].pastTense = pastTense
+            flashCards[index].futureTense = futureTense
+            flashCards[index].pastParticiple = pastParticiple
             updateCardDeckAssociations()
         }
     }
@@ -480,7 +476,7 @@ class FlashCardViewModel: ObservableObject {
     // MARK: - Export Functionality
     
     func exportCardsToCSV() -> String {
-        let headers = ["Word", "Definition", "Example", "Article", "Past Tense", "Future Tense", "Decks", "Success Count", "Times Shown", "Times Correct"]
+        let headers = ["Word", "Translation", "Example", "Article", "Plural", "Past Tense", "Future Tense", "Past Participle", "Decks", "Success Count", "Times Shown", "Times Correct"]
         var csvContent = headers.joined(separator: ",") + "\n"
         
         for card in flashCards {
@@ -490,9 +486,11 @@ class FlashCardViewModel: ObservableObject {
                 escapeCSVField(card.word),
                 escapeCSVField(card.definition),
                 escapeCSVField(card.example),
-                escapeCSVField(card.article ?? ""),
-                escapeCSVField(card.pastTense ?? ""),
-                escapeCSVField(card.futureTense ?? ""),
+                escapeCSVField(card.article),
+                escapeCSVField(card.plural),
+                escapeCSVField(card.pastTense),
+                escapeCSVField(card.futureTense),
+                escapeCSVField(card.pastParticiple),
                 escapeCSVField(deckNames),
                 String(card.successCount),
                 String(card.timesShown),
@@ -506,7 +504,7 @@ class FlashCardViewModel: ObservableObject {
     }
     
     func exportDeckToCSV(_ deck: Deck) -> String {
-        let headers = ["Word", "Definition", "Example", "Article", "Past Tense", "Future Tense", "Success Count", "Times Shown", "Times Correct"]
+        let headers = ["Word", "Translation", "Example", "Article", "Plural", "Past Tense", "Future Tense", "Past Participle", "Success Count", "Times Shown", "Times Correct"]
         var csvContent = headers.joined(separator: ",") + "\n"
         
         for card in deck.cards {
@@ -514,9 +512,11 @@ class FlashCardViewModel: ObservableObject {
                 escapeCSVField(card.word),
                 escapeCSVField(card.definition),
                 escapeCSVField(card.example),
-                escapeCSVField(card.article ?? ""),
-                escapeCSVField(card.pastTense ?? ""),
-                escapeCSVField(card.futureTense ?? ""),
+                escapeCSVField(card.article),
+                escapeCSVField(card.plural),
+                escapeCSVField(card.pastTense),
+                escapeCSVField(card.futureTense),
+                escapeCSVField(card.pastParticiple),
                 String(card.successCount),
                 String(card.timesShown),
                 String(card.timesCorrect)
@@ -578,21 +578,26 @@ class FlashCardViewModel: ObservableObject {
             guard fields.count >= 2, 
                   !fields[0].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
                   !fields[1].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-                errors.append("Line \(lineNumber): Missing required word or definition")
+                errors.append("Line \(lineNumber): Missing required word or translation")
                 continue
             }
             
             let word = fields[0].trimmingCharacters(in: .whitespacesAndNewlines)
             let definition = fields[1].trimmingCharacters(in: .whitespacesAndNewlines)
             let example = fields.count > 2 ? fields[2].trimmingCharacters(in: .whitespacesAndNewlines) : ""
-            let article = fields.count > 3 ? (fields[3].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : fields[3].trimmingCharacters(in: .whitespacesAndNewlines)) : nil
-            let pastTense = fields.count > 4 ? (fields[4].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : fields[4].trimmingCharacters(in: .whitespacesAndNewlines)) : nil
-            let futureTense = fields.count > 5 ? (fields[5].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : fields[5].trimmingCharacters(in: .whitespacesAndNewlines)) : nil
             
-            // Handle deck names (if provided)
+            // Handle grammatical fields
+            let article = fields.count > 3 ? fields[3].trimmingCharacters(in: .whitespacesAndNewlines) : ""
+            let plural = fields.count > 4 ? fields[4].trimmingCharacters(in: .whitespacesAndNewlines) : ""
+            let pastTense = fields.count > 5 ? fields[5].trimmingCharacters(in: .whitespacesAndNewlines) : ""
+            let futureTense = fields.count > 6 ? fields[6].trimmingCharacters(in: .whitespacesAndNewlines) : ""
+            let pastParticiple = fields.count > 7 ? fields[7].trimmingCharacters(in: .whitespacesAndNewlines) : ""
+            
+            // Handle deck names
             var deckIds: Set<UUID> = []
-            if fields.count > 6 && !fields[6].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                let deckNamesString = fields[6].trimmingCharacters(in: .whitespacesAndNewlines)
+            let deckFieldIndex = 8 // Updated index for new format
+            if fields.count > deckFieldIndex && !fields[deckFieldIndex].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                let deckNamesString = fields[deckFieldIndex].trimmingCharacters(in: .whitespacesAndNewlines)
                 let deckNames = deckNamesString.components(separatedBy: ";").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
                 
                 for deckName in deckNames {
@@ -606,31 +611,33 @@ class FlashCardViewModel: ObservableObject {
                 }
             }
             
-            // Handle success count (old field)
+            // Handle success count
             var successCount = 0
-            if fields.count > 7 {
-                successCount = Int(fields[7].trimmingCharacters(in: .whitespacesAndNewlines)) ?? 0
+            if fields.count > 9 {
+                successCount = Int(fields[9].trimmingCharacters(in: .whitespacesAndNewlines)) ?? 0
             }
             
             // Handle learning statistics
             var timesShown = 0
             var timesCorrect = 0
-            if fields.count > 8 {
-                timesShown = Int(fields[8].trimmingCharacters(in: .whitespacesAndNewlines)) ?? 0
+            if fields.count > 10 {
+                timesShown = Int(fields[10].trimmingCharacters(in: .whitespacesAndNewlines)) ?? 0
             }
-            if fields.count > 9 {
-                timesCorrect = Int(fields[9].trimmingCharacters(in: .whitespacesAndNewlines)) ?? 0
+            if fields.count > 11 {
+                timesCorrect = Int(fields[11].trimmingCharacters(in: .whitespacesAndNewlines)) ?? 0
             }
             
-            // Create the card
+            // Create the card with new signature
             let newCard = addCard(
                 word: word,
                 definition: definition,
                 example: example,
                 deckIds: deckIds,
                 article: article,
+                plural: plural,
                 pastTense: pastTense,
-                futureTense: futureTense
+                futureTense: futureTense,
+                pastParticiple: pastParticiple
             )
             
             // Update statistics if provided
@@ -1078,6 +1085,201 @@ class FlashCardViewModel: ObservableObject {
         saveDecks()
         saveCardStatus()
         print("💾 All ViewModel data saved to UserDefaults")
+    }
+    
+    // MARK: - Duplicate Card Management
+    
+    enum DuplicateCheckResult {
+        case noDuplicate
+        case exactMatch(FlashCard)
+        case partialMatch(FlashCard, differences: CardComparison)
+    }
+    
+    struct CardComparison {
+        let existingFilledFields: Int
+        let newFilledFields: Int
+        let fieldDifferences: [String: (existing: String, new: String)]
+        let newFieldsCount: Int // Fields that are empty in existing but filled in new
+        
+        var hasMoreInformation: Bool {
+            return newFieldsCount > 0 || newFilledFields > existingFilledFields
+        }
+    }
+    
+    /// Check if a card with the same word already exists
+    func checkForDuplicateCard(word: String, definition: String, example: String, article: String, plural: String, pastTense: String, futureTense: String, pastParticiple: String) -> DuplicateCheckResult {
+        let trimmedWord = word.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        guard let existingCard = flashCards.first(where: { $0.word.lowercased() == trimmedWord.lowercased() }) else {
+            return .noDuplicate
+        }
+        
+        // Check if it's an exact match (all fields the same)
+        if existingCard.definition == definition &&
+           existingCard.example == example &&
+           existingCard.article == article &&
+           existingCard.plural == plural &&
+           existingCard.pastTense == pastTense &&
+           existingCard.futureTense == futureTense &&
+           existingCard.pastParticiple == pastParticiple {
+            return .exactMatch(existingCard)
+        }
+        
+        // It's a partial match - compare the differences
+        let comparison = compareCards(existing: existingCard, 
+                                    newWord: trimmedWord,
+                                    newDefinition: definition,
+                                    newExample: example,
+                                    newArticle: article,
+                                    newPlural: plural,
+                                    newPastTense: pastTense,
+                                    newFutureTense: futureTense,
+                                    newPastParticiple: pastParticiple)
+        
+        return .partialMatch(existingCard, differences: comparison)
+    }
+    
+    /// Compare existing card with new card data
+    private func compareCards(existing: FlashCard, newWord: String, newDefinition: String, newExample: String, newArticle: String, newPlural: String, newPastTense: String, newFutureTense: String, newPastParticiple: String) -> CardComparison {
+        
+        var fieldDifferences: [String: (existing: String, new: String)] = [:]
+        var newFieldsCount = 0
+        
+        // Helper function to check if a field has content
+        func hasContent(_ field: String) -> Bool {
+            return !field.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
+        
+        // Check each field for differences
+        if existing.definition != newDefinition && hasContent(newDefinition) {
+            fieldDifferences["definition"] = (existing.definition, newDefinition)
+        }
+        
+        if existing.example != newExample && hasContent(newExample) {
+            fieldDifferences["example"] = (existing.example, newExample)
+            if !hasContent(existing.example) {
+                newFieldsCount += 1
+            }
+        }
+        
+        if existing.article != newArticle && hasContent(newArticle) {
+            fieldDifferences["article"] = (existing.article, newArticle)
+            if !hasContent(existing.article) {
+                newFieldsCount += 1
+            }
+        }
+        
+        if existing.plural != newPlural && hasContent(newPlural) {
+            fieldDifferences["plural"] = (existing.plural, newPlural)
+            if !hasContent(existing.plural) {
+                newFieldsCount += 1
+            }
+        }
+        
+        if existing.pastTense != newPastTense && hasContent(newPastTense) {
+            fieldDifferences["pastTense"] = (existing.pastTense, newPastTense)
+            if !hasContent(existing.pastTense) {
+                newFieldsCount += 1
+            }
+        }
+        
+        if existing.futureTense != newFutureTense && hasContent(newFutureTense) {
+            fieldDifferences["futureTense"] = (existing.futureTense, newFutureTense)
+            if !hasContent(existing.futureTense) {
+                newFieldsCount += 1
+            }
+        }
+        
+        if existing.pastParticiple != newPastParticiple && hasContent(newPastParticiple) {
+            fieldDifferences["pastParticiple"] = (existing.pastParticiple, newPastParticiple)
+            if !hasContent(existing.pastParticiple) {
+                newFieldsCount += 1
+            }
+        }
+        
+        // Count filled fields in existing card
+        let existingFilledFields = [
+            existing.definition,
+            existing.example,
+            existing.article,
+            existing.plural,
+            existing.pastTense,
+            existing.futureTense,
+            existing.pastParticiple
+        ].filter { hasContent($0) }.count
+        
+        // Count filled fields in new card
+        let newFilledFields = [
+            newDefinition,
+            newExample,
+            newArticle,
+            newPlural,
+            newPastTense,
+            newFutureTense,
+            newPastParticiple
+        ].filter { hasContent($0) }.count
+        
+        return CardComparison(
+            existingFilledFields: existingFilledFields,
+            newFilledFields: newFilledFields,
+            fieldDifferences: fieldDifferences,
+            newFieldsCount: newFieldsCount
+        )
+    }
+    
+    /// Merge new card data into existing card
+    func mergeCardData(existingCard: FlashCard, newDefinition: String, newExample: String, newDeckIds: Set<UUID>, newArticle: String, newPlural: String, newPastTense: String, newFutureTense: String, newPastParticiple: String, mergeStrategy: MergeStrategy) {
+        
+        guard let cardIndex = flashCards.firstIndex(where: { $0.id == existingCard.id }) else { return }
+        
+        switch mergeStrategy {
+        case .keepExisting:
+            // Only add new deck associations
+            flashCards[cardIndex].deckIds.formUnion(newDeckIds)
+            
+        case .replaceWithNew:
+            // Replace all fields with new data
+            flashCards[cardIndex].definition = newDefinition
+            flashCards[cardIndex].example = newExample
+            flashCards[cardIndex].deckIds = newDeckIds
+            flashCards[cardIndex].article = newArticle
+            flashCards[cardIndex].plural = newPlural
+            flashCards[cardIndex].pastTense = newPastTense
+            flashCards[cardIndex].futureTense = newFutureTense
+            flashCards[cardIndex].pastParticiple = newPastParticiple
+            
+        case .mergeAdditionalFields:
+            // Keep existing definition, but add new fields where existing is empty
+            if !newExample.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && flashCards[cardIndex].example.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                flashCards[cardIndex].example = newExample
+            }
+            if !newArticle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && flashCards[cardIndex].article.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                flashCards[cardIndex].article = newArticle
+            }
+            if !newPlural.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && flashCards[cardIndex].plural.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                flashCards[cardIndex].plural = newPlural
+            }
+            if !newPastTense.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && flashCards[cardIndex].pastTense.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                flashCards[cardIndex].pastTense = newPastTense
+            }
+            if !newFutureTense.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && flashCards[cardIndex].futureTense.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                flashCards[cardIndex].futureTense = newFutureTense
+            }
+            if !newPastParticiple.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && flashCards[cardIndex].pastParticiple.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                flashCards[cardIndex].pastParticiple = newPastParticiple
+            }
+            
+            // Always merge deck associations
+            flashCards[cardIndex].deckIds.formUnion(newDeckIds)
+        }
+        
+        updateCardDeckAssociations()
+    }
+    
+    enum MergeStrategy {
+        case keepExisting
+        case replaceWithNew
+        case mergeAdditionalFields
     }
 }
 

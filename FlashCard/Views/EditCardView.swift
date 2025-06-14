@@ -1,6 +1,8 @@
 import SwiftUI
 import os
-import Translation
+#if canImport(Translation)
+@preconcurrency import Translation
+#endif
 
 struct EditCardView: View {
     @Environment(\.dismiss) private var dismiss
@@ -14,19 +16,27 @@ struct EditCardView: View {
     @State private var showingNewDeckSheet = false
     @State private var newDeckName = ""
     
-    // New verb form structure
-    @State private var selectedVerbForm: VerbForm = .infinitive
+    // Additional grammatical fields
+    @State private var article: String = ""
+    @State private var plural: String = ""
+    @State private var pastTense: String = ""
+    @State private var futureTense: String = ""
+    @State private var pastParticiple: String = ""
     
-    // Dutch language features (keeping article for nouns)
-    @State private var isDeSelected: Bool = false
-    @State private var isHetSelected: Bool = false
-    
-    // Translation features
+    // Translation features (only used on iOS 17.4+)
+    #if canImport(Translation)
+    @available(iOS 17.4, *)
     @State private var translationConfiguration: TranslationSession.Configuration?
+    #endif
     @State private var suggestedTranslation: String = ""
     @State private var isTranslating: Bool = false
     @State private var showTranslationSuggestion: Bool = false
     @State private var lastTranslatedWord: String = ""
+    @State private var translationDismissed: Bool = false
+    
+    // Compatibility
+    @State private var showingCompatibilityAlert = false
+    @State private var compatibilityFeature: UnavailableFeature?
     
     private let logger = Logger(subsystem: "com.flashcards", category: "EditCardView")
     
@@ -39,12 +49,12 @@ struct EditCardView: View {
         _example = State(initialValue: card.example)
         _selectedDeckIds = State(initialValue: card.deckIds)
         
-        // Initialize new verb form field
-        _selectedVerbForm = State(initialValue: card.verbForm)
-        
-        // Initialize Dutch language fields
-        _isDeSelected = State(initialValue: card.article == "de")
-        _isHetSelected = State(initialValue: card.article == "het")
+        // Initialize grammatical fields
+        _article = State(initialValue: card.article)
+        _plural = State(initialValue: card.plural)
+        _pastTense = State(initialValue: card.pastTense)
+        _futureTense = State(initialValue: card.futureTense)
+        _pastParticiple = State(initialValue: card.pastParticiple)
     }
     
     private var card: FlashCard? {
@@ -81,8 +91,13 @@ struct EditCardView: View {
                     let trimmedWord = word.trimmingCharacters(in: .whitespacesAndNewlines)
                     let trimmedDefinition = definition.trimmingCharacters(in: .whitespacesAndNewlines)
                     let trimmedExample = example.trimmingCharacters(in: .whitespacesAndNewlines)
+                    let trimmedArticle = article.trimmingCharacters(in: .whitespacesAndNewlines)
+                    let trimmedPlural = plural.trimmingCharacters(in: .whitespacesAndNewlines)
+                    let trimmedPastTense = pastTense.trimmingCharacters(in: .whitespacesAndNewlines)
+                    let trimmedFutureTense = futureTense.trimmingCharacters(in: .whitespacesAndNewlines)
+                    let trimmedPastParticiple = pastParticiple.trimmingCharacters(in: .whitespacesAndNewlines)
                     
-                    logger.debug("Updating card with values - Word: \(trimmedWord), Definition: \(trimmedDefinition), Verb Form: \(selectedVerbForm.description)")
+                    logger.debug("Updating card with values - Word: \(trimmedWord), Translation: \(trimmedDefinition)")
                     
                     // Update the card
                     viewModel.updateCard(
@@ -91,8 +106,11 @@ struct EditCardView: View {
                         definition: trimmedDefinition,
                         example: trimmedExample,
                         deckIds: selectedDeckIds,
-                        verbForm: selectedVerbForm,
-                        article: isDeSelected ? "de" : (isHetSelected ? "het" : nil)
+                        article: trimmedArticle,
+                        plural: trimmedPlural,
+                        pastTense: trimmedPastTense,
+                        futureTense: trimmedFutureTense,
+                        pastParticiple: trimmedPastParticiple
                     )
                     
                     // Force a save to UserDefaults
@@ -119,37 +137,36 @@ struct EditCardView: View {
             
             // Main content
             Form {
-                Section(header: Text("Card Details")) {
-                    // Verb Form Picker
+                Section(header: Text("Basic Information")) {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Word Type")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                        
-                        Picker("Verb Form", selection: $selectedVerbForm) {
-                            ForEach(VerbForm.allCases, id: \.self) { form in
-                                Text(form.description).tag(form)
-                            }
-                        }
-                        .pickerStyle(MenuPickerStyle())
-                        .onChange(of: selectedVerbForm) { oldValue, newValue in
-                            logger.debug("Verb form changed from \(oldValue.description) to \(newValue.description)")
-                        }
-                    }
-                    
-                    VStack(alignment: .leading, spacing: 8) {
-                        // Word field with speech controls and dynamic placeholder
+                        // Word field with speech controls
                         HStack(spacing: 8) {
-                            TextField(selectedVerbForm.placeholder, text: $word)
+                            TextField("e.g., eten", text: $word)
                                 .onChange(of: word) { oldValue, newValue in
                                     logger.debug("Word changed from '\(oldValue)' to '\(newValue)'")
-                                    // Trigger translation suggestion for Dutch words
-                                    if !newValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-                                       newValue != lastTranslatedWord {
-                                        triggerTranslationSuggestion(for: newValue)
-                                    } else if newValue.isEmpty {
+                                    
+                                    let trimmedWord = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
+                                    
+                                    // Only trigger automatic translation if:
+                                    // 1. Word has 3+ characters
+                                    // 2. Word is different from last translated
+                                    // 3. User hasn't dismissed suggestions
+                                    // 4. We're not currently translating
+                                    if trimmedWord.count >= 3 && 
+                                       trimmedWord != lastTranslatedWord && 
+                                       !translationDismissed && 
+                                       !isTranslating {
+                                        triggerTranslationSuggestion(for: trimmedWord)
+                                    } else if trimmedWord.isEmpty {
                                         showTranslationSuggestion = false
                                         suggestedTranslation = ""
+                                        translationDismissed = false
+                                        lastTranslatedWord = ""
+                                    } else if trimmedWord.count < 3 {
+                                        showTranslationSuggestion = false
+                                        suggestedTranslation = ""
+                                        isTranslating = false
+                                        lastTranslatedWord = ""
                                     }
                                 }
                             
@@ -158,20 +175,77 @@ struct EditCardView: View {
                             }
                         }
                         
-                        // Translation suggestion
+                        // Persistent translation button - always available when word has 3+ characters
+                        if !word.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && word.count >= 3 {
+                            HStack {
+                                Button {
+                                    manualTranslationRequest()
+                                } label: {
+                                    HStack(spacing: 6) {
+                                        Image(systemName: "translate")
+                                        Text("Get Translation")
+                                        if isTranslating {
+                                            ProgressView()
+                                                .scaleEffect(0.7)
+                                                .frame(width: 14, height: 14)
+                                        }
+                                    }
+                                    .font(.caption)
+                                    .foregroundColor(.blue)
+                                }
+                                .buttonStyle(.bordered)
+                                .controlSize(.small)
+                                .disabled(isTranslating)
+                                
+                                // Show compatibility info for older iOS versions
+                                if !CompatibilityHelper.isTranslationFrameworkAvailable {
+                                    Button {
+                                        compatibilityFeature = .translation
+                                        showingCompatibilityAlert = true
+                                    } label: {
+                                        Image(systemName: "info.circle")
+                                            .font(.caption)
+                                            .foregroundColor(.orange)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                                
+                                Spacer()
+                            }
+                            .padding(.top, 4)
+                        }
+                        
+                        // Compatibility notice for older iOS versions
+                        if !CompatibilityHelper.isTranslationFrameworkAvailable && !word.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && word.count >= 3 {
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack {
+                                    Image(systemName: "info.circle.fill")
+                                        .foregroundColor(.orange)
+                                    Text("Limited Translation")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                                
+                                Text("Using local dictionary only. For full translation features, update to iOS 17.4+")
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 8)
+                                    .background(Color.orange.opacity(0.1))
+                                    .cornerRadius(8)
+                                    .font(.caption)
+                                    .foregroundColor(.orange)
+                            }
+                            .padding(.vertical, 8)
+                        }
+                        
+                        // Automatic translation suggestion (can be dismissed)
                         if showTranslationSuggestion && !suggestedTranslation.isEmpty {
                             VStack(alignment: .leading, spacing: 8) {
                                 HStack {
-                                    Image(systemName: "translate")
+                                    Image(systemName: "sparkles")
                                         .foregroundColor(.blue)
-                                    Text("Suggested translation:")
+                                    Text("Auto-suggested translation:")
                                         .font(.caption)
                                         .foregroundColor(.secondary)
-                                    
-                                    if isTranslating {
-                                        ProgressView()
-                                            .scaleEffect(0.7)
-                                    }
                                 }
                                 
                                 HStack {
@@ -185,6 +259,7 @@ struct EditCardView: View {
                                     Button("Use") {
                                         definition = suggestedTranslation
                                         showTranslationSuggestion = false
+                                        translationDismissed = true
                                         HapticManager.shared.lightImpact()
                                     }
                                     .buttonStyle(.borderedProminent)
@@ -192,6 +267,7 @@ struct EditCardView: View {
                                     
                                     Button("Dismiss") {
                                         showTranslationSuggestion = false
+                                        translationDismissed = true
                                         HapticManager.shared.lightImpact()
                                     }
                                     .buttonStyle(.bordered)
@@ -200,16 +276,46 @@ struct EditCardView: View {
                             }
                             .padding(.vertical, 8)
                         }
+                        
+                        // Manual translation result (from button press)
+                        if !showTranslationSuggestion && !suggestedTranslation.isEmpty && !isTranslating {
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack {
+                                    Image(systemName: "translate")
+                                        .foregroundColor(.green)
+                                    Text("Translation:")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                                
+                                HStack {
+                                    Text(suggestedTranslation)
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 8)
+                                        .background(Color.green.opacity(0.1))
+                                        .cornerRadius(8)
+                                        .font(.body)
+                                    
+                                    Button("Use") {
+                                        definition = suggestedTranslation
+                                        HapticManager.shared.lightImpact()
+                                    }
+                                    .buttonStyle(.borderedProminent)
+                                    .controlSize(.small)
+                                }
+                            }
+                            .padding(.vertical, 8)
+                        }
                     }
                     
-                    TextField(selectedVerbForm.translationPlaceholder, text: $definition)
+                    TextField("e.g., to eat", text: $definition)
                         .onChange(of: definition) { oldValue, newValue in
-                            logger.debug("Definition changed from '\(oldValue)' to '\(newValue)'")
+                            logger.debug("Translation changed from '\(oldValue)' to '\(newValue)'")
                         }
                     
-                    // Example field with speech controls and dynamic placeholder
+                    // Example field with speech controls
                     HStack(spacing: 8) {
-                        TextField(selectedVerbForm.examplePlaceholder, text: $example)
+                        TextField("e.g., Ik wil eten.", text: $example)
                             .onChange(of: example) { oldValue, newValue in
                                 logger.debug("Example changed from '\(oldValue)' to '\(newValue)'")
                             }
@@ -218,6 +324,33 @@ struct EditCardView: View {
                             DutchSpeechControlView(text: example, mode: .minimal)
                         }
                     }
+                }
+                
+                Section(header: Text("Additional Grammar (Optional)")) {
+                    TextField("Article (de/het)", text: $article)
+                        .onChange(of: article) { oldValue, newValue in
+                            logger.debug("Article changed from '\(oldValue)' to '\(newValue)'")
+                        }
+                    
+                    TextField("Plural form", text: $plural)
+                        .onChange(of: plural) { oldValue, newValue in
+                            logger.debug("Plural changed from '\(oldValue)' to '\(newValue)'")
+                        }
+                    
+                    TextField("Past tense", text: $pastTense)
+                        .onChange(of: pastTense) { oldValue, newValue in
+                            logger.debug("Past tense changed from '\(oldValue)' to '\(newValue)'")
+                        }
+                    
+                    TextField("Future tense", text: $futureTense)
+                        .onChange(of: futureTense) { oldValue, newValue in
+                            logger.debug("Future tense changed from '\(oldValue)' to '\(newValue)'")
+                        }
+                    
+                    TextField("Past participle", text: $pastParticiple)
+                        .onChange(of: pastParticiple) { oldValue, newValue in
+                            logger.debug("Past participle changed from '\(oldValue)' to '\(newValue)'")
+                        }
                 }
                 
                 // New section for Dutch Pronunciation
@@ -246,57 +379,6 @@ struct EditCardView: View {
                             .foregroundColor(.secondary)
                         
                         AudioControlView(cardId: cardId, mode: .full)
-                    }
-                }
-                
-                Section(header: Text("Dutch Language Features (Optional)")) {
-                    // Article selection (only show for nouns/infinitives)
-                    if selectedVerbForm == .infinitive {
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("Article (for nouns)")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                            
-                            HStack(spacing: 20) {
-                                // De checkbox
-                                Button(action: {
-                                    if isDeSelected {
-                                        isDeSelected = false // Uncheck if already selected
-                                    } else {
-                                        isDeSelected = true
-                                        isHetSelected = false // Uncheck het if de is selected
-                                    }
-                                }) {
-                                    HStack {
-                                        Image(systemName: isDeSelected ? "checkmark.square.fill" : "square")
-                                            .foregroundColor(isDeSelected ? .blue : .gray)
-                                        Text("de")
-                                            .foregroundColor(.primary)
-                                    }
-                                }
-                                .buttonStyle(PlainButtonStyle())
-                                
-                                // Het checkbox
-                                Button(action: {
-                                    if isHetSelected {
-                                        isHetSelected = false // Uncheck if already selected
-                                    } else {
-                                        isHetSelected = true
-                                        isDeSelected = false // Uncheck de if het is selected
-                                    }
-                                }) {
-                                    HStack {
-                                        Image(systemName: isHetSelected ? "checkmark.square.fill" : "square")
-                                            .foregroundColor(isHetSelected ? .blue : .gray)
-                                        Text("het")
-                                            .foregroundColor(.primary)
-                                    }
-                                }
-                                .buttonStyle(PlainButtonStyle())
-                                
-                                Spacer()
-                            }
-                        }
                     }
                 }
 
@@ -344,6 +426,7 @@ struct EditCardView: View {
         }
         .navigationBarHidden(true)
         .sheet(isPresented: $showingNewDeckSheet) {
+            // New deck creation sheet
             VStack(spacing: 0) {
                 // Custom navigation bar for sheet
                 HStack {
@@ -389,35 +472,47 @@ struct EditCardView: View {
             }
             .navigationBarHidden(true)
         }
+        .compatibleTranslationTask()
+        .featureUnavailableAlert(
+            isPresented: $showingCompatibilityAlert,
+            feature: compatibilityFeature ?? .translation
+        )
         .onAppear {
-            logger.debug("EditCardView appeared")
-        }
-        .translationTask(translationConfiguration) { session in
-            let wordToTranslate = lastTranslatedWord.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !wordToTranslate.isEmpty else { return }
-            
-            do {
-                logger.debug("Translating word: \(wordToTranslate)")
-                let response = try await session.translate(wordToTranslate)
-                
-                await MainActor.run {
-                    suggestedTranslation = response.targetText
-                    isTranslating = false
-                    showTranslationSuggestion = true
-                    logger.debug("Translation completed: \(response.targetText)")
-                }
-            } catch {
-                await MainActor.run {
-                    isTranslating = false
-                    logger.error("Translation failed: \(error.localizedDescription)")
-                }
-            }
+            loadCardData()
         }
         .onDisappear {
-            logger.debug("EditCardView disappeared")
             // Stop any ongoing recording when view disappears
             AudioManager.shared.stopRecording()
             AudioManager.shared.stopPlayback()
+        }
+    }
+    
+    @ViewBuilder
+    private func compatibleTranslationTask() -> some View {
+        if #available(iOS 17.4, *) {
+            self.translationTask(translationConfiguration) { session in
+                guard let config = translationConfiguration else { return }
+                
+                let wordToTranslate = lastTranslatedWord
+                
+                do {
+                    let response = try await session.translate(wordToTranslate)
+                    await MainActor.run {
+                        suggestedTranslation = response.targetText
+                        isTranslating = false
+                        showTranslationSuggestion = true
+                        logger.debug("Translation completed: \(response.targetText)")
+                    }
+                } catch {
+                    await MainActor.run {
+                        isTranslating = false
+                        logger.error("Translation failed: \(error.localizedDescription)")
+                    }
+                }
+            }
+        } else {
+            // No translation task needed for older iOS versions
+            self
         }
     }
     
@@ -425,19 +520,78 @@ struct EditCardView: View {
         let trimmedWord = word.trimmingCharacters(in: .whitespacesAndNewlines)
         
         // Only translate if word has meaningful content and isn't too short
-        guard trimmedWord.count >= 2 else { return }
+        guard trimmedWord.count >= 3 else { return }
         
         // Reset state
         showTranslationSuggestion = false
         suggestedTranslation = ""
         isTranslating = true
         lastTranslatedWord = trimmedWord
+        translationDismissed = false
         
         // Set up translation configuration
         translationConfiguration = TranslationSession.Configuration(
             source: Locale.Language(identifier: "nl"),
             target: Locale.Language(identifier: "en")
         )
+    }
+    
+    private func manualTranslationRequest() {
+        let trimmedWord = word.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmedWord.count >= 3 else { return }
+        
+        logger.debug("🔄 Manual translation request for: '\(trimmedWord)'")
+        
+        // Set loading state
+        isTranslating = true
+        showTranslationSuggestion = false
+        suggestedTranslation = ""
+        lastTranslatedWord = trimmedWord
+        translationDismissed = false
+        
+        // Use compatibility wrapper for translation
+        Task {
+            let translation = await TranslationCompatibility.getTranslation(for: trimmedWord)
+            
+            await MainActor.run {
+                isTranslating = false
+                
+                if !translation.isEmpty {
+                    suggestedTranslation = translation
+                    logger.debug("✅ Translation found: '\(translation)'")
+                } else {
+                    suggestedTranslation = ""
+                    translationDismissed = true
+                    logger.debug("❌ No translation found for: '\(trimmedWord)'")
+                }
+            }
+        }
+        
+        HapticManager.shared.lightImpact()
+        logger.debug("✅ Manual translation request initiated")
+    }
+    
+    private func loadCardData() {
+        logger.debug("EditCardView appeared")
+        
+        guard let card = viewModel.getCard(by: cardId) else {
+            logger.error("Card not found with ID: \(cardId)")
+            dismiss()
+            return
+        }
+        
+        // Load card data into state variables
+        word = card.word
+        definition = card.definition
+        example = card.example
+        selectedDeckIds = Set(card.deckIds)
+        article = card.article
+        plural = card.plural
+        pastTense = card.pastTense
+        futureTense = card.futureTense
+        pastParticiple = card.pastParticiple
+        
+        logger.debug("Loaded card data - Word: \(card.word), Definition: \(card.definition)")
     }
 }
 

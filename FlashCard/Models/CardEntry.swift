@@ -6,9 +6,10 @@ struct CardEntry: Identifiable {
     var definition: String = ""
     var example: String = ""
     
-    // Dutch language features
-    var isDeSelected: Bool = false
-    var isHetSelected: Bool = false
+    // Additional grammatical fields
+    var article: String = ""
+    var plural: String = ""
     var pastTense: String = ""
     var futureTense: String = ""
+    var pastParticiple: String = ""
 } 

@@ -172,8 +172,8 @@ struct CardView: View {
                     VStack(spacing: 16) {
                         // Word with optional article
                         VStack(spacing: 4) {
-                            if let article = card.article {
-                                Text(article)
+                            if !card.article.isEmpty {
+                                Text(card.article)
                                     .font(.caption)
                                     .foregroundColor(.blue)
                                     .bold()
@@ -222,27 +222,60 @@ struct CardView: View {
                             .multilineTextAlignment(.center)
                             .foregroundColor(.black)
                         
-                        // Show tenses if available
-                        if card.pastTense != nil || card.futureTense != nil {
+                        // Show grammatical information if available
+                        if !card.article.isEmpty || !card.plural.isEmpty || !card.pastTense.isEmpty || !card.futureTense.isEmpty || !card.pastParticiple.isEmpty {
                             Divider()
                             VStack(spacing: 8) {
-                                if let pastTense = card.pastTense {
+                                if !card.article.isEmpty {
                                     HStack {
-                                        Text("Past:")
+                                        Text("Article:")
                                             .font(.caption)
                                             .foregroundColor(.secondary)
-                                        Text(pastTense)
+                                        Text(card.article)
                                             .font(.callout)
                                             .bold()
                                         Spacer()
                                     }
                                 }
-                                if let futureTense = card.futureTense {
+                                if !card.plural.isEmpty {
                                     HStack {
-                                        Text("Future:")
+                                        Text("Plural:")
                                             .font(.caption)
                                             .foregroundColor(.secondary)
-                                        Text(futureTense)
+                                        Text(card.plural)
+                                            .font(.callout)
+                                            .bold()
+                                        Spacer()
+                                    }
+                                }
+                                if !card.pastTense.isEmpty {
+                                    HStack {
+                                        Text("Past tense:")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                        Text(card.pastTense)
+                                            .font(.callout)
+                                            .bold()
+                                        Spacer()
+                                    }
+                                }
+                                if !card.futureTense.isEmpty {
+                                    HStack {
+                                        Text("Future tense:")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                        Text(card.futureTense)
+                                            .font(.callout)
+                                            .bold()
+                                        Spacer()
+                                    }
+                                }
+                                if !card.pastParticiple.isEmpty {
+                                    HStack {
+                                        Text("Past participle:")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                        Text(card.pastParticiple)
                                             .font(.callout)
                                             .bold()
                                         Spacer()

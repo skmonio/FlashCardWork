@@ -16,6 +16,27 @@
 	<string>1</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>This app needs access to the microphone to record pronunciation for your flashcards. This helps you practice speaking and pronunciation of foreign words.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>This app needs access to the camera to take photos of text and extract words for your flashcards. This allows you to quickly import vocabulary from books, signs, and other printed materials.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app needs access to your photo library to select images containing text and extract words for your flashcards. This allows you to import vocabulary from photos you've already taken.</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<false/>
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>en.wiktionary.org</key>
+			<dict>
+				<key>NSExceptionRequiresForwardSecrecy</key>
+				<false/>
+				<key>NSExceptionMinimumTLSVersion</key>
+				<string>TLSv1.0</string>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+			</dict>
+		</dict>
+	</dict>
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>
