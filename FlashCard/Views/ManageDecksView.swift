@@ -196,17 +196,10 @@ struct ManageDecksView: View {
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    HStack {
-                        if !isSelectionMode {
-                            Button("Select") {
-                                isSelectionMode = true
-                            }
+                    if !isSelectionMode {
+                        Button("Select") {
+                            isSelectionMode = true
                         }
-                        
-                        Button("Add Deck") {
-                            showingAddDeck = true
-                        }
-                        .disabled(isSelectionMode)
                     }
                 }
             })
