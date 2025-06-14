@@ -113,7 +113,7 @@ struct TranslationCompatibility {
     
     /// Get translation using available methods
     static func getTranslation(for word: String) async -> String {
-        if CompatibilityHelper.isTranslationFrameworkAvailable {
+        if #available(iOS 17.4, *), CompatibilityHelper.isTranslationFrameworkAvailable {
             // Use Apple's Translation framework on iOS 17.4+
             return await getAppleTranslation(for: word)
         } else {

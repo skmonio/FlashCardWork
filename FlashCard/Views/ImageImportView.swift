@@ -370,10 +370,12 @@ struct ImageImportView: View {
         
         // Set up translation configuration
         #if canImport(Translation)
-        translationConfiguration = TranslationSession.Configuration(
-            source: Locale.Language(identifier: "nl"),
-            target: Locale.Language(identifier: "en")
-        )
+        if #available(iOS 18.0, *) {
+            translationConfiguration = TranslationSession.Configuration(
+                source: Locale.Language(identifier: "nl"),
+                target: Locale.Language(identifier: "en")
+            )
+        }
         #endif
         
         // Extract unique words to translate

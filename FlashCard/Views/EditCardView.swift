@@ -469,7 +469,6 @@ struct EditCardView: View {
             }
             .navigationBarHidden(true)
         }
-        .compatibleTranslationTask()
         .featureUnavailableAlert(
             isPresented: $showingCompatibilityAlert,
             feature: compatibilityFeature ?? .translation
@@ -512,10 +511,14 @@ struct EditCardView: View {
         translationDismissed = false
         
         // Set up translation configuration
-        translationConfiguration = TranslationSession.Configuration(
-            source: Locale.Language(identifier: "nl"),
-            target: Locale.Language(identifier: "en")
-        )
+        #if canImport(Translation)
+        if #available(iOS 18.0, *) {
+            translationConfiguration = TranslationSession.Configuration(
+                source: Locale.Language(identifier: "nl"),
+                target: Locale.Language(identifier: "en")
+            )
+        }
+        #endif
     }
     
     private func manualTranslationRequest() {
