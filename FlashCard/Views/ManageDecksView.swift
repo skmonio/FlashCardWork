@@ -184,9 +184,29 @@ struct ManageDecksView: View {
             }
             .navigationTitle("Manage Decks")
             .toolbar(content: {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    if isSelectionMode {
+                        Button("Cancel") {
+                            isSelectionMode = false
+                            selectedDeckIds.removeAll()
+                        }
+                    } else {
+                        EmptyView()
+                    }
+                }
+                
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Add Deck") {
-                        showingAddDeck = true
+                    HStack {
+                        if !isSelectionMode {
+                            Button("Select") {
+                                isSelectionMode = true
+                            }
+                        }
+                        
+                        Button("Add Deck") {
+                            showingAddDeck = true
+                        }
+                        .disabled(isSelectionMode)
                     }
                 }
             })
