@@ -218,11 +218,11 @@ struct WordSelectionView: View {
         } message: {
             Text("Successfully imported \(importedCardsCount) card\(importedCardsCount == 1 ? "" : "s") to your flashcard collection!")
         }
-        .sheet(item: Binding<Int?>(
-            get: { editingWordIndex },
-            set: { editingWordIndex = $0 }
-        )) { index in
-            if index < extractedWords.count {
+        .sheet(isPresented: Binding<Bool>(
+            get: { editingWordIndex != nil },
+            set: { if !$0 { editingWordIndex = nil } }
+        )) {
+            if let index = editingWordIndex, index < extractedWords.count {
                 TranslationEditView(
                     word: extractedWords[index].text,
                     translation: $editingTranslation

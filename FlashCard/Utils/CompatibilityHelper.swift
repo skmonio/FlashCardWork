@@ -146,14 +146,14 @@ struct VisionCompatibility {
     static func getOCRConfiguration() -> OCRConfiguration {
         if CompatibilityHelper.isAdvancedVisionAvailable {
             return OCRConfiguration(
-                recognitionLevel: .accurate,
+                recognitionLevel: "accurate",
                 languages: ["nl", "en"],
                 usesLanguageCorrection: true,
                 supportsLiveText: true
             )
         } else {
             return OCRConfiguration(
-                recognitionLevel: .fast,
+                recognitionLevel: "fast",
                 languages: ["en"], // More limited on older iOS
                 usesLanguageCorrection: false,
                 supportsLiveText: false

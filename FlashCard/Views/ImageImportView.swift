@@ -550,31 +550,35 @@ struct ImageTranslationTaskModifier: ViewModifier {
     func body(content: Content) -> some View {
         if #available(iOS 18.0, *), CompatibilityHelper.isTranslationFrameworkAvailable {
             #if canImport(Translation)
-            content.translationTask(translationConfiguration as? TranslationSession.Configuration) { session in
-                guard !wordsToTranslate.isEmpty else { return }
-                
-                for word in wordsToTranslate {
-                    guard currentTranslatingWords.contains(word) else { continue }
+            if let config = translationConfiguration as? TranslationSession.Configuration {
+                content.translationTask(config) { session in
+                    guard !wordsToTranslate.isEmpty else { return }
                     
-                    do {
-                        let response = try await session.translate(word)
+                    for word in wordsToTranslate {
+                        guard currentTranslatingWords.contains(word) else { continue }
                         
-                        await MainActor.run {
-                            if let wordIndex = extractedWords.firstIndex(where: { $0.text == word }) {
-                                onTranslationComplete(wordIndex, response.targetText)
+                        do {
+                            let response = try await session.translate(word)
+                            
+                            await MainActor.run {
+                                if let wordIndex = extractedWords.firstIndex(where: { $0.text == word }) {
+                                    onTranslationComplete(wordIndex, response.targetText)
+                                }
+                            }
+                        } catch {
+                            await MainActor.run {
+                                onTranslationError(word)
                             }
                         }
-                    } catch {
-                        await MainActor.run {
-                            onTranslationError(word)
-                        }
+                    }
+                    
+                    // Clear the translation queue
+                    await MainActor.run {
+                        onComplete()
                     }
                 }
-                
-                // Clear the translation queue
-                await MainActor.run {
-                    onComplete()
-                }
+            } else {
+                content
             }
             #else
             content

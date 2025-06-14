@@ -606,21 +606,25 @@ struct TranslationTaskModifier: ViewModifier {
     func body(content: Content) -> some View {
         if #available(iOS 18.0, *), CompatibilityHelper.isTranslationFrameworkAvailable {
             #if canImport(Translation)
-            content.translationTask(translationConfiguration as? TranslationSession.Configuration) { session in
-                guard translationConfiguration != nil else { return }
-                
-                let wordToTranslate = lastTranslatedWord
-                
-                do {
-                    let response = try await session.translate(wordToTranslate)
-                    await MainActor.run {
-                        onTranslationComplete(response.targetText)
-                    }
-                } catch {
-                    await MainActor.run {
-                        onTranslationError(error.localizedDescription)
+            if let config = translationConfiguration as? TranslationSession.Configuration {
+                content.translationTask(config) { session in
+                    guard translationConfiguration != nil else { return }
+                    
+                    let wordToTranslate = lastTranslatedWord
+                    
+                    do {
+                        let response = try await session.translate(wordToTranslate)
+                        await MainActor.run {
+                            onTranslationComplete(response.targetText)
+                        }
+                    } catch {
+                        await MainActor.run {
+                            onTranslationError(error.localizedDescription)
+                        }
                     }
                 }
+            } else {
+                content
             }
             #else
             content
