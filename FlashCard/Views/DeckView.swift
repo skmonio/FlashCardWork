@@ -422,7 +422,7 @@ struct MoveCardsSheet: View {
     }
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 Section(header: Text("Move Option")) {
                     Picker("Option", selection: $moveOption) {
@@ -479,17 +479,21 @@ struct MoveCardsSheet: View {
                 }
             }
             .navigationTitle("Move Cards")
-            .navigationBarItems(
-                leading: Button("Cancel") {
-                    dismiss()
-                },
-                trailing: Button("Apply") {
-                    applyMove()
-                    onComplete()
-                    dismiss()
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
                 }
-                .disabled(selectedDeckIds.isEmpty)
-            )
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Apply") {
+                        applyMove()
+                        onComplete()
+                        dismiss()
+                    }
+                    .disabled(selectedDeckIds.isEmpty)
+                }
+            }
         }
     }
     
