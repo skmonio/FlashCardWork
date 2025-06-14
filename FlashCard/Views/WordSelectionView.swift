@@ -575,7 +575,7 @@ struct BatchImportView: View {
         importedCount = 0
         for word in selectedWords {
             if !word.suggestedTranslation.isEmpty {
-                viewModel.addCard(
+                let _ = viewModel.addCard(
                     word: word.text,
                     definition: word.suggestedTranslation,
                     example: "",
@@ -592,7 +592,7 @@ struct BatchImportView: View {
         importedCount = 0
         for entry in entries {
             if !entry.definition.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                viewModel.addCard(
+                let _ = viewModel.addCard(
                     word: entry.word,
                     definition: entry.definition,
                     example: entry.example,
@@ -656,11 +656,6 @@ struct ImportPreviewRow: View {
         .background(Color(UIColor.systemGray6))
         .cornerRadius(12)
     }
-}
-
-// Helper extension for sheet presentation
-extension Int: Identifiable {
-    public var id: Int { self }
 }
 
 #Preview {

@@ -1,6 +1,7 @@
 import Foundation
 import AVFoundation
 
+@MainActor
 class DutchSpeechService: NSObject, ObservableObject {
     static let shared = DutchSpeechService()
     

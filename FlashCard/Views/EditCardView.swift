@@ -24,10 +24,7 @@ struct EditCardView: View {
     @State private var pastParticiple: String = ""
     
     // Translation features (only used on iOS 17.4+)
-    #if canImport(Translation)
-    @available(iOS 17.4, *)
-    @State private var translationConfiguration: TranslationSession.Configuration?
-    #endif
+    @State private var translationConfiguration: Any?
     @State private var suggestedTranslation: String = ""
     @State private var isTranslating: Bool = false
     @State private var showTranslationSuggestion: Bool = false
@@ -485,35 +482,20 @@ struct EditCardView: View {
             AudioManager.shared.stopRecording()
             AudioManager.shared.stopPlayback()
         }
-    }
-    
-    @ViewBuilder
-    private func compatibleTranslationTask() -> some View {
-        if #available(iOS 17.4, *) {
-            self.translationTask(translationConfiguration) { session in
-                guard let config = translationConfiguration else { return }
-                
-                let wordToTranslate = lastTranslatedWord
-                
-                do {
-                    let response = try await session.translate(wordToTranslate)
-                    await MainActor.run {
-                        suggestedTranslation = response.targetText
-                        isTranslating = false
-                        showTranslationSuggestion = true
-                        logger.debug("Translation completed: \(response.targetText)")
-                    }
-                } catch {
-                    await MainActor.run {
-                        isTranslating = false
-                        logger.error("Translation failed: \(error.localizedDescription)")
-                    }
-                }
+        .modifier(TranslationTaskModifier(
+            translationConfiguration: translationConfiguration,
+            lastTranslatedWord: lastTranslatedWord,
+            onTranslationComplete: { translation in
+                suggestedTranslation = translation
+                isTranslating = false
+                showTranslationSuggestion = true
+                logger.debug("Translation completed: \(translation)")
+            },
+            onTranslationError: { error in
+                isTranslating = false
+                logger.error("Translation failed: \(error)")
             }
-        } else {
-            // No translation task needed for older iOS versions
-            self
-        }
+        ))
     }
     
     private func triggerTranslationSuggestion(for word: String) {
@@ -549,20 +531,30 @@ struct EditCardView: View {
         lastTranslatedWord = trimmedWord
         translationDismissed = false
         
-        // Use compatibility wrapper for translation
-        Task {
-            let translation = await TranslationCompatibility.getTranslation(for: trimmedWord)
-            
-            await MainActor.run {
-                isTranslating = false
+        // Set up translation configuration if available
+        if #available(iOS 18.0, *), CompatibilityHelper.isTranslationFrameworkAvailable {
+            #if canImport(Translation)
+            translationConfiguration = TranslationSession.Configuration(
+                source: Locale.Language(identifier: "nl"),
+                target: Locale.Language(identifier: "en")
+            )
+            #endif
+        } else {
+            // Use compatibility wrapper for translation on older iOS versions
+            Task {
+                let translation = await TranslationCompatibility.getTranslation(for: trimmedWord)
                 
-                if !translation.isEmpty {
-                    suggestedTranslation = translation
-                    logger.debug("✅ Translation found: '\(translation)'")
-                } else {
-                    suggestedTranslation = ""
-                    translationDismissed = true
-                    logger.debug("❌ No translation found for: '\(trimmedWord)'")
+                await MainActor.run {
+                    isTranslating = false
+                    
+                    if !translation.isEmpty {
+                        suggestedTranslation = translation
+                        logger.debug("✅ Translation found: '\(translation)'")
+                    } else {
+                        suggestedTranslation = ""
+                        translationDismissed = true
+                        logger.debug("❌ No translation found for: '\(trimmedWord)'")
+                    }
                 }
             }
         }
@@ -600,5 +592,41 @@ struct EditCardView_Previews: PreviewProvider {
         let viewModel = FlashCardViewModel()
         let sampleCard = FlashCard(word: "eten", definition: "to eat", example: "Ik wil eten.")
         EditCardView(viewModel: viewModel, card: sampleCard)
+    }
+}
+
+// MARK: - Translation Task Modifier
+
+struct TranslationTaskModifier: ViewModifier {
+    let translationConfiguration: Any?
+    let lastTranslatedWord: String
+    let onTranslationComplete: (String) -> Void
+    let onTranslationError: (String) -> Void
+    
+    func body(content: Content) -> some View {
+        if #available(iOS 18.0, *), CompatibilityHelper.isTranslationFrameworkAvailable {
+            #if canImport(Translation)
+            content.translationTask(translationConfiguration as? TranslationSession.Configuration) { session in
+                guard translationConfiguration != nil else { return }
+                
+                let wordToTranslate = lastTranslatedWord
+                
+                do {
+                    let response = try await session.translate(wordToTranslate)
+                    await MainActor.run {
+                        onTranslationComplete(response.targetText)
+                    }
+                } catch {
+                    await MainActor.run {
+                        onTranslationError(error.localizedDescription)
+                    }
+                }
+            }
+            #else
+            content
+            #endif
+        } else {
+            content
+        }
     }
 } 

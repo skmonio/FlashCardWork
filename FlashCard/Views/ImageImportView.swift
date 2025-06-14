@@ -20,10 +20,7 @@ struct ImageImportView: View {
     @State private var selectedDeckIds: Set<UUID> = []
     
     // Translation state (only used on iOS 17.4+)
-    #if canImport(Translation)
-    @available(iOS 17.4, *)
-    @State private var translationConfiguration: TranslationSession.Configuration?
-    #endif
+    @State private var translationConfiguration: Any?
     @State private var wordsToTranslate: [String] = []
     @State private var currentTranslatingWords: Set<String> = []
     
@@ -159,7 +156,34 @@ struct ImageImportView: View {
         .sheet(isPresented: $showingCamera) {
             CameraView(selectedImage: $selectedImage)
         }
-        .compatibleTranslationTask()
+        .modifier(ImageTranslationTaskModifier(
+            translationConfiguration: translationConfiguration,
+            wordsToTranslate: wordsToTranslate,
+            currentTranslatingWords: currentTranslatingWords,
+            extractedWords: $extractedWords,
+            onTranslationComplete: { wordIndex, translation in
+                if wordIndex < extractedWords.count {
+                    extractedWords[wordIndex].suggestedTranslation = translation
+                    extractedWords[wordIndex].isLoadingTranslation = false
+                }
+            },
+            onTranslationError: { word in
+                // Try fallback translation using TranslationService
+                Task {
+                    let fallbackTranslation = await TranslationService.shared.getTranslationWithFallback(for: word)
+                    await MainActor.run {
+                        if let finalIndex = extractedWords.firstIndex(where: { $0.text == word }) {
+                            extractedWords[finalIndex].suggestedTranslation = fallbackTranslation
+                            extractedWords[finalIndex].isLoadingTranslation = false
+                            currentTranslatingWords.remove(word)
+                        }
+                    }
+                }
+            },
+            onComplete: {
+                wordsToTranslate = []
+            }
+        ))
         .featureUnavailableAlert(
             isPresented: $showingCompatibilityAlert,
             feature: compatibilityFeature ?? .translation
@@ -329,8 +353,14 @@ struct ImageImportView: View {
         }
     }
     
-    @available(iOS 17.4, *)
     private func fetchTranslationsUsingAppleFramework(_ unknownWords: [ExtractedWord]) {
+        // Check if we can use Apple's Translation framework
+        guard #available(iOS 18.0, *), CompatibilityHelper.isTranslationFrameworkAvailable else {
+            // Fallback to local dictionary
+            fetchTranslationsUsingLocalDictionary(unknownWords)
+            return
+        }
+        
         for (index, word) in extractedWords.enumerated() {
             if !word.isKnownWord && !word.isLoadingTranslation {
                 extractedWords[index].isLoadingTranslation = true
@@ -339,10 +369,12 @@ struct ImageImportView: View {
         }
         
         // Set up translation configuration
+        #if canImport(Translation)
         translationConfiguration = TranslationSession.Configuration(
             source: Locale.Language(identifier: "nl"),
             target: Locale.Language(identifier: "en")
         )
+        #endif
         
         // Extract unique words to translate
         let uniqueWords = Array(currentTranslatingWords)
@@ -502,4 +534,53 @@ struct CameraView: UIViewControllerRepresentable {
 
 #Preview {
     ImageImportView(viewModel: FlashCardViewModel())
+}
+
+// MARK: - Image Translation Task Modifier
+
+struct ImageTranslationTaskModifier: ViewModifier {
+    let translationConfiguration: Any?
+    let wordsToTranslate: [String]
+    let currentTranslatingWords: Set<String>
+    @Binding var extractedWords: [ImageImportView.ExtractedWord]
+    let onTranslationComplete: (Int, String) -> Void
+    let onTranslationError: (String) -> Void
+    let onComplete: () -> Void
+    
+    func body(content: Content) -> some View {
+        if #available(iOS 18.0, *), CompatibilityHelper.isTranslationFrameworkAvailable {
+            #if canImport(Translation)
+            content.translationTask(translationConfiguration as? TranslationSession.Configuration) { session in
+                guard !wordsToTranslate.isEmpty else { return }
+                
+                for word in wordsToTranslate {
+                    guard currentTranslatingWords.contains(word) else { continue }
+                    
+                    do {
+                        let response = try await session.translate(word)
+                        
+                        await MainActor.run {
+                            if let wordIndex = extractedWords.firstIndex(where: { $0.text == word }) {
+                                onTranslationComplete(wordIndex, response.targetText)
+                            }
+                        }
+                    } catch {
+                        await MainActor.run {
+                            onTranslationError(word)
+                        }
+                    }
+                }
+                
+                // Clear the translation queue
+                await MainActor.run {
+                    onComplete()
+                }
+            }
+            #else
+            content
+            #endif
+        } else {
+            content
+        }
+    }
 } 
