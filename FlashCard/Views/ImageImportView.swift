@@ -42,7 +42,7 @@ struct ImageImportView: View {
     }
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack(spacing: 20) {
                 if selectedImage == nil {
                     // Image selection interface
@@ -144,11 +144,13 @@ struct ImageImportView: View {
             }
             .navigationTitle("Import from Image")
             .navigationBarTitleDisplayMode(.inline)
-            .navigationBarItems(
-                leading: Button("Cancel") {
-                    dismiss()
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
                 }
-            )
+            }
         }
         .sheet(isPresented: $showingImagePicker) {
             ImagePicker(selectedImage: $selectedImage)
@@ -188,60 +190,6 @@ struct ImageImportView: View {
             isPresented: $showingCompatibilityAlert,
             feature: compatibilityFeature ?? .translation
         )
-    }
-    
-    @ViewBuilder
-    private func compatibleTranslationTask() -> some View {
-        if #available(iOS 17.4, *) {
-            self.translationTask(translationConfiguration) { session in
-                guard !wordsToTranslate.isEmpty else { return }
-                
-                logger.debug("📡 translationTask triggered for \(wordsToTranslate.count) words")
-                
-                for word in wordsToTranslate {
-                    guard currentTranslatingWords.contains(word) else { continue }
-                    
-                    do {
-                        logger.debug("🔄 Starting translation for: '\(word)'")
-                        let response = try await session.translate(word)
-                        logger.debug("✅ Translation API responded for '\(word)': '\(response.targetText)'")
-                        
-                        await MainActor.run {
-                            if let wordIndex = self.extractedWords.firstIndex(where: { $0.text == word }) {
-                                self.extractedWords[wordIndex].suggestedTranslation = response.targetText
-                                self.extractedWords[wordIndex].isLoadingTranslation = false
-                                self.currentTranslatingWords.remove(word)
-                            }
-                        }
-                    } catch {
-                        logger.error("❌ Translation failed for '\(word)': \(error.localizedDescription)")
-                        await MainActor.run {
-                            if let wordIndex = self.extractedWords.firstIndex(where: { $0.text == word }) {
-                                // Try fallback translation using TranslationService
-                                Task {
-                                    let fallbackTranslation = await TranslationService.shared.getTranslationWithFallback(for: word)
-                                    await MainActor.run {
-                                        if let finalIndex = self.extractedWords.firstIndex(where: { $0.text == word }) {
-                                            self.extractedWords[finalIndex].suggestedTranslation = fallbackTranslation
-                                            self.extractedWords[finalIndex].isLoadingTranslation = false
-                                            self.currentTranslatingWords.remove(word)
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                
-                // Clear the translation queue
-                await MainActor.run {
-                    self.wordsToTranslate = []
-                }
-            }
-        } else {
-            // No translation task needed for older iOS versions
-            self
-        }
     }
     
     private func processImage() {
@@ -552,7 +500,8 @@ struct ImageTranslationTaskModifier: ViewModifier {
     func body(content: Content) -> some View {
         if #available(iOS 18.0, *), CompatibilityHelper.isTranslationFrameworkAvailable {
             #if canImport(Translation)
-            if let config = translationConfiguration as? TranslationSession.Configuration {
+            if let translationConfiguration = translationConfiguration,
+               let config = translationConfiguration as? TranslationSession.Configuration {
                 content.translationTask(config) { session in
                     guard !wordsToTranslate.isEmpty else { return }
                     

@@ -183,28 +183,13 @@ struct ManageDecksView: View {
                 }
             }
             .navigationTitle("Manage Decks")
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    if isSelectionMode {
-                        Button("Cancel") {
-                            isSelectionMode = false
-                            selectedDeckIds.removeAll()
-                        }
-                    } else {
-                        EmptyView()
-                    }
-                }
-                
+            .toolbar(content: {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    if !isSelectionMode && searchText.isEmpty {
-                        Button("Select") {
-                            isSelectionMode = true
-                        }
-                    } else {
-                        EmptyView()
+                    Button("Add Deck") {
+                        showingAddDeck = true
                     }
                 }
-            }
+            })
             
             Spacer()
             
@@ -396,9 +381,9 @@ struct ManageDecksView: View {
             EmptyView()
         }
         .hidden()
-        .onChange(of: showingEditCardView) { oldValue, newValue in
+        .onChange(of: showingEditCardView) { newValue in
             // Refresh search results when returning from EditCardView
-            if oldValue && !newValue {
+            if !newValue {
                 // Force a refresh by temporarily clearing and resetting search
                 let currentSearch = searchText
                 searchText = ""
@@ -428,7 +413,7 @@ struct MoveDeckSheet: View {
     }
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 Section(header: Text("Move '\(deck.name)' to:")) {
                     // Option for top level
@@ -487,7 +472,7 @@ struct MoveDeckSheet: View {
             }
             .navigationTitle("Move Deck")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
+            .toolbar(content: {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") {
                         dismiss()
@@ -501,7 +486,7 @@ struct MoveDeckSheet: View {
                     }
                     .disabled(!hasChanges())
                 }
-            }
+            })
             .onAppear {
                 // Initialize with current parent
                 selectedParentId = deck.parentId
@@ -561,7 +546,7 @@ struct BulkMoveDeckSheet: View {
     }
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 Section(header: Text("Move \(deckIds.count) decks to:")) {
                     // Option for top level
@@ -612,7 +597,7 @@ struct BulkMoveDeckSheet: View {
             }
             .navigationTitle("Move Decks")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
+            .toolbar(content: {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") {
                         dismiss()
@@ -625,7 +610,7 @@ struct BulkMoveDeckSheet: View {
                         dismiss()
                     }
                 }
-            }
+            })
         }
         .presentationDetents([.medium, .large])
     }

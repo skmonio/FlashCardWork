@@ -81,9 +81,9 @@ extension View {
     @ViewBuilder
     func compatibleToolbar<Content: View>(@ViewBuilder content: () -> Content) -> some View {
         if CompatibilityHelper.isModernToolbarAvailable {
-            self.toolbar {
+            self.toolbar(content: {
                 content()
-            }
+            })
         } else {
             // Fallback for iOS 13 and earlier
             self.navigationBarItems(trailing: content())

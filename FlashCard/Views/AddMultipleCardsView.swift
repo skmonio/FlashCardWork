@@ -33,44 +33,44 @@ struct AddMultipleCardsView: View {
             ForEach($cardEntries.indices, id: \.self) { index in
                 Section(header: Text(cardEntries.count > 1 ? "Card \(index + 1)" : "Card Details")) {
                     TextField("Word", text: $cardEntries[index].word)
-                        .onChange(of: cardEntries[index].word) { _, newValue in
+                        .onChange(of: cardEntries[index].word) { newValue in
                             logger.debug("Word changed for card \(index): \(newValue)")
                         }
                     
                     TextField("Translation", text: $cardEntries[index].definition)
-                        .onChange(of: cardEntries[index].definition) { _, newValue in
+                        .onChange(of: cardEntries[index].definition) { newValue in
                             logger.debug("Translation changed for card \(index): \(newValue)")
                         }
                     
                     TextField("Example (Optional)", text: $cardEntries[index].example)
-                        .onChange(of: cardEntries[index].example) { _, newValue in
+                        .onChange(of: cardEntries[index].example) { newValue in
                             logger.debug("Example changed for card \(index): \(newValue)")
                         }
                 }
                 
                 Section(header: Text("Additional Grammar (Optional)")) {
                     TextField("Article (de/het)", text: $cardEntries[index].article)
-                        .onChange(of: cardEntries[index].article) { _, newValue in
+                        .onChange(of: cardEntries[index].article) { newValue in
                             logger.debug("Article changed for card \(index): \(newValue)")
                         }
                     
                     TextField("Plural form", text: $cardEntries[index].plural)
-                        .onChange(of: cardEntries[index].plural) { _, newValue in
+                        .onChange(of: cardEntries[index].plural) { newValue in
                             logger.debug("Plural changed for card \(index): \(newValue)")
                         }
                     
                     TextField("Past tense", text: $cardEntries[index].pastTense)
-                        .onChange(of: cardEntries[index].pastTense) { _, newValue in
+                        .onChange(of: cardEntries[index].pastTense) { newValue in
                             logger.debug("Past tense changed for card \(index): \(newValue)")
                         }
                     
                     TextField("Future tense", text: $cardEntries[index].futureTense)
-                        .onChange(of: cardEntries[index].futureTense) { _, newValue in
+                        .onChange(of: cardEntries[index].futureTense) { newValue in
                             logger.debug("Future tense changed for card \(index): \(newValue)")
                         }
                     
                     TextField("Past participle", text: $cardEntries[index].pastParticiple)
-                        .onChange(of: cardEntries[index].pastParticiple) { _, newValue in
+                        .onChange(of: cardEntries[index].pastParticiple) { newValue in
                             logger.debug("Past participle changed for card \(index): \(newValue)")
                         }
                     
@@ -255,7 +255,7 @@ struct AddMultipleCardsView: View {
             
             logger.debug("Adding card - Word: \(trimmedWord), Translation: \(trimmedDefinition)")
             
-            viewModel.addCard(
+            let _ = viewModel.addCard(
                 word: trimmedWord,
                 definition: trimmedDefinition,
                 example: trimmedExample,

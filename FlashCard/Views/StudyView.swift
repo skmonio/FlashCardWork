@@ -107,13 +107,13 @@ struct StudyView: View {
                     print("📝 Edit sheet disappeared")
                 }
         }
-        .onChange(of: selectedCardForEdit) { oldValue, newValue in
+        .onChange(of: selectedCardForEdit) { newValue in
             // Just print when edit is done - don't try to update game state
-            if oldValue != nil && newValue == nil {
+            if newValue == nil {
                 print("📝 Edit completed - card saved in viewModel")
             }
         }
-        .onChange(of: cards) { oldCards, newCards in
+        .onChange(of: cards) { newCards in
             print("📚 Cards array changed - Count: \(newCards.count), Current card: \(currentIndex < newCards.count ? newCards[currentIndex].word : "N/A")")
         }
         .onAppear {

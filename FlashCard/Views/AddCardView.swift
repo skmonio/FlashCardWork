@@ -109,13 +109,14 @@ struct AddCardView: View {
                         VStack(alignment: .leading, spacing: 8) {
                             // Word field
                             TextField("e.g., eten", text: $word)
-                                .onChange(of: word) { oldValue, newValue in
-                                    logger.debug("Word changed from '\(oldValue)' to '\(newValue)'")
-                                    
-                                    // Clear translation results when word changes
-                                    if newValue.trimmingCharacters(in: .whitespacesAndNewlines) != lastTranslatedWord {
+                                .onChange(of: word) { newValue in
+                                    logger.debug("Word changed: \(newValue)")
+                                    if !newValue.isEmpty {
+                                        Task {
+                                            await fetchTranslationSuggestion(for: newValue)
+                                        }
+                                    } else {
                                         suggestedTranslation = ""
-                                        translationDismissed = false
                                     }
                                 }
                             
@@ -237,15 +238,15 @@ struct AddCardView: View {
                         }
                         
                         TextField("e.g., to eat", text: $definition)
-                            .onChange(of: definition) { oldValue, newValue in
-                                logger.debug("Definition changed from '\(oldValue)' to '\(newValue)'")
+                            .onChange(of: definition) { newValue in
+                                logger.debug("Definition changed: \(newValue)")
                             }
                         
                         // Example field with speech controls
                         HStack(spacing: 8) {
                             TextField("e.g., Ik wil eten.", text: $example)
-                                .onChange(of: example) { oldValue, newValue in
-                                    logger.debug("Example changed from '\(oldValue)' to '\(newValue)'")
+                                .onChange(of: example) { newValue in
+                                    logger.debug("Example changed: \(newValue)")
                                 }
                             
                             if !example.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
@@ -256,28 +257,28 @@ struct AddCardView: View {
                     
                     Section(header: Text("Additional Grammar (Optional)")) {
                         TextField("Article (de/het)", text: $article)
-                            .onChange(of: article) { oldValue, newValue in
-                                logger.debug("Article changed from '\(oldValue)' to '\(newValue)'")
+                            .onChange(of: article) { newValue in
+                                logger.debug("Article changed: \(newValue)")
                             }
                         
                         TextField("Plural form", text: $plural)
-                            .onChange(of: plural) { oldValue, newValue in
-                                logger.debug("Plural changed from '\(oldValue)' to '\(newValue)'")
+                            .onChange(of: plural) { newValue in
+                                logger.debug("Plural changed: \(newValue)")
                             }
                         
                         TextField("Past tense", text: $pastTense)
-                            .onChange(of: pastTense) { oldValue, newValue in
-                                logger.debug("Past tense changed from '\(oldValue)' to '\(newValue)'")
+                            .onChange(of: pastTense) { newValue in
+                                logger.debug("Past tense changed: \(newValue)")
                             }
                         
                         TextField("Future tense", text: $futureTense)
-                            .onChange(of: futureTense) { oldValue, newValue in
-                                logger.debug("Future tense changed from '\(oldValue)' to '\(newValue)'")
+                            .onChange(of: futureTense) { newValue in
+                                logger.debug("Future tense changed: \(newValue)")
                             }
                         
                         TextField("Past participle", text: $pastParticiple)
-                            .onChange(of: pastParticiple) { oldValue, newValue in
-                                logger.debug("Past participle changed from '\(oldValue)' to '\(newValue)'")
+                            .onChange(of: pastParticiple) { newValue in
+                                logger.debug("Past participle changed: \(newValue)")
                             }
                     }
                     
@@ -623,6 +624,37 @@ struct AddCardView: View {
         isTranslating = false
         
         logger.debug("Form reset for adding another card")
+    }
+    
+    private func fetchTranslationSuggestion(for word: String) {
+        let trimmedWord = word.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        // Only translate if word has meaningful content and isn't too short
+        guard trimmedWord.count >= 3 else { return }
+        
+        // Reset state
+        suggestedTranslation = ""
+        isTranslating = true
+        lastTranslatedWord = trimmedWord
+        translationDismissed = false
+        
+        // Use compatibility wrapper for automatic translation
+        Task {
+            let translation = await TranslationCompatibility.getTranslation(for: trimmedWord)
+            
+            await MainActor.run {
+                isTranslating = false
+                
+                if !translation.isEmpty {
+                    suggestedTranslation = translation
+                    logger.debug("✅ Auto-translation found: '\(translation)'")
+                } else {
+                    suggestedTranslation = ""
+                    // Don't set translationDismissed for auto-suggestions
+                    logger.debug("❌ No auto-translation found for: '\(trimmedWord)'")
+                }
+            }
+        }
     }
     
     private func manualTranslationRequest() {

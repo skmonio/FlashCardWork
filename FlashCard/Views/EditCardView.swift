@@ -38,13 +38,12 @@ struct EditCardView: View {
     private let logger = Logger(subsystem: "com.flashcards", category: "EditCardView")
     
     init(viewModel: FlashCardViewModel, card: FlashCard) {
-        logger.debug("Initializing EditCardView for card: \(card.id)")
         self.viewModel = viewModel
         self.cardId = card.id
         _word = State(initialValue: card.word)
         _definition = State(initialValue: card.definition)
         _example = State(initialValue: card.example)
-        _selectedDeckIds = State(initialValue: card.deckIds)
+        _selectedDeckIds = State(initialValue: Set(card.deckIds))
         
         // Initialize grammatical fields
         _article = State(initialValue: card.article)
@@ -139,31 +138,14 @@ struct EditCardView: View {
                         // Word field with speech controls
                         HStack(spacing: 8) {
                             TextField("e.g., eten", text: $word)
-                                .onChange(of: word) { oldValue, newValue in
-                                    logger.debug("Word changed from '\(oldValue)' to '\(newValue)'")
-                                    
-                                    let trimmedWord = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
-                                    
-                                    // Only trigger automatic translation if:
-                                    // 1. Word has 3+ characters
-                                    // 2. Word is different from last translated
-                                    // 3. User hasn't dismissed suggestions
-                                    // 4. We're not currently translating
-                                    if trimmedWord.count >= 3 && 
-                                       trimmedWord != lastTranslatedWord && 
-                                       !translationDismissed && 
-                                       !isTranslating {
-                                        triggerTranslationSuggestion(for: trimmedWord)
-                                    } else if trimmedWord.isEmpty {
-                                        showTranslationSuggestion = false
+                                .onChange(of: word) { newValue in
+                                    logger.debug("Word changed: \(newValue)")
+                                    if !newValue.isEmpty {
+                                        Task {
+                                            await fetchTranslationSuggestion(for: newValue)
+                                        }
+                                    } else {
                                         suggestedTranslation = ""
-                                        translationDismissed = false
-                                        lastTranslatedWord = ""
-                                    } else if trimmedWord.count < 3 {
-                                        showTranslationSuggestion = false
-                                        suggestedTranslation = ""
-                                        isTranslating = false
-                                        lastTranslatedWord = ""
                                     }
                                 }
                             
@@ -306,15 +288,15 @@ struct EditCardView: View {
                     }
                     
                     TextField("e.g., to eat", text: $definition)
-                        .onChange(of: definition) { oldValue, newValue in
-                            logger.debug("Translation changed from '\(oldValue)' to '\(newValue)'")
+                        .onChange(of: definition) { newValue in
+                            logger.debug("Definition changed: \(newValue)")
                         }
                     
                     // Example field with speech controls
                     HStack(spacing: 8) {
                         TextField("e.g., Ik wil eten.", text: $example)
-                            .onChange(of: example) { oldValue, newValue in
-                                logger.debug("Example changed from '\(oldValue)' to '\(newValue)'")
+                            .onChange(of: example) { newValue in
+                                logger.debug("Example changed: \(newValue)")
                             }
                         
                         if !example.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
@@ -325,28 +307,28 @@ struct EditCardView: View {
                 
                 Section(header: Text("Additional Grammar (Optional)")) {
                     TextField("Article (de/het)", text: $article)
-                        .onChange(of: article) { oldValue, newValue in
-                            logger.debug("Article changed from '\(oldValue)' to '\(newValue)'")
+                        .onChange(of: article) { newValue in
+                            logger.debug("Article changed: \(newValue)")
                         }
                     
                     TextField("Plural form", text: $plural)
-                        .onChange(of: plural) { oldValue, newValue in
-                            logger.debug("Plural changed from '\(oldValue)' to '\(newValue)'")
+                        .onChange(of: plural) { newValue in
+                            logger.debug("Plural changed: \(newValue)")
                         }
                     
                     TextField("Past tense", text: $pastTense)
-                        .onChange(of: pastTense) { oldValue, newValue in
-                            logger.debug("Past tense changed from '\(oldValue)' to '\(newValue)'")
+                        .onChange(of: pastTense) { newValue in
+                            logger.debug("Past tense changed: \(newValue)")
                         }
                     
                     TextField("Future tense", text: $futureTense)
-                        .onChange(of: futureTense) { oldValue, newValue in
-                            logger.debug("Future tense changed from '\(oldValue)' to '\(newValue)'")
+                        .onChange(of: futureTense) { newValue in
+                            logger.debug("Future tense changed: \(newValue)")
                         }
                     
                     TextField("Past participle", text: $pastParticiple)
-                        .onChange(of: pastParticiple) { oldValue, newValue in
-                            logger.debug("Past participle changed from '\(oldValue)' to '\(newValue)'")
+                        .onChange(of: pastParticiple) { newValue in
+                            logger.debug("Past participle changed: \(newValue)")
                         }
                 }
                 
@@ -421,7 +403,8 @@ struct EditCardView: View {
                 }
             }
         }
-        .navigationBarHidden(true)
+        .navigationBarBackButtonHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
         .sheet(isPresented: $showingNewDeckSheet) {
             // New deck creation sheet
             VStack(spacing: 0) {
@@ -467,7 +450,8 @@ struct EditCardView: View {
                     }
                 }
             }
-            .navigationBarHidden(true)
+            .navigationBarBackButtonHidden(true)
+            .toolbar(.hidden, for: .navigationBar)
         }
         .featureUnavailableAlert(
             isPresented: $showingCompatibilityAlert,
@@ -497,7 +481,7 @@ struct EditCardView: View {
         ))
     }
     
-    private func triggerTranslationSuggestion(for word: String) {
+    private func fetchTranslationSuggestion(for word: String) {
         let trimmedWord = word.trimmingCharacters(in: .whitespacesAndNewlines)
         
         // Only translate if word has meaningful content and isn't too short
@@ -569,24 +553,24 @@ struct EditCardView: View {
     private func loadCardData() {
         logger.debug("EditCardView appeared")
         
-        guard let card = viewModel.getCard(by: cardId) else {
+        guard let currentCard = card else {
             logger.error("Card not found with ID: \(cardId)")
             dismiss()
             return
         }
         
         // Load card data into state variables
-        word = card.word
-        definition = card.definition
-        example = card.example
-        selectedDeckIds = Set(card.deckIds)
-        article = card.article
-        plural = card.plural
-        pastTense = card.pastTense
-        futureTense = card.futureTense
-        pastParticiple = card.pastParticiple
+        word = currentCard.word
+        definition = currentCard.definition
+        example = currentCard.example
+        selectedDeckIds = Set(currentCard.deckIds)
+        article = currentCard.article
+        plural = currentCard.plural
+        pastTense = currentCard.pastTense
+        futureTense = currentCard.futureTense
+        pastParticiple = currentCard.pastParticiple
         
-        logger.debug("Loaded card data - Word: \(card.word), Definition: \(card.definition)")
+        logger.debug("Loaded card data - Word: \(currentCard.word), Definition: \(currentCard.definition)")
     }
 }
 

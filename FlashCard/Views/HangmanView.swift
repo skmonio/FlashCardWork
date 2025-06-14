@@ -180,13 +180,11 @@ struct HangmanView: View {
                     .disableAutocorrection(true)
                     .textInputAutocapitalization(.never)
                     .keyboardType(.alphabet)
-                    .onChange(of: currentGuess) { oldValue, newValue in
-                        // Process new letters
+                    .onChange(of: currentGuess) { newValue in
+                        // Process new letters - we need to track old value manually for iOS 16 compatibility
                         let newLetters = Set(newValue.lowercased())
-                        let oldLetters = Set(oldValue.lowercased())
-                        let addedLetters = newLetters.subtracting(oldLetters)
                         
-                        for letter in addedLetters {
+                        for letter in newLetters {
                             if letter.isLetter && !guessedLetters.contains(letter) {
                                 guessLetter(letter)
                             }
@@ -279,7 +277,7 @@ struct HangmanView: View {
         } message: {
             Text("Are you sure you want to close? Your progress will be lost.")
         }
-        .onChange(of: showingNextWord) { oldValue, newValue in
+        .onChange(of: showingNextWord) { newValue in
             if newValue {
                 nextWord()
             }

@@ -144,16 +144,9 @@ struct CardView: View {
         .onAppear {
             // Safely check for audio existence in background
             DispatchQueue.global(qos: .background).async {
-                do {
-                    let audioExists = AudioManager.shared.audioExists(for: card.id)
-                    DispatchQueue.main.async {
-                        hasAudio = audioExists
-                    }
-                } catch {
-                    print("CardView: Error checking audio existence: \(error)")
-                    DispatchQueue.main.async {
-                        hasAudio = false
-                    }
+                let audioExists = AudioManager.shared.audioExists(for: card.id)
+                DispatchQueue.main.async {
+                    hasAudio = audioExists
                 }
             }
         }

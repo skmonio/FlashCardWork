@@ -296,18 +296,17 @@ struct DeckSelectionView: View {
                 }
             }
         }
-        .onChange(of: shouldStartGame) { oldValue, newValue in
+        .onChange(of: shouldStartGame) { newValue in
             if newValue {
-                print("🎮 Starting game: \(mode.title), Continue: \(shouldContinueGame), Decks: \(selectedDeckIds.count)")
-                print("📊 Available cards: \(availableCards.count)")
-                print("🔗 Deck IDs: \(Array(selectedDeckIds))")
-            }
-            if oldValue && !newValue {
-                print("🔄 Game navigation state reset")
+                // Game will start automatically via NavigationLink
+                print("🎮 shouldStartGame changed to: \(newValue)")
             }
         }
-        .onChange(of: showingContinueGameOverlay) { oldValue, newValue in
-            print("🎨 showingContinueGameOverlay changed from \(oldValue) to \(newValue)")
+        .onChange(of: showingContinueGameOverlay) { newValue in
+            if !newValue {
+                // Reset the flag when overlay is dismissed
+                shouldStartGame = false
+            }
         }
         .alert("Overwrite Saved Game?", isPresented: $showingSaveOverwriteWarning) {
             Button("Start New Game", role: .destructive) {

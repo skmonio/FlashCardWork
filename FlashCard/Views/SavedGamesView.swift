@@ -17,7 +17,7 @@ struct SavedGamesView: View {
             }
             .navigationTitle("Saved Games")
             .navigationBarTitleDisplayMode(.large)
-            .toolbar {
+            .toolbar(content: {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Done") {
                         dismiss()
@@ -32,7 +32,7 @@ struct SavedGamesView: View {
                         .foregroundColor(.red)
                     }
                 }
-            }
+            })
             .alert("Clear All Saved Games?", isPresented: $showingClearAllConfirmation) {
                 Button("Clear All", role: .destructive) {
                     saveStateManager.clearAllSaveStates()

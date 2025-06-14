@@ -52,7 +52,7 @@ struct ExportImportView: View {
     }
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             List {
                 Section(header: Text("Export")) {
                     VStack(alignment: .leading, spacing: 12) {
@@ -143,7 +143,7 @@ struct ExportImportView: View {
                         Brood,Bread,"Ik eet brood met kaas",het,,,"A1 - Food & Drinks; Basics",3,5,3
                         """)
                             .font(.caption)
-                            .fontDesign(.monospaced)
+                            .modifier(MonospacedFontModifier())
                             .padding(8)
                             .background(Color(.systemGray6))
                             .cornerRadius(8)
@@ -151,11 +151,13 @@ struct ExportImportView: View {
                 }
             }
             .navigationTitle("Export & Import")
-            .navigationBarItems(
-                leading: Button("Cancel") {
-                    dismiss()
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
                 }
-            )
+            }
             .sheet(isPresented: $showingExportSheet) {
                 ShareSheet(activityItems: [exportContent])
             }
@@ -308,6 +310,17 @@ extension DateFormatter {
         formatter.dateFormat = "yyyy-MM-dd_HH-mm-ss"
         return formatter
     }()
+}
+
+// MARK: - iOS 16.0 Compatibility
+struct MonospacedFontModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(iOS 16.1, *) {
+            content.fontDesign(.monospaced)
+        } else {
+            content.font(.system(.caption, design: .monospaced))
+        }
+    }
 }
 
 struct ExportImportView_Previews: PreviewProvider {

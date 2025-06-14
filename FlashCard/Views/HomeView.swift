@@ -12,7 +12,7 @@ struct HomeView: View {
     @State private var showingImageImportView = false
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             // Add loading check - show loading only for a brief moment during initialization
             Group {
                 if viewModel.decks.isEmpty && viewModel.flashCards.isEmpty {
@@ -27,7 +27,8 @@ struct HomeView: View {
                     // Show main content
                     mainContent
                         .navigationTitle("FlashCards")
-                        .toolbar {
+                        .navigationBarTitleDisplayMode(.large)
+                        .toolbar(content: {
                             ToolbarItem(placement: .navigationBarTrailing) {
                                 Menu {
                                     Button(action: {
@@ -67,7 +68,7 @@ struct HomeView: View {
                                     Image(systemName: "plus")
                                 }
                             }
-                        }
+                        })
                 }
             }
             .background(Color(.systemGroupedBackground))
@@ -102,7 +103,7 @@ struct HomeView: View {
             showingExportImport = false
             showingResetAlert = false
         }
-        .onChange(of: viewModel.shouldNavigateToRoot) { oldValue, newValue in
+        .onChange(of: viewModel.shouldNavigateToRoot) { newValue in
             if newValue {
                 // Navigation to root is handled by dismissing all presented views
                 // The state will be reset when we return to HomeView

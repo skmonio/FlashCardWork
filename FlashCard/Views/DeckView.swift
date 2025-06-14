@@ -195,7 +195,7 @@ struct DeckView: View {
             }
             .navigationTitle(deck.name)
             .navigationBarBackButtonHidden(true)
-            .toolbar {
+            .toolbar(content: {
                 ToolbarItem(placement: .navigationBarLeading) {
                     if isSelectionMode {
                         Button("Cancel") {
@@ -230,7 +230,7 @@ struct DeckView: View {
                         .disabled(isSelectionMode)
                     }
                 }
-            }
+            })
             .alert("Delete Card", isPresented: $showingDeleteAlert) {
                 Button("Remove from \(deck.name)", role: .destructive) {
                     deleteCard(fromAllDecks: false)
@@ -362,9 +362,9 @@ struct DeckView: View {
             EmptyView()
         }
         .hidden()
-        .onChange(of: showingEditCardView) { oldValue, newValue in
+        .onChange(of: showingEditCardView) { newValue in
             // Refresh the view when returning from EditCardView
-            if oldValue && !newValue {
+            if !newValue {
                 logger.debug("Returned from EditCardView, refreshing DeckView")
                 refreshID = UUID()
                 selectedCard = nil
