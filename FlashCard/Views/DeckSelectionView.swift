@@ -11,7 +11,7 @@ struct DeckSelectionView: View {
     @State private var showingSaveOverwriteWarning = false
     
     enum StudyMode {
-        case study, test, game, truefalse, hangman, dehet, writing
+        case study, test, game, truefalse, hangman, dehet, writing, wordScramble
         
         var title: String {
             switch self {
@@ -22,6 +22,7 @@ struct DeckSelectionView: View {
             case .hangman: return "Hangman"
             case .dehet: return "de of het"
             case .writing: return "Write Your Card"
+            case .wordScramble: return "Jumble Your Cards"
             }
         }
         
@@ -33,6 +34,7 @@ struct DeckSelectionView: View {
             case .truefalse: return .trueFalse
             case .dehet: return .dehet
             case .writing: return .writing
+            case .wordScramble: return .wordScramble
             case .hangman:
                 fatalError("Hangman game does not support save states")
             }
@@ -81,7 +83,7 @@ struct DeckSelectionView: View {
 
     var body: some View {
         ZStack {
-            VStack {
+            VStack(spacing: 0) {
                 List {
                     Section(header: Text("Select Decks")) {
                         Button(action: {
@@ -239,28 +241,11 @@ struct DeckSelectionView: View {
                 .navigationTitle(mode.title)
                 .navigationBarBackButtonHidden(true)
                 
-                Spacer()
-                
-                // Bottom Navigation Bar
-                HStack {
-                    Button(action: {
-                        dismiss()
-                    }) {
-                        VStack {
-                            Image(systemName: "chevron.backward")
-                            Text("Back")
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
-                }
-                .padding()
-                .background(Color(.systemBackground))
-                .overlay(
-                    Rectangle()
-                        .frame(height: 1)
-                        .foregroundColor(.gray)
-                        .opacity(0.2),
-                    alignment: .top
+                // Bottom Navigation
+                BottomNavigationView(
+                    viewModel: viewModel,
+                    selectedTab: .constant(.home),
+                    onNavigate: handleBottomNavigation
                 )
             }
             .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("DismissToRoot"))) { _ in
@@ -353,6 +338,24 @@ struct DeckSelectionView: View {
         }
     }
     
+    private func handleBottomNavigation(_ tab: BottomNavigationView.TabItem) {
+        // Handle navigation from bottom bar
+        switch tab {
+        case .home:
+            // Go back to home
+            dismiss()
+        case .cards:
+            // Navigate to cards section (implement if needed)
+            break
+        case .games:
+            // Already in games section
+            break
+        case .settings:
+            // Navigate to settings section (implement if needed)
+            break
+        }
+    }
+    
     @ViewBuilder
     private var destinationView: some View {
         let deckIdArray = Array(selectedDeckIds)
@@ -402,6 +405,13 @@ struct DeckSelectionView: View {
             )
         case .writing:
             WritingViewWithSaveState(
+                viewModel: viewModel, 
+                cards: availableCards,
+                deckIds: deckIdArray,
+                shouldContinue: shouldContinueGame
+            )
+        case .wordScramble:
+            WordScrambleViewWithSaveState(
                 viewModel: viewModel, 
                 cards: availableCards,
                 deckIds: deckIdArray,
@@ -531,6 +541,25 @@ struct WritingViewWithSaveState: View {
         )
         .onAppear {
             print("✏️ WritingViewWithSaveState appearing - Cards: \(cards.count), DeckIds: \(deckIds.count), ShouldContinue: \(shouldContinue)")
+        }
+    }
+}
+
+struct WordScrambleViewWithSaveState: View {
+    @ObservedObject var viewModel: FlashCardViewModel
+    let cards: [FlashCard]
+    let deckIds: [UUID]
+    let shouldContinue: Bool
+    
+    var body: some View {
+        WordScrambleView(
+            viewModel: viewModel, 
+            cards: cards,
+            deckIds: deckIds,
+            shouldLoadSaveState: shouldContinue
+        )
+        .onAppear {
+            print("🎲 WordScrambleViewWithSaveState appearing - Cards: \(cards.count), DeckIds: \(deckIds.count), ShouldContinue: \(shouldContinue)")
         }
     }
 } 

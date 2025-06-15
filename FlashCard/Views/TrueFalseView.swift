@@ -52,69 +52,34 @@ struct TrueFalseView: View {
             } else if showingResults {
                 resultsView
             } else {
-                trueFalseView
+                gameView
             }
             
-            // Bottom Navigation Bar
+            // Bottom close button
             HStack {
+                Spacer()
                 Button(action: {
                     if hasSignificantProgress && !showingResults {
                         showingCloseConfirmation = true
                     } else {
-                        dismiss()
+                        dismissToRoot()
                     }
                 }) {
-                    VStack {
-                        Image(systemName: "chevron.backward")
-                        Text("Back")
-                    }
+                    Image(systemName: "xmark")
+                        .font(.title2)
+                        .foregroundColor(.secondary)
+                        .padding(12)
+                        .background(Circle().fill(Color(.systemGray5)))
                 }
-                .frame(maxWidth: .infinity)
-                
-                // Save progress button
-                if hasSignificantProgress && !showingResults {
-                    Button(action: {
-                        saveCurrentProgress()
-                        HapticManager.shared.successNotification()
-                    }) {
-                        VStack {
-                            Image(systemName: "bookmark.fill")
-                            Text("Save")
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
-                }
+                Spacer()
             }
-            .padding()
+            .padding(.bottom, 20)
             .background(Color(.systemBackground))
-            .overlay(
-                Rectangle()
-                    .frame(height: 1)
-                    .foregroundColor(.gray)
-                    .opacity(0.2),
-                alignment: .top
-            )
         }
         .navigationBarHidden(true)
-        .onAppear {
-            if shouldLoadSaveState {
-                loadSavedProgress()
-            } else {
-                resetGame()
-            }
-        }
-        .onDisappear {
-            // Auto-save when view disappears
-            if hasSignificantProgress && !showingResults {
-                saveCurrentProgress()
-            }
-        }
         .alert("Close Game?", isPresented: $showingCloseConfirmation) {
             Button("Save & Close", role: .destructive) {
-                if hasSignificantProgress && !showingResults {
-                    saveCurrentProgress()
-                }
-                dismissToRoot()
+                saveProgressAndDismiss()
             }
             Button("Close Without Saving") {
                 dismissToRoot()
@@ -124,6 +89,23 @@ struct TrueFalseView: View {
             Text(hasSignificantProgress ? 
                 "Would you like to save your progress?" : 
                 "Are you sure you want to close?")
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("DismissToRoot"))) { _ in
+            // Dismiss this view when dismiss to root is requested
+            dismiss()
+        }
+        .onAppear {
+            if shouldLoadSaveState {
+                loadSavedProgress()
+            } else {
+                setupGame()
+            }
+        }
+        .onDisappear {
+            // Auto-save when view disappears (if user navigates away without using back button)
+            if hasSignificantProgress && !showingResults {
+                saveCurrentProgress()
+            }
         }
 
         if showingGameOver {
@@ -205,7 +187,7 @@ struct TrueFalseView: View {
         }
     }
     
-    private var trueFalseView: some View {
+    private var gameView: some View {
         VStack(spacing: 20) {
             // Score display - with top padding for status bar
             HStack {
@@ -338,7 +320,7 @@ struct TrueFalseView: View {
     
     private func setupNextQuestion() {
         guard !remainingCards.isEmpty else {
-            showingResults = true
+            StreakManager.shared.recordGameCompletion(); showingResults = true
             return
         }
         
@@ -409,7 +391,7 @@ struct TrueFalseView: View {
             if remainingCards.isEmpty {
                 // Clear saved progress since game is complete
                 clearSavedProgress()
-                showingResults = true
+                StreakManager.shared.recordGameCompletion(); showingResults = true
             } else {
                 setupNextQuestion()
             }
@@ -497,7 +479,7 @@ struct TrueFalseView: View {
             if !remainingCards.isEmpty {
                 setupNextQuestion()
             } else {
-                showingResults = true
+                StreakManager.shared.recordGameCompletion(); showingResults = true
             }
             
             print("🔥 True/False progress loaded - Score: \(score), Questions: \(questionsAnswered)")
@@ -511,6 +493,27 @@ struct TrueFalseView: View {
     
     private func clearSavedProgress() {
         SaveStateManager.shared.deleteSaveState(gameType: .trueFalse)
+    }
+    
+    private func saveProgressAndDismiss() {
+        if hasSignificantProgress && !showingResults {
+            saveCurrentProgress()
+        }
+        dismissToRoot()
+    }
+    
+    private func setupGame() {
+        remainingCards = cards
+        score = 0
+        questionsAnswered = 0
+        correctAnswers = 0
+        incorrectAnswers = 0
+        showingFeedback = false
+        showingResults = false
+        setupNextQuestion()
+        
+        // Clear any saved progress when resetting
+        clearSavedProgress()
     }
 }
 

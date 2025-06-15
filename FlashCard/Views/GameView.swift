@@ -28,6 +28,7 @@ struct GameView: View {
     @State private var showingGameOver = false
     @State private var incorrectMatches: Set<FlashCard> = []
     @State private var showingCloseConfirmation = false
+    @State private var showingResults = false
     
     // Save state properties
     private var deckIds: [UUID]
@@ -52,164 +53,51 @@ struct GameView: View {
     }
 
     var body: some View {
-        ZStack {
-            VStack(spacing: 0) {
-                if cards.isEmpty {
-                    emptyStateView
-                } else {
-                    gameView
-                }
-                
-                // Bottom Navigation Bar
-                HStack {
-                    Button(action: {
-                        handleBackButton()
-                    }) {
-                        VStack {
-                            Image(systemName: "chevron.backward")
-                            Text("Back")
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
-                    
-                    Button(action: {
-                        setupGame()
-                    }) {
-                        VStack {
-                            Image(systemName: "arrow.clockwise")
-                            Text("Reset")
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
-                    
-                    // Save progress button
-                    if hasSignificantProgress && !showingGameOver {
-                        Button(action: {
-                            saveCurrentProgress()
-                            HapticManager.shared.successNotification()
-                        }) {
-                            VStack {
-                                Image(systemName: "bookmark.fill")
-                                Text("Save")
-                            }
-                        }
-                        .frame(maxWidth: .infinity)
-                    }
-                }
-                .padding()
-                .background(Color(.systemBackground))
-                .overlay(
-                    Rectangle()
-                        .frame(height: 1)
-                        .foregroundColor(.gray)
-                        .opacity(0.2),
-                    alignment: .top
-                )
+        VStack(spacing: 0) {
+            if cards.isEmpty {
+                emptyStateView
+            } else if showingResults {
+                resultsView
+            } else {
+                gameView
             }
-
-            if showingGameOver {
-                // Semi-transparent background
-                Color.black.opacity(0.5)
-                    .edgesIgnoringSafeArea(.all)
-                
-                // Game over popup
-                VStack(spacing: 20) {
-                    // Score summary
-                    VStack(spacing: 10) {
-                        Text("Game Complete! 🎉")
-                            .font(.title)
-                            .fontWeight(.bold)
-                        
-                        Text("You completed the game in \(moves) moves!")
-                            .font(.headline)
+            
+            // Bottom close button
+            HStack {
+                Spacer()
+                Button(action: {
+                    if hasSignificantProgress && !showingResults {
+                        showingCloseConfirmation = true
+                    } else {
+                        dismissToRoot()
                     }
-                    .padding(.top)
-                    
-                    // Action buttons
-                    VStack(spacing: 15) {
-                        Button(action: {
-                            // Explicitly save all ViewModel data to ensure statistics persist
-                            viewModel.saveAllData()
-                            
-                            // Force UI refresh
-                            DispatchQueue.main.async {
-                                viewModel.objectWillChange.send()
-                            }
-                            
-                            setupGame()
-                            showingGameOver = false
-                        }) {
-                            HStack {
-                                Image(systemName: "arrow.clockwise")
-                                Text("Play Again")
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.green)
-                            .foregroundColor(.white)
-                            .cornerRadius(10)
-                        }
-                        
-                        Button(action: {
-                            dismissToRoot()
-                        }) {
-                            HStack {
-                                Image(systemName: "house.fill")
-                                Text("Return to Main Menu")
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.secondary)
-                            .foregroundColor(.white)
-                            .cornerRadius(10)
-                        }
-                    }
-                    .padding(.horizontal)
+                }) {
+                    Image(systemName: "xmark")
+                        .font(.title2)
+                        .foregroundColor(.secondary)
+                        .padding(12)
+                        .background(Circle().fill(Color(.systemGray5)))
                 }
-                .padding()
-                .background(Color(UIColor.systemBackground))
-                .cornerRadius(20)
-                .shadow(radius: 10)
-                .padding(.horizontal)
+                Spacer()
             }
+            .padding(.bottom, 20)
+            .background(Color(.systemBackground))
         }
         .navigationBarHidden(true)
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("DismissToRoot"))) { _ in
+            // Dismiss this view when dismiss to root is requested
+            dismiss()
+        }
         .onAppear {
             if shouldLoadSaveState {
                 loadSavedProgress()
             } else {
-                // Initialize normally if not loading save state
-                // Don't call setupGame() as it deletes save states
-                // Reset game state
-                score = 0
-                moves = 0
-                selectedCard = nil
-                
-                // Don't clear saved progress here - only when explicitly resetting
-                
-                // Create pairs of cards (word and definition)
-                var allPairs: [(Card, Card)] = cards.map { flashCard in
-                    let wordCard = Card(content: flashCard.word, type: .word, originalCard: flashCard)
-                    let defCard = Card(content: flashCard.definition, type: .definition, originalCard: flashCard)
-                    return (wordCard, defCard)
-                }
-                
-                // Shuffle the pairs
-                allPairs.shuffle()
-                
-                // Take first 4 pairs for display (8 cards total)
-                displayedCards = Array(allPairs.prefix(4)).flatMap { [$0.0, $0.1] }
-                // Store remaining pairs
-                remainingCards = Array(allPairs.dropFirst(4)).flatMap { [$0.0, $0.1] }
-                // Shuffle the displayed cards
-                displayedCards.shuffle()
-                
-                gameCards = displayedCards + remainingCards
+                setupGame()
             }
         }
         .onDisappear {
-            // Auto-save when view disappears
-            if hasSignificantProgress && !showingGameOver {
+            // Auto-save when view disappears (if user navigates away without using back button)
+            if hasSignificantProgress && !showingResults {
                 saveCurrentProgress()
             }
         }
@@ -229,7 +117,7 @@ struct GameView: View {
     }
     
     private func handleBackButton() {
-        if hasSignificantProgress && !showingGameOver {
+        if hasSignificantProgress && !showingResults {
             showingCloseConfirmation = true
         } else {
             dismiss()
@@ -345,7 +233,7 @@ struct GameView: View {
     }
     
     private func saveProgressAndDismiss() {
-        if hasSignificantProgress && !showingGameOver {
+        if hasSignificantProgress && !showingResults {
             saveCurrentProgress()
         }
         dismissToRoot()
@@ -365,16 +253,43 @@ struct GameView: View {
     
     private var gameView: some View {
         VStack(spacing: 15) {
-            // Score and moves - with top padding for status bar
-            HStack {
-                Text("Matches: \(score)")
-                    .font(.headline)
-                Spacer()
-                Text("Moves: \(moves)")
-                    .font(.headline)
+            // Score and moves with progress bar - with extra top padding for status bar
+            VStack(spacing: 12) {
+                HStack {
+                    Text("Matches: \(score)")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                    Text("Moves: \(moves)")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                
+                // Progress bar showing completion
+                GeometryReader { geometry in
+                    ZStack(alignment: .leading) {
+                        // Background
+                        Rectangle()
+                            .fill(Color(.systemGray5))
+                            .frame(height: 6)
+                            .cornerRadius(3)
+                        
+                        // Progress fill based on matches
+                        Rectangle()
+                            .fill(LinearGradient(
+                                gradient: Gradient(colors: [.blue, .purple]),
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            ))
+                            .frame(width: geometry.size.width * (cards.count > 0 ? Double(score) / Double(cards.count) : 0), height: 6)
+                            .cornerRadius(3)
+                            .animation(.easeInOut(duration: 0.3), value: score)
+                    }
+                }
+                .frame(height: 6)
             }
             .padding(.horizontal)
-            .padding(.top, 50) // Add top padding for status bar
+            .padding(.top, 70) // Extra space at top for memory game
             
             // Game grid
             ScrollView {
@@ -520,7 +435,7 @@ struct GameView: View {
                             // Clear saved progress since game is complete
                             clearSavedProgress()
                             
-                            showingGameOver = true
+                            StreakManager.shared.recordGameCompletion(); showingResults = true
                         }
                     }
                 }
@@ -562,6 +477,49 @@ struct GameView: View {
                 dismiss()
             }
         }
+    }
+    
+    private var resultsView: some View {
+        VStack(spacing: 20) {
+            Text("Game Complete! 🎉")
+                .font(.title)
+                .multilineTextAlignment(.center)
+            
+            Text("You completed the game in \(moves) moves!")
+                .font(.title2)
+            
+            VStack(spacing: 16) {
+                Button(action: {
+                    // Explicitly save all ViewModel data to ensure statistics persist
+                    viewModel.saveAllData()
+                    
+                    // Force UI refresh
+                    DispatchQueue.main.async {
+                        viewModel.objectWillChange.send()
+                    }
+                    
+                    setupGame()
+                }) {
+                    Text("Play Again")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.blue)
+                        .cornerRadius(10)
+                }
+                
+                Button(action: {
+                    dismissToRoot()
+                }) {
+                    Text("Done")
+                        .font(.headline)
+                        .foregroundColor(.blue)
+                }
+            }
+            .padding(.top)
+        }
+        .padding()
     }
 }
 

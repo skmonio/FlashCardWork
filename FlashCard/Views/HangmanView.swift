@@ -94,22 +94,80 @@ struct HangmanView: View {
     }
     
     private func dismissToRoot() {
-        // Send notification to dismiss all views
         NotificationCenter.default.post(name: NSNotification.Name("DismissToRoot"), object: nil)
-        
-        // Also trigger ViewModel navigation
-        viewModel.navigateToRoot()
-        
-        // Fallback with multiple dismissals
-        dismiss()
-        for i in 1...8 {
-            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.15) {
-                dismiss()
-            }
-        }
     }
     
     var body: some View {
+        VStack(spacing: 0) {
+            if cards.isEmpty {
+                emptyStateView
+            } else if showingGameOver {
+                gameOverView
+            } else {
+                hangmanView
+            }
+            
+            // Bottom close button
+            HStack {
+                Spacer()
+                Button(action: {
+                    if !guessedLetters.isEmpty && !showingGameOver {
+                        showingCloseConfirmation = true
+                    } else {
+                        dismissToRoot()
+                    }
+                }) {
+                    Image(systemName: "xmark")
+                        .font(.title2)
+                        .foregroundColor(.secondary)
+                        .padding(12)
+                        .background(Circle().fill(Color(.systemGray5)))
+                }
+                Spacer()
+            }
+            .padding(.bottom, 20)
+            .background(Color(.systemBackground))
+        }
+        .navigationBarHidden(true)
+        .onAppear {
+            resetGame()
+        }
+    }
+    
+    private var emptyStateView: some View {
+        Text("No cards available")
+    }
+    
+    private var gameOverView: some View {
+        VStack(spacing: 20) {
+            Text("Game Over")
+                .font(.largeTitle)
+                .fontWeight(.bold)
+            
+            Text(gameWon ? "Congratulations! You guessed the word: \(word)" : "Sorry! The word was: \(word)")
+                .font(.title)
+                .foregroundColor(.secondary)
+            
+            Button("Try Again") {
+                // Explicitly save all ViewModel data to ensure statistics persist
+                viewModel.saveAllData()
+                
+                // Force UI refresh
+                DispatchQueue.main.async {
+                    viewModel.objectWillChange.send()
+                }
+                
+                resetGame()
+            }
+            
+            Button("Exit", role: .destructive) {
+                dismissToRoot()
+            }
+        }
+        .padding()
+    }
+    
+    private var hangmanView: some View {
         VStack(spacing: 0) {
             ZStack {
                 VStack(spacing: 20) {
@@ -196,42 +254,6 @@ struct HangmanView: View {
                         }
                     }
             }
-            
-            // Bottom Navigation Bar
-            HStack {
-                Button(action: {
-                    if !guessedLetters.isEmpty && !showingGameOver {
-                        showingCloseConfirmation = true
-                    } else {
-                        dismiss()
-                    }
-                }) {
-                    VStack {
-                        Image(systemName: "chevron.backward")
-                        Text("Back")
-                    }
-                }
-                .frame(maxWidth: .infinity)
-                
-                Button(action: {
-                    resetGame()
-                }) {
-                    VStack {
-                        Image(systemName: "arrow.clockwise")
-                        Text("Reset")
-                    }
-                }
-                .frame(maxWidth: .infinity)
-            }
-            .padding()
-            .background(Color(.systemBackground))
-            .overlay(
-                Rectangle()
-                    .frame(height: 1)
-                    .foregroundColor(.gray)
-                    .opacity(0.2),
-                alignment: .top
-            )
         }
         .navigationBarHidden(true)
         .onAppear {
@@ -241,33 +263,6 @@ struct HangmanView: View {
         .onTapGesture {
             // Tap anywhere to focus keyboard
             isKeyboardFocused = true
-        }
-        .alert("Game Over", isPresented: $showingGameOver) {
-            if currentCardIndex < cards.count - 1 {
-                Button("Next Word") {
-                    showingNextWord = true
-                }
-            }
-            Button("Try Again") {
-                // Explicitly save all ViewModel data to ensure statistics persist
-                viewModel.saveAllData()
-                
-                // Force UI refresh
-                DispatchQueue.main.async {
-                    viewModel.objectWillChange.send()
-                }
-                
-                resetGame()
-            }
-            Button("Exit", role: .cancel) {
-                dismissToRoot()
-            }
-        } message: {
-            if gameWon {
-                Text("Congratulations! You guessed the word: \(word)")
-            } else {
-                Text("Sorry! The word was: \(word)")
-            }
         }
         .alert("Close Game?", isPresented: $showingCloseConfirmation) {
             Button("Close", role: .destructive) {

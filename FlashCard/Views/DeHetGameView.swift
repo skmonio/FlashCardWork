@@ -39,8 +39,26 @@ struct DeHetGameView: View {
                 gameView
             }
             
-            // Bottom Navigation Bar
-            bottomNavigationBar
+            // Bottom close button
+            HStack {
+                Spacer()
+                Button(action: {
+                    if totalAnswers > 0 && !showingResults {
+                        showingCloseConfirmation = true
+                    } else {
+                        dismissToRoot()
+                    }
+                }) {
+                    Image(systemName: "xmark")
+                        .font(.title2)
+                        .foregroundColor(.secondary)
+                        .padding(12)
+                        .background(Circle().fill(Color(.systemGray5)))
+                }
+                Spacer()
+            }
+            .padding(.bottom, 20)
+            .background(Color(.systemBackground))
         }
         .navigationBarHidden(true)
         .alert("Close Game?", isPresented: $showingCloseConfirmation) {
@@ -50,6 +68,9 @@ struct DeHetGameView: View {
             Button("Cancel", role: .cancel) { }
         } message: {
             Text("Are you sure you want to close? Your progress will be lost.")
+        }
+        .onAppear {
+            setupGame()
         }
     }
     
@@ -217,43 +238,6 @@ struct DeHetGameView: View {
         }
     }
     
-    private var bottomNavigationBar: some View {
-        HStack {
-            Button(action: {
-                if totalAnswers > 0 && !showingResults {
-                    showingCloseConfirmation = true
-                } else {
-                    dismiss()
-                }
-            }) {
-                VStack {
-                    Image(systemName: "chevron.backward")
-                    Text("Back")
-                }
-            }
-            .frame(maxWidth: .infinity)
-            
-            Button(action: {
-                resetGame()
-            }) {
-                VStack {
-                    Image(systemName: "arrow.clockwise")
-                    Text("Reset")
-                }
-            }
-            .frame(maxWidth: .infinity)
-        }
-        .padding()
-        .background(Color(.systemBackground))
-        .overlay(
-            Rectangle()
-                .frame(height: 1)
-                .foregroundColor(.gray)
-                .opacity(0.2),
-            alignment: .top
-        )
-    }
-    
     private func checkAnswer(_ selectedArticle: String) {
         guard let card = currentCard else { return }
         
@@ -281,7 +265,7 @@ struct DeHetGameView: View {
         if currentIndex < filteredCards.count - 1 {
             currentIndex += 1
         } else {
-            showingResults = true
+            StreakManager.shared.recordGameCompletion(); showingResults = true
             HapticManager.shared.gameComplete()
         }
     }
@@ -297,18 +281,17 @@ struct DeHetGameView: View {
     }
     
     private func dismissToRoot() {
-        // Send notification to dismiss all views
         NotificationCenter.default.post(name: NSNotification.Name("DismissToRoot"), object: nil)
-        
-        // Also trigger ViewModel navigation
-        viewModel.navigateToRoot()
-        
-        // Fallback with multiple dismissals
-        dismiss()
-        for i in 1...8 {
-            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.15) {
-                dismiss()
-            }
-        }
+    }
+    
+    private func setupGame() {
+        // Initialize game state
+        currentIndex = 0
+        correctAnswers = 0
+        totalAnswers = 0
+        showingResults = false
+        lastAnswerCorrect = nil
+        showingAnswer = false
+        cards = viewModel.sortCardsForLearning(cards)
     }
 } 

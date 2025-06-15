@@ -24,6 +24,8 @@ struct GameSaveState: Codable {
         case dehet
         case lookCoverCheck
         case writing
+        case wordScramble
+        case multipleChoice
         
         var displayName: String {
             switch self {
@@ -34,6 +36,8 @@ struct GameSaveState: Codable {
             case .dehet: return "de of het"
             case .lookCoverCheck: return "Look Cover Check"
             case .writing: return "Write Your Card"
+            case .wordScramble: return "Word Scramble"
+            case .multipleChoice: return "Multiple Choice"
             }
         }
         
@@ -46,6 +50,8 @@ struct GameSaveState: Codable {
             case .dehet: return "questionmark.diamond.fill"
             case .lookCoverCheck: return "eye.fill"
             case .writing: return "pencil.and.scribble"
+            case .wordScramble: return "textformat.abc"
+            case .multipleChoice: return "list.bullet.circle.fill"
             }
         }
     }

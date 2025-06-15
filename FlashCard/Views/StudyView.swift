@@ -48,41 +48,26 @@ struct StudyView: View {
                 studyView
             }
             
-            // Bottom Navigation Bar
+            // Bottom close button
             HStack {
+                Spacer()
                 Button(action: {
-                    handleBackButton()
+                    if hasSignificantProgress && !showingResults {
+                        showingCloseConfirmation = true
+                    } else {
+                        dismissToRoot()
+                    }
                 }) {
-                    VStack {
-                        Image(systemName: "chevron.backward")
-                        Text("Back")
-                    }
+                    Image(systemName: "xmark")
+                        .font(.title2)
+                        .foregroundColor(.secondary)
+                        .padding(12)
+                        .background(Circle().fill(Color(.systemGray5)))
                 }
-                .frame(maxWidth: .infinity)
-                
-                // Save progress button
-                if hasSignificantProgress && !showingResults {
-                    Button(action: {
-                        saveCurrentProgress()
-                        HapticManager.shared.successNotification()
-                    }) {
-                        VStack {
-                            Image(systemName: "bookmark.fill")
-                            Text("Save")
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
-                }
+                Spacer()
             }
-            .padding()
+            .padding(.bottom, 20)
             .background(Color(.systemBackground))
-            .overlay(
-                Rectangle()
-                    .frame(height: 1)
-                    .foregroundColor(.gray)
-                    .opacity(0.2),
-                alignment: .top
-            )
         }
         .navigationBarHidden(true)
         .alert("Close Study Session?", isPresented: $showingCloseConfirmation) {
@@ -191,7 +176,10 @@ struct StudyView: View {
                             },
                             onDragChanged: { offset in
                                 dragOffset = offset
-                            }
+                            },
+                            onGoBack: currentIndex > 0 ? {
+                                goToPreviousCard()
+                            } : nil
                         )
                         .transition(AnyTransition.asymmetric(
                             insertion: .opacity.combined(with: .move(edge: .bottom)),
@@ -327,11 +315,90 @@ struct StudyView: View {
         .padding()
     }
     
-    private func handleBackButton() {
-        if hasSeenCards && !showingResults {
-            showingCloseConfirmation = true
+    private func handleSwipeRight() {
+        HapticManager.shared.cardSwipeRight() // Success haptic for "I know this"
+        let cardId = cards[currentIndex].id
+        knownCards.insert(cardId)
+        unknownCards.remove(cardId)
+        viewModel.setCardStatus(cardId: cardId, status: .known)
+        
+        // Record learning statistics - card was shown and answered correctly
+        viewModel.recordCardShown(cardId, isCorrect: true)
+        
+        withAnimation(.easeOut(duration: 0.3)) {
+            moveToNextCard()
+        }
+    }
+    
+    private func handleSwipeLeft() {
+        HapticManager.shared.cardSwipeLeft() // Warning haptic for "I don't know this"
+        let cardId = cards[currentIndex].id
+        unknownCards.insert(cardId)
+        knownCards.remove(cardId)
+        viewModel.setCardStatus(cardId: cardId, status: .unknown)
+        
+        // Record learning statistics - card was shown and answered incorrectly
+        viewModel.recordCardShown(cardId, isCorrect: false)
+        
+        withAnimation(.easeOut(duration: 0.3)) {
+            moveToNextCard()
+        }
+    }
+    
+    private func moveToNextCard() {
+        if currentIndex < cards.count - 1 {
+            withAnimation(.easeInOut(duration: 0.3)) {
+                currentIndex += 1
+                isShowingFront = true
+                isShowingExample = false
+                dragOffset = 0
+                
+                // Auto-save progress periodically (every 5 cards)
+                if currentIndex % 5 == 0 {
+                    saveCurrentProgress()
+                }
+            }
         } else {
-            dismiss()
+            HapticManager.shared.gameComplete() // Strong haptic for session completion
+            
+            // Clear saved progress since session is complete
+            clearSavedProgress()
+            
+            withAnimation {
+                StreakManager.shared.recordGameCompletion(); showingResults = true
+            }
+        }
+    }
+    
+    private func goToPreviousCard() {
+        if currentIndex > 0 {
+            withAnimation(.easeInOut(duration: 0.3)) {
+                currentIndex -= 1
+                isShowingFront = true
+                isShowingExample = false
+                dragOffset = 0
+                
+                // Auto-save progress periodically (every 5 cards)
+                if currentIndex % 5 == 0 {
+                    saveCurrentProgress()
+                }
+            }
+        }
+    }
+    
+    private func dismissToRoot() {
+        // Send notification to dismiss all views
+        NotificationCenter.default.post(name: NSNotification.Name("DismissToRoot"), object: nil)
+        
+        // Also trigger ViewModel navigation
+        viewModel.navigateToRoot()
+        
+        // Fallback with multiple dismissals
+        dismiss()
+        for i in 1...8 {
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.15) {
+                dismiss()
+            }
         }
     }
     
@@ -441,76 +508,5 @@ struct StudyView: View {
         }
         
         dismissToRoot()
-    }
-    
-    private func handleSwipeRight() {
-        HapticManager.shared.cardSwipeRight() // Success haptic for "I know this"
-        let cardId = cards[currentIndex].id
-        knownCards.insert(cardId)
-        unknownCards.remove(cardId)
-        viewModel.setCardStatus(cardId: cardId, status: .known)
-        
-        // Record learning statistics - card was shown and answered correctly
-        viewModel.recordCardShown(cardId, isCorrect: true)
-        
-        withAnimation(.easeOut(duration: 0.3)) {
-            moveToNextCard()
-        }
-    }
-    
-    private func handleSwipeLeft() {
-        HapticManager.shared.cardSwipeLeft() // Warning haptic for "I don't know this"
-        let cardId = cards[currentIndex].id
-        unknownCards.insert(cardId)
-        knownCards.remove(cardId)
-        viewModel.setCardStatus(cardId: cardId, status: .unknown)
-        
-        // Record learning statistics - card was shown and answered incorrectly
-        viewModel.recordCardShown(cardId, isCorrect: false)
-        
-        withAnimation(.easeOut(duration: 0.3)) {
-            moveToNextCard()
-        }
-    }
-    
-    private func moveToNextCard() {
-        if currentIndex < cards.count - 1 {
-            withAnimation(.easeInOut(duration: 0.3)) {
-                currentIndex += 1
-                isShowingFront = true
-                isShowingExample = false
-                dragOffset = 0
-                
-                // Auto-save progress periodically (every 5 cards)
-                if currentIndex % 5 == 0 {
-                    saveCurrentProgress()
-                }
-            }
-        } else {
-            HapticManager.shared.gameComplete() // Strong haptic for session completion
-            
-            // Clear saved progress since session is complete
-            clearSavedProgress()
-            
-            withAnimation {
-                showingResults = true
-            }
-        }
-    }
-    
-    private func dismissToRoot() {
-        // Send notification to dismiss all views
-        NotificationCenter.default.post(name: NSNotification.Name("DismissToRoot"), object: nil)
-        
-        // Also trigger ViewModel navigation
-        viewModel.navigateToRoot()
-        
-        // Fallback with multiple dismissals
-        dismiss()
-        for i in 1...8 {
-            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.15) {
-                dismiss()
-            }
-        }
     }
 } 

@@ -13,6 +13,9 @@ struct LookCoverCheckView: View {
     @State private var showingCloseConfirmation = false
     @Environment(\.dismiss) private var dismiss
     
+    // Add speech service for pronunciation
+    @StateObject private var speechService = DutchSpeechService.shared
+    
     // Save state properties
     private var deckIds: [UUID]
     private var shouldLoadSaveState: Bool
@@ -33,6 +36,17 @@ struct LookCoverCheckView: View {
         return cards[currentIndex]
     }
     
+    // Get the text to speak for current card
+    private var textToSpeak: String {
+        guard let card = currentCard else { return "" }
+        return card.article.isEmpty ? card.word : "\(card.article) \(card.word)"
+    }
+    
+    // Check if current word is being spoken
+    private var isCurrentWordSpeaking: Bool {
+        return speechService.isSpeaking && speechService.currentlySpeaking == textToSpeak
+    }
+    
     init(viewModel: FlashCardViewModel, cards: [FlashCard], deckIds: [UUID] = [], shouldLoadSaveState: Bool = false) {
         self.viewModel = viewModel
         // Apply intelligent ordering: less-known cards first, well-known cards later
@@ -51,27 +65,31 @@ struct LookCoverCheckView: View {
                 gameView
             }
             
-            // Bottom Navigation Bar
-            bottomNavigationBar
+            // Bottom close button
+            HStack {
+                Spacer()
+                Button(action: {
+                    if hasSignificantProgress && !showingResults {
+                        showingCloseConfirmation = true
+                    } else {
+                        dismissToRoot()
+                    }
+                }) {
+                    Image(systemName: "xmark")
+                        .font(.title2)
+                        .foregroundColor(.secondary)
+                        .padding(12)
+                        .background(Circle().fill(Color(.systemGray5)))
+                }
+                Spacer()
+            }
+            .padding(.bottom, 20)
+            .background(Color(.systemBackground))
         }
         .navigationBarHidden(true)
-        .onAppear {
-            if shouldLoadSaveState {
-                loadSavedProgress()
-            }
-        }
-        .onDisappear {
-            // Auto-save when view disappears
-            if hasSignificantProgress && !showingResults {
-                saveCurrentProgress()
-            }
-        }
-        .alert("Close Game?", isPresented: $showingCloseConfirmation) {
+        .alert("Close Session?", isPresented: $showingCloseConfirmation) {
             Button("Save & Close", role: .destructive) {
-                if hasSignificantProgress && !showingResults {
-                    saveCurrentProgress()
-                }
-                dismissToRoot()
+                saveProgressAndDismiss()
             }
             Button("Close Without Saving") {
                 dismissToRoot()
@@ -82,6 +100,41 @@ struct LookCoverCheckView: View {
                 "Would you like to save your progress?" : 
                 "Are you sure you want to close?")
         }
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("DismissToRoot"))) { _ in
+            // Dismiss this view when dismiss to root is requested
+            dismiss()
+        }
+        .onAppear {
+            if shouldLoadSaveState {
+                loadSavedProgress()
+            } else {
+                setupSession()
+            }
+        }
+        .onDisappear {
+            // Auto-save when view disappears (if user navigates away without using back button)
+            if hasSignificantProgress && !showingResults {
+                saveCurrentProgress()
+            }
+        }
+    }
+    
+    private func saveProgressAndDismiss() {
+        if hasSignificantProgress && !showingResults {
+            saveCurrentProgress()
+        }
+        dismissToRoot()
+    }
+    
+    private func setupSession() {
+        // Initialize session state
+        currentIndex = 0
+        correctAnswers = 0
+        totalAnswers = 0
+        gamePhase = .look
+        showingResults = false
+        userInput = ""
+        cards = viewModel.sortCardsForLearning(cards)
     }
     
     private var emptyStateView: some View {
@@ -137,10 +190,19 @@ struct LookCoverCheckView: View {
                     .font(.headline)
                     .foregroundColor(.secondary)
                 
-                // Display the word prominently
-                Text(card.word)
-                    .font(.system(size: 48, weight: .bold))
-                    .multilineTextAlignment(.center)
+                // Display the word prominently with pronunciation
+                VStack(spacing: 15) {
+                    VStack(spacing: 8) {
+                        if !card.article.isEmpty {
+                            Text(card.article)
+                                .font(.title3)
+                                .foregroundColor(.blue)
+                                .bold()
+                        }
+                        Text(card.word)
+                            .font(.system(size: 48, weight: .bold))
+                            .multilineTextAlignment(.center)
+                    }
                     .padding()
                     .frame(maxWidth: .infinity)
                     .background(
@@ -149,6 +211,29 @@ struct LookCoverCheckView: View {
                             .shadow(radius: 5)
                     )
                     .padding(.horizontal)
+                    
+                    // Pronunciation button
+                    Button(action: {
+                        if isCurrentWordSpeaking {
+                            speechService.stopSpeaking()
+                        } else {
+                            speakCurrentWord()
+                        }
+                        HapticManager.shared.lightImpact()
+                    }) {
+                        HStack(spacing: 8) {
+                            Image(systemName: isCurrentWordSpeaking ? "speaker.wave.2.fill" : "speaker.wave.2")
+                                .foregroundColor(.blue)
+                            Text(isCurrentWordSpeaking ? "Stop" : "Listen")
+                                .font(.subheadline)
+                                .foregroundColor(.blue)
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 10)
+                        .background(Color.blue.opacity(0.1))
+                        .cornerRadius(20)
+                    }
+                }
                 
                 // Show definition as context
                 Text(card.definition)
@@ -165,6 +250,12 @@ struct LookCoverCheckView: View {
             .buttonStyle(.borderedProminent)
             .font(.headline)
             .controlSize(.large)
+        }
+        .onAppear {
+            // Auto-play pronunciation when word appears
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                speakCurrentWord()
+            }
         }
     }
     
@@ -230,14 +321,39 @@ struct LookCoverCheckView: View {
                         Text("Correct word:")
                             .font(.headline)
                             .foregroundColor(.secondary)
-                        Text(card.word)
-                            .font(.system(size: 32, weight: .bold))
-                            .foregroundColor(.green)
-                            .padding()
-                            .background(
-                                RoundedRectangle(cornerRadius: 15)
-                                    .fill(Color.green.opacity(0.1))
-                            )
+                        
+                        HStack(spacing: 12) {
+                            VStack(spacing: 4) {
+                                if !card.article.isEmpty {
+                                    Text(card.article)
+                                        .font(.caption)
+                                        .foregroundColor(.blue)
+                                        .bold()
+                                }
+                                Text(card.word)
+                                    .font(.system(size: 32, weight: .bold))
+                                    .foregroundColor(.green)
+                            }
+                            
+                            // Pronunciation button for correct word
+                            Button(action: {
+                                if isCurrentWordSpeaking {
+                                    speechService.stopSpeaking()
+                                } else {
+                                    speakCurrentWord()
+                                }
+                                HapticManager.shared.lightImpact()
+                            }) {
+                                Image(systemName: isCurrentWordSpeaking ? "speaker.wave.2.fill" : "speaker.wave.2")
+                                    .font(.title2)
+                                    .foregroundColor(.blue)
+                            }
+                        }
+                        .padding()
+                        .background(
+                            RoundedRectangle(cornerRadius: 15)
+                                .fill(Color.green.opacity(0.1))
+                        )
                     }
                     
                     VStack(spacing: 8) {
@@ -262,6 +378,14 @@ struct LookCoverCheckView: View {
             .buttonStyle(.borderedProminent)
             .font(.headline)
             .controlSize(.large)
+        }
+        .onAppear {
+            // Auto-play correct word pronunciation in check phase
+            if isCorrect == false {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                    speakCurrentWord()
+                }
+            }
         }
     }
     
@@ -306,57 +430,6 @@ struct LookCoverCheckView: View {
         }
     }
     
-    private var bottomNavigationBar: some View {
-        HStack {
-            Button(action: {
-                if totalAnswers > 0 && !showingResults {
-                    showingCloseConfirmation = true
-                } else {
-                    dismiss()
-                }
-            }) {
-                VStack {
-                    Image(systemName: "chevron.backward")
-                    Text("Back")
-                }
-            }
-            .frame(maxWidth: .infinity)
-            
-            Button(action: {
-                resetGame()
-            }) {
-                VStack {
-                    Image(systemName: "arrow.clockwise")
-                    Text("Reset")
-                }
-            }
-            .frame(maxWidth: .infinity)
-            
-            // Save progress button
-            if hasSignificantProgress && !showingResults {
-                Button(action: {
-                    saveCurrentProgress()
-                    HapticManager.shared.successNotification()
-                }) {
-                    VStack {
-                        Image(systemName: "bookmark.fill")
-                        Text("Save")
-                    }
-                }
-                .frame(maxWidth: .infinity)
-            }
-        }
-        .padding()
-        .background(Color(.systemBackground))
-        .overlay(
-            Rectangle()
-                .frame(height: 1)
-                .foregroundColor(.gray)
-                .opacity(0.2),
-            alignment: .top
-        )
-    }
-    
     private func checkAnswer() {
         guard let card = currentCard else { return }
         
@@ -389,6 +462,11 @@ struct LookCoverCheckView: View {
         if currentIndex < cards.count - 1 {
             currentIndex += 1
             resetForNextCard()
+            
+            // Auto-play pronunciation for new word in look phase
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                speakCurrentWord()
+            }
         } else {
             // Clear saved progress since game is complete
             clearSavedProgress()
@@ -498,5 +576,14 @@ struct LookCoverCheckView: View {
                 dismiss()
             }
         }
+    }
+    
+    // MARK: - Speech Functions
+    private func speakCurrentWord() {
+        let text = textToSpeak.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return }
+        
+        // Use slower speech rate for learning
+        speechService.speakDutch(text, rate: 0.4)
     }
 } 

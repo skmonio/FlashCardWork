@@ -5,46 +5,58 @@ class HapticManager {
     
     private init() {}
     
+    // MARK: - Settings Check
+    private var isHapticsEnabled: Bool {
+        return SettingsManager.shared.isHapticsEnabled
+    }
+    
     // MARK: - Haptic Feedback Types
     
     /// Light impact for subtle feedback (card tap, button press)
     func lightImpact() {
+        guard isHapticsEnabled else { return }
         let impactFeedback = UIImpactFeedbackGenerator(style: .light)
         impactFeedback.impactOccurred()
     }
     
     /// Medium impact for moderate feedback (card flip, selection)
     func mediumImpact() {
+        guard isHapticsEnabled else { return }
         let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
         impactFeedback.impactOccurred()
     }
     
     /// Heavy impact for strong feedback (correct answer, completion)
     func heavyImpact() {
+        guard isHapticsEnabled else { return }
         let impactFeedback = UIImpactFeedbackGenerator(style: .heavy)
         impactFeedback.impactOccurred()
     }
     
     /// Success notification (game won, test completed)
     func successNotification() {
+        guard isHapticsEnabled else { return }
         let notificationFeedback = UINotificationFeedbackGenerator()
         notificationFeedback.notificationOccurred(.success)
     }
     
     /// Warning notification (wrong answer, limited attempts)
     func warningNotification() {
+        guard isHapticsEnabled else { return }
         let notificationFeedback = UINotificationFeedbackGenerator()
         notificationFeedback.notificationOccurred(.warning)
     }
     
     /// Error notification (game over, failed action)
     func errorNotification() {
+        guard isHapticsEnabled else { return }
         let notificationFeedback = UINotificationFeedbackGenerator()
         notificationFeedback.notificationOccurred(.error)
     }
     
     /// Selection changed (deck selection, card selection)
     func selectionChanged() {
+        guard isHapticsEnabled else { return }
         let selectionFeedback = UISelectionFeedbackGenerator()
         selectionFeedback.selectionChanged()
     }

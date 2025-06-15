@@ -13,6 +13,9 @@ struct TestView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var incorrectCards: Set<UUID> = []
     
+    // Add speech service for pronunciation
+    @StateObject private var speechService = DutchSpeechService.shared
+    
     // Save state properties
     private var deckIds: [UUID]
     private var shouldLoadSaveState: Bool
@@ -20,6 +23,17 @@ struct TestView: View {
     // Computed property to check if there's significant progress to save
     private var hasSignificantProgress: Bool {
         return currentIndex > 0 || correctAnswers > 0
+    }
+    
+    // Get the text to speak for current card
+    private var textToSpeak: String {
+        let card = currentCard
+        return card.article.isEmpty ? card.word : "\(card.article) \(card.word)"
+    }
+    
+    // Check if current word is being spoken
+    private var isCurrentWordSpeaking: Bool {
+        return speechService.isSpeaking && speechService.currentlySpeaking == textToSpeak
     }
     
     init(viewModel: FlashCardViewModel, cards: [FlashCard], deckIds: [UUID] = [], shouldLoadSaveState: Bool = false) {
@@ -99,6 +113,11 @@ struct TestView: View {
             hasAnswered = false
             shuffledOptions = generateOptions()
             
+            // Auto-play pronunciation for new question
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                speakCurrentWord()
+            }
+            
             // Auto-save progress periodically (every 5 questions)
             if currentIndex % 5 == 0 {
                 saveCurrentProgress()
@@ -115,6 +134,11 @@ struct TestView: View {
                 incorrectCards.removeAll() // Reset for next round
                 shuffledOptions = generateOptions()
                 
+                // Auto-play pronunciation for first question of new round
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    speakCurrentWord()
+                }
+                
                 HapticManager.shared.mediumImpact() // Feedback for round transition
                 
                 // Optional: Show a brief message that we're replaying incorrect cards
@@ -126,7 +150,7 @@ struct TestView: View {
                 // Clear saved progress since test is complete
                 clearSavedProgress()
                 
-                showingResults = true
+                StreakManager.shared.recordGameCompletion(); showingResults = true
             }
         }
     }
@@ -175,68 +199,50 @@ struct TestView: View {
                 testView
             }
             
-            // Bottom Navigation Bar
+            // Bottom close button
             HStack {
+                Spacer()
                 Button(action: {
-                    handleBackButton()
+                    if hasSignificantProgress && !showingResults {
+                        showingCloseConfirmation = true
+                    } else {
+                        dismissToRoot()
+                    }
                 }) {
-                    VStack {
-                        Image(systemName: "chevron.backward")
-                        Text("Back")
-                    }
+                    Image(systemName: "xmark")
+                        .font(.title2)
+                        .foregroundColor(.secondary)
+                        .padding(12)
+                        .background(Circle().fill(Color(.systemGray5)))
                 }
-                .frame(maxWidth: .infinity)
-                
-                // Save progress button
-                if hasSignificantProgress && !showingResults {
-                    Button(action: {
-                        saveCurrentProgress()
-                        HapticManager.shared.successNotification()
-                    }) {
-                        VStack {
-                            Image(systemName: "bookmark.fill")
-                            Text("Save")
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
-                }
+                Spacer()
             }
-            .padding()
+            .padding(.bottom, 20)
             .background(Color(.systemBackground))
-            .overlay(
-                Rectangle()
-                    .frame(height: 1)
-                    .foregroundColor(.gray)
-                    .opacity(0.2),
-                alignment: .top
-            )
         }
         .navigationBarHidden(true)
         .alert("Close Test?", isPresented: $showingCloseConfirmation) {
-            if hasSignificantProgress {
-                Button("Save & Close") {
-                    saveProgressAndDismiss()
-                }
-                Button("Close Without Saving", role: .destructive) {
-                    dismissToRoot()
-                }
-                Button("Cancel", role: .cancel) { }
-            } else {
-                Button("Close", role: .destructive) {
-                    dismissToRoot()
-                }
-                Button("Cancel", role: .cancel) { }
+            Button("Save & Close") {
+                saveCurrentProgress()
+                dismissToRoot()
             }
+            Button("Close", role: .destructive) {
+                dismissToRoot()
+            }
+            Button("Cancel", role: .cancel) { }
         } message: {
-            Text(hasSignificantProgress ? 
-                "Would you like to save your progress or close without saving?" : 
-                "Are you sure you want to close?")
+            Text(hasSignificantProgress ? "Would you like to save your progress?" : "Are you sure you want to close?")
         }
         .onAppear {
             if shouldLoadSaveState {
                 loadSavedProgress()
             } else {
                 shuffledOptions = generateOptions()
+            }
+            
+            // Auto-play pronunciation when test starts
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                speakCurrentWord()
             }
         }
         .onDisappear {
@@ -248,88 +254,116 @@ struct TestView: View {
     }
     
     private var testView: some View {
-        VStack(spacing: 20) {
-            // Progress - with top padding for status bar
+        VStack(spacing: 30) {
+            // Progress indicator
             HStack {
                 Text("\(currentIndex + 1) of \(cards.count)")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                 Spacer()
-                Text("Correct: \(correctAnswers)")
+                Text("Score: \(correctAnswers)")
                     .font(.subheadline)
-                    .foregroundColor(.green)
+                    .bold()
+                    .foregroundColor(.blue)
             }
             .padding(.horizontal)
             .padding(.top, 50) // Add top padding for status bar
             
-            // Question
-            VStack(spacing: 15) {
-                Text("What does this word mean?")
-                    .font(.headline)
-                    .foregroundColor(.secondary)
-                
-                ZStack {
-                    VStack {
+            Spacer()
+            
+            // Question card with pronunciation
+            ZStack {
+                VStack(spacing: 16) {
+                    // Word with optional article
+                    VStack(spacing: 4) {
+                        if !currentCard.article.isEmpty {
+                            Text(currentCard.article)
+                                .font(.caption)
+                                .foregroundColor(.blue)
+                                .bold()
+                        }
                         Text(currentCard.word)
                             .font(.title)
                             .bold()
                             .multilineTextAlignment(.center)
                     }
-                    .padding()
-                    .frame(maxWidth: .infinity)
-                    .background(Color(.systemBackground))
-                    .cornerRadius(15)
-                    .shadow(radius: 5)
                     
-                    // Learning percentage in top right
-                    VStack {
-                        HStack {
-                            Spacer()
-                            LearningPercentageView(percentage: currentCard.learningPercentage)
-                                .padding(.top, 16)
-                                .padding(.trailing, 16)
+                    // Pronunciation button
+                    Button(action: {
+                        if isCurrentWordSpeaking {
+                            speechService.stopSpeaking()
+                        } else {
+                            speakCurrentWord()
                         }
-                        Spacer()
+                        HapticManager.shared.lightImpact()
+                    }) {
+                        HStack(spacing: 8) {
+                            Image(systemName: isCurrentWordSpeaking ? "speaker.wave.2.fill" : "speaker.wave.2")
+                                .foregroundColor(.blue)
+                            Text(isCurrentWordSpeaking ? "Stop" : "Pronounce")
+                                .font(.subheadline)
+                                .foregroundColor(.blue)
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(Color.blue.opacity(0.1))
+                        .cornerRadius(20)
                     }
                 }
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(Color(.systemBackground))
+                .cornerRadius(15)
+                .shadow(radius: 5)
                 
-                Text("Choose one of the following:")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                
-                // Answer options
-                VStack(spacing: 10) {
-                    ForEach(shuffledOptions, id: \.self) { option in
-                        Button(action: {
-                            handleAnswer(option)
-                        }) {
-                            Text(option)
-                                .font(.body)
-                                .multilineTextAlignment(.center)
-                                .padding()
-                                .frame(maxWidth: .infinity)
-                                .background(
-                                    Group {
-                                        if hasAnswered {
-                                            if option == currentCard.definition {
-                                                Color.green.opacity(0.2)
-                                            } else if option == selectedAnswer {
-                                                Color.red.opacity(0.2)
-                                            } else {
-                                                Color(.systemGray6)
-                                            }
+                // Learning percentage in top right
+                VStack {
+                    HStack {
+                        Spacer()
+                        LearningPercentageView(percentage: currentCard.learningPercentage)
+                            .padding(.top, 16)
+                            .padding(.trailing, 16)
+                    }
+                    Spacer()
+                }
+            }
+            
+            Text("Choose the correct translation:")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+            
+            // Answer options
+            VStack(spacing: 10) {
+                ForEach(shuffledOptions, id: \.self) { option in
+                    Button(action: {
+                        handleAnswer(option)
+                    }) {
+                        Text(option)
+                            .font(.body)
+                            .multilineTextAlignment(.center)
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .background(
+                                Group {
+                                    if hasAnswered {
+                                        if option == currentCard.definition {
+                                            Color.green.opacity(0.2)
+                                        } else if option == selectedAnswer {
+                                            Color.red.opacity(0.2)
                                         } else {
                                             Color(.systemGray6)
                                         }
+                                    } else {
+                                        Color(.systemGray6)
                                     }
-                                )
-                                .cornerRadius(10)
-                        }
-                        .disabled(hasAnswered)
+                                }
+                            )
+                            .cornerRadius(10)
                     }
+                    .disabled(hasAnswered)
                 }
-                .padding(.horizontal)
             }
+            .padding(.horizontal)
             
             Spacer()
         }
@@ -468,10 +502,12 @@ struct TestView: View {
         SaveStateManager.shared.deleteSaveState(gameType: .test)
     }
     
-    private func saveProgressAndDismiss() {
-        if hasSignificantProgress && !showingResults {
-            saveCurrentProgress()
-        }
-        dismissToRoot()
+    // MARK: - Speech Functions
+    private func speakCurrentWord() {
+        let text = textToSpeak.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return }
+        
+        // Use slower speech rate for learning
+        speechService.speakDutch(text, rate: 0.4)
     }
 } 
