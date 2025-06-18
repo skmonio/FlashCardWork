@@ -21,7 +21,6 @@ struct GameSaveState: Codable {
         case test
         case memoryGame
         case trueFalse
-        case dehet
         case lookCoverCheck
         case writing
         case wordScramble
@@ -33,7 +32,6 @@ struct GameSaveState: Codable {
             case .test: return "Test Mode"
             case .memoryGame: return "Memory Game"
             case .trueFalse: return "True or False"
-            case .dehet: return "de of het"
             case .lookCoverCheck: return "Look Cover Check"
             case .writing: return "Write Your Card"
             case .wordScramble: return "Word Scramble"
@@ -47,7 +45,6 @@ struct GameSaveState: Codable {
             case .test: return "checkmark.circle.fill"
             case .memoryGame: return "brain.fill"
             case .trueFalse: return "questionmark.circle.fill"
-            case .dehet: return "questionmark.diamond.fill"
             case .lookCoverCheck: return "eye.fill"
             case .writing: return "pencil.and.scribble"
             case .wordScramble: return "textformat.abc"
@@ -62,6 +59,7 @@ struct StudyGameState: Codable {
     let currentIndex: Int
     let knownCards: Set<UUID>
     let unknownCards: Set<UUID>
+    let skippedCards: Set<UUID>
     let isShowingFront: Bool
     let isShowingExample: Bool
     let cards: [FlashCard]

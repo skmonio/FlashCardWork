@@ -6,6 +6,14 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		DC7C27332E02FEF20089C13B /* Begin.wav in Resources */ = {isa = PBXBuildFile; fileRef = DC7C27322E02FEF20089C13B /* Begin.wav */; };
+		DC7C27362E03014C0089C13B /* Correct.wav in Resources */ = {isa = PBXBuildFile; fileRef = DC7C27342E03014C0089C13B /* Correct.wav */; };
+		DC7C27372E03014C0089C13B /* Wrong.wav in Resources */ = {isa = PBXBuildFile; fileRef = DC7C27352E03014C0089C13B /* Wrong.wav */; };
+		DC7C273A2E0304560089C13B /* Complete.wav in Resources */ = {isa = PBXBuildFile; fileRef = DC7C27382E0304560089C13B /* Complete.wav */; };
+		DC7C273B2E0304560089C13B /* Game.wav in Resources */ = {isa = PBXBuildFile; fileRef = DC7C27392E0304560089C13B /* Game.wav */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		0A780FAC2DF0528700F71F44 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -27,6 +35,11 @@
 		0A780F9E2DF0528600F71F44 /* FlashCard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FlashCard.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0A780FAB2DF0528700F71F44 /* FlashCardTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlashCardTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		0A780FB52DF0528700F71F44 /* FlashCardUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlashCardUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		DC7C27322E02FEF20089C13B /* Begin.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Begin.wav; sourceTree = "<group>"; };
+		DC7C27342E03014C0089C13B /* Correct.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Correct.wav; sourceTree = "<group>"; };
+		DC7C27352E03014C0089C13B /* Wrong.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Wrong.wav; sourceTree = "<group>"; };
+		DC7C27382E0304560089C13B /* Complete.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Complete.wav; sourceTree = "<group>"; };
+		DC7C27392E0304560089C13B /* Game.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Game.wav; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -88,6 +101,11 @@
 		0A780F952DF0528600F71F44 = {
 			isa = PBXGroup;
 			children = (
+				DC7C27382E0304560089C13B /* Complete.wav */,
+				DC7C27392E0304560089C13B /* Game.wav */,
+				DC7C27342E03014C0089C13B /* Correct.wav */,
+				DC7C27352E03014C0089C13B /* Wrong.wav */,
+				DC7C27322E02FEF20089C13B /* Begin.wav */,
 				0A780FA02DF0528600F71F44 /* FlashCard */,
 				0A780FAE2DF0528700F71F44 /* FlashCardTests */,
 				0A780FB82DF0528700F71F44 /* FlashCardUITests */,
@@ -225,6 +243,11 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DC7C27362E03014C0089C13B /* Correct.wav in Resources */,
+				DC7C27372E03014C0089C13B /* Wrong.wav in Resources */,
+				DC7C27332E02FEF20089C13B /* Begin.wav in Resources */,
+				DC7C273A2E0304560089C13B /* Complete.wav in Resources */,
+				DC7C273B2E0304560089C13B /* Game.wav in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -408,13 +431,15 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = FlashCard/FlashCard.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 33JRS76UKD;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = FlashCard/Info.plist;
-				INFOPLIST_KEY_LSApplicationCategoryType = "";
+				INFOPLIST_KEY_CFBundleDisplayName = "Taal Trek";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
 				INFOPLIST_KEY_NSDocumentsFolderUsageDescription = "Access is needed to import and export flashcard data";
 				INFOPLIST_KEY_NSDownloadsFolderUsageDescription = "Access is needed to import flashcard data from your downloads\n\nAccess is needed to import flashcard data from your downloads\n\nAccess is needed to import flashcard data from your downloads\n\nAccess is needed to import flashcard data from your downloads\n\nAccess is needed to import flashcard data from your downloads\n\nAccess is needed to import flashcard data from your downloads\n\nAccess is needed to import flashcard data from your downloads\n\nAccess is needed to import flashcard data from downloads";
@@ -428,7 +453,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 2;
 				PRODUCT_BUNDLE_IDENTIFIER = Dutch.FlashCard;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -442,13 +467,15 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = FlashCard/FlashCard.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 33JRS76UKD;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = FlashCard/Info.plist;
-				INFOPLIST_KEY_LSApplicationCategoryType = "";
+				INFOPLIST_KEY_CFBundleDisplayName = "Taal Trek";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
 				INFOPLIST_KEY_NSDocumentsFolderUsageDescription = "Access is needed to import and export flashcard data";
 				INFOPLIST_KEY_NSDownloadsFolderUsageDescription = "Access is needed to import flashcard data from your downloads\n\nAccess is needed to import flashcard data from your downloads\n\nAccess is needed to import flashcard data from your downloads\n\nAccess is needed to import flashcard data from your downloads\n\nAccess is needed to import flashcard data from your downloads\n\nAccess is needed to import flashcard data from your downloads\n\nAccess is needed to import flashcard data from your downloads\n\nAccess is needed to import flashcard data from downloads";
@@ -462,7 +489,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 2;
 				PRODUCT_BUNDLE_IDENTIFIER = Dutch.FlashCard;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;

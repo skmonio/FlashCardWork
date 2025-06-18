@@ -346,11 +346,6 @@ struct DeckView: View {
         }
         
         // Navigation destinations
-        NavigationLink(destination: AddCardView(viewModel: viewModel, defaultDeck: deck), isActive: $showingAddCardView) {
-            EmptyView()
-        }
-        .hidden()
-        
         NavigationLink(destination: 
             Group {
                 if let card = selectedCard {
@@ -369,6 +364,9 @@ struct DeckView: View {
                 refreshID = UUID()
                 selectedCard = nil
             }
+        }
+        .sheet(isPresented: $showingAddCardView) {
+            AddCardView(viewModel: viewModel, defaultDeck: deck)
         }
     }
     

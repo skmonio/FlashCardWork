@@ -5,7 +5,7 @@ struct DutchSpeechControlView: View {
     let text: String
     let mode: SpeechControlMode
     
-    @StateObject private var speechService = DutchSpeechService.shared
+    @ObservedObject private var speechService = DutchSpeechService.shared
     @State private var showingVoiceSelector = false
     
     enum SpeechControlMode {

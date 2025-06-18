@@ -12,10 +12,11 @@ struct WordScrambleView: View {
     @State private var hasAnswered = false
     @State private var isCorrect: Bool? = nil
     @State private var showingCloseConfirmation = false
+    @State private var comboCount = 0
     @Environment(\.dismiss) private var dismiss
     
     // Add speech service for pronunciation
-    @StateObject private var speechService = DutchSpeechService.shared
+    @ObservedObject private var speechService = DutchSpeechService.shared
     
     // Save state properties
     private var deckIds: [UUID]
@@ -128,165 +129,126 @@ struct WordScrambleView: View {
     }
     
     private var gameView: some View {
-        VStack(spacing: 30) {
-            // Progress indicator - with top padding for status bar
-            HStack {
-                Text("Word \(currentIndex + 1) of \(cards.count)")
-                    .font(.headline)
-                Spacer()
-                Text("Score: \(correctAnswers)/\(totalAnswers)")
-                    .font(.headline)
-                    .foregroundColor(totalAnswers > 0 ? (Double(correctAnswers)/Double(totalAnswers) >= 0.7 ? .green : .orange) : .primary)
-            }
-            .padding(.horizontal)
-            .padding(.top, 50) // Add top padding for status bar
+        VStack(spacing: 0) {
+            // Unified header with progress bar
+            GameHeaderView(
+                currentIndex: currentIndex + 1,
+                totalCards: cards.count,
+                score: correctAnswers * 10, // Convert to scoring system like other games
+                combo: comboCount,
+                knownCount: nil,
+                unknownCount: nil,
+                skippedCount: nil
+            )
             
             if let card = currentCard {
-                // Definition display
                 VStack(spacing: 20) {
-                    Text("Arrange the letters to spell:")
-                        .font(.title3)
-                        .foregroundColor(.secondary)
-                    
-                    Text(card.definition)
-                        .font(.title2)
-                        .bold()
-                        .multilineTextAlignment(.center)
-                        .padding()
-                        .background(Color(.systemGray6))
-                        .cornerRadius(12)
-                }
-                .padding(.horizontal)
-                
-                // Selected chunks (user's current arrangement)
-                VStack(spacing: 15) {
-                    Text("Your Answer:")
-                        .font(.headline)
-                        .foregroundColor(.secondary)
-                    
-                    HStack(spacing: 8) {
-                        ForEach(selectedChunks) { chunk in
-                            ChunkView(chunk: chunk, isSelected: true) {
-                                removeChunk(chunk)
-                            }
-                        }
-                        
-                        // Show placeholder if no chunks selected
-                        if selectedChunks.isEmpty {
-                            Text("Tap chunks below to build the word")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                                .italic()
-                        }
-                    }
-                    .frame(minHeight: 50)
-                    .padding()
-                    .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.blue, lineWidth: 2)
-                            .background(Color.blue.opacity(0.05))
-                    )
-                }
-                .padding(.horizontal)
-                
-                // Available chunks
-                VStack(spacing: 15) {
-                    Text("Available Pieces:")
-                        .font(.headline)
-                        .foregroundColor(.secondary)
-                    
-                    LazyVGrid(columns: [
-                        GridItem(.flexible()),
-                        GridItem(.flexible()),
-                        GridItem(.flexible())
-                    ], spacing: 12) {
-                        ForEach(wordChunks.filter { !selectedChunks.contains($0) }) { chunk in
-                            ChunkView(chunk: chunk, isSelected: false) {
-                                addChunk(chunk)
-                            }
-                        }
-                    }
-                }
-                .padding(.horizontal)
-                
-                // Action buttons
-                if !hasAnswered {
-                    HStack(spacing: 12) {
-                        Button("Clear") {
-                            clearSelection()
-                        }
-                        .buttonStyle(.bordered)
-                        .disabled(selectedChunks.isEmpty)
-                        
-                        Button("Check Answer") {
-                            checkAnswer()
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .disabled(selectedChunks.isEmpty)
-                    }
-                } else {
-                    // Show result and next button
+                    // Title and definition display (matching WritingView layout)
                     VStack(spacing: 15) {
-                        if let correct = isCorrect {
-                            HStack {
-                                Image(systemName: correct ? "checkmark.circle.fill" : "xmark.circle.fill")
-                                    .foregroundColor(correct ? .green : .red)
-                                    .font(.title2)
-                                
-                                Text(correct ? "Correct!" : "Incorrect")
-                                    .font(.title2)
-                                    .bold()
-                                    .foregroundColor(correct ? .green : .red)
+                        Text("Arrange the letters to translate:")
+                            .font(.title3)
+                            .foregroundColor(.secondary)
+                        
+                        Text(card.definition)
+                            .font(.title2)
+                            .bold()
+                            .multilineTextAlignment(.center)
+                            .padding()
+                            .background(Color(.systemGray6))
+                            .cornerRadius(12)
+                    }
+                    
+                    // Button row: Clear and Submit (matching WritingView style)
+                    if !hasAnswered {
+                        HStack(spacing: 12) {
+                            // Clear button
+                            Button(action: {
+                                clearSelection()
+                                HapticManager.shared.lightImpact()
+                            }) {
+                                Text("Clear")
+                                    .font(.subheadline)
+                                    .foregroundColor(.orange)
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 8)
+                                    .background(Color.orange.opacity(0.1))
+                                    .cornerRadius(8)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .stroke(Color.orange, lineWidth: 1)
+                                    )
+                            }
+                            .disabled(selectedChunks.isEmpty)
+                            
+                            // Submit button
+                            Button(action: checkAnswer) {
+                                Text("Submit")
+                                    .font(.subheadline)
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 8)
+                                    .background(selectedChunks.isEmpty ? Color.gray : Color.green)
+                                    .cornerRadius(8)
+                            }
+                            .disabled(selectedChunks.isEmpty)
+                        }
+                    }
+                    
+                    // Answer area (selected chunks display)
+                    VStack(spacing: 15) {
+                        Text("Answer")
+                            .font(.headline)
+                            .foregroundColor(.secondary)
+                        
+                        HStack(spacing: 8) {
+                            ForEach(selectedChunks) { chunk in
+                                ChunkView(chunk: chunk, isSelected: true) {
+                                    removeChunk(chunk)
+                                }
                             }
                             
-                            if !correct {
-                                VStack(spacing: 8) {
-                                    Text("Correct answer:")
-                                        .font(.subheadline)
-                                        .foregroundColor(.secondary)
-                                    
-                                    HStack(spacing: 8) {
-                                        VStack(spacing: 4) {
-                                            if !card.article.isEmpty {
-                                                Text(card.article)
-                                                    .font(.caption)
-                                                    .foregroundColor(.blue)
-                                                    .bold()
-                                            }
-                                            Text(card.word)
-                                                .font(.title2)
-                                                .bold()
-                                                .foregroundColor(.green)
-                                        }
-                                        
-                                        // Pronunciation button for correct answer
-                                        Button(action: {
-                                            if isCurrentWordSpeaking {
-                                                speechService.stopSpeaking()
-                                            } else {
-                                                speakCurrentWord()
-                                            }
-                                            HapticManager.shared.lightImpact()
-                                        }) {
-                                            Image(systemName: isCurrentWordSpeaking ? "speaker.wave.2.fill" : "speaker.wave.2")
-                                                .font(.title3)
-                                                .foregroundColor(.blue)
-                                        }
-                                    }
-                                }
-                                .padding()
-                                .background(Color(.systemGray6))
-                                .cornerRadius(8)
+                            // Show placeholder if no chunks selected
+                            if selectedChunks.isEmpty {
+                                Text("Tap pieces below to build the word")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                                    .italic()
                             }
                         }
+                        .frame(minHeight: 50)
+                        .padding()
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.blue, lineWidth: 2)
+                                .background(Color.blue.opacity(0.05))
+                        )
+                    }
+                    
+                    // Available chunks section
+                    VStack(spacing: 15) {
+                        Text("Tap pieces below")
+                            .font(.headline)
+                            .foregroundColor(.secondary)
                         
-                        Button("Next Word") {
-                            nextCard()
+                        LazyVGrid(columns: [
+                            GridItem(.flexible()),
+                            GridItem(.flexible()),
+                            GridItem(.flexible())
+                        ], spacing: 12) {
+                            ForEach(wordChunks.filter { !selectedChunks.contains($0) }) { chunk in
+                                ChunkView(chunk: chunk, isSelected: false) {
+                                    addChunk(chunk)
+                                }
+                            }
                         }
-                        .buttonStyle(.borderedProminent)
-                        .font(.headline)
+                    }
+                    
+                    // Answer feedback (shown after checking answer)
+                    if hasAnswered {
+                        answerFeedbackView(for: card)
                     }
                 }
+                .padding(.horizontal)
             }
             
             Spacer()
@@ -342,6 +304,7 @@ struct WordScrambleView: View {
         currentIndex = 0
         correctAnswers = 0
         totalAnswers = 0
+        comboCount = 0
         showingResults = false
         cards = viewModel.sortCardsForLearning(cards)
         setupCurrentWord()
@@ -365,32 +328,44 @@ struct WordScrambleView: View {
         var currentIndex = 0
         let characters = Array(cleanWord)
         
-        while currentIndex < characters.count {
-            let remainingChars = characters.count - currentIndex
-            let chunkSize: Int
-            
-            // Determine chunk size (2-4 characters)
-            if remainingChars >= 4 && Bool.random() {
-                chunkSize = Int.random(in: 3...4)
-            } else if remainingChars >= 3 && Bool.random() {
-                chunkSize = Int.random(in: 2...3)
-            } else if remainingChars >= 2 {
-                chunkSize = 2
-            } else {
-                chunkSize = 1
+        // For very short words (2-3 characters), split into individual characters to ensure at least 2 chunks
+        if characters.count <= 3 {
+            for (index, char) in characters.enumerated() {
+                chunks.append(WordChunk(
+                    id: UUID(),
+                    text: String(char),
+                    originalPosition: index
+                ))
             }
-            
-            let actualChunkSize = min(chunkSize, remainingChars)
-            let chunkChars = Array(characters[currentIndex..<currentIndex + actualChunkSize])
-            let chunkText = String(chunkChars)
-            
-            chunks.append(WordChunk(
-                id: UUID(),
-                text: chunkText,
-                originalPosition: chunks.count
-            ))
-            
-            currentIndex += actualChunkSize
+        } else {
+            // For longer words, use the original chunking logic
+            while currentIndex < characters.count {
+                let remainingChars = characters.count - currentIndex
+                let chunkSize: Int
+                
+                // Determine chunk size (2-4 characters)
+                if remainingChars >= 4 && Bool.random() {
+                    chunkSize = Int.random(in: 3...4)
+                } else if remainingChars >= 3 && Bool.random() {
+                    chunkSize = Int.random(in: 2...3)
+                } else if remainingChars >= 2 {
+                    chunkSize = 2
+                } else {
+                    chunkSize = 1
+                }
+                
+                let actualChunkSize = min(chunkSize, remainingChars)
+                let chunkChars = Array(characters[currentIndex..<currentIndex + actualChunkSize])
+                let chunkText = String(chunkChars)
+                
+                chunks.append(WordChunk(
+                    id: UUID(),
+                    text: chunkText,
+                    originalPosition: chunks.count
+                ))
+                
+                currentIndex += actualChunkSize
+            }
         }
         
         // Shuffle the chunks
@@ -426,20 +401,19 @@ struct WordScrambleView: View {
         
         if correct {
             correctAnswers += 1
-            HapticManager.shared.correctAnswer()
+            // Use custom sound for games (not study mode)
+            HapticManager.shared.successNotification() // Haptic only
+            SoundManager.shared.playTestCorrectSound() // Custom Correct.wav
+            comboCount += 1
         } else {
-            HapticManager.shared.wrongAnswer()
+            // Use custom sound for games (not study mode)
+            HapticManager.shared.errorNotification() // Haptic only
+            SoundManager.shared.playTestWrongSound() // Custom Wrong.wav
+            comboCount = 0
         }
         
         // Record learning statistics
         viewModel.recordCardShown(card.id, isCorrect: correct)
-        
-        // Auto-play pronunciation for incorrect answers
-        if !correct {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                speakCurrentWord()
-            }
-        }
     }
     
     private func nextCard() {
@@ -556,6 +530,70 @@ struct WordScrambleView: View {
         
         // Use slower speech rate for learning
         speechService.speakDutch(text, rate: 0.4)
+    }
+    
+    private func answerFeedbackView(for card: FlashCard) -> some View {
+        VStack(spacing: 16) {
+            // Feedback section
+            VStack(spacing: 12) {
+                if let isCorrect = isCorrect {
+                    HStack {
+                        Image(systemName: isCorrect ? "checkmark.circle.fill" : "xmark.circle.fill")
+                            .foregroundColor(isCorrect ? .green : .red)
+                            .font(.title2)
+                        
+                        Text(isCorrect ? "Correct!" : "Incorrect")
+                            .font(.title3)
+                            .bold()
+                            .foregroundColor(isCorrect ? .green : .red)
+                    }
+                    
+                    if !isCorrect {
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Text("Your answer:")
+                                    .foregroundColor(.secondary)
+                                Spacer()
+                                Text(selectedChunks.map { $0.text }.joined())
+                                    .foregroundColor(.red)
+                            }
+                            
+                            HStack {
+                                Text("Correct answer:")
+                                    .foregroundColor(.secondary)
+                                Spacer()
+                                
+                                VStack(spacing: 2) {
+                                    if !card.article.isEmpty {
+                                        Text(card.article)
+                                            .font(.caption2)
+                                            .foregroundColor(.blue)
+                                            .bold()
+                                    }
+                                    Text(card.word)
+                                        .foregroundColor(.green)
+                                        .bold()
+                                }
+                            }
+                        }
+                        .padding()
+                        .background(Color(.systemGray6))
+                        .cornerRadius(8)
+                    }
+                }
+            }
+            
+            // Next button
+            Button(action: nextCard) {
+                Text(currentIndex < cards.count - 1 ? "Next Word" : "Finish")
+                    .font(.headline)
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.blue)
+                    .cornerRadius(10)
+            }
+        }
     }
 }
 

@@ -14,7 +14,7 @@ struct LookCoverCheckView: View {
     @Environment(\.dismiss) private var dismiss
     
     // Add speech service for pronunciation
-    @StateObject private var speechService = DutchSpeechService.shared
+    @ObservedObject private var speechService = DutchSpeechService.shared
     
     // Save state properties
     private var deckIds: [UUID]
@@ -156,17 +156,16 @@ struct LookCoverCheckView: View {
     
     private var gameView: some View {
         VStack(spacing: 30) {
-            // Progress indicator - with top padding for status bar
-            HStack {
-                Text("Card \(currentIndex + 1) of \(cards.count)")
-                    .font(.headline)
-                Spacer()
-                Text("Score: \(correctAnswers)/\(totalAnswers)")
-                    .font(.headline)
-                    .foregroundColor(totalAnswers > 0 ? (Double(correctAnswers)/Double(totalAnswers) >= 0.7 ? .green : .orange) : .primary)
-            }
-            .padding(.horizontal)
-            .padding(.top, 50) // Add top padding for status bar
+            // Unified header with progress bar
+            GameHeaderView(
+                currentIndex: currentIndex + 1,
+                totalCards: cards.count,
+                score: correctAnswers * 10, // Convert to scoring system like other games
+                combo: 0, // Look Cover Check doesn't have combo system
+                knownCount: nil,
+                unknownCount: nil,
+                skippedCount: nil
+            )
             
             if let card = currentCard {
                 switch gamePhase {
@@ -442,9 +441,13 @@ struct LookCoverCheckView: View {
         
         if correct {
             correctAnswers += 1
-            HapticManager.shared.correctAnswer()
+            // Use custom sound for games (not study mode)
+            HapticManager.shared.successNotification() // Haptic only
+            SoundManager.shared.playTestCorrectSound() // Custom Correct.wav
         } else {
-            HapticManager.shared.wrongAnswer()
+            // Use custom sound for games (not study mode)
+            HapticManager.shared.errorNotification() // Haptic only
+            SoundManager.shared.playTestWrongSound() // Custom Wrong.wav
         }
         
         // Record learning statistics

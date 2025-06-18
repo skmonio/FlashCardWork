@@ -8,11 +8,14 @@ struct CardView: View {
     @State private var exitSide: ExitSide = .none
     
     // Replace audio manager with speech service
-    @StateObject private var speechService = DutchSpeechService.shared
+    @ObservedObject private var speechService = DutchSpeechService.shared
     
     let onSwipeLeft: (() -> Void)?
     let onSwipeRight: (() -> Void)?
+    let onSwipeUp: (() -> Void)?
+    let onSwipeDown: (() -> Void)?
     let onDragChanged: ((CGFloat) -> Void)?
+    let onVerticalDragChanged: ((CGFloat) -> Void)?
     let onGoBack: (() -> Void)?  // Add back functionality
     
     private enum ExitSide {
@@ -44,14 +47,20 @@ struct CardView: View {
          isShowingExample: Binding<Bool>,
          onSwipeLeft: (() -> Void)? = nil,
          onSwipeRight: (() -> Void)? = nil,
+         onSwipeUp: (() -> Void)? = nil,
+         onSwipeDown: (() -> Void)? = nil,
          onDragChanged: ((CGFloat) -> Void)? = nil,
+         onVerticalDragChanged: ((CGFloat) -> Void)? = nil,
          onGoBack: (() -> Void)? = nil) {
         self.card = card
         self._isShowingFront = isShowingFront
         self._isShowingExample = isShowingExample
         self.onSwipeLeft = onSwipeLeft
         self.onSwipeRight = onSwipeRight
+        self.onSwipeUp = onSwipeUp
+        self.onSwipeDown = onSwipeDown
         self.onDragChanged = onDragChanged
+        self.onVerticalDragChanged = onVerticalDragChanged
         self.onGoBack = onGoBack
     }
 
@@ -72,7 +81,7 @@ struct CardView: View {
             .frame(maxWidth: .infinity)
             .frame(height: 300)
             .padding(.horizontal)
-            .offset(x: offset.width, y: 0)
+            .offset(x: offset.width, y: offset.height)
             .rotationEffect(.degrees(rotationOffset))
             .gesture(
                 DragGesture()
@@ -82,9 +91,10 @@ struct CardView: View {
                         let previousOffset = offset.width
                         offset = gesture.translation
                         onDragChanged?(gesture.translation.width)
+                        onVerticalDragChanged?(gesture.translation.height)
                         
                         // Haptic feedback when crossing thresholds
-                        if abs(gesture.translation.width) > 100 {
+                        if abs(gesture.translation.width) > 100 || abs(gesture.translation.height) > 100 {
                             // Crossed the swipe threshold
                             if abs(previousOffset) <= 100 {
                                 HapticManager.shared.mediumImpact() // Feedback when crossing threshold
@@ -98,25 +108,54 @@ struct CardView: View {
                     }
                     .onEnded { gesture in
                         guard exitSide == .none else { return }
-                        if gesture.translation.width < -100 {
-                            // Swipe left - Don't know
-                            exitSide = .left
-                            HapticManager.shared.heavyImpact() // Strong feedback for commit to swipe
-                            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-                                offset.width = -1000
+                        
+                        // Determine if it's primarily horizontal or vertical swipe
+                        let horizontalDistance = abs(gesture.translation.width)
+                        let verticalDistance = abs(gesture.translation.height)
+                        
+                        if horizontalDistance > verticalDistance && horizontalDistance > 100 {
+                            // Horizontal swipe
+                            if gesture.translation.width < -100 {
+                                // Swipe left - Don't know
+                                exitSide = .left
+                                HapticManager.shared.heavyImpact() // Strong feedback for commit to swipe
+                                withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                                    offset.width = -1000
+                                }
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                    onSwipeLeft?()
+                                }
+                            } else if gesture.translation.width > 100 {
+                                // Swipe right - Know it
+                                exitSide = .right
+                                HapticManager.shared.heavyImpact() // Strong feedback for commit to swipe
+                                withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                                    offset.width = 1000
+                                }
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                    onSwipeRight?()
+                                }
                             }
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                                onSwipeLeft?()
-                            }
-                        } else if gesture.translation.width > 100 {
-                            // Swipe right - Know it
-                            exitSide = .right
-                            HapticManager.shared.heavyImpact() // Strong feedback for commit to swipe
-                            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-                                offset.width = 1000
-                            }
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                                onSwipeRight?()
+                        } else if verticalDistance > horizontalDistance && verticalDistance > 100 {
+                            // Vertical swipe
+                            if gesture.translation.height < -100 {
+                                // Swipe up - Add to review
+                                HapticManager.shared.heavyImpact() // Strong feedback for commit to swipe
+                                withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                                    offset = CGSize(width: 0, height: -1000)
+                                }
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                    onSwipeUp?()
+                                }
+                            } else if gesture.translation.height > 100 {
+                                // Swipe down - Skip
+                                HapticManager.shared.heavyImpact() // Strong feedback for commit to swipe
+                                withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                                    offset = CGSize(width: 0, height: 1000)
+                                }
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                    onSwipeDown?()
+                                }
                             }
                         } else {
                             // Reset if not swiped far enough
@@ -124,6 +163,7 @@ struct CardView: View {
                             withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
                                 offset = .zero
                                 onDragChanged?(0)
+                                onVerticalDragChanged?(0)
                             }
                         }
                     }

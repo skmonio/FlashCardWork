@@ -87,6 +87,15 @@ class HapticManager {
         SoundManager.shared.playIncorrectSound() // Add tock sound for incorrect answers
     }
     
+    /// Test game haptic-only feedback (for use with custom audio)
+    func testCorrectHaptic() {
+        successNotification() // Haptic only, no sound
+    }
+    
+    func testWrongHaptic() {
+        errorNotification() // Haptic only, no sound
+    }
+    
     func questionAdvance() {
         lightImpact()
     }
@@ -94,16 +103,20 @@ class HapticManager {
     /// Game interactions
     func cardMatch() {
         heavyImpact() // Memory game match
+        // Use custom sound for games (not study mode)
+        SoundManager.shared.playTestCorrectSound() // Custom Correct.wav for matches
     }
     
     func cardMismatch() {
         mediumImpact() // Memory game no match
+        // Use custom sound for games (not study mode)
+        SoundManager.shared.playTestWrongSound() // Custom Wrong.wav for mismatches
     }
     
     func gameComplete() {
         // Double success for emphasis
         successNotification()
-        SoundManager.shared.playSuccessSound() // Add success sound for game completion
+        SoundManager.shared.playCompleteSound() // Use new Complete.wav sound for game completion
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             self.heavyImpact()
         }

@@ -8,14 +8,12 @@ struct BottomNavigationView: View {
     enum TabItem: String, CaseIterable {
         case home = "home"
         case cards = "cards"
-        case games = "games"
         case settings = "settings"
         
         var icon: String {
             switch self {
             case .home: return "house"
             case .cards: return "rectangle.stack"
-            case .games: return "book"
             case .settings: return "gearshape"
             }
         }
@@ -24,7 +22,6 @@ struct BottomNavigationView: View {
             switch self {
             case .home: return "house.fill"
             case .cards: return "rectangle.stack.fill"
-            case .games: return "book.fill"
             case .settings: return "gearshape.fill"
             }
         }
@@ -33,7 +30,6 @@ struct BottomNavigationView: View {
             switch self {
             case .home: return "Home"
             case .cards: return "Cards"
-            case .games: return "Games"
             case .settings: return "Settings"
             }
         }

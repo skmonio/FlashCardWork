@@ -1,4 +1,5 @@
 import SwiftUI
+import SpriteKit
 
 struct TestView: View {
     @ObservedObject var viewModel: FlashCardViewModel
@@ -12,9 +13,14 @@ struct TestView: View {
     @State private var showingCloseConfirmation = false
     @Environment(\.dismiss) private var dismiss
     @State private var incorrectCards: Set<UUID> = []
+    @State private var isShowingExample = false
+    @State private var showingExample = false
+    
+    // Track original number of cards for proper percentage calculation
+    @State private var originalCardCount = 0
     
     // Add speech service for pronunciation
-    @StateObject private var speechService = DutchSpeechService.shared
+    @ObservedObject private var speechService = DutchSpeechService.shared
     
     // Save state properties
     private var deckIds: [UUID]
@@ -42,6 +48,8 @@ struct TestView: View {
         self.cards = viewModel.sortCardsForLearning(cards)
         self.deckIds = deckIds
         self.shouldLoadSaveState = shouldLoadSaveState
+        // Track original number of cards for proper scoring
+        self._originalCardCount = State(initialValue: cards.count)
     }
     
     private var currentCard: FlashCard {
@@ -89,10 +97,12 @@ struct TestView: View {
             let isCorrect = option == currentCard.definition
             if isCorrect {
                 correctAnswers += 1
-                HapticManager.shared.correctAnswer()
+                HapticManager.shared.testCorrectHaptic() // Haptic only, no system sound
+                SoundManager.shared.playTestCorrectSound() // Play custom correct sound
             } else {
                 incorrectCards.insert(currentCard.id)
-                HapticManager.shared.wrongAnswer()
+                HapticManager.shared.testWrongHaptic() // Haptic only, no system sound
+                SoundManager.shared.playTestWrongSound() // Play custom wrong sound
             }
             
             // Record learning statistics - card was shown and answered correctly/incorrectly
@@ -111,12 +121,8 @@ struct TestView: View {
             currentIndex += 1
             selectedAnswer = nil
             hasAnswered = false
+            isShowingExample = false // Reset example state
             shuffledOptions = generateOptions()
-            
-            // Auto-play pronunciation for new question
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                speakCurrentWord()
-            }
             
             // Auto-save progress periodically (every 5 questions)
             if currentIndex % 5 == 0 {
@@ -133,11 +139,6 @@ struct TestView: View {
                 hasAnswered = false
                 incorrectCards.removeAll() // Reset for next round
                 shuffledOptions = generateOptions()
-                
-                // Auto-play pronunciation for first question of new round
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                    speakCurrentWord()
-                }
                 
                 HapticManager.shared.mediumImpact() // Feedback for round transition
                 
@@ -160,12 +161,15 @@ struct TestView: View {
             cards = cards.filter { incorrectCards.contains($0.id) }
         } else {
             cards = viewModel.sortCardsForLearning(cards)
+            // Reset original card count for new test
+            originalCardCount = cards.count
         }
         currentIndex = 0
         correctAnswers = 0
         showingResults = false
         selectedAnswer = nil
         hasAnswered = false
+        isShowingExample = false // Reset example state
         incorrectCards.removeAll()
         shuffledOptions = generateOptions()
         
@@ -240,10 +244,7 @@ struct TestView: View {
                 shuffledOptions = generateOptions()
             }
             
-            // Auto-play pronunciation when test starts
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-                speakCurrentWord()
-            }
+            // Removed automatic audio playback - only manual card taps trigger audio
         }
         .onDisappear {
             // Auto-save when view disappears
@@ -254,25 +255,33 @@ struct TestView: View {
     }
     
     private var testView: some View {
-        VStack(spacing: 30) {
-            // Progress indicator
-            HStack {
-                Text("\(currentIndex + 1) of \(cards.count)")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                Spacer()
-                Text("Score: \(correctAnswers)")
-                    .font(.subheadline)
-                    .bold()
-                    .foregroundColor(.blue)
-            }
-            .padding(.horizontal)
-            .padding(.top, 50) // Add top padding for status bar
+        VStack(spacing: 0) {
+            // Use same header as StudyView
+            GameHeaderView(
+                currentIndex: currentIndex + 1,
+                totalCards: cards.count,
+                score: correctAnswers * 10, // Convert to scoring system like other games
+                combo: 0, // No combo for test mode
+                knownCount: nil,
+                unknownCount: nil,
+                skippedCount: nil
+            )
             
             Spacer()
             
-            // Question card with pronunciation
-            ZStack {
+            // Question text above card
+            Text("What is the correct translation for:")
+                .font(.headline)
+                .foregroundColor(.primary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+                .padding(.bottom, 20)
+            
+            // Question card (tappable for audio, double-tap for example)
+            Button(action: {
+                speakCurrentWord()
+                HapticManager.shared.lightImpact()
+            }) {
                 VStack(spacing: 16) {
                     // Word with optional article
                     VStack(spacing: 4) {
@@ -283,57 +292,49 @@ struct TestView: View {
                                 .bold()
                         }
                         Text(currentCard.word)
-                            .font(.title)
-                            .bold()
+                            .font(.system(size: 32, weight: .bold, design: .rounded))
+                            .foregroundColor(.primary)
                             .multilineTextAlignment(.center)
                     }
                     
-                    // Pronunciation button
-                    Button(action: {
-                        if isCurrentWordSpeaking {
-                            speechService.stopSpeaking()
-                        } else {
-                            speakCurrentWord()
-                        }
-                        HapticManager.shared.lightImpact()
-                    }) {
-                        HStack(spacing: 8) {
-                            Image(systemName: isCurrentWordSpeaking ? "speaker.wave.2.fill" : "speaker.wave.2")
-                                .foregroundColor(.blue)
-                            Text(isCurrentWordSpeaking ? "Stop" : "Pronounce")
-                                .font(.subheadline)
-                                .foregroundColor(.blue)
-                        }
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 8)
-                        .background(Color.blue.opacity(0.1))
-                        .cornerRadius(20)
+                    // Example (if showing) - plain text, centered
+                    if isShowingExample && !currentCard.example.isEmpty {
+                        Text(currentCard.example)
+                            .font(.body)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                            .lineLimit(4)
+                            .transition(.opacity.combined(with: .scale))
                     }
                 }
-                .padding()
+                .padding(24)
                 .frame(maxWidth: .infinity)
-                .background(Color(.systemBackground))
-                .cornerRadius(15)
-                .shadow(radius: 5)
-                
-                // Learning percentage in top right
-                VStack {
-                    HStack {
-                        Spacer()
-                        LearningPercentageView(percentage: currentCard.learningPercentage)
-                            .padding(.top, 16)
-                            .padding(.trailing, 16)
-                    }
-                    Spacer()
+                .frame(height: 200)
+                .background(
+                    RoundedRectangle(cornerRadius: 20)
+                        .fill(Color(.secondarySystemGroupedBackground))
+                        .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
+                )
+                .padding(.horizontal, 20)
+            }
+            .buttonStyle(PlainButtonStyle())
+            .onTapGesture(count: 2) {
+                // Double tap to show/hide example
+                HapticManager.shared.lightImpact()
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    isShowingExample.toggle()
                 }
             }
+            .onTapGesture(count: 1) {
+                // Single tap for audio
+                speakCurrentWord()
+                HapticManager.shared.lightImpact()
+            }
             
-            Text("Choose the correct translation:")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
+            Spacer()
             
-            // Answer options
-            VStack(spacing: 10) {
+            // Answer options (thinner)
+            VStack(spacing: 8) {
                 ForEach(shuffledOptions, id: \.self) { option in
                     Button(action: {
                         handleAnswer(option)
@@ -341,7 +342,8 @@ struct TestView: View {
                         Text(option)
                             .font(.body)
                             .multilineTextAlignment(.center)
-                            .padding()
+                            .padding(.vertical, 12)
+                            .padding(.horizontal, 16)
                             .frame(maxWidth: .infinity)
                             .background(
                                 Group {
@@ -370,20 +372,20 @@ struct TestView: View {
     }
     
     private var resultsView: some View {
-        VStack(spacing: 20) {
-            Text("Test Complete! 🎉")
-                .font(.title)
-                .multilineTextAlignment(.center)
+        VStack(spacing: 30) {
+            Image(systemName: "trophy.fill")
+                .font(.system(size: 60))
+                .foregroundColor(.yellow)
             
-            Text("Score: \(correctAnswers) / \(cards.count)")
-                .font(.title2)
-            
-            Text("\(Int((Double(correctAnswers) / Double(cards.count)) * 100))%")
+            Text("Test Complete!")
                 .font(.largeTitle)
                 .bold()
-                .foregroundColor(
-                    Double(correctAnswers) / Double(cards.count) >= 0.7 ? .green : .red
-                )
+                .multilineTextAlignment(.center)
+            
+            Text("All cards have been mastered! 🎉")
+                .font(.title2)
+                .multilineTextAlignment(.center)
+                .foregroundColor(.green)
             
             VStack(spacing: 16) {
                 Button(action: {
@@ -414,7 +416,6 @@ struct TestView: View {
                         .foregroundColor(.blue)
                 }
             }
-            .padding(.top)
         }
         .padding()
     }

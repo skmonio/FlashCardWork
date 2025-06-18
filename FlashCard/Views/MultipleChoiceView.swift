@@ -11,10 +11,8 @@ struct MultipleChoiceView: View {
     @State private var hasAnswered = false
     @State private var shuffledOptions: [String] = []
     @State private var showingCloseConfirmation = false
+    @State private var comboCount = 0
     @Environment(\.dismiss) private var dismiss
-    
-    // Add speech service for pronunciation
-    @StateObject private var speechService = DutchSpeechService.shared
     
     // Save state properties
     private var deckIds: [UUID]
@@ -32,13 +30,12 @@ struct MultipleChoiceView: View {
     
     // Get the text to speak for current card
     private var textToSpeak: String {
-        guard let card = currentCard else { return "" }
-        return card.article.isEmpty ? card.word : "\(card.article) \(card.word)"
+        return "" // Not needed for multiple choice
     }
     
     // Check if current word is being spoken
     private var isCurrentWordSpeaking: Bool {
-        return speechService.isSpeaking && speechService.currentlySpeaking == textToSpeak
+        return false // Removed speech service
     }
     
     init(viewModel: FlashCardViewModel, cards: [FlashCard], deckIds: [UUID] = [], shouldLoadSaveState: Bool = false) {
@@ -127,163 +124,61 @@ struct MultipleChoiceView: View {
     }
     
     private var gameView: some View {
-        VStack(spacing: 30) {
-            // Progress indicator - with top padding for status bar
-            HStack {
-                Text("Question \(currentIndex + 1) of \(cards.count)")
-                    .font(.headline)
-                Spacer()
-                Text("Score: \(correctAnswers)/\(totalAnswers)")
-                    .font(.headline)
-                    .foregroundColor(totalAnswers > 0 ? (Double(correctAnswers)/Double(totalAnswers) >= 0.7 ? .green : .orange) : .primary)
-            }
-            .padding(.horizontal)
-            .padding(.top, 50) // Add top padding for status bar
+        VStack(spacing: 0) {
+            // Unified header with progress bar
+            GameHeaderView(
+                currentIndex: currentIndex + 1,
+                totalCards: cards.count,
+                score: correctAnswers * 10, // Convert to scoring system like other games
+                combo: comboCount,
+                knownCount: nil,
+                unknownCount: nil,
+                skippedCount: nil
+            )
             
-            if let card = currentCard {
-                // Question display
-                VStack(spacing: 25) {
-                    Text("How do you say this in Dutch?")
-                        .font(.title3)
-                        .foregroundColor(.secondary)
-                    
-                    Text(card.definition)
+            Spacer()
+            
+            // Question card
+            VStack(spacing: 20) {
+                if let card = currentCard {
+                    Text(card.word)
                         .font(.title)
                         .bold()
                         .multilineTextAlignment(.center)
                         .padding()
-                        .frame(maxWidth: .infinity)
-                        .background(
-                            RoundedRectangle(cornerRadius: 15)
-                                .fill(Color(.systemBackground))
-                                .shadow(radius: 5)
-                        )
-                        .padding(.horizontal)
-                }
-                
-                // Answer options
-                VStack(spacing: 12) {
-                    ForEach(shuffledOptions, id: \.self) { option in
-                        Button(action: {
-                            handleAnswer(option)
-                        }) {
-                            HStack {
+                    
+                    // Options
+                    VStack(spacing: 12) {
+                        ForEach(shuffledOptions, id: \.self) { option in
+                            Button(action: {
+                                handleAnswer(option)
+                            }) {
                                 Text(option)
-                                    .font(.body)
-                                    .multilineTextAlignment(.leading)
+                                    .font(.headline)
                                     .foregroundColor(.primary)
-                                
-                                Spacer()
-                                
-                                // Show pronunciation button for each option when answered
-                                if hasAnswered {
-                                    Button(action: {
-                                        speakText(option)
-                                        HapticManager.shared.lightImpact()
-                                    }) {
-                                        Image(systemName: "speaker.wave.2")
-                                            .font(.callout)
-                                            .foregroundColor(.blue)
-                                    }
-                                    .buttonStyle(PlainButtonStyle())
-                                }
-                            }
-                            .padding()
-                            .frame(maxWidth: .infinity)
-                            .background(
-                                Group {
-                                    if hasAnswered {
-                                        if option == getCorrectAnswer() {
-                                            Color.green.opacity(0.2)
-                                        } else if option == selectedAnswer {
-                                            Color.red.opacity(0.2)
-                                        } else {
-                                            Color(.systemGray6)
-                                        }
-                                    } else {
-                                        Color(.systemGray6)
-                                    }
-                                }
-                            )
-                            .cornerRadius(12)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .stroke(
-                                        hasAnswered && option == getCorrectAnswer() ? Color.green :
-                                        hasAnswered && option == selectedAnswer ? Color.red :
-                                        Color.clear,
-                                        lineWidth: 2
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 10)
+                                            .fill(Color(.systemBackground))
+                                            .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
                                     )
-                            )
-                        }
-                        .disabled(hasAnswered)
-                        .buttonStyle(PlainButtonStyle())
-                    }
-                }
-                .padding(.horizontal)
-                
-                // Show result feedback
-                if hasAnswered {
-                    VStack(spacing: 15) {
-                        HStack {
-                            Image(systemName: selectedAnswer == getCorrectAnswer() ? "checkmark.circle.fill" : "xmark.circle.fill")
-                                .foregroundColor(selectedAnswer == getCorrectAnswer() ? .green : .red)
-                                .font(.title2)
-                            
-                            Text(selectedAnswer == getCorrectAnswer() ? "Correct!" : "Incorrect")
-                                .font(.title2)
-                                .bold()
-                                .foregroundColor(selectedAnswer == getCorrectAnswer() ? .green : .red)
-                        }
-                        
-                        if selectedAnswer != getCorrectAnswer() {
-                            VStack(spacing: 8) {
-                                Text("The correct answer is:")
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-                                
-                                HStack(spacing: 8) {
-                                    VStack(spacing: 4) {
-                                        if !card.article.isEmpty {
-                                            Text(card.article)
-                                                .font(.caption)
-                                                .foregroundColor(.blue)
-                                                .bold()
-                                        }
-                                        Text(card.word)
-                                            .font(.title2)
-                                            .bold()
-                                            .foregroundColor(.green)
-                                    }
-                                    
-                                    // Pronunciation button for correct answer
-                                    Button(action: {
-                                        if isCurrentWordSpeaking {
-                                            speechService.stopSpeaking()
-                                        } else {
-                                            speakCurrentWord()
-                                        }
-                                        HapticManager.shared.lightImpact()
-                                    }) {
-                                        Image(systemName: isCurrentWordSpeaking ? "speaker.wave.2.fill" : "speaker.wave.2")
-                                            .font(.title3)
-                                            .foregroundColor(.blue)
-                                    }
-                                }
                             }
-                            .padding()
-                            .background(Color(.systemGray6))
-                            .cornerRadius(8)
+                            .disabled(hasAnswered)
                         }
-                        
-                        Button("Next Question") {
-                            nextQuestion()
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .font(.headline)
                     }
+                    .padding(.horizontal)
+                } else {
+                    Text("No card available")
+                        .font(.title)
+                        .foregroundColor(.secondary)
                 }
             }
+            .padding()
+            .background(Color(.systemBackground))
+            .cornerRadius(20)
+            .shadow(radius: 10)
+            .padding(.horizontal)
             
             Spacer()
         }
@@ -338,13 +233,20 @@ struct MultipleChoiceView: View {
         currentIndex = 0
         correctAnswers = 0
         totalAnswers = 0
+        comboCount = 0
         showingResults = false
         cards = viewModel.sortCardsForLearning(cards)
         setupCurrentQuestion()
     }
     
     private func setupCurrentQuestion() {
-        guard let card = currentCard else { return }
+        guard let card = currentCard else {
+            // Reset state if no card is available
+            selectedAnswer = nil
+            hasAnswered = false
+            shuffledOptions = []
+            return
+        }
         
         // Reset state
         selectedAnswer = nil
@@ -392,7 +294,7 @@ struct MultipleChoiceView: View {
     }
     
     private func handleAnswer(_ option: String) {
-        guard !hasAnswered else { return }
+        guard !hasAnswered, let card = currentCard else { return }
         
         selectedAnswer = option
         hasAnswered = true
@@ -401,22 +303,19 @@ struct MultipleChoiceView: View {
         let isCorrect = option == getCorrectAnswer()
         if isCorrect {
             correctAnswers += 1
-            HapticManager.shared.correctAnswer()
+            comboCount += 1
+            // Use custom sound for games (not study mode)
+            HapticManager.shared.successNotification() // Haptic only
+            SoundManager.shared.playTestCorrectSound() // Custom Correct.wav
         } else {
-            HapticManager.shared.wrongAnswer()
+            comboCount = 0
+            // Use custom sound for games (not study mode)
+            HapticManager.shared.errorNotification() // Haptic only
+            SoundManager.shared.playTestWrongSound() // Custom Wrong.wav
         }
         
         // Record learning statistics
-        if let card = currentCard {
-            viewModel.recordCardShown(card.id, isCorrect: isCorrect)
-        }
-        
-        // Auto-play pronunciation for incorrect answers
-        if !isCorrect {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                speakCurrentWord()
-            }
-        }
+        viewModel.recordCardShown(card.id, isCorrect: isCorrect)
     }
     
     private func nextQuestion() {
@@ -432,7 +331,6 @@ struct MultipleChoiceView: View {
             // Clear saved progress since game is complete
             clearSavedProgress()
             showingResults = true
-            HapticManager.shared.gameComplete()
         }
     }
     
@@ -491,7 +389,6 @@ struct MultipleChoiceView: View {
             setupCurrentQuestion()
             
             print("🔤 Multiple Choice progress loaded - Index: \(currentIndex), Score: \(correctAnswers)/\(totalAnswers)")
-            HapticManager.shared.successNotification()
         } else {
             // No saved state found, start normally
             print("🔤 No saved state found, starting fresh Multiple Choice")
@@ -528,19 +425,11 @@ struct MultipleChoiceView: View {
     
     // MARK: - Speech Functions
     private func speakCurrentWord() {
-        let text = textToSpeak.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !text.isEmpty else { return }
-        
-        // Use slower speech rate for learning
-        speechService.speakDutch(text, rate: 0.4)
+        // No speech functionality in multiple choice
     }
     
     private func speakText(_ text: String) {
-        let cleanText = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !cleanText.isEmpty else { return }
-        
-        // Use slower speech rate for learning
-        speechService.speakDutch(cleanText, rate: 0.4)
+        // No speech functionality in multiple choice
     }
 }
 

@@ -1,4 +1,5 @@
 import SwiftUI
+import SpriteKit
 
 struct Card: Identifiable {
     let id = UUID()
@@ -29,6 +30,11 @@ struct GameView: View {
     @State private var incorrectMatches: Set<FlashCard> = []
     @State private var showingCloseConfirmation = false
     @State private var showingResults = false
+    @State private var comboCount = 0
+    @State private var consecutiveMatches = 0
+    
+    // SpriteKit scene for effects
+    @State private var gameScene = GameScene()
     
     // Save state properties
     private var deckIds: [UUID]
@@ -89,6 +95,14 @@ struct GameView: View {
             dismiss()
         }
         .onAppear {
+            print("🧠 GameView appeared - initializing SpriteKit scene")
+            
+            // Initialize SpriteKit scene
+            gameScene = GameScene()
+            gameScene.size = CGSize(width: 400, height: 600)
+            
+            print("🧠 GameScene initialized with size: \(gameScene.size)")
+            
             if shouldLoadSaveState {
                 loadSavedProgress()
             } else {
@@ -252,65 +266,44 @@ struct GameView: View {
     }
     
     private var gameView: some View {
-        VStack(spacing: 15) {
-            // Score and moves with progress bar - with extra top padding for status bar
-            VStack(spacing: 12) {
-                HStack {
-                    Text("Matches: \(score)")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    Spacer()
-                    Text("Moves: \(moves)")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
+        ZStack {
+            VStack(spacing: 0) {
+                // Unified header with progress bar
+                GameHeaderView(
+                    currentIndex: score + 1,
+                    totalCards: cards.count,
+                    score: score * 10, // Convert to scoring system like other games
+                    combo: comboCount,
+                    knownCount: nil,
+                    unknownCount: nil,
+                    skippedCount: nil
+                )
                 
-                // Progress bar showing completion
-                GeometryReader { geometry in
-                    ZStack(alignment: .leading) {
-                        // Background
-                        Rectangle()
-                            .fill(Color(.systemGray5))
-                            .frame(height: 6)
-                            .cornerRadius(3)
-                        
-                        // Progress fill based on matches
-                        Rectangle()
-                            .fill(LinearGradient(
-                                gradient: Gradient(colors: [.blue, .purple]),
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            ))
-                            .frame(width: geometry.size.width * (cards.count > 0 ? Double(score) / Double(cards.count) : 0), height: 6)
-                            .cornerRadius(3)
-                            .animation(.easeInOut(duration: 0.3), value: score)
-                    }
-                }
-                .frame(height: 6)
-            }
-            .padding(.horizontal)
-            .padding(.top, 70) // Extra space at top for memory game
-            
-            // Game grid
-            ScrollView {
-                LazyVGrid(columns: columns, spacing: 16) {
-                    ForEach(0..<8) { index in
-                        if index < displayedCards.count {
-                            GameCardView(card: displayedCards[index]) {
-                                cardTapped(displayedCards[index])
+                // Game grid with proper safe area handling
+                ScrollView {
+                    LazyVGrid(columns: columns, spacing: 16) {
+                        ForEach(0..<8) { index in
+                            if index < displayedCards.count {
+                                MemoryGameCardView(card: displayedCards[index]) {
+                                    cardTapped(displayedCards[index])
+                                }
+                                .opacity(displayedCards[index].isMatched ? 0 : 1)
+                            } else {
+                                // Empty space to maintain grid
+                                Color.clear
+                                    .frame(height: 110)
                             }
-                            .opacity(displayedCards[index].isMatched ? 0 : 1)
-                        } else {
-                            // Empty space to maintain grid
-                            Color.clear
-                                .frame(height: 110)
                         }
                     }
+                    .padding(.horizontal)
+                    .padding(.top, 20) // Add padding to the content, not between header and content
                 }
-                .padding(.horizontal)
             }
             
-            Spacer()
+            // SpriteKit overlay for particle effects (non-interactive)
+            SpriteKitGameView(scene: gameScene)
+                .allowsHitTesting(false) // Allows touches to pass through to cards below
+                .ignoresSafeArea()
         }
     }
     
@@ -319,6 +312,8 @@ struct GameView: View {
         score = 0
         moves = 0
         selectedCard = nil
+        comboCount = 0
+        consecutiveMatches = 0
         
         // Clear any saved progress when starting fresh
         clearSavedProgress()
@@ -410,6 +405,24 @@ struct GameView: View {
                 // It's a match! 
                 HapticManager.shared.cardMatch() // Strong haptic for successful match
                 score += 1
+                consecutiveMatches += 1
+                
+                // Create success particle effect at the center of the screen
+                let screenCenter = CGPoint(x: gameScene.size.width / 2, y: gameScene.size.height / 2)
+                gameScene.createSuccessParticles(at: screenCenter)
+                
+                // Show floating score
+                gameScene.createFloatingScore(score: "+10", at: screenCenter)
+                
+                // Update combo count (after 2 consecutive matches)
+                if consecutiveMatches >= 2 {
+                    comboCount = consecutiveMatches
+                    
+                    // Create combo effect for multiple consecutive matches
+                    let comboPosition = CGPoint(x: gameScene.size.width / 2, y: gameScene.size.height / 2 + 50)
+                    gameScene.createComboEffect(combo: comboCount, at: comboPosition)
+                }
+                
                 displayedCards[index].isSelected = true
                 
                 // After a brief delay, mark them as matched
@@ -432,6 +445,11 @@ struct GameView: View {
                         if unmatchedCards.isEmpty && remainingCards.isEmpty {
                             HapticManager.shared.gameComplete() // Double haptic for game completion
                             
+                            // Final celebration particle effect
+                            let celebrationCenter = CGPoint(x: gameScene.size.width / 2, y: gameScene.size.height / 2)
+                            gameScene.createSuccessParticles(at: celebrationCenter)
+                            gameScene.createFloatingScore(score: "COMPLETE!", at: celebrationCenter, color: .systemYellow)
+                            
                             // Clear saved progress since game is complete
                             clearSavedProgress()
                             
@@ -443,6 +461,14 @@ struct GameView: View {
                 // Not a match
                 HapticManager.shared.cardMismatch() // Medium haptic for mismatch
                 displayedCards[index].showWrongAnimation = true
+                
+                // Create error effect at screen center
+                let errorPosition = CGPoint(x: gameScene.size.width / 2, y: gameScene.size.height / 2)
+                gameScene.createErrorEffect(at: errorPosition)
+                
+                // Reset combo on mismatch
+                consecutiveMatches = 0
+                comboCount = 0
                 
                 // Track incorrect matches
                 incorrectMatches.insert(selectedCard!.originalCard)
@@ -523,7 +549,7 @@ struct GameView: View {
     }
 }
 
-struct GameCardView: View {
+struct MemoryGameCardView: View {
     let card: Card
     let action: () -> Void
     
@@ -537,7 +563,7 @@ struct GameCardView: View {
                 if !card.isMatched {
                     Text(card.content)
                         .font(.body)
-                        .foregroundColor(.black)
+                        .foregroundColor(.primary)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 8)
                         .padding()
@@ -556,7 +582,7 @@ struct GameCardView: View {
         } else if card.showWrongAnimation {
             return .red.opacity(0.3)
         } else {
-            return .white
+            return Color(.secondarySystemGroupedBackground)
         }
     }
 } 

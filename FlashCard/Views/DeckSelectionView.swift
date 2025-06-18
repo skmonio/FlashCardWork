@@ -9,9 +9,16 @@ struct DeckSelectionView: View {
     @State private var shouldStartGame = false
     @State private var shouldContinueGame = false
     @State private var showingSaveOverwriteWarning = false
+    @State private var showingCardsContent = false
+    @State private var showingSettingsContent = false
+    
+    // Cards page state variables (same as HomeView)
+    @State private var showingAddCardView = false
+    @State private var showingAddDeckView = false
+    @State private var showingImageImportView = false
     
     enum StudyMode {
-        case study, test, game, truefalse, hangman, dehet, writing, wordScramble
+        case study, test, game, truefalse, writing, wordScramble
         
         var title: String {
             switch self {
@@ -19,8 +26,6 @@ struct DeckSelectionView: View {
             case .test: return "Test Mode"
             case .game: return "Memory Game"
             case .truefalse: return "True or False"
-            case .hangman: return "Hangman"
-            case .dehet: return "de of het"
             case .writing: return "Write Your Card"
             case .wordScramble: return "Jumble Your Cards"
             }
@@ -32,11 +37,8 @@ struct DeckSelectionView: View {
             case .test: return .test
             case .game: return .memoryGame
             case .truefalse: return .trueFalse
-            case .dehet: return .dehet
             case .writing: return .writing
             case .wordScramble: return .wordScramble
-            case .hangman:
-                fatalError("Hangman game does not support save states")
             }
         }
     }
@@ -63,12 +65,6 @@ struct DeckSelectionView: View {
     }
     
     private var hasSaveState: Bool {
-        // Skip save state for Hangman game
-        if mode == .hangman {
-            print("💾 Hangman mode - no save state support")
-            return false
-        }
-        
         let saveExists = SaveStateManager.shared.hasSaveState(gameType: mode.saveStateType)
         
         print("💾 Save state check for \(mode.title): \(saveExists)")
@@ -80,173 +76,302 @@ struct DeckSelectionView: View {
         
         return saveExists
     }
-
-    var body: some View {
-        ZStack {
-            VStack(spacing: 0) {
-                List {
-                    Section(header: Text("Select Decks")) {
-                        Button(action: {
-                            // Toggle all decks
-                            if !selectedDeckIds.isEmpty {
-                                selectedDeckIds.removeAll()
-                            } else {
-                                selectedDeckIds = Set(viewModel.getAllDecksHierarchical().map { $0.id })
-                            }
-                        }) {
-                            HStack {
-                                Text(selectedDeckIds.isEmpty ? "Select All Decks" : "Deselect All")
-                                    .foregroundColor(.primary)
-                                Spacer()
-                                Text("\(availableCards.count) cards")
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                        
-                        ForEach(viewModel.getAllDecksHierarchical()) { deck in
-                            Button(action: {
-                                if selectedDeckIds.contains(deck.id) {
-                                    selectedDeckIds.remove(deck.id)
-                                } else {
-                                    selectedDeckIds.insert(deck.id)
-                                }
-                            }) {
-                                HStack {
-                                    // Show indentation for sub-decks
-                                    if deck.isSubDeck {
-                                        HStack(spacing: 4) {
-                                            Text("    ↳")
-                                                .foregroundColor(.secondary)
-                                            Text(deck.name)
-                                        }
-                                    } else {
-                                        Text(deck.name)
-                                    }
-                                    Spacer()
-                                    if selectedDeckIds.contains(deck.id) {
-                                        Image(systemName: "checkmark")
-                                            .foregroundColor(.blue)
-                                    }
-                                    Text("\(deck.cards.count)")
-                                        .foregroundColor(.secondary)
-                                }
-                            }
+    
+    private var deckSelectionContent: some View {
+        List {
+            Section(header: Text("Select Decks")) {
+                Button(action: {
+                    // Toggle all decks
+                    if !selectedDeckIds.isEmpty {
+                        selectedDeckIds.removeAll()
+                    } else {
+                        selectedDeckIds = Set(viewModel.getAllDecksHierarchical().map { $0.id })
+                    }
+                }) {
+                    HStack {
+                        Text(selectedDeckIds.isEmpty ? "Select All Decks" : "Deselect All")
                             .foregroundColor(.primary)
+                        Spacer()
+                        Text("\(availableCards.count) cards")
+                            .foregroundColor(.secondary)
+                    }
+                }
+                
+                ForEach(viewModel.getAllDecksHierarchical()) { deck in
+                    Button(action: {
+                        if selectedDeckIds.contains(deck.id) {
+                            selectedDeckIds.remove(deck.id)
+                        } else {
+                            selectedDeckIds.insert(deck.id)
+                        }
+                    }) {
+                        HStack {
+                            // Show indentation for sub-decks
+                            if deck.isSubDeck {
+                                HStack(spacing: 4) {
+                                    Text("    ↳")
+                                        .foregroundColor(.secondary)
+                                    Text(deck.name)
+                                }
+                            } else {
+                                Text(deck.name)
+                            }
+                            Spacer()
+                            if selectedDeckIds.contains(deck.id) {
+                                Image(systemName: "checkmark")
+                                    .foregroundColor(.blue)
+                            }
+                            Text("\(deck.cards.count)")
+                                .foregroundColor(.secondary)
                         }
                     }
-                    
-                    if !selectedDeckIds.isEmpty && !availableCards.isEmpty {
-                        Section {
-                            // Start Game Button
-                            Button(action: {
-                                handleStartGame()
-                            }) {
-                                HStack {
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text("Start \(mode.title)")
-                                            .font(.headline)
-                                    }
-                                    Spacer()
-                                    Text("\(availableCards.count) cards")
-                                        .foregroundColor(.secondary)
-                                }
+                    .foregroundColor(.primary)
+                }
+            }
+            
+            if !selectedDeckIds.isEmpty && !availableCards.isEmpty {
+                Section {
+                    // Start Game Button
+                    Button(action: {
+                        handleStartGame()
+                    }) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Start \(mode.title)")
+                                    .font(.headline)
                             }
-                            .foregroundColor(selectedDeckIds.isEmpty || availableCards.isEmpty ? .gray : .blue)
-                            .disabled(selectedDeckIds.isEmpty || availableCards.isEmpty)
-                            .buttonStyle(PlainButtonStyle())
+                            Spacer()
+                            Text("\(availableCards.count) cards")
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .foregroundColor(selectedDeckIds.isEmpty || availableCards.isEmpty ? .gray : .blue)
+                    .disabled(selectedDeckIds.isEmpty || availableCards.isEmpty)
+                    .buttonStyle(PlainButtonStyle())
+                    
+                    // Continue Game Button (always present, grayed out if no save state)
+                    Button(action: {
+                        if hasSaveState {
+                            // Play game start sound
+                            // SoundManager.shared.playGameStartSound()
+                            HapticManager.shared.lightImpact()
                             
-                            // Continue Game Button (always present, grayed out if no save state)
-                            Button(action: {
-                                if hasSaveState {
-                                    shouldContinueGame = true
-                                    shouldStartGame = true
-                                }
-                            }) {
+                            shouldContinueGame = true
+                            shouldStartGame = true
+                        }
+                    }) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Continue Saved Game")
+                                    .font(.headline)
+                                    .foregroundColor(hasSaveState ? .green : .gray)
+                                
                                 HStack {
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text("Continue Saved Game")
-                                            .font(.headline)
-                                            .foregroundColor(hasSaveState ? .green : .gray)
-                                        
-                                        HStack {
-                                            Image(systemName: "clock.fill")
-                                                .foregroundColor(hasSaveState ? .green : .gray)
-                                                .font(.caption)
-                                            Text(hasSaveState ? "Pick up where you left off" : "No saved game available")
-                                                .font(.caption)
-                                                .foregroundColor(hasSaveState ? .green : .gray)
-                                        }
-                                    }
-                                    Spacer()
-                                    Image(systemName: "arrow.clockwise")
+                                    Image(systemName: "clock.fill")
+                                        .foregroundColor(hasSaveState ? .green : .gray)
+                                        .font(.caption)
+                                    Text(hasSaveState ? "Pick up where you left off" : "No saved game available")
+                                        .font(.caption)
                                         .foregroundColor(hasSaveState ? .green : .gray)
                                 }
                             }
-                            .disabled(!hasSaveState)
-                            .buttonStyle(PlainButtonStyle())
-                            
-                            // Hidden NavigationLink for programmatic navigation
-                            NavigationLink(
-                                destination: destinationView,
-                                isActive: $shouldStartGame
-                            ) {
-                                EmptyView()
-                            }
-                            .opacity(0)
-                            .frame(height: 0)
-                        }
-                    } else {
-                        Section {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("Start \(mode.title)")
-                                        .font(.headline)
-                                        .foregroundColor(.gray)
-                                }
-                                Spacer()
-                                Text("Select decks to continue")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                            
-                            // Continue Game Button (always present, grayed out if no save state or no decks selected)
-                            Button(action: {
-                                // Do nothing when no decks selected
-                            }) {
-                                HStack {
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text("Continue Saved Game")
-                                            .font(.headline)
-                                            .foregroundColor(.gray)
-                                        
-                                        HStack {
-                                            Image(systemName: "clock.fill")
-                                                .foregroundColor(.gray)
-                                                .font(.caption)
-                                            Text("Select decks to continue")
-                                                .font(.caption)
-                                                .foregroundColor(.gray)
-                                        }
-                                    }
-                                    Spacer()
-                                    Image(systemName: "arrow.clockwise")
-                                        .foregroundColor(.gray)
-                                }
-                            }
-                            .disabled(true)
-                            .buttonStyle(PlainButtonStyle())
+                            Spacer()
+                            Image(systemName: "arrow.clockwise")
+                                .foregroundColor(hasSaveState ? .green : .gray)
                         }
                     }
+                    .disabled(!hasSaveState)
+                    .buttonStyle(PlainButtonStyle())
+                    
+                    // Hidden NavigationLink for programmatic navigation
+                    NavigationLink(
+                        destination: destinationView,
+                        isActive: $shouldStartGame
+                    ) {
+                        EmptyView()
+                    }
+                    .opacity(0)
+                    .frame(height: 0)
                 }
-                .navigationTitle(mode.title)
-                .navigationBarBackButtonHidden(true)
+            } else {
+                Section {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Start \(mode.title)")
+                                .font(.headline)
+                                .foregroundColor(.gray)
+                        }
+                        Spacer()
+                        Text("Select decks to continue")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    // Continue Game Button (always present, grayed out if no save state or no decks selected)
+                    Button(action: {
+                        // Do nothing when no decks selected
+                    }) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Continue Saved Game")
+                                    .font(.headline)
+                                    .foregroundColor(.gray)
+                                
+                                HStack {
+                                    Image(systemName: "clock.fill")
+                                        .foregroundColor(.gray)
+                                        .font(.caption)
+                                    Text("Select decks to continue")
+                                        .font(.caption)
+                                        .foregroundColor(.gray)
+                                }
+                            }
+                            Spacer()
+                            Image(systemName: "arrow.clockwise")
+                                .foregroundColor(.gray)
+                        }
+                    }
+                    .disabled(true)
+                    .buttonStyle(PlainButtonStyle())
+                }
+            }
+        }
+    }
+    
+    private var cardsContent: some View {
+        VStack(spacing: 16) {
+            if viewModel.flashCards.isEmpty && viewModel.decks.isEmpty {
+                // Empty state
+                VStack(spacing: 16) {
+                    Image(systemName: "rectangle.stack")
+                        .font(.system(size: 60))
+                        .foregroundColor(.secondary)
+                    
+                    Text("No Cards Yet")
+                        .font(.title2)
+                        .bold()
+                    
+                    Text("Start building your flashcard collection by adding your first card or creating a deck.")
+                        .font(.body)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
+                }
+                .padding(.top, 60)
+                
+                // Quick action buttons
+                VStack(spacing: 12) {
+                    Button(action: {
+                        showingAddCardView = true
+                    }) {
+                        MenuButton(title: "Add Your First Card", icon: "plus.rectangle.fill", color: .orange)
+                    }
+                    
+                    Button(action: {
+                        showingAddDeckView = true
+                    }) {
+                        MenuButton(title: "Create Your First Deck", icon: "folder.badge.plus", color: .teal)
+                    }
+                }
+                .padding(.horizontal)
+                .padding(.top)
+            } else {
+                // Quick stats
+                VStack(spacing: 12) {
+                    HStack {
+                        VStack(alignment: .leading) {
+                            Text("Total Cards")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Text("\(viewModel.flashCards.count)")
+                                .font(.title2)
+                                .bold()
+                        }
+                        Spacer()
+                        VStack(alignment: .trailing) {
+                            Text("Total Decks")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Text("\(viewModel.decks.count)")
+                                .font(.title2)
+                                .bold()
+                        }
+                    }
+                    .padding()
+                    .background(Color(.secondarySystemGroupedBackground))
+                    .cornerRadius(12)
+                    .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 2)
+                }
+                .padding(.horizontal)
+                .padding(.top)
+                
+                // Navigate to manage cards
+                VStack(spacing: 12) {
+                    NavigationLink(destination: ManageDecksView(viewModel: viewModel)) {
+                        MenuButton(title: "Manage Your Decks", icon: "folder.fill", color: .teal)
+                    }
+                    
+                    Button(action: {
+                        showingAddCardView = true
+                    }) {
+                        MenuButton(title: "Add New Card", icon: "plus.rectangle.fill", color: .orange)
+                    }
+                    
+                    Button(action: {
+                        showingAddDeckView = true
+                    }) {
+                        MenuButton(title: "Create New Deck", icon: "folder.badge.plus", color: Color(red: 1.0, green: 0.4, blue: 0.3))
+                    }
+                    
+                    Button(action: {
+                        showingImageImportView = true
+                    }) {
+                        MenuButton(title: "Import from Image", icon: "photo.on.rectangle.angled", color: Color(red: 1.0, green: 0.6, blue: 0.0))
+                    }
+                }
+                .padding(.horizontal)
+            }
+            
+            Spacer()
+        }
+    }
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 0) {
+                // Show different content based on selection
+                if showingCardsContent {
+                    ScrollView {
+                        cardsContent
+                    }
+                } else if showingSettingsContent {
+                    SettingsView(viewModel: viewModel, isSheet: false)
+                } else {
+                    deckSelectionContent
+                }
                 
                 // Bottom Navigation
                 BottomNavigationView(
                     viewModel: viewModel,
-                    selectedTab: .constant(.home),
+                    selectedTab: showingCardsContent ? .constant(.cards) : 
+                                 showingSettingsContent ? .constant(.settings) : .constant(.home),
                     onNavigate: handleBottomNavigation
                 )
+            }
+            .navigationTitle(mode.title)
+            .navigationBarBackButtonHidden(true)
+            
+            .navigationDestination(isPresented: Binding(
+                get: { viewModel.shouldNavigateToManageDecks },
+                set: { if !$0 { viewModel.resetNavigationToManageDecks() } }
+            )) {
+                ManageDecksView(viewModel: viewModel)
+            }
+            .navigationDestination(isPresented: Binding(
+                get: { viewModel.shouldNavigateToSettings },
+                set: { if !$0 { viewModel.resetNavigationToSettings() } }
+            )) {
+                SettingsView(viewModel: viewModel, isSheet: false)
             }
             .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("DismissToRoot"))) { _ in
                 // Dismiss this view when dismiss to root is requested
@@ -261,11 +386,15 @@ struct DeckSelectionView: View {
                     cardCount: availableCards.count,
                     onContinue: {
                         print("🎮 User chose to continue game")
+                        // SoundManager.shared.playGameStartSound()
+                        HapticManager.shared.lightImpact()
                         shouldContinueGame = true
                         shouldStartGame = true
                     },
                     onStartFresh: {
                         print("🆕 User chose to start fresh")
+                        // SoundManager.shared.playGameStartSound()
+                        HapticManager.shared.lightImpact()
                         // Delete the save state and start fresh
                         SaveStateManager.shared.deleteSaveState(gameType: mode.saveStateType)
                         shouldContinueGame = false
@@ -295,6 +424,9 @@ struct DeckSelectionView: View {
         }
         .alert("Overwrite Saved Game?", isPresented: $showingSaveOverwriteWarning) {
             Button("Start New Game", role: .destructive) {
+                // Play game start sound
+                // SoundManager.shared.playGameStartSound()
+                HapticManager.shared.lightImpact()
                 // Delete the save state and start fresh
                 SaveStateManager.shared.deleteSaveState(gameType: mode.saveStateType)
                 shouldContinueGame = false
@@ -304,12 +436,23 @@ struct DeckSelectionView: View {
         } message: {
             Text("Starting a new game will overwrite your current saved progress. Are you sure you want to continue?")
         }
+        .sheet(isPresented: $showingAddCardView) {
+            AddCardView(viewModel: viewModel)
+        }
+        .sheet(isPresented: $showingAddDeckView) {
+            AddDeckView(viewModel: viewModel)
+        }
+        .sheet(isPresented: $showingImageImportView) {
+            ImageImportView(viewModel: viewModel)
+        }
         .onAppear {
             // Reset navigation state when view appears
             shouldStartGame = false
             shouldContinueGame = false
             showingContinueGameOverlay = false
             showingSaveOverwriteWarning = false
+            showingCardsContent = false
+            showingSettingsContent = false
         }
     }
     
@@ -317,13 +460,9 @@ struct DeckSelectionView: View {
         print("🚀 handleStartGame called for \(mode.title)")
         print("📋 Selected decks: \(selectedDeckIds.count), Available cards: \(availableCards.count)")
         
-        // Skip save state check for Hangman
-        if mode == .hangman {
-            print("🎯 Hangman mode - starting directly")
-            shouldContinueGame = false
-            shouldStartGame = true
-            return
-        }
+        // Play game start sound - DISABLED FOR TESTING
+        // SoundManager.shared.playGameStartSound()
+        HapticManager.shared.lightImpact()
         
         let hasExistingSave = hasSaveState
         print("💾 Has existing save: \(hasExistingSave)")
@@ -342,17 +481,16 @@ struct DeckSelectionView: View {
         // Handle navigation from bottom bar
         switch tab {
         case .home:
-            // Go back to home
+            // Always go back to actual HomeView, not just deck selection
             dismiss()
         case .cards:
-            // Navigate to cards section (implement if needed)
-            break
-        case .games:
-            // Already in games section
-            break
+            // Show cards content instead of navigating to ManageDecksView
+            showingCardsContent = true
+            showingSettingsContent = false
         case .settings:
-            // Navigate to settings section (implement if needed)
-            break
+            // Show settings content instead of navigating to SettingsView
+            showingCardsContent = false
+            showingSettingsContent = true
         }
     }
     
@@ -384,20 +522,6 @@ struct DeckSelectionView: View {
             )
         case .truefalse:
             TrueFalseViewWithSaveState(
-                viewModel: viewModel, 
-                cards: availableCards,
-                deckIds: deckIdArray,
-                shouldContinue: shouldContinueGame
-            )
-        case .hangman:
-            HangmanViewWithSaveState(
-                viewModel: viewModel, 
-                cards: availableCards,
-                deckIds: deckIdArray,
-                shouldContinue: shouldContinueGame
-            )
-        case .dehet:
-            DeHetGameViewWithSaveState(
                 viewModel: viewModel, 
                 cards: availableCards,
                 deckIds: deckIdArray,
@@ -495,34 +619,6 @@ struct TrueFalseViewWithSaveState: View {
         .onAppear {
             print("🔥 TrueFalseViewWithSaveState appearing - Cards: \(cards.count), DeckIds: \(deckIds.count), ShouldContinue: \(shouldContinue)")
         }
-    }
-}
-
-struct HangmanViewWithSaveState: View {
-    @ObservedObject var viewModel: FlashCardViewModel
-    let cards: [FlashCard]
-    let deckIds: [UUID]
-    let shouldContinue: Bool
-    
-    var body: some View {
-        // Hangman doesn't support save states, so just use regular view
-        HangmanView(viewModel: viewModel, cards: cards)
-    }
-}
-
-struct DeHetGameViewWithSaveState: View {
-    @ObservedObject var viewModel: FlashCardViewModel
-    let cards: [FlashCard]
-    let deckIds: [UUID]
-    let shouldContinue: Bool
-    
-    var body: some View {
-        DeHetGameView(viewModel: viewModel, cards: cards)
-            .onAppear {
-                if shouldContinue {
-                    // Load saved state logic will be implemented in DeHetGameView
-                }
-            }
     }
 }
 

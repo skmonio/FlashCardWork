@@ -6,28 +6,62 @@ struct StudyView: View {
     @State private var currentIndex = 0
     @State private var knownCards: Set<UUID> = []
     @State private var unknownCards: Set<UUID> = []
+    @State private var skippedCards: Set<UUID> = []
     @State private var showingResults = false
     @State private var isShowingFront = true
     @State private var isShowingExample = false
     @State private var dragOffset: CGFloat = 0
+    @State private var verticalDragOffset: CGFloat = 0
     @State private var nextCardActive = false
     @State private var selectedCardForEdit: FlashCard?
-    @State private var showingCloseConfirmation = false
     @State private var refreshID = UUID()
+    @State private var forceRefreshID = UUID()
+    @State private var showingCloseConfirmation = false
     @Environment(\.dismiss) private var dismiss
+    
+    // Add speech service for pronunciation
+    @ObservedObject private var speechService = DutchSpeechService.shared
     
     // Save state properties
     private var deckIds: [UUID]
     private var shouldLoadSaveState: Bool
     
+    // Get the text to speak for current card
+    private var textToSpeak: String {
+        guard let card = currentCard else { return "" }
+        return card.article.isEmpty ? card.word : "\(card.article) \(card.word)"
+    }
+    
+    // Check if current word is being spoken
+    private var isCurrentTextSpeaking: Bool {
+        return speechService.isSpeaking && speechService.currentlySpeaking == textToSpeak
+    }
+    
+    // Speech function
+    private func speakCurrentText(_ text: String) {
+        guard !text.isEmpty else { return }
+        speechService.speakDutch(text, rate: 0.4)
+    }
+    
     // Computed property to check if user has seen any cards
     private var hasSeenCards: Bool {
-        return !knownCards.isEmpty || !unknownCards.isEmpty
+        return !knownCards.isEmpty || !unknownCards.isEmpty || !skippedCards.isEmpty
     }
     
     // Computed property to check if there's significant progress to save
     private var hasSignificantProgress: Bool {
         return currentIndex > 0 || hasSeenCards
+    }
+    
+    // Computed property for score (known cards)
+    private var score: Int {
+        return knownCards.count * 10
+    }
+    
+    // Computed property for combo (consecutive known cards)
+    private var combo: Int {
+        // Simple combo calculation - could be enhanced
+        return knownCards.count >= 3 ? knownCards.count : 0
     }
     
     init(viewModel: FlashCardViewModel, cards: [FlashCard], deckIds: [UUID] = [], shouldLoadSaveState: Bool = false) {
@@ -48,41 +82,17 @@ struct StudyView: View {
                 studyView
             }
             
-            // Bottom close button
-            HStack {
-                Spacer()
-                Button(action: {
-                    if hasSignificantProgress && !showingResults {
-                        showingCloseConfirmation = true
-                    } else {
-                        dismissToRoot()
-                    }
-                }) {
-                    Image(systemName: "xmark")
-                        .font(.title2)
-                        .foregroundColor(.secondary)
-                        .padding(12)
-                        .background(Circle().fill(Color(.systemGray5)))
-                }
-                Spacer()
-            }
-            .padding(.bottom, 20)
-            .background(Color(.systemBackground))
+            // Unified footer
+            GameFooterView(
+                hasSignificantProgress: hasSignificantProgress,
+                showingResults: showingResults,
+                onClose: dismissToRoot,
+                onSaveAndClose: saveProgressAndDismiss,
+                onPrevious: nil,
+                canGoPrevious: false
+            )
         }
         .navigationBarHidden(true)
-        .alert("Close Study Session?", isPresented: $showingCloseConfirmation) {
-            Button("Save & Close", role: .destructive) {
-                saveProgressAndDismiss()
-            }
-            Button("Close Without Saving") {
-                dismissToRoot()
-            }
-            Button("Cancel", role: .cancel) { }
-        } message: {
-            Text(hasSignificantProgress ? 
-                "Would you like to save your progress?" : 
-                "Are you sure you want to close?")
-        }
         .sheet(item: $selectedCardForEdit) { card in
             EditCardView(viewModel: viewModel, card: card)
                 .onAppear {
@@ -101,7 +111,16 @@ struct StudyView: View {
         .onChange(of: cards) { newCards in
             print("📚 Cards array changed - Count: \(newCards.count), Current card: \(currentIndex < newCards.count ? newCards[currentIndex].word : "N/A")")
         }
+        .onChange(of: currentIndex) { newIndex in
+            print("📇 Current index changed to: \(newIndex)")
+            if newIndex < cards.count {
+                print("📇 Now showing card: \(cards[newIndex].word)")
+            }
+        }
         .onAppear {
+            // Pause CloudKit sync during active study session to prevent interference
+            viewModel.pauseCloudKitSync()
+            
             if shouldLoadSaveState {
                 loadSavedProgress()  
             } else {
@@ -112,14 +131,19 @@ struct StudyView: View {
                 isShowingFront = true
                 isShowingExample = false
                 dragOffset = 0
+                verticalDragOffset = 0
                 nextCardActive = false
                 knownCards.removeAll()
                 unknownCards.removeAll()
+                skippedCards.removeAll()
                 cards = viewModel.sortCardsForLearning(cards) // Use intelligent ordering for new session
                 // Don't clear saved progress here - only when explicitly resetting
             }
         }
         .onDisappear {
+            // Resume CloudKit sync when leaving study session
+            viewModel.resumeCloudKitSync()
+            
             // Auto-save when view disappears (if user navigates away without using back button)
             if hasSignificantProgress && !showingResults {
                 saveCurrentProgress()
@@ -127,73 +151,136 @@ struct StudyView: View {
         }
     }
     
+    // Computed property for current card to make SwiftUI detect changes better
+    private var currentCard: FlashCard? {
+        guard currentIndex < cards.count else { return nil }
+        return cards[currentIndex]
+    }
+    
     private var studyView: some View {
         ZStack {
-            // Background color for swipe feedback
-            Color.white  // Add default white background
+            // Default background
+            Color(.systemBackground)
                 .ignoresSafeArea()
             
-            Color.green
-                .opacity(dragOffset > 0 ? min(dragOffset / 500, 0.3) : 0)
-                .ignoresSafeArea()
+            // Green radial gradient for swipe right (Know it)
+            if dragOffset > 0 {
+                RadialGradient(
+                    gradient: Gradient(colors: [
+                        Color.green.opacity(min(dragOffset / 200, 0.8)),
+                        Color.green.opacity(min(dragOffset / 300, 0.5)),
+                        Color.green.opacity(min(dragOffset / 500, 0.2)),
+                        Color.clear
+                    ]),
+                    center: .center,
+                    startRadius: 10,
+                    endRadius: 800
+                )
+                .ignoresSafeArea(.all)
+                .animation(.easeOut(duration: 0.3), value: dragOffset)
+            }
             
-            Color.red
-                .opacity(dragOffset < 0 ? min(-dragOffset / 500, 0.3) : 0)
-                .ignoresSafeArea()
+            // Red radial gradient for swipe left (Don't know)
+            if dragOffset < 0 {
+                RadialGradient(
+                    gradient: Gradient(colors: [
+                        Color.red.opacity(min(-dragOffset / 200, 0.8)),
+                        Color.red.opacity(min(-dragOffset / 300, 0.5)),
+                        Color.red.opacity(min(-dragOffset / 500, 0.2)),
+                        Color.clear
+                    ]),
+                    center: .center,
+                    startRadius: 10,
+                    endRadius: 800
+                )
+                .ignoresSafeArea(.all)
+                .animation(.easeOut(duration: 0.3), value: dragOffset)
+            }
             
-            VStack(spacing: 20) {
-                // Progress indicator with edit button - with top padding for status bar
-                HStack {
-                    Text("\(currentIndex + 1) of \(cards.count)")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                    Spacer()
-                    
-                    HStack(spacing: 20) {
-                        Label("\(knownCards.count)", systemImage: "checkmark.circle.fill")
-                            .foregroundColor(.green)
-                        Label("\(unknownCards.count)", systemImage: "xmark.circle.fill")
-                            .foregroundColor(.red)
-                    }
-                }
-                .padding(.horizontal)
-                .padding(.top, 50) // Add top padding for status bar
+            // Yellow radial gradient for swipe up (Review)
+            if verticalDragOffset < 0 {
+                RadialGradient(
+                    gradient: Gradient(colors: [
+                        Color.yellow.opacity(min(-verticalDragOffset / 200, 0.8)),
+                        Color.yellow.opacity(min(-verticalDragOffset / 300, 0.5)),
+                        Color.yellow.opacity(min(-verticalDragOffset / 500, 0.2)),
+                        Color.clear
+                    ]),
+                    center: .center,
+                    startRadius: 10,
+                    endRadius: 800
+                )
+                .ignoresSafeArea(.all)
+                .animation(.easeOut(duration: 0.3), value: verticalDragOffset)
+            }
+            
+            // Blue radial gradient for swipe down (Skip)
+            if verticalDragOffset > 0 {
+                RadialGradient(
+                    gradient: Gradient(colors: [
+                        Color.blue.opacity(min(verticalDragOffset / 200, 0.8)),
+                        Color.blue.opacity(min(verticalDragOffset / 300, 0.5)),
+                        Color.blue.opacity(min(verticalDragOffset / 500, 0.2)),
+                        Color.clear
+                    ]),
+                    center: .center,
+                    startRadius: 10,
+                    endRadius: 800
+                )
+                .ignoresSafeArea(.all)
+                .animation(.easeOut(duration: 0.3), value: verticalDragOffset)
+            }
+            
+            VStack(spacing: 0) {
+                // Unified header with progress bar
+                GameHeaderView(
+                    currentIndex: currentIndex + 1,
+                    totalCards: cards.count,
+                    score: score,
+                    combo: combo,
+                    knownCount: nil,
+                    unknownCount: nil,
+                    skippedCount: nil
+                )
                 
                 Spacer()
                 
-                // Single card view
-                if currentIndex < cards.count {
-                    ZStack {
-                        CardView(
-                            card: cards[currentIndex],
-                            isShowingFront: $isShowingFront,
-                            isShowingExample: $isShowingExample,
-                            onSwipeLeft: {
-                                handleSwipeLeft()
-                            },
-                            onSwipeRight: {
-                                handleSwipeRight()
-                            },
-                            onDragChanged: { offset in
-                                dragOffset = offset
-                            },
-                            onGoBack: currentIndex > 0 ? {
-                                goToPreviousCard()
-                            } : nil
-                        )
-                        .transition(AnyTransition.asymmetric(
-                            insertion: .opacity.combined(with: .move(edge: .bottom)),
-                            removal: .opacity.combined(with: .offset(x: dragOffset, y: 0))
-                        ))
-                        .id("\(cards[currentIndex].id)-\(refreshID)")
-                        .onAppear {
-                            print("🎴 CardView appeared - Showing: \(cards[currentIndex].word) - \(cards[currentIndex].definition)")
+                // Single card view using unified component
+                if let card = currentCard {
+                    GameCardView(
+                        card: card,
+                        isShowingFront: $isShowingFront,
+                        isShowingExample: $isShowingExample,
+                        onSwipeLeft: {
+                            handleSwipeLeft()
+                        },
+                        onSwipeRight: {
+                            handleSwipeRight()
+                        },
+                        onSwipeUp: {
+                            handleSwipeUp() // Now review
+                        },
+                        onSwipeDown: {
+                            handleSwipeDown() // Now skip
+                        },
+                        onDragChanged: { offset in
+                            dragOffset = offset
+                        },
+                        onVerticalDragChanged: { offset in
+                            verticalDragOffset = offset
                         }
-                        .blur(radius: 0)
-                    }
+                    )
+                    .id("\(card.id)-\(forceRefreshID)") // Combined unique ID to force refresh
+                    .transition(.asymmetric(
+                        insertion: .move(edge: .trailing).combined(with: .opacity),
+                        removal: .move(edge: .leading).combined(with: .opacity)
+                    ))
                 }
                 
                 Spacer()
+                
+                // Swipe hint with updated directions
+                // swipeHintView
             }
         }
     }
@@ -229,6 +316,13 @@ struct StudyView: View {
                         .foregroundColor(.red)
                     Text("Need Review: \(unknownCards.count) cards")
                         .foregroundColor(.red)
+                }
+                
+                HStack {
+                    Image(systemName: "minus.circle.fill")
+                        .foregroundColor(.blue)
+                    Text("Skipped: \(skippedCards.count) cards")
+                        .foregroundColor(.blue)
                 }
             }
             .font(.title3)
@@ -316,53 +410,127 @@ struct StudyView: View {
     }
     
     private func handleSwipeRight() {
+        print("👆 SWIPE RIGHT - Starting handler")
+        print("👆 Current state: index=\(currentIndex), card='\(cards[currentIndex].word)'")
+        
         HapticManager.shared.cardSwipeRight() // Success haptic for "I know this"
         let cardId = cards[currentIndex].id
         knownCards.insert(cardId)
         unknownCards.remove(cardId)
         viewModel.setCardStatus(cardId: cardId, status: .known)
         
+        print("👆 About to record card shown...")
         // Record learning statistics - card was shown and answered correctly
         viewModel.recordCardShown(cardId, isCorrect: true)
+        print("👆 Card shown recorded, about to move to next card...")
         
         withAnimation(.easeOut(duration: 0.3)) {
             moveToNextCard()
         }
+        print("👆 SWIPE RIGHT - Handler complete")
     }
     
     private func handleSwipeLeft() {
+        print("👈 SWIPE LEFT - Starting handler")
+        print("👈 Current state: index=\(currentIndex), card='\(cards[currentIndex].word)'")
+        
         HapticManager.shared.cardSwipeLeft() // Warning haptic for "I don't know this"
         let cardId = cards[currentIndex].id
         unknownCards.insert(cardId)
         knownCards.remove(cardId)
         viewModel.setCardStatus(cardId: cardId, status: .unknown)
         
+        print("👈 About to record card shown...")
         // Record learning statistics - card was shown and answered incorrectly
         viewModel.recordCardShown(cardId, isCorrect: false)
+        print("👈 Card shown recorded, about to move to next card...")
         
         withAnimation(.easeOut(duration: 0.3)) {
             moveToNextCard()
         }
+        print("👈 SWIPE LEFT - Handler complete")
+    }
+    
+    private func handleSwipeUp() {
+        print("👆 SWIPE UP - Starting handler")
+        print("👆 Current state: index=\(currentIndex), card='\(cards[currentIndex].word)'")
+        
+        HapticManager.shared.mediumImpact() // Medium haptic for "review this"
+        let cardId = cards[currentIndex].id
+        skippedCards.insert(cardId)
+        knownCards.remove(cardId)
+        unknownCards.remove(cardId)
+        
+        print("👆 About to add card to review...")
+        // Add card to review deck
+        viewModel.addCardToReview(cardId)
+        print("👆 Card added to review, about to move to next card...")
+        
+        // Record as skipped (not counted in learning statistics)
+        print("📋 Card '\(cards[currentIndex].word)' added to review - skipped")
+        
+        withAnimation(.easeOut(duration: 0.3)) {
+            moveToNextCard()
+        }
+        print("👆 SWIPE UP - Handler complete")
+    }
+    
+    private func handleSwipeDown() {
+        print("👇 SWIPE DOWN - Starting handler")
+        print("👇 Current state: index=\(currentIndex), card='\(cards[currentIndex].word)'")
+        
+        HapticManager.shared.lightImpact() // Light haptic for "skip"
+        let cardId = cards[currentIndex].id
+        skippedCards.insert(cardId)
+        knownCards.remove(cardId)
+        unknownCards.remove(cardId)
+        
+        // Just skip without adding to review deck
+        print("⏭️ Card '\(cards[currentIndex].word)' skipped")
+        
+        withAnimation(.easeOut(duration: 0.3)) {
+            moveToNextCard()
+        }
+        print("👇 SWIPE DOWN - Handler complete")
     }
     
     private func moveToNextCard() {
+        print("🃏 moveToNextCard called - currentIndex: \(currentIndex), cards.count: \(cards.count)")
+        
         if currentIndex < cards.count - 1 {
+            print("🃏 Moving to next card: \(currentIndex) -> \(currentIndex + 1)")
+            
+            // Reset card display state BEFORE changing index
+            isShowingFront = true
+            isShowingExample = false
+            dragOffset = 0
+            verticalDragOffset = 0
+            
             withAnimation(.easeInOut(duration: 0.3)) {
                 currentIndex += 1
-                isShowingFront = true
-                isShowingExample = false
-                dragOffset = 0
-                
-                // Auto-save progress periodically (every 5 cards)
-                if currentIndex % 5 == 0 {
-                    saveCurrentProgress()
-                }
+            }
+            
+            // Force UI refresh
+            forceRefreshID = UUID()
+            
+            print("🃏 Card updated - now showing: \(cards[currentIndex].word)")
+            print("🃏 Current card ID: \(cards[currentIndex].id)")
+            print("🃏 isShowingFront: \(isShowingFront)")
+            print("🃏 forceRefreshID updated: \(forceRefreshID)")
+            
+            // Auto-save progress periodically (every 5 cards)
+            if currentIndex % 5 == 0 {
+                saveCurrentProgress()
             }
         } else {
+            print("🃏 Reached end of cards - showing results")
             HapticManager.shared.gameComplete() // Strong haptic for session completion
             
             // Clear saved progress since session is complete
             clearSavedProgress()
+            
+            // Resume CloudKit sync when session completes
+            viewModel.resumeCloudKitSync()
             
             withAnimation {
                 StreakManager.shared.recordGameCompletion(); showingResults = true
@@ -377,6 +545,7 @@ struct StudyView: View {
                 isShowingFront = true
                 isShowingExample = false
                 dragOffset = 0
+                verticalDragOffset = 0
                 
                 // Auto-save progress periodically (every 5 cards)
                 if currentIndex % 5 == 0 {
@@ -409,6 +578,7 @@ struct StudyView: View {
             currentIndex: currentIndex,
             knownCards: knownCards,
             unknownCards: unknownCards,
+            skippedCards: skippedCards,
             isShowingFront: isShowingFront,
             isShowingExample: isShowingExample,
             cards: cards
@@ -419,7 +589,7 @@ struct StudyView: View {
             gameData: gameState
         )
         
-        print("💾 Study progress saved - Index: \(currentIndex), Known: \(knownCards.count), Unknown: \(unknownCards.count)")
+        print("💾 Study progress saved - Index: \(currentIndex), Known: \(knownCards.count), Unknown: \(unknownCards.count), Skipped: \(skippedCards.count)")
     }
     
     private func loadSavedProgress() {
@@ -431,6 +601,7 @@ struct StudyView: View {
             currentIndex = savedState.currentIndex
             knownCards = savedState.knownCards
             unknownCards = savedState.unknownCards
+            skippedCards = savedState.skippedCards
             isShowingFront = savedState.isShowingFront
             isShowingExample = savedState.isShowingExample
             
@@ -450,7 +621,7 @@ struct StudyView: View {
                 currentIndex = max(0, cards.count - 1)
             }
             
-            print("📖 Study progress loaded - Index: \(currentIndex), Known: \(knownCards.count), Unknown: \(unknownCards.count)")
+            print("📖 Study progress loaded - Index: \(currentIndex), Known: \(knownCards.count), Unknown: \(unknownCards.count), Skipped: \(skippedCards.count)")
             
             HapticManager.shared.successNotification()
         } else {
@@ -470,9 +641,11 @@ struct StudyView: View {
         isShowingFront = true
         isShowingExample = false
         dragOffset = 0
+        verticalDragOffset = 0
         nextCardActive = false
         knownCards.removeAll()
         unknownCards.removeAll()
+        skippedCards.removeAll()
         
         // Clear any saved progress when starting fresh
         clearSavedProgress()
@@ -484,9 +657,11 @@ struct StudyView: View {
         isShowingFront = true
         isShowingExample = false
         dragOffset = 0
+        verticalDragOffset = 0
         nextCardActive = false
         knownCards.removeAll()
         unknownCards.removeAll()
+        skippedCards.removeAll()
         cards = viewModel.sortCardsForLearning(cards) // Use intelligent ordering for new session
         
         // Clear any saved progress when resetting

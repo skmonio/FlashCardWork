@@ -1,10 +1,14 @@
 import Foundation
+import UIKit
+import CloudKit
 
 class FlashCardViewModel: ObservableObject {
     @Published var flashCards: [FlashCard] = [] {
         didSet {
             print("FlashCards changed: \(flashCards.count) cards")
             saveCards()
+            // Remove automatic CloudKit sync on every change - too aggressive!
+            // triggerCloudKitSync()
         }
     }
     
@@ -12,12 +16,32 @@ class FlashCardViewModel: ObservableObject {
         didSet {
             print("Decks changed: \(decks.count) decks")
             saveDecks()
+            // Remove automatic CloudKit sync on every change - too aggressive!
+            // triggerCloudKitSync()
         }
     }
     
     // Navigation state
     @Published var shouldNavigateToRoot = false
     @Published var navigationPath: [String] = []
+    @Published var shouldNavigateToManageDecks = false
+    @Published var shouldNavigateToSettings = false
+    
+    // CloudKit integration
+    @Published var isCloudSyncEnabled: Bool = true {
+        didSet {
+            UserDefaults.standard.set(isCloudSyncEnabled, forKey: "CloudSyncEnabled")
+            if isCloudSyncEnabled {
+                // Add schema validation before triggering sync
+                validateCloudKitSchemaBeforeSync()
+            }
+        }
+    }
+    
+    private let cloudKitManager = CloudKitManager.shared
+    private var syncTimer: Timer?
+    private var lastSyncTime: Date = .distantPast
+    private let minimumSyncInterval: TimeInterval = 1800 // 30 minutes instead of 5
     
     private let userDefaultsKey = "SavedFlashCards"
     private let decksDefaultsKey = "SavedDecks"
@@ -25,6 +49,7 @@ class FlashCardViewModel: ObservableObject {
     private var uncategorizedDeckId: UUID?
     private var learntDeckId: UUID?
     private var learningDeckId: UUID?
+    private var reviewDeckId: UUID?
     
     enum CardStatus: String, Codable {
         case unknown
@@ -38,23 +63,39 @@ class FlashCardViewModel: ObservableObject {
     }
     
     init() {
-        print("ViewModel init - Loading data")
+        print("🚀 ViewModel init - Starting...")
         
         // Reset navigation state first
         shouldNavigateToRoot = false
         navigationPath = []
+        print("✅ Navigation state reset")
         
+        // Load CloudKit settings
+        isCloudSyncEnabled = UserDefaults.standard.bool(forKey: "CloudSyncEnabled")
+        print("✅ CloudKit settings loaded: \(isCloudSyncEnabled)")
+        
+        print("📂 Loading cards...")
         loadCards()
-        loadDecks()
-        loadCardStatus()
+        print("✅ Cards loaded: \(flashCards.count)")
         
+        print("📁 Loading decks...")
+        loadDecks()
+        print("✅ Decks loaded: \(decks.count)")
+        
+        print("📊 Loading card status...")
+        loadCardStatus()
+        print("✅ Card status loaded")
+        
+        print("🏗️ Creating system decks...")
         // Create "Uncategorized" deck if it doesn't exist
         if !decks.contains(where: { $0.name == "Uncategorized" }) {
             let uncategorizedDeck = Deck(name: "Uncategorized")
             uncategorizedDeckId = uncategorizedDeck.id
             decks.append(uncategorizedDeck)
+            print("✅ Created Uncategorized deck")
         } else {
             uncategorizedDeckId = decks.first(where: { $0.name == "Uncategorized" })?.id
+            print("✅ Found existing Uncategorized deck")
         }
         
         // Create "Learnt" deck if it doesn't exist
@@ -62,8 +103,10 @@ class FlashCardViewModel: ObservableObject {
             let learntDeck = Deck(name: "Learnt")
             learntDeckId = learntDeck.id
             decks.append(learntDeck)
+            print("✅ Created Learnt deck")
         } else {
             learntDeckId = decks.first(where: { $0.name == "Learnt" })?.id
+            print("✅ Found existing Learnt deck")
         }
         
         // Create "Learning" deck if it doesn't exist
@@ -71,20 +114,51 @@ class FlashCardViewModel: ObservableObject {
             let learningDeck = Deck(name: "Learning")
             learningDeckId = learningDeck.id
             decks.append(learningDeck)
+            print("✅ Created Learning deck")
         } else {
             learningDeckId = decks.first(where: { $0.name == "Learning" })?.id
+            print("✅ Found existing Learning deck")
         }
+        
+        // Create "Review" deck if it doesn't exist
+        if !decks.contains(where: { $0.name == "Review" }) {
+            let reviewDeck = Deck(name: "Review")
+            reviewDeckId = reviewDeck.id
+            decks.append(reviewDeck)
+            print("✅ Created Review deck")
+        } else {
+            reviewDeckId = decks.first(where: { $0.name == "Review" })?.id
+            print("✅ Found existing Review deck")
+        }
+        
+        print("📚 Total decks after system deck creation: \(decks.count)")
         
         // Add example Dutch cards if no cards exist
         if flashCards.isEmpty {
+            print("📝 Creating example cards...")
             createExampleDutchCards()
+            print("✅ Example cards created: \(flashCards.count)")
+        } else {
+            print("✅ Using existing cards: \(flashCards.count)")
         }
         
         // Initialize statistics for existing cards that might not have them
+        print("📈 Initializing statistics...")
         initializeStatisticsForExistingCards()
+        print("✅ Statistics initialized")
         
         // Update cards and decks
+        print("🔄 Updating card-deck associations...")
         updateCardDeckAssociations()
+        print("✅ Associations updated")
+        
+        // Set up CloudKit sync
+        print("☁️ Setting up CloudKit sync...")
+        setupCloudKitSync()
+        print("✅ CloudKit setup complete")
+        
+        print("🎉 ViewModel initialization complete!")
+        print("📊 Final state: \(flashCards.count) cards, \(decks.count) decks")
     }
     
     private func createExampleDutchCards() {
@@ -267,6 +341,22 @@ class FlashCardViewModel: ObservableObject {
         shouldNavigateToRoot = false
     }
     
+    func navigateToManageDecks() {
+        shouldNavigateToManageDecks = true
+    }
+    
+    func resetNavigationToManageDecks() {
+        shouldNavigateToManageDecks = false
+    }
+    
+    func navigateToSettings() {
+        shouldNavigateToSettings = true
+    }
+    
+    func resetNavigationToSettings() {
+        shouldNavigateToSettings = false
+    }
+    
     private func saveCardStatus() {
         if let encoded = try? JSONEncoder().encode(cardStatus) {
             UserDefaults.standard.set(encoded, forKey: cardStatusKey)
@@ -282,35 +372,39 @@ class FlashCardViewModel: ObservableObject {
     
     func updateCardDeckAssociations() {
         print("Updating card-deck associations")
+        
+        // Create a mutable copy of decks to prevent didSet loops
+        var tempDecks = decks
+        
         // Clear all deck cards
-        for index in decks.indices {
-            decks[index].cards = []
+        for index in tempDecks.indices {
+            tempDecks[index].cards = []
         }
         
         // Reassign cards to appropriate decks
         for card in flashCards {
             if card.deckIds.isEmpty {
                 // Add to uncategorized if no decks
-                if let uncategorizedIndex = decks.firstIndex(where: { $0.name == "Uncategorized" }) {
-                    decks[uncategorizedIndex].cards.append(card)
+                if let uncategorizedIndex = tempDecks.firstIndex(where: { $0.name == "Uncategorized" }) {
+                    tempDecks[uncategorizedIndex].cards.append(card)
                 }
             } else {
                 // Add to all assigned decks
                 for deckId in card.deckIds {
-                    if let deckIndex = decks.firstIndex(where: { $0.id == deckId }) {
-                        decks[deckIndex].cards.append(card)
+                    if let deckIndex = tempDecks.firstIndex(where: { $0.id == deckId }) {
+                        tempDecks[deckIndex].cards.append(card)
                     }
                 }
             }
         }
         
-        // Save decks after updating associations
-        saveDecks()
+        // Update decks only once at the end to avoid didSet loops
+        decks = tempDecks
     }
     
     func addCard(word: String, definition: String, example: String, deckIds: Set<UUID>, article: String = "", plural: String = "", pastTense: String = "", futureTense: String = "", pastParticiple: String = "", cardId: UUID? = nil) -> FlashCard {
         print("Adding new card")
-        let newCard = FlashCard(
+        var newCard = FlashCard(
             word: word, 
             definition: definition, 
             example: example, 
@@ -322,6 +416,10 @@ class FlashCardViewModel: ObservableObject {
             pastParticiple: pastParticiple,
             cardId: cardId
         )
+        
+        // Mark as modified for CloudKit
+        newCard.markAsModified()
+        
         flashCards.append(newCard)
         updateCardDeckAssociations()
         return newCard
@@ -338,6 +436,10 @@ class FlashCardViewModel: ObservableObject {
             flashCards[index].pastTense = pastTense
             flashCards[index].futureTense = futureTense
             flashCards[index].pastParticiple = pastParticiple
+            
+            // Mark as modified for CloudKit
+            flashCards[index].markAsModified()
+            
             updateCardDeckAssociations()
         }
     }
@@ -383,19 +485,28 @@ class FlashCardViewModel: ObservableObject {
     
     func createDeck(name: String) -> Deck {
         print("Creating new deck: \(name)")
-        let newDeck = Deck(name: name)
+        var newDeck = Deck(name: name)
+        
+        // Mark as modified for CloudKit
+        newDeck.markAsModified()
+        
         decks.append(newDeck)
         return newDeck
     }
     
     func createSubDeck(name: String, parentId: UUID) -> Deck {
         print("Creating new sub-deck: \(name) under parent: \(parentId)")
-        let newSubDeck = Deck(name: name, parentId: parentId)
+        var newSubDeck = Deck(name: name, parentId: parentId)
+        
+        // Mark as modified for CloudKit
+        newSubDeck.markAsModified()
+        
         decks.append(newSubDeck)
         
         // Update parent deck to include this sub-deck
         if let parentIndex = decks.firstIndex(where: { $0.id == parentId }) {
             decks[parentIndex].subDeckIds.insert(newSubDeck.id)
+            decks[parentIndex].markAsModified()
         }
         
         return newSubDeck
@@ -465,6 +576,10 @@ class FlashCardViewModel: ObservableObject {
         // Update the deck name
         if let index = decks.firstIndex(where: { $0.id == deck.id }) {
             decks[index].name = trimmedName
+            
+            // Mark as modified for CloudKit
+            decks[index].markAsModified()
+            
             saveDecks()
         }
     }
@@ -737,6 +852,12 @@ class FlashCardViewModel: ObservableObject {
             }
             
             successCount += 1
+        }
+        
+        // Only sync to CloudKit after bulk import (not on every card)
+        if successCount > 0 {
+            print("📦 Imported \(successCount) cards - scheduling CloudKit sync")
+            forceSyncAfterDataChange()
         }
         
         return (successCount, errors)
@@ -1057,7 +1178,11 @@ class FlashCardViewModel: ObservableObject {
     }
     
     func recordCardShown(_ cardId: UUID, isCorrect: Bool) {
-        guard let cardIndex = flashCards.firstIndex(where: { $0.id == cardId }) else { return }
+        print("📊 Recording card shown: \(cardId), correct: \(isCorrect)")
+        guard let cardIndex = flashCards.firstIndex(where: { $0.id == cardId }) else { 
+            print("❌ Card not found: \(cardId)")
+            return 
+        }
         
         // Update statistics
         flashCards[cardIndex].timesShown += 1
@@ -1065,15 +1190,18 @@ class FlashCardViewModel: ObservableObject {
             flashCards[cardIndex].timesCorrect += 1
         }
         
+        // Mark as modified for CloudKit (but don't trigger sync immediately)
+        flashCards[cardIndex].markAsModified()
+        
         // Update learning decks with the updated card
         updateLearningDecks(for: flashCards[cardIndex])
         
-        // Save changes
+        // Save changes to local storage (but CloudKit sync is paused during study)
         saveCards()
         
         print("📊 Card '\(flashCards[cardIndex].word)' stats updated: \(flashCards[cardIndex].timesCorrect)/\(flashCards[cardIndex].timesShown) = \(flashCards[cardIndex].learningPercentage ?? 0)%")
         
-        // Force UI update by triggering objectWillChange
+        // Force UI update by triggering objectWillChange (non-blocking)
         DispatchQueue.main.async {
             self.objectWillChange.send()
         }
@@ -1098,8 +1226,9 @@ class FlashCardViewModel: ObservableObject {
             print("📖 Card '\(flashCards[cardIndex].word)' moved to LEARNING deck (\(flashCards[cardIndex].learningPercentage ?? 0)%)")
         }
         
-        // Update deck associations
-        updateCardDeckAssociations()
+        // Defer heavy deck association updates to reduce blocking during study sessions
+        // The full updateCardDeckAssociations will be called when study session ends
+        print("📖 Learning deck assignment updated for '\(flashCards[cardIndex].word)' - full sync deferred")
     }
     
     func resetLearningStatistics() {
@@ -1119,6 +1248,33 @@ class FlashCardViewModel: ObservableObject {
         // Update deck associations and save
         updateCardDeckAssociations()
         saveCards()
+    }
+    
+    func addCardToReview(_ cardId: UUID) {
+        print("📋 addCardToReview - Starting for cardId: \(cardId)")
+        guard let reviewDeckId = reviewDeckId,
+              let cardIndex = flashCards.firstIndex(where: { $0.id == cardId }) else { 
+            print("📋 addCardToReview - Guard failed: reviewDeckId=\(String(describing: reviewDeckId)), cardFound=\(flashCards.firstIndex(where: { $0.id == cardId }) != nil)")
+            return 
+        }
+        
+        // Add card to review deck if not already there
+        flashCards[cardIndex].deckIds.insert(reviewDeckId)
+        print("📋 addCardToReview - Card deck IDs updated")
+        
+        // Save changes (defer heavy deck associations update until study session ends)
+        print("📋 addCardToReview - About to save...")
+        saveCards()
+        print("📋 addCardToReview - saveCards complete")
+        
+        print("📋 Card '\(flashCards[cardIndex].word)' added to Review deck")
+        
+        // Force UI update
+        DispatchQueue.main.async {
+            print("📋 addCardToReview - Triggering UI update")
+            self.objectWillChange.send()
+        }
+        print("📋 addCardToReview - Complete")
     }
     
     /// Sort cards intelligently for games: less-known cards first, well-known cards later
@@ -1161,12 +1317,12 @@ class FlashCardViewModel: ObservableObject {
     
     func canDeleteDeck(_ deck: Deck) -> Bool {
         // Prevent deletion of special learning decks
-        return deck.name != "Uncategorized" && deck.name != "Learnt" && deck.name != "Learning"
+        return deck.name != "Uncategorized" && deck.name != "Learnt" && deck.name != "Learning" && deck.name != "Review"
     }
     
     func canRenameDeck(_ deck: Deck) -> Bool {
         // Prevent renaming of special learning decks
-        return deck.name != "Uncategorized" && deck.name != "Learnt" && deck.name != "Learning"
+        return deck.name != "Uncategorized" && deck.name != "Learnt" && deck.name != "Learning" && deck.name != "Review"
     }
     
     func saveAllData() {
@@ -1369,6 +1525,518 @@ class FlashCardViewModel: ObservableObject {
         case keepExisting
         case replaceWithNew
         case mergeAdditionalFields
+    }
+    
+    // MARK: - CloudKit Integration
+    
+    private func setupCloudKitSync() {
+        print("☁️ CloudKit setup starting...")
+        
+        // Initial sync on app launch
+        if isCloudSyncEnabled {
+            print("☁️ CloudKit enabled, performing initial sync...")
+            performInitialCloudKitSync()
+        } else {
+            print("☁️ CloudKit disabled in settings")
+        }
+        
+        // Set up periodic sync every 30 minutes (much less aggressive)
+        #if !targetEnvironment(simulator)
+        print("☁️ Setting up periodic sync timer (30-minute intervals)")
+        syncTimer = Timer.scheduledTimer(withTimeInterval: minimumSyncInterval, repeats: true) { [weak self] _ in
+            self?.conditionalCloudKitSync()
+        }
+        #else
+        print("☁️ Skipping periodic sync timer (simulator mode)")
+        #endif
+        
+        // Set up app lifecycle notifications for proper sync timing
+        setupAppLifecycleObservers()
+        
+        print("☁️ CloudKit setup method complete")
+    }
+    
+    private func setupAppLifecycleObservers() {
+        #if !targetEnvironment(simulator)
+        // Sync when app goes to background
+        NotificationCenter.default.addObserver(
+            forName: UIApplication.didEnterBackgroundNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            print("📱 App entering background - triggering CloudKit sync")
+            self?.conditionalCloudKitSync()
+        }
+        
+        // Sync when app becomes active
+        NotificationCenter.default.addObserver(
+            forName: UIApplication.didBecomeActiveNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            print("📱 App became active - checking for CloudKit sync")
+            self?.conditionalCloudKitSync()
+        }
+        #endif
+    }
+    
+    private func conditionalCloudKitSync() {
+        guard isCloudSyncEnabled else { 
+            print("☁️ CloudKit sync skipped - disabled")
+            return 
+        }
+        
+        // Check if enough time has passed since last sync
+        let timeSinceLastSync = Date().timeIntervalSince(lastSyncTime)
+        if timeSinceLastSync < minimumSyncInterval {
+            print("☁️ CloudKit sync skipped - too soon (last sync \(Int(timeSinceLastSync))s ago)")
+            return
+        }
+        
+        print("☁️ Performing conditional CloudKit sync")
+        performCloudKitSync()
+    }
+    
+    private func performInitialCloudKitSync() {
+        print("☁️ Initial CloudKit sync starting...")
+        guard isCloudSyncEnabled else { 
+            print("☁️ Sync disabled, returning early")
+            return 
+        }
+        
+        #if targetEnvironment(simulator)
+        print("📱 Skipping CloudKit sync - running on simulator")
+        return
+        #endif
+        
+        print("☁️ Creating detached async task for CloudKit sync...")
+        // Use Task.detached to prevent blocking the UI
+        Task.detached { [weak self] in
+            guard let self = self else { return }
+            
+            print("☁️ Inside detached async task, calling CloudKit manager...")
+            do {
+                let currentCards = await MainActor.run { self.flashCards }
+                let currentDecks = await MainActor.run { self.decks }
+                
+                print("☁️ Starting CloudKit sync with \(currentCards.count) cards and \(currentDecks.count) decks")
+                
+                let (syncedCards, syncedDecks) = await self.cloudKitManager.syncData(
+                    flashCards: currentCards,
+                    decks: currentDecks
+                )
+                
+                print("☁️ CloudKit sync completed with \(syncedCards.count) cards and \(syncedDecks.count) decks")
+                
+                await MainActor.run {
+                    // Check if this was a new device download (more cloud data than local)
+                    let wasNewDeviceDownload = syncedCards.count > currentCards.count || syncedDecks.count > currentDecks.count
+                    
+                    if wasNewDeviceDownload {
+                        print("🆕 New device detected - downloaded \(syncedCards.count - currentCards.count) new cards and \(syncedDecks.count - currentDecks.count) new decks")
+                    }
+                    
+                    // Temporarily disable CloudKit sync to prevent recursion
+                    let originalSyncEnabled = self.isCloudSyncEnabled
+                    self.isCloudSyncEnabled = false
+                    
+                    // Update data with synced results
+                    self.flashCards = syncedCards
+                    self.decks = syncedDecks
+                    self.updateCardDeckAssociations()
+                    
+                    // Re-enable sync
+                    self.isCloudSyncEnabled = originalSyncEnabled
+                    
+                    // Mark sync time
+                    self.lastSyncTime = Date()
+                    
+                    if wasNewDeviceDownload {
+                        print("✅ Initial CloudKit download completed - your data has been restored!")
+                    } else {
+                        print("✅ Initial CloudKit sync completed")
+                    }
+                }
+            } catch {
+                print("❌ Initial CloudKit sync failed: \(error)")
+                
+                // Provide user-friendly error handling
+                await MainActor.run {
+                    // Don't reset sync time on first failure to allow quick retry
+                    if let ckError = error as? CKError {
+                        switch ckError.code {
+                        case .quotaExceeded:
+                            print("⚠️ CloudKit quota exceeded - will retry automatically")
+                        case .networkUnavailable, .networkFailure:
+                            print("📶 Network issue - will retry when connection improves")
+                        case .notAuthenticated:
+                            print("🔐 iCloud account issue - please check Settings > [Your Name] > iCloud")
+                        default:
+                            print("☁️ CloudKit error: \(ckError.localizedDescription)")
+                        }
+                    }
+                }
+            }
+        }
+        print("☁️ Initial CloudKit sync task created")
+    }
+    
+    private func triggerCloudKitSync() {
+        // This method now only triggers immediate sync for specific user actions
+        guard isCloudSyncEnabled else { return }
+        
+        #if targetEnvironment(simulator)
+        return
+        #endif
+        
+        print("☁️ Manual sync triggered")
+        performCloudKitSync()
+    }
+    
+    private func performCloudKitSync() {
+        guard isCloudSyncEnabled else { return }
+        
+        #if targetEnvironment(simulator)
+        return
+        #endif
+        
+        // Update last sync time to prevent too frequent syncing
+        lastSyncTime = Date()
+        
+        // Use Task.detached to prevent blocking the UI
+        Task.detached { [weak self] in
+            guard let self = self else { return }
+            
+            do {
+                let currentCards = await MainActor.run { self.flashCards }
+                let currentDecks = await MainActor.run { self.decks }
+                
+                let (syncedCards, syncedDecks) = await self.cloudKitManager.syncData(
+                    flashCards: currentCards,
+                    decks: currentDecks
+                )
+                
+                await MainActor.run {
+                    // Only update if data has significantly changed to prevent infinite loops
+                    let cardsChanged = syncedCards.count != self.flashCards.count || 
+                                     syncedCards.map(\.id).sorted() != self.flashCards.map(\.id).sorted()
+                    let decksChanged = syncedDecks.count != self.decks.count ||
+                                     syncedDecks.map(\.id).sorted() != self.decks.map(\.id).sorted()
+                    
+                    if cardsChanged || decksChanged {
+                        // Temporarily disable CloudKit sync to prevent recursion
+                        let originalSyncEnabled = self.isCloudSyncEnabled
+                        self.isCloudSyncEnabled = false
+                        
+                        self.flashCards = syncedCards
+                        self.decks = syncedDecks
+                        self.updateCardDeckAssociations()
+                        
+                        self.isCloudSyncEnabled = originalSyncEnabled
+                        print("🔄 CloudKit sync updated data")
+                    } else {
+                        print("☁️ CloudKit sync completed - no changes needed")
+                    }
+                }
+            } catch {
+                print("❌ CloudKit sync failed: \(error)")
+                // Reset last sync time on failure so we can retry sooner if needed
+                await MainActor.run {
+                    self.lastSyncTime = .distantPast
+                }
+            }
+        }
+    }
+    
+    func manualSync() {
+        #if targetEnvironment(simulator)
+        print("📱 Manual sync skipped - running on simulator")
+        return
+        #endif
+        
+        print("👤 User requested manual sync")
+        
+        // Check CloudKit status first on main actor
+        Task { @MainActor in
+            guard cloudKitManager.isAccountAvailable else {
+                print("❌ iCloud account not available")
+                return
+            }
+            
+            // Allow manual sync even if recent sync occurred
+            lastSyncTime = .distantPast
+            
+            print("🔄 Starting manual sync...")
+            performCloudKitSync()
+        }
+    }
+    
+    func forceFullSync() {
+        #if targetEnvironment(simulator)
+        print("📱 Force sync skipped - running on simulator")
+        return
+        #endif
+        
+        print("🔄 User requested force full sync")
+        
+        // Reset sync time to force immediate sync
+        lastSyncTime = .distantPast
+        
+        // Perform sync with all current data
+        Task.detached { [weak self] in
+            guard let self = self else { return }
+            
+            do {
+                let currentCards = await MainActor.run { self.flashCards }
+                let currentDecks = await MainActor.run { self.decks }
+                
+                print("🔄 Force syncing \(currentCards.count) cards and \(currentDecks.count) decks")
+                
+                let (syncedCards, syncedDecks) = await self.cloudKitManager.syncData(
+                    flashCards: currentCards,
+                    decks: currentDecks
+                )
+                
+                await MainActor.run {
+                    // Always update data on force sync
+                    let originalSyncEnabled = self.isCloudSyncEnabled
+                    self.isCloudSyncEnabled = false
+                    
+                    self.flashCards = syncedCards
+                    self.decks = syncedDecks
+                    self.updateCardDeckAssociations()
+                    
+                    self.isCloudSyncEnabled = originalSyncEnabled
+                    self.lastSyncTime = Date()
+                    
+                    print("✅ Force sync completed - \(syncedCards.count) cards, \(syncedDecks.count) decks")
+                }
+            } catch {
+                print("❌ Force sync failed: \(error)")
+                await MainActor.run {
+                    self.lastSyncTime = .distantPast // Allow retry
+                }
+            }
+        }
+    }
+    
+    func toggleCloudSync() {
+        #if targetEnvironment(simulator)
+        print("📱 CloudKit toggle ignored - running on simulator")
+        return
+        #endif
+        
+        isCloudSyncEnabled.toggle()
+        if isCloudSyncEnabled {
+            performInitialCloudKitSync()
+        }
+    }
+    
+    func getCloudSyncStatus() async -> String {
+        #if targetEnvironment(simulator)
+        return "Simulator mode - CloudKit disabled"
+        #else
+        return await MainActor.run { cloudKitManager.statusMessage }
+        #endif
+    }
+    
+    func getIsCloudSyncAvailable() async -> Bool {
+        #if targetEnvironment(simulator)
+        return false
+        #else
+        return await MainActor.run { cloudKitManager.isAccountAvailable }
+        #endif
+    }
+    
+    // Synchronous versions for UI that may not always be up to date but won't crash
+    var cloudSyncStatus: String {
+        #if targetEnvironment(simulator)
+        return "Simulator mode"
+        #else
+        return "Sync status loading..."
+        #endif
+    }
+    
+    var isCloudSyncAvailable: Bool {
+        #if targetEnvironment(simulator)
+        return false
+        #else
+        return false
+        #endif
+    }
+    
+    deinit {
+        syncTimer?.invalidate()
+    }
+    
+    // MARK: - CloudKit Sync Control
+    
+    func pauseCloudKitSync() {
+        #if !targetEnvironment(simulator)
+        print("⏸️ Pausing CloudKit sync during active session")
+        syncTimer?.invalidate()
+        syncTimer = nil
+        #endif
+    }
+    
+    func resumeCloudKitSync() {
+        #if !targetEnvironment(simulator)
+        print("▶️ Resuming CloudKit sync")
+        
+        // Update deck associations after study session (deferred for performance)
+        print("🔄 Updating deck associations after study session")
+        updateCardDeckAssociations()
+        
+        // Restart the periodic sync timer with 30-minute intervals
+        syncTimer = Timer.scheduledTimer(withTimeInterval: minimumSyncInterval, repeats: true) { [weak self] _ in
+            self?.conditionalCloudKitSync()
+        }
+        #endif
+    }
+    
+    // Add method to force sync for important data changes (like bulk imports)
+    func forceSyncAfterDataChange() {
+        #if !targetEnvironment(simulator)
+        print("🔄 Forcing sync after significant data change")
+        // Reset last sync time and trigger immediate sync
+        lastSyncTime = .distantPast
+        triggerCloudKitSync()
+        #endif
+    }
+    
+    // MARK: - CloudKit Testing
+    
+    func testCloudKitQuota() {
+        #if !targetEnvironment(simulator)
+        print("🧪 CloudKit Quota Test - Starting")
+        print("🧪 Current cards count: \(flashCards.count)")
+        print("🧪 Current decks count: \(decks.count)")
+        
+        // Count cards that have been modified recently (last hour) as a proxy for "needs sync"
+        let oneHourAgo = Date().addingTimeInterval(-3600)
+        let recentlyModifiedCards = flashCards.filter { $0.lastModified > oneHourAgo }
+        let recentlyModifiedDecks = decks.filter { $0.lastModified > oneHourAgo }
+        
+        // Count cards/decks that don't have CloudKit record names (never synced)
+        let unsyncedCards = flashCards.filter { $0.cloudKitRecordName == nil }
+        let unsyncedDecks = decks.filter { $0.cloudKitRecordName == nil }
+        
+        print("🧪 Recently modified cards (last hour): \(recentlyModifiedCards.count)")
+        print("🧪 Recently modified decks (last hour): \(recentlyModifiedDecks.count)")
+        print("🧪 Never synced cards: \(unsyncedCards.count)")
+        print("🧪 Never synced decks: \(unsyncedDecks.count)")
+        print("🧪 Last sync time: \(lastSyncTime)")
+        print("🧪 CloudKit enabled: \(isCloudSyncEnabled)")
+        
+        // Show some specific card details
+        if !flashCards.isEmpty {
+            let firstCard = flashCards[0]
+            print("🧪 Sample card: '\(firstCard.word)' - lastModified: \(firstCard.lastModified), cloudKitRecordName: \(firstCard.cloudKitRecordName ?? "nil")")
+        }
+        
+        // Show current CloudKit status
+        Task { @MainActor in
+            print("🧪 CloudKit status: \(cloudKitManager.statusMessage)")
+            print("🧪 CloudKit account available: \(cloudKitManager.isAccountAvailable)")
+        }
+        
+        // Test a minimal sync operation
+        Task.detached { [weak self] in
+            guard let self = self else { return }
+            
+            do {
+                print("🧪 Testing CloudKit sync with current data...")
+                let currentCards = await MainActor.run { self.flashCards }
+                let currentDecks = await MainActor.run { self.decks }
+                
+                let (syncedCards, syncedDecks) = await self.cloudKitManager.syncData(
+                    flashCards: currentCards,
+                    decks: currentDecks
+                )
+                
+                await MainActor.run {
+                    print("🧪 Test sync completed successfully")
+                    print("🧪 Synced cards: \(syncedCards.count), Synced decks: \(syncedDecks.count)")
+                    print("🧪 CloudKit manager status: \(self.cloudKitManager.statusMessage)")
+                }
+            } catch {
+                await MainActor.run {
+                    print("🧪 Test sync failed: \(error)")
+                    if let ckError = error as? CKError {
+                        print("🧪 CloudKit error code: \(ckError.code)")
+                        print("🧪 CloudKit error description: \(ckError.localizedDescription)")
+                        if let retryAfter = ckError.retryAfterSeconds {
+                            print("🧪 CloudKit retry after: \(retryAfter) seconds")
+                        }
+                    }
+                }
+            }
+        }
+        #else
+        print("🧪 CloudKit test skipped - running on simulator")
+        #endif
+    }
+    
+    // MARK: - Testing Helper Methods
+    
+    func createTestCards(count: Int = 50) {
+        #if !targetEnvironment(simulator)
+        print("🧪 Creating \(count) test cards for quota testing...")
+        
+        let testDeck = createDeck(name: "Test Quota Deck")
+        
+        for i in 1...count {
+            addCard(
+                word: "TestWord\(i)",
+                definition: "Test definition for word \(i)",
+                example: "This is test example \(i) for quota testing.",
+                deckIds: [testDeck.id],
+                article: i % 2 == 0 ? "de" : "het",
+                plural: "TestWord\(i)s"
+            )
+        }
+        
+        print("🧪 Created \(count) test cards - triggering sync...")
+        forceSyncAfterDataChange()
+        #else
+        print("🧪 Test card creation skipped - running on simulator")
+        #endif
+    }
+    
+    private func validateCloudKitSchemaBeforeSync() {
+        #if !targetEnvironment(simulator)
+        Task.detached { [weak self] in
+            guard let self = self else { return }
+            
+            do {
+                // Test if we can create a simple query to check schema
+                try await self.cloudKitManager.validateSchema()
+                await MainActor.run {
+                    self.triggerCloudKitSync()
+                }
+            } catch {
+                await MainActor.run {
+                    print("⚠️ CloudKit schema validation failed: \(error)")
+                    
+                    // Check for production schema error
+                    if let ckError = error as? CKError,
+                       ckError.localizedDescription.contains("production schema") ||
+                       ckError.localizedDescription.contains("Cannot create new type") {
+                        print("🔧 CloudKit Schema Issue Detected:")
+                        print("   The CloudKit schema needs to be deployed to production.")
+                        print("   Please deploy the schema via CloudKit Console:")
+                        print("   https://icloud.developer.apple.com/dashboard")
+                        print("   Container: iCloud.Dutch.FlashCard")
+                        
+                        // Temporarily disable sync to prevent repeated errors
+                        self.isCloudSyncEnabled = false
+                    }
+                }
+            }
+        }
+        #else
+        triggerCloudKitSync()
+        #endif
     }
 }
 

@@ -9,10 +9,10 @@ struct EditCardView: View {
     @ObservedObject var viewModel: FlashCardViewModel
     let cardId: UUID
     
-    @State private var word: String = ""
-    @State private var definition: String = ""
-    @State private var example: String = ""
-    @State private var selectedDeckIds: Set<UUID> = []
+    @State private var word: String
+    @State private var definition: String
+    @State private var example: String
+    @State private var selectedDeckIds: Set<UUID>
     @State private var showingNewDeckSheet = false
     @State private var newDeckName = ""
     
@@ -23,17 +23,13 @@ struct EditCardView: View {
     @State private var futureTense: String = ""
     @State private var pastParticiple: String = ""
     
-    // Translation features (only used on iOS 17.4+)
-    @State private var translationConfiguration: Any?
-    @State private var suggestedTranslation: String = ""
-    @State private var isTranslating: Bool = false
-    @State private var showTranslationSuggestion: Bool = false
-    @State private var lastTranslatedWord: String = ""
-    @State private var translationDismissed: Bool = false
+    // Validation state
+    @State private var showingValidationAlert = false
+    @State private var validationMessage = ""
     
-    // Compatibility
-    @State private var showingCompatibilityAlert = false
+    // Compatibility tracking
     @State private var compatibilityFeature: UnavailableFeature?
+    @State private var showingCompatibilityAlert = false
     
     private let logger = Logger(subsystem: "com.flashcards", category: "EditCardView")
     
@@ -140,13 +136,6 @@ struct EditCardView: View {
                             TextField("e.g., eten", text: $word)
                                 .onChange(of: word) { newValue in
                                     logger.debug("Word changed: \(newValue)")
-                                    if !newValue.isEmpty {
-                                        Task {
-                                            await fetchTranslationSuggestion(for: newValue)
-                                        }
-                                    } else {
-                                        suggestedTranslation = ""
-                                    }
                                 }
                             
                             if !word.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
@@ -163,18 +152,12 @@ struct EditCardView: View {
                                     HStack(spacing: 6) {
                                         Image(systemName: "translate")
                                         Text("Get Translation")
-                                        if isTranslating {
-                                            ProgressView()
-                                                .scaleEffect(0.7)
-                                                .frame(width: 14, height: 14)
-                                        }
                                     }
                                     .font(.caption)
                                     .foregroundColor(.blue)
                                 }
                                 .buttonStyle(.bordered)
                                 .controlSize(.small)
-                                .disabled(isTranslating)
                                 
                                 // Show compatibility info for older iOS versions
                                 if !CompatibilityHelper.isTranslationFrameworkAvailable {
@@ -212,76 +195,6 @@ struct EditCardView: View {
                                     .cornerRadius(8)
                                     .font(.caption)
                                     .foregroundColor(.orange)
-                            }
-                            .padding(.vertical, 8)
-                        }
-                        
-                        // Automatic translation suggestion (can be dismissed)
-                        if showTranslationSuggestion && !suggestedTranslation.isEmpty {
-                            VStack(alignment: .leading, spacing: 8) {
-                                HStack {
-                                    Image(systemName: "sparkles")
-                                        .foregroundColor(.blue)
-                                    Text("Auto-suggested translation:")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                }
-                                
-                                HStack {
-                                    Text(suggestedTranslation)
-                                        .padding(.horizontal, 12)
-                                        .padding(.vertical, 8)
-                                        .background(Color.blue.opacity(0.1))
-                                        .cornerRadius(8)
-                                        .font(.body)
-                                    
-                                    Button("Use") {
-                                        definition = suggestedTranslation
-                                        showTranslationSuggestion = false
-                                        translationDismissed = true
-                                        HapticManager.shared.lightImpact()
-                                    }
-                                    .buttonStyle(.borderedProminent)
-                                    .controlSize(.small)
-                                    
-                                    Button("Dismiss") {
-                                        showTranslationSuggestion = false
-                                        translationDismissed = true
-                                        HapticManager.shared.lightImpact()
-                                    }
-                                    .buttonStyle(.bordered)
-                                    .controlSize(.small)
-                                }
-                            }
-                            .padding(.vertical, 8)
-                        }
-                        
-                        // Manual translation result (from button press)
-                        if !showTranslationSuggestion && !suggestedTranslation.isEmpty && !isTranslating {
-                            VStack(alignment: .leading, spacing: 8) {
-                                HStack {
-                                    Image(systemName: "translate")
-                                        .foregroundColor(.green)
-                                    Text("Translation:")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                }
-                                
-                                HStack {
-                                    Text(suggestedTranslation)
-                                        .padding(.horizontal, 12)
-                                        .padding(.vertical, 8)
-                                        .background(Color.green.opacity(0.1))
-                                        .cornerRadius(8)
-                                        .font(.body)
-                                    
-                                    Button("Use") {
-                                        definition = suggestedTranslation
-                                        HapticManager.shared.lightImpact()
-                                    }
-                                    .buttonStyle(.borderedProminent)
-                                    .controlSize(.small)
-                                }
                             }
                             .padding(.vertical, 8)
                         }
@@ -465,44 +378,6 @@ struct EditCardView: View {
             AudioManager.shared.stopRecording()
             AudioManager.shared.stopPlayback()
         }
-        .modifier(TranslationTaskModifier(
-            translationConfiguration: translationConfiguration,
-            lastTranslatedWord: lastTranslatedWord,
-            onTranslationComplete: { translation in
-                suggestedTranslation = translation
-                isTranslating = false
-                showTranslationSuggestion = true
-                logger.debug("Translation completed: \(translation)")
-            },
-            onTranslationError: { error in
-                isTranslating = false
-                logger.error("Translation failed: \(error)")
-            }
-        ))
-    }
-    
-    private func fetchTranslationSuggestion(for word: String) {
-        let trimmedWord = word.trimmingCharacters(in: .whitespacesAndNewlines)
-        
-        // Only translate if word has meaningful content and isn't too short
-        guard trimmedWord.count >= 3 else { return }
-        
-        // Reset state
-        showTranslationSuggestion = false
-        suggestedTranslation = ""
-        isTranslating = true
-        lastTranslatedWord = trimmedWord
-        translationDismissed = false
-        
-        // Set up translation configuration
-        #if canImport(Translation)
-        if #available(iOS 18.0, *) {
-            translationConfiguration = TranslationSession.Configuration(
-                source: Locale.Language(identifier: "nl"),
-                target: Locale.Language(identifier: "en")
-            )
-        }
-        #endif
     }
     
     private func manualTranslationRequest() {
@@ -511,37 +386,18 @@ struct EditCardView: View {
         
         logger.debug("🔄 Manual translation request for: '\(trimmedWord)'")
         
-        // Set loading state
-        isTranslating = true
-        showTranslationSuggestion = false
-        suggestedTranslation = ""
-        lastTranslatedWord = trimmedWord
-        translationDismissed = false
-        
-        // Set up translation configuration if available
-        if #available(iOS 18.0, *), CompatibilityHelper.isTranslationFrameworkAvailable {
-            #if canImport(Translation)
-            translationConfiguration = TranslationSession.Configuration(
-                source: Locale.Language(identifier: "nl"),
-                target: Locale.Language(identifier: "en")
-            )
-            #endif
-        } else {
-            // Use compatibility wrapper for translation on older iOS versions
-            Task {
-                let translation = await TranslationCompatibility.getTranslation(for: trimmedWord)
-                
-                await MainActor.run {
-                    isTranslating = false
-                    
-                    if !translation.isEmpty {
-                        suggestedTranslation = translation
-                        logger.debug("✅ Translation found: '\(translation)'")
-                    } else {
-                        suggestedTranslation = ""
-                        translationDismissed = true
-                        logger.debug("❌ No translation found for: '\(trimmedWord)'")
-                    }
+        // Use the same translation service that photo import uses for consistency
+        Task {
+            let translation = await TranslationService.shared.getTranslationWithFallback(for: trimmedWord)
+            
+            await MainActor.run {
+                if !translation.isEmpty {
+                    definition = translation
+                    logger.debug("✅ Translation found: '\(translation)'")
+                } else {
+                    validationMessage = "No translation found for: '\(trimmedWord)'"
+                    showingValidationAlert = true
+                    logger.debug("❌ No translation found for: '\(trimmedWord)'")
                 }
             }
         }

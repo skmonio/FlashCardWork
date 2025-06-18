@@ -8,37 +8,32 @@ struct AddCardView: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject var viewModel: FlashCardViewModel
     let defaultDeck: Deck?
+    let initialDeckIds: [UUID]?
     
     @State private var word: String = ""
     @State private var definition: String = ""
     @State private var example: String = ""
     @State private var selectedDeckIds: Set<UUID> = []
-    @State private var showingNewDeckSheet = false
+    @State private var showingDeckSelection = false
     @State private var newDeckName: String = ""
     
-    // Additional grammatical fields
+    // Additional grammatical fields (matching EditCardView)
     @State private var article: String = ""
     @State private var plural: String = ""
     @State private var pastTense: String = ""
     @State private var futureTense: String = ""
     @State private var pastParticiple: String = ""
     
-    // Audio recording
-    @State private var temporaryCardId: UUID = UUID()
+    // Audio recording state
+    @State private var temporaryCardId = UUID()
     
-    // Translation features
-    @State private var suggestedTranslation: String = ""
-    @State private var isTranslating: Bool = false
-    @State private var lastTranslatedWord: String = ""
-    @State private var translationDismissed: Bool = false
+    // Validation state
+    @State private var showingValidationAlert = false
+    @State private var validationMessage = ""
     
-    // Compatibility
-    @State private var showingCompatibilityAlert = false
+    // Compatibility tracking
     @State private var compatibilityFeature: UnavailableFeature?
-    
-    // Duplicate handling
-    @State private var showingDuplicateResolution = false
-    @State private var duplicateCheckResult: FlashCardViewModel.DuplicateCheckResult?
+    @State private var showingCompatibilityAlert = false
     
     private let logger = Logger(subsystem: "com.flashcards", category: "AddCardView")
     
@@ -47,9 +42,10 @@ struct AddCardView: View {
         !definition.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
     
-    init(viewModel: FlashCardViewModel, defaultDeck: Deck? = nil) {
+    init(viewModel: FlashCardViewModel, defaultDeck: Deck? = nil, initialDeckIds: [UUID]? = nil) {
         self.viewModel = viewModel
         self.defaultDeck = defaultDeck
+        self.initialDeckIds = initialDeckIds
     }
     
     var body: some View {
@@ -107,20 +103,19 @@ struct AddCardView: View {
                 Form {
                     Section(header: Text("Basic Information")) {
                         VStack(alignment: .leading, spacing: 8) {
-                            // Word field
-                            TextField("e.g., eten", text: $word)
-                                .onChange(of: word) { newValue in
-                                    logger.debug("Word changed: \(newValue)")
-                                    if !newValue.isEmpty {
-                                        Task {
-                                            await fetchTranslationSuggestion(for: newValue)
-                                        }
-                                    } else {
-                                        suggestedTranslation = ""
+                            // Word field with speech controls
+                            HStack(spacing: 8) {
+                                TextField("e.g., eten", text: $word)
+                                    .onChange(of: word) { newValue in
+                                        logger.debug("Word changed: \(newValue)")
                                     }
+                                
+                                if !word.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                                    DutchSpeechControlView(text: word, mode: .minimal)
                                 }
+                            }
                             
-                            // Manual translation button - always available when word has 3+ characters
+                            // Persistent translation button - always available when word has 3+ characters
                             if !word.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && word.count >= 3 {
                                 HStack {
                                     Button {
@@ -129,18 +124,12 @@ struct AddCardView: View {
                                         HStack(spacing: 6) {
                                             Image(systemName: "translate")
                                             Text("Get Translation")
-                                            if isTranslating {
-                                                ProgressView()
-                                                    .scaleEffect(0.7)
-                                                    .frame(width: 14, height: 14)
-                                            }
                                         }
                                         .font(.caption)
                                         .foregroundColor(.blue)
                                     }
                                     .buttonStyle(.bordered)
                                     .controlSize(.small)
-                                    .disabled(isTranslating)
                                     
                                     // Show compatibility info for older iOS versions
                                     if !CompatibilityHelper.isTranslationFrameworkAvailable {
@@ -177,60 +166,6 @@ struct AddCardView: View {
                                         .background(Color.orange.opacity(0.1))
                                         .cornerRadius(8)
                                         .font(.caption)
-                                        .foregroundColor(.orange)
-                                }
-                                .padding(.vertical, 8)
-                            }
-                            
-                            // Translation result
-                            if !suggestedTranslation.isEmpty {
-                                VStack(alignment: .leading, spacing: 8) {
-                                    HStack {
-                                        Image(systemName: "checkmark.circle.fill")
-                                            .foregroundColor(.green)
-                                        Text("Translation found:")
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                    }
-                                    
-                                    HStack {
-                                        Text(suggestedTranslation)
-                                            .padding(.horizontal, 12)
-                                            .padding(.vertical, 8)
-                                            .background(Color.green.opacity(0.1))
-                                            .cornerRadius(8)
-                                            .font(.body)
-                                        
-                                        Button("Use") {
-                                            logger.debug("🎯 Use translation button tapped: '\(suggestedTranslation)'")
-                                            definition = suggestedTranslation
-                                            logger.debug("🔄 Translation used")
-                                            HapticManager.shared.lightImpact()
-                                        }
-                                        .buttonStyle(.borderedProminent)
-                                        .controlSize(.small)
-                                    }
-                                }
-                                .padding(.vertical, 8)
-                            }
-                            
-                            // No translation found message
-                            if translationDismissed && suggestedTranslation.isEmpty && !isTranslating {
-                                VStack(alignment: .leading, spacing: 8) {
-                                    HStack {
-                                        Image(systemName: "exclamationmark.circle.fill")
-                                            .foregroundColor(.orange)
-                                        Text("No translation found")
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                    }
-                                    
-                                    Text("No translation available for '\(lastTranslatedWord)'")
-                                        .padding(.horizontal, 12)
-                                        .padding(.vertical, 8)
-                                        .background(Color.orange.opacity(0.1))
-                                        .cornerRadius(8)
-                                        .font(.body)
                                         .foregroundColor(.orange)
                                 }
                                 .padding(.vertical, 8)
@@ -281,35 +216,6 @@ struct AddCardView: View {
                                 logger.debug("Past participle changed: \(newValue)")
                             }
                     }
-                    
-                    // New section for Dutch Pronunciation
-                    Section(header: Text("Dutch Pronunciation")) {
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("Listen to pronunciation while you type")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                            
-                            // Compact speech controls for the main word
-                            if !word.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                                DutchSpeechControlView(text: word, mode: .compact)
-                            } else {
-                                Text("Enter a Dutch word above to hear pronunciation")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                    .italic()
-                            }
-                        }
-                    }
-                    
-                    Section(header: Text("Pronunciation (Optional)")) {
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("Record pronunciation for this word")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                            
-                            AudioControlView(cardId: temporaryCardId, mode: .full)
-                        }
-                    }
 
                     Section(header: Text("Decks (Select one or more)")) {
                         ForEach(viewModel.getSelectableDecks()) { deck in
@@ -343,7 +249,7 @@ struct AddCardView: View {
                         }
                         
                         Button(action: {
-                            showingNewDeckSheet = true
+                            showingDeckSelection = true
                         }) {
                             HStack {
                                 Image(systemName: "folder.badge.plus")
@@ -354,13 +260,14 @@ struct AddCardView: View {
                 }
             }
         }
-        .navigationBarHidden(true)
-        .sheet(isPresented: $showingNewDeckSheet) {
+        .navigationBarBackButtonHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
+        .sheet(isPresented: $showingDeckSelection) {
             VStack(spacing: 0) {
                 // Custom navigation bar for sheet
                 HStack {
                     Button("Cancel") {
-                        showingNewDeckSheet = false
+                        showingDeckSelection = false
                     }
                     .foregroundColor(.blue)
                     
@@ -376,7 +283,7 @@ struct AddCardView: View {
                         logger.debug("Creating new deck: \(newDeckName)")
                         let newDeck = viewModel.createDeck(name: newDeckName.trimmingCharacters(in: .whitespacesAndNewlines))
                         selectedDeckIds.insert(newDeck.id)
-                        showingNewDeckSheet = false
+                        showingDeckSelection = false
                         newDeckName = ""
                     }
                     .disabled(newDeckName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
@@ -399,50 +306,19 @@ struct AddCardView: View {
                     }
                 }
             }
-            .navigationBarHidden(true)
+            .navigationBarBackButtonHidden(true)
+            .toolbar(.hidden, for: .navigationBar)
         }
-        .sheet(isPresented: $showingDuplicateResolution) {
-            if case .partialMatch(let existingCard, let comparison) = duplicateCheckResult {
-                let newCardData = DuplicateCardResolutionView.NewCardData(
-                    word: word.trimmingCharacters(in: .whitespacesAndNewlines),
-                    definition: definition.trimmingCharacters(in: .whitespacesAndNewlines),
-                    example: example.trimmingCharacters(in: .whitespacesAndNewlines),
-                    deckIds: selectedDeckIds,
-                    article: article.trimmingCharacters(in: .whitespacesAndNewlines),
-                    plural: plural.trimmingCharacters(in: .whitespacesAndNewlines),
-                    pastTense: pastTense.trimmingCharacters(in: .whitespacesAndNewlines),
-                    futureTense: futureTense.trimmingCharacters(in: .whitespacesAndNewlines),
-                    pastParticiple: pastParticiple.trimmingCharacters(in: .whitespacesAndNewlines)
-                )
-                
-                DuplicateCardResolutionView(
-                    viewModel: viewModel,
-                    existingCard: existingCard,
-                    newCardData: newCardData,
-                    comparison: comparison
-                ) { action in
-                    handleDuplicateResolution(action, existingCard: existingCard)
-                }
-            }
-        }
-        .alert("Card Already Exists", isPresented: .constant(duplicateCheckResult != nil && showingExactMatchAlert)) {
-            Button("OK") {
-                duplicateCheckResult = nil
-            }
-        } message: {
-            Text("The word \"\(word)\" already exists with identical information.")
-        }
-        .featureUnavailableAlert(
-            isPresented: $showingCompatibilityAlert,
-            feature: compatibilityFeature ?? .translation
-        )
         .onAppear {
             logger.debug("AddCardView appeared")
             
-            // Auto-select the default deck if provided
-            if let defaultDeck = defaultDeck {
+            // Pre-select decks if provided
+            if let providedDeckIds = initialDeckIds {
+                selectedDeckIds = Set(providedDeckIds)
+                logger.debug("Pre-selected decks: \(selectedDeckIds)")
+            } else if let defaultDeck = defaultDeck {
                 selectedDeckIds.insert(defaultDeck.id)
-                logger.debug("Auto-selected default deck: \(defaultDeck.name)")
+                logger.debug("Pre-selected default deck: \(defaultDeck.name)")
             }
         }
         .onDisappear {
@@ -451,13 +327,15 @@ struct AddCardView: View {
             AudioManager.shared.stopRecording()
             AudioManager.shared.stopPlayback()
         }
-    }
-    
-    private var showingExactMatchAlert: Bool {
-        if case .exactMatch = duplicateCheckResult {
-            return true
+        .alert("Validation Error", isPresented: $showingValidationAlert) {
+            Button("OK") { }
+        } message: {
+            Text(validationMessage)
         }
-        return false
+        .featureUnavailableAlert(
+            isPresented: $showingCompatibilityAlert,
+            feature: compatibilityFeature ?? .translation
+        )
     }
     
     private func attemptToSaveCard(shouldResetForm: Bool = false) {
@@ -484,93 +362,22 @@ struct AddCardView: View {
         
         switch result {
         case .noDuplicate:
-            // No duplicate, proceed with adding the card
-            saveCurrentCard()
-            if shouldResetForm {
-                resetForm()
-            } else {
-                dismiss()
-            }
+            // No duplicates, save the card
+            saveCardWithoutDuplicateCheck(shouldResetForm: shouldResetForm)
             
         case .exactMatch:
             // Show alert for exact match
-            duplicateCheckResult = result
+            showingValidationAlert = true
+            validationMessage = "The word \"\(trimmedWord)\" already exists with identical information."
             
         case .partialMatch:
             // Show resolution view for partial match
-            duplicateCheckResult = result
-            showingDuplicateResolution = true
+            showingValidationAlert = true
+            validationMessage = "The word \"\(trimmedWord)\" already exists with similar information."
         }
     }
     
-    private func handleDuplicateResolution(_ action: DuplicateCardResolutionView.ResolutionAction, existingCard: FlashCard, shouldResetForm: Bool = false) {
-        let trimmedDefinition = definition.trimmingCharacters(in: .whitespacesAndNewlines)
-        let trimmedExample = example.trimmingCharacters(in: .whitespacesAndNewlines)
-        let trimmedArticle = article.trimmingCharacters(in: .whitespacesAndNewlines)
-        let trimmedPlural = plural.trimmingCharacters(in: .whitespacesAndNewlines)
-        let trimmedPastTense = pastTense.trimmingCharacters(in: .whitespacesAndNewlines)
-        let trimmedFutureTense = futureTense.trimmingCharacters(in: .whitespacesAndNewlines)
-        let trimmedPastParticiple = pastParticiple.trimmingCharacters(in: .whitespacesAndNewlines)
-        
-        switch action {
-        case .keepExisting:
-            // Just dismiss, don't add anything
-            duplicateCheckResult = nil
-            if shouldResetForm {
-                resetForm()
-            } else {
-                dismiss()
-            }
-            
-        case .replaceWithNew:
-            // Replace the existing card with new data
-            viewModel.mergeCardData(
-                existingCard: existingCard,
-                newDefinition: trimmedDefinition,
-                newExample: trimmedExample,
-                newDeckIds: selectedDeckIds,
-                newArticle: trimmedArticle,
-                newPlural: trimmedPlural,
-                newPastTense: trimmedPastTense,
-                newFutureTense: trimmedFutureTense,
-                newPastParticiple: trimmedPastParticiple,
-                mergeStrategy: .replaceWithNew
-            )
-            duplicateCheckResult = nil
-            if shouldResetForm {
-                resetForm()
-            } else {
-                dismiss()
-            }
-            
-        case .mergeAdditionalFields:
-            // Merge only additional fields
-            viewModel.mergeCardData(
-                existingCard: existingCard,
-                newDefinition: trimmedDefinition,
-                newExample: trimmedExample,
-                newDeckIds: selectedDeckIds,
-                newArticle: trimmedArticle,
-                newPlural: trimmedPlural,
-                newPastTense: trimmedPastTense,
-                newFutureTense: trimmedFutureTense,
-                newPastParticiple: trimmedPastParticiple,
-                mergeStrategy: .mergeAdditionalFields
-            )
-            duplicateCheckResult = nil
-            if shouldResetForm {
-                resetForm()
-            } else {
-                dismiss()
-            }
-            
-        case .cancel:
-            // Cancel the operation
-            duplicateCheckResult = nil
-        }
-    }
-    
-    private func saveCurrentCard() {
+    private func saveCardWithoutDuplicateCheck(shouldResetForm: Bool = false) {
         let trimmedWord = word.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedDefinition = definition.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedExample = example.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -580,10 +387,9 @@ struct AddCardView: View {
         let trimmedFutureTense = futureTense.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedPastParticiple = pastParticiple.trimmingCharacters(in: .whitespacesAndNewlines)
         
-        logger.debug("Adding card - Word: \(trimmedWord), Definition: \(trimmedDefinition)")
+        logger.debug("Attempting to save card...")
         
-        // Create the card with the temporary ID so audio gets associated correctly
-        let newCard = viewModel.addCard(
+        viewModel.addCard(
             word: trimmedWord,
             definition: trimmedDefinition,
             example: trimmedExample,
@@ -599,6 +405,12 @@ struct AddCardView: View {
         // Force a save to UserDefaults
         UserDefaults.standard.synchronize()
         logger.debug("UserDefaults synchronized")
+        
+        if shouldResetForm {
+            resetForm()
+        } else {
+            dismiss()
+        }
     }
     
     private func resetForm() {
@@ -617,44 +429,7 @@ struct AddCardView: View {
         // Generate new temporary ID for audio recordings
         temporaryCardId = UUID()
         
-        // Clear translation state
-        suggestedTranslation = ""
-        lastTranslatedWord = ""
-        translationDismissed = false
-        isTranslating = false
-        
         logger.debug("Form reset for adding another card")
-    }
-    
-    private func fetchTranslationSuggestion(for word: String) {
-        let trimmedWord = word.trimmingCharacters(in: .whitespacesAndNewlines)
-        
-        // Only translate if word has meaningful content and isn't too short
-        guard trimmedWord.count >= 3 else { return }
-        
-        // Reset state
-        suggestedTranslation = ""
-        isTranslating = true
-        lastTranslatedWord = trimmedWord
-        translationDismissed = false
-        
-        // Use compatibility wrapper for automatic translation
-        Task {
-            let translation = await TranslationCompatibility.getTranslation(for: trimmedWord)
-            
-            await MainActor.run {
-                isTranslating = false
-                
-                if !translation.isEmpty {
-                    suggestedTranslation = translation
-                    logger.debug("✅ Auto-translation found: '\(translation)'")
-                } else {
-                    suggestedTranslation = ""
-                    // Don't set translationDismissed for auto-suggestions
-                    logger.debug("❌ No auto-translation found for: '\(trimmedWord)'")
-                }
-            }
-        }
     }
     
     private func manualTranslationRequest() {
@@ -663,25 +438,17 @@ struct AddCardView: View {
         
         logger.debug("🔄 Manual translation request for: '\(trimmedWord)'")
         
-        // Set loading state
-        isTranslating = true
-        lastTranslatedWord = trimmedWord
-        suggestedTranslation = ""
-        translationDismissed = false
-        
-        // Use compatibility wrapper for translation
+        // Use the same translation service that photo import uses for consistency
         Task {
-            let translation = await TranslationCompatibility.getTranslation(for: trimmedWord)
+            let translation = await TranslationService.shared.getTranslationWithFallback(for: trimmedWord)
             
             await MainActor.run {
-                isTranslating = false
-                
                 if !translation.isEmpty {
-                    suggestedTranslation = translation
+                    definition = translation
                     logger.debug("✅ Translation found: '\(translation)'")
                 } else {
-                    suggestedTranslation = ""
-                    translationDismissed = true // This will show "no translation found"
+                    validationMessage = "No translation found for: '\(trimmedWord)'"
+                    showingValidationAlert = true
                     logger.debug("❌ No translation found for: '\(trimmedWord)'")
                 }
             }
