@@ -57,11 +57,11 @@ struct LoadingView: View {
                 VStack(spacing: 16) {
                     ProgressView()
                         .scaleEffect(1.2 * progressPulse)
-                        .progressViewStyle(CircularProgressViewStyle(tint: Color(red: 0.2, green: 0.4, blue: 0.5)))
+                        .progressViewStyle(CircularProgressViewStyle(tint: .primary))
                     
                     Text(loadingText)
                         .font(.subheadline)
-                        .foregroundColor(Color(red: 0.2, green: 0.4, blue: 0.5))
+                        .foregroundColor(.primary)
                         .multilineTextAlignment(.center)
                         .transition(.opacity)
                 }

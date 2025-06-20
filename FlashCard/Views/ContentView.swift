@@ -14,7 +14,7 @@ struct ContentView: View {
                 return isViewModelReady || loadingTimeoutReached
             }
         ) {
-            HomeView(viewModel: viewModel, streakManager: streakManager)
+            MainNavigationView(viewModel: viewModel, streakManager: streakManager)
         }
         .onAppear {
             // Add a timeout to prevent infinite loading
@@ -74,5 +74,9 @@ struct CardRow: View {
             // Learning percentage on the right
             LearningPercentageView(percentage: card.learningPercentage)
         }
+        .padding()
+        .background(Color(.secondarySystemGroupedBackground))
+        .cornerRadius(12)
+        .shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1)
     }
 } 

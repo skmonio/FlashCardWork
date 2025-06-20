@@ -26,6 +26,44 @@ struct StudyView: View {
     private var deckIds: [UUID]
     private var shouldLoadSaveState: Bool
     
+    // Add new state variables for directional locking
+    @State private var swipeDirection: SwipeDirection = .none
+    @State private var swipeIntensity: CGFloat = 0
+    
+    enum SwipeDirection {
+        case none, left, right, up, down
+        
+        var color: Color {
+            switch self {
+            case .none: return .clear
+            case .left: return .red      // Don't Know
+            case .right: return .green   // Known
+            case .up: return .yellow     // Review
+            case .down: return .blue     // Skip
+            }
+        }
+        
+        var label: String {
+            switch self {
+            case .none: return ""
+            case .left: return "Don't Know"
+            case .right: return "Known"
+            case .up: return "Review"
+            case .down: return "Skip"
+            }
+        }
+        
+        var icon: String {
+            switch self {
+            case .none: return ""
+            case .left: return "xmark.circle.fill"
+            case .right: return "checkmark.circle.fill"
+            case .up: return "arrow.clockwise.circle.fill"
+            case .down: return "forward.circle.fill"
+            }
+        }
+    }
+    
     // Get the text to speak for current card
     private var textToSpeak: String {
         guard let card = currentCard else { return "" }
@@ -163,13 +201,13 @@ struct StudyView: View {
             Color(.systemBackground)
                 .ignoresSafeArea()
             
-            // Green radial gradient for swipe right (Know it)
-            if dragOffset > 0 {
+            // Single directional gradient based on locked direction
+            if swipeDirection != .none {
                 RadialGradient(
                     gradient: Gradient(colors: [
-                        Color.green.opacity(min(dragOffset / 200, 0.8)),
-                        Color.green.opacity(min(dragOffset / 300, 0.5)),
-                        Color.green.opacity(min(dragOffset / 500, 0.2)),
+                        swipeDirection.color.opacity(min(swipeIntensity / 150, 0.7)),
+                        swipeDirection.color.opacity(min(swipeIntensity / 250, 0.4)),
+                        swipeDirection.color.opacity(min(swipeIntensity / 400, 0.2)),
                         Color.clear
                     ]),
                     center: .center,
@@ -177,58 +215,41 @@ struct StudyView: View {
                     endRadius: 800
                 )
                 .ignoresSafeArea(.all)
-                .animation(.easeOut(duration: 0.3), value: dragOffset)
+                .animation(.easeOut(duration: 0.2), value: swipeDirection)
+                .animation(.easeOut(duration: 0.1), value: swipeIntensity)
             }
             
-            // Red radial gradient for swipe left (Don't know)
-            if dragOffset < 0 {
-                RadialGradient(
-                    gradient: Gradient(colors: [
-                        Color.red.opacity(min(-dragOffset / 200, 0.8)),
-                        Color.red.opacity(min(-dragOffset / 300, 0.5)),
-                        Color.red.opacity(min(-dragOffset / 500, 0.2)),
-                        Color.clear
-                    ]),
-                    center: .center,
-                    startRadius: 10,
-                    endRadius: 800
-                )
-                .ignoresSafeArea(.all)
-                .animation(.easeOut(duration: 0.3), value: dragOffset)
-            }
-            
-            // Yellow radial gradient for swipe up (Review)
-            if verticalDragOffset < 0 {
-                RadialGradient(
-                    gradient: Gradient(colors: [
-                        Color.yellow.opacity(min(-verticalDragOffset / 200, 0.8)),
-                        Color.yellow.opacity(min(-verticalDragOffset / 300, 0.5)),
-                        Color.yellow.opacity(min(-verticalDragOffset / 500, 0.2)),
-                        Color.clear
-                    ]),
-                    center: .center,
-                    startRadius: 10,
-                    endRadius: 800
-                )
-                .ignoresSafeArea(.all)
-                .animation(.easeOut(duration: 0.3), value: verticalDragOffset)
-            }
-            
-            // Blue radial gradient for swipe down (Skip)
-            if verticalDragOffset > 0 {
-                RadialGradient(
-                    gradient: Gradient(colors: [
-                        Color.blue.opacity(min(verticalDragOffset / 200, 0.8)),
-                        Color.blue.opacity(min(verticalDragOffset / 300, 0.5)),
-                        Color.blue.opacity(min(verticalDragOffset / 500, 0.2)),
-                        Color.clear
-                    ]),
-                    center: .center,
-                    startRadius: 10,
-                    endRadius: 800
-                )
-                .ignoresSafeArea(.all)
-                .animation(.easeOut(duration: 0.3), value: verticalDragOffset)
+            // Directional feedback overlay
+            if swipeDirection != .none && swipeIntensity > 50 {
+                VStack {
+                    Spacer()
+                    
+                    VStack(spacing: 12) {
+                        Image(systemName: swipeDirection.icon)
+                            .font(.system(size: 50, weight: .bold))
+                            .foregroundColor(swipeDirection.color)
+                            .scaleEffect(min(swipeIntensity / 100, 1.5))
+                            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: swipeIntensity)
+                        
+                        Text(swipeDirection.label)
+                            .font(.title2)
+                            .fontWeight(.bold)
+                            .foregroundColor(swipeDirection.color)
+                            .scaleEffect(min(swipeIntensity / 120, 1.2))
+                            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: swipeIntensity)
+                    }
+                    .padding()
+                    .background(
+                        RoundedRectangle(cornerRadius: 20)
+                            .fill(.ultraThinMaterial)
+                            .opacity(min(swipeIntensity / 100, 0.9))
+                    )
+                    .scaleEffect(min(swipeIntensity / 80, 1.0))
+                    .animation(.spring(response: 0.3, dampingFraction: 0.7), value: swipeIntensity)
+                    
+                    Spacer()
+                }
+                .transition(.opacity.combined(with: .scale))
             }
             
             VStack(spacing: 0) {
@@ -258,16 +279,21 @@ struct StudyView: View {
                             handleSwipeRight()
                         },
                         onSwipeUp: {
-                            handleSwipeUp() // Now review
+                            handleSwipeUp() // Review
                         },
                         onSwipeDown: {
-                            handleSwipeDown() // Now skip
+                            handleSwipeDown() // Skip
                         },
                         onDragChanged: { offset in
-                            dragOffset = offset
+                            updateSwipeDirection(horizontal: offset, vertical: 0)
                         },
                         onVerticalDragChanged: { offset in
-                            verticalDragOffset = offset
+                            updateSwipeDirection(horizontal: 0, vertical: offset)
+                        },
+                        onDragEnded: {
+                            // Reset swipe direction state when drag ends
+                            swipeDirection = .none
+                            swipeIntensity = 0
                         }
                     )
                     .id("\(card.id)-\(forceRefreshID)") // Combined unique ID to force refresh
@@ -278,9 +304,6 @@ struct StudyView: View {
                 }
                 
                 Spacer()
-                
-                // Swipe hint with updated directions
-                // swipeHintView
             }
         }
     }
@@ -683,5 +706,41 @@ struct StudyView: View {
         }
         
         dismissToRoot()
+    }
+    
+    // New method to handle directional locking
+    private func updateSwipeDirection(horizontal: CGFloat, vertical: CGFloat) {
+        let horizontalDistance = abs(horizontal)
+        let verticalDistance = abs(vertical)
+        
+        // Reset if both are near zero
+        if horizontalDistance < 10 && verticalDistance < 10 {
+            swipeDirection = .none
+            swipeIntensity = 0
+            return
+        }
+        
+        // Lock direction based on which is stronger (only if not already locked)
+        if swipeDirection == .none {
+            if horizontalDistance > verticalDistance && horizontalDistance > 20 {
+                swipeDirection = horizontal > 0 ? .right : .left
+            } else if verticalDistance > horizontalDistance && verticalDistance > 20 {
+                swipeDirection = vertical > 0 ? .down : .up
+            }
+        }
+        
+        // Update intensity based on locked direction
+        switch swipeDirection {
+        case .left:
+            swipeIntensity = horizontalDistance
+        case .right:
+            swipeIntensity = horizontalDistance
+        case .up:
+            swipeIntensity = verticalDistance
+        case .down:
+            swipeIntensity = verticalDistance
+        case .none:
+            swipeIntensity = 0
+        }
     }
 } 

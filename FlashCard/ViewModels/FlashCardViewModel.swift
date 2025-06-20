@@ -28,7 +28,7 @@ class FlashCardViewModel: ObservableObject {
     @Published var shouldNavigateToSettings = false
     
     // CloudKit integration
-    @Published var isCloudSyncEnabled: Bool = true {
+    @Published var isCloudSyncEnabled: Bool = false {  // Changed from true to false temporarily
         didSet {
             UserDefaults.standard.set(isCloudSyncEnabled, forKey: "CloudSyncEnabled")
             if isCloudSyncEnabled {
@@ -373,23 +373,35 @@ class FlashCardViewModel: ObservableObject {
     func updateCardDeckAssociations() {
         print("Updating card-deck associations")
         
+        // Safety check to prevent crashes
+        guard !flashCards.isEmpty || !decks.isEmpty else {
+            print("⚠️ Skipping deck associations update - no cards or decks")
+            return
+        }
+        
         // Create a mutable copy of decks to prevent didSet loops
         var tempDecks = decks
         
-        // Clear all deck cards
+        // Clear all deck cards safely
         for index in tempDecks.indices {
             tempDecks[index].cards = []
         }
         
-        // Reassign cards to appropriate decks
+        // Reassign cards to appropriate decks with safety checks
         for card in flashCards {
+            // Safety check for card validity
+            guard !card.word.isEmpty else {
+                print("⚠️ Skipping invalid card with empty word")
+                continue
+            }
+            
             if card.deckIds.isEmpty {
                 // Add to uncategorized if no decks
                 if let uncategorizedIndex = tempDecks.firstIndex(where: { $0.name == "Uncategorized" }) {
                     tempDecks[uncategorizedIndex].cards.append(card)
                 }
             } else {
-                // Add to all assigned decks
+                // Add to all assigned decks with safety checks
                 for deckId in card.deckIds {
                     if let deckIndex = tempDecks.firstIndex(where: { $0.id == deckId }) {
                         tempDecks[deckIndex].cards.append(card)
@@ -404,25 +416,54 @@ class FlashCardViewModel: ObservableObject {
     
     func addCard(word: String, definition: String, example: String, deckIds: Set<UUID>, article: String = "", plural: String = "", pastTense: String = "", futureTense: String = "", pastParticiple: String = "", cardId: UUID? = nil) -> FlashCard {
         print("Adding new card")
-        var newCard = FlashCard(
-            word: word, 
-            definition: definition, 
-            example: example, 
-            deckIds: deckIds,
-            article: article,
-            plural: plural,
-            pastTense: pastTense,
-            futureTense: futureTense,
-            pastParticiple: pastParticiple,
-            cardId: cardId
-        )
         
-        // Mark as modified for CloudKit
-        newCard.markAsModified()
+        // Safety checks to prevent crashes
+        let safeWord = word.trimmingCharacters(in: .whitespacesAndNewlines)
+        let safeDefinition = definition.trimmingCharacters(in: .whitespacesAndNewlines)
         
-        flashCards.append(newCard)
-        updateCardDeckAssociations()
-        return newCard
+        guard !safeWord.isEmpty else {
+            print("❌ Cannot add card with empty word")
+            // Return a placeholder card that won't be saved
+            return FlashCard(word: "Error", definition: "Invalid card", example: "")
+        }
+        
+        guard !safeDefinition.isEmpty else {
+            print("❌ Cannot add card with empty definition")
+            // Return a placeholder card that won't be saved
+            return FlashCard(word: safeWord, definition: "Translation needed", example: example)
+        }
+        
+        do {
+            var newCard = FlashCard(
+                word: safeWord, 
+                definition: safeDefinition, 
+                example: example.trimmingCharacters(in: .whitespacesAndNewlines), 
+                deckIds: deckIds,
+                article: article.trimmingCharacters(in: .whitespacesAndNewlines),
+                plural: plural.trimmingCharacters(in: .whitespacesAndNewlines),
+                pastTense: pastTense.trimmingCharacters(in: .whitespacesAndNewlines),
+                futureTense: futureTense.trimmingCharacters(in: .whitespacesAndNewlines),
+                pastParticiple: pastParticiple.trimmingCharacters(in: .whitespacesAndNewlines),
+                cardId: cardId
+            )
+            
+            // Mark as modified for CloudKit
+            newCard.markAsModified()
+            
+            flashCards.append(newCard)
+            
+            // Use DispatchQueue to prevent potential main thread issues
+            DispatchQueue.main.async { [weak self] in
+                self?.updateCardDeckAssociations()
+            }
+            
+            print("✅ Successfully added card: '\(safeWord)' -> '\(safeDefinition)'")
+            return newCard
+        } catch {
+            print("❌ Error creating card: \(error)")
+            // Return a safe fallback card
+            return FlashCard(word: safeWord, definition: safeDefinition, example: example)
+        }
     }
     
     func updateCard(_ card: FlashCard, word: String, definition: String, example: String, deckIds: Set<UUID>, article: String = "", plural: String = "", pastTense: String = "", futureTense: String = "", pastParticiple: String = "") {

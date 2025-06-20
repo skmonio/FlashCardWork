@@ -218,7 +218,7 @@ struct TrueFalseView: View {
                     currentIndex: questionsAnswered + 1,
                     totalCards: max(remainingCards.count + questionsAnswered, 1),
                     score: score * 10, // Convert to scoring system like other games
-                    combo: 0, // True/False doesn't have combo system
+                    combo: 0, // No combo system for True/False
                     knownCount: nil,
                     unknownCount: nil,
                     skippedCount: nil
@@ -250,19 +250,11 @@ struct TrueFalseView: View {
                         HapticManager.shared.lightImpact()
                     }) {
                         VStack(spacing: 16) {
-                            // Word with optional article
-                            VStack(spacing: 4) {
-                                if !question.originalCard.article.isEmpty {
-                                    Text(question.originalCard.article)
-                                        .font(.caption)
-                                        .foregroundColor(.blue)
-                                        .bold()
-                                }
-                                Text(question.word)
-                                    .font(.system(size: 32, weight: .bold, design: .rounded))
-                                    .foregroundColor(.primary)
-                                    .multilineTextAlignment(.center)
-                            }
+                            // Word only (removed article display)
+                            Text(question.word)
+                                .font(.system(size: 32, weight: .bold, design: .rounded))
+                                .foregroundColor(.primary)
+                                .multilineTextAlignment(.center)
                             
                             // Example (if showing) - plain text, centered
                             if isShowingExample && !question.originalCard.example.isEmpty {

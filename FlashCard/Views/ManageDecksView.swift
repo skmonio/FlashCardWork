@@ -15,6 +15,25 @@ struct ManageDecksView: View {
     
     @State private var showingEditCardView = false
     
+    // Sort functionality
+    @State private var sortOption: SortOption = .alphabetical
+    
+    enum SortOption: CaseIterable {
+        case alphabetical
+        case reverseAlphabetical
+        
+        var label: String {
+            switch self {
+            case .alphabetical: return "A-Z"
+            case .reverseAlphabetical: return "Z-A"
+            }
+        }
+        
+        var icon: String {
+            return "textformat.abc"
+        }
+    }
+    
     // Deck editing
     @State private var showingRenameDeckAlert = false
     @State private var deckToRename: Deck?
@@ -36,26 +55,69 @@ struct ManageDecksView: View {
     
     // Navigation state for full-screen forms
     
+    // Computed property for sorted decks
+    private var sortedDecks: [Deck] {
+        let allDecks = viewModel.getAllDecksHierarchical()
+        
+        // Separate parent decks and sub-decks
+        let parentDecks = allDecks.filter { $0.parentId == nil }
+        let subDecks = allDecks.filter { $0.parentId != nil }
+        
+        var result: [Deck] = []
+        
+        // Sort parent decks
+        let sortedParents: [Deck]
+        switch sortOption {
+        case .alphabetical:
+            sortedParents = parentDecks.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+        case .reverseAlphabetical:
+            sortedParents = parentDecks.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedDescending }
+        }
+        
+        // For each parent deck, add it and its sorted sub-decks
+        for parentDeck in sortedParents {
+            result.append(parentDeck)
+            
+            // Find and sort sub-decks for this parent
+            let parentSubDecks = subDecks.filter { $0.parentId == parentDeck.id }
+            let sortedSubDecks: [Deck]
+            switch sortOption {
+            case .alphabetical:
+                sortedSubDecks = parentSubDecks.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+            case .reverseAlphabetical:
+                sortedSubDecks = parentSubDecks.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedDescending }
+            }
+            
+            result.append(contentsOf: sortedSubDecks)
+        }
+        
+        return result
+    }
+    
+    // Computed property for system decks (protected)
+    private var systemDecks: [Deck] {
+        return sortedDecks.filter { deck in
+            deck.name == "Uncategorized" || deck.name == "Learning" || deck.name == "Learnt" || deck.name == "Review"
+        }
+    }
+    
+    // Computed property for user-created decks (editable)
+    private var userDecks: [Deck] {
+        return sortedDecks.filter { deck in
+            deck.name != "Uncategorized" && deck.name != "Learning" && deck.name != "Learnt" && deck.name != "Review"
+        }
+    }
+    
     // Computed property for search results
-    private var searchResults: [(card: FlashCard, deckName: String)] {
+    private var searchResults: [Deck] {
         guard !searchText.isEmpty else { return [] }
         
-        var results: [(FlashCard, String)] = []
-        
-        for deck in viewModel.decks {
-            for card in deck.cards {
-                if card.word.localizedCaseInsensitiveContains(searchText) ||
-                   card.definition.localizedCaseInsensitiveContains(searchText) ||
-                   card.example.localizedCaseInsensitiveContains(searchText) {
-                    results.append((card, deck.name))
-                }
-            }
+        let results = viewModel.getAllDecksHierarchical().filter { deck in
+            deck.name.localizedCaseInsensitiveContains(searchText)
         }
         
         // Sort alphabetically by default
-        results.sort { $0.0.word.localizedCaseInsensitiveCompare($1.0.word) == .orderedAscending }
-        
-        return results
+        return results.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
     }
     
     var body: some View {
@@ -66,7 +128,7 @@ struct ManageDecksView: View {
                     HStack {
                         Image(systemName: "magnifyingglass")
                             .foregroundColor(.gray)
-                        TextField("Search cards...", text: $searchText)
+                        TextField("Search decks...", text: $searchText)
                         if !searchText.isEmpty {
                             Button(action: {
                                 searchText = ""
@@ -80,83 +142,13 @@ struct ManageDecksView: View {
                 
                 // Search results
                 if !searchText.isEmpty {
-                    Section(header: Text("Search Results (\(searchResults.count) cards)")) {
+                    Section(header: Text("Search Results (\(searchResults.count) decks)")) {
                         if searchResults.isEmpty {
-                            Text("No cards found")
+                            Text("No decks found")
                                 .foregroundColor(.secondary)
                                 .italic()
                         } else {
-                            ForEach(searchResults, id: \.card.id) { result in
-                                Button(action: {
-                                    // Open EditCardView for the selected card
-                                    selectedCardForEdit = result.card
-                                    showingEditCardView = true
-                                }) {
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        HStack {
-                                            VStack(alignment: .leading, spacing: 4) {
-                                                Text(result.card.word)
-                                                    .font(.headline)
-                                                    .foregroundColor(.primary)
-                                                Text(result.card.definition)
-                                                    .font(.subheadline)
-                                                    .foregroundColor(.secondary)
-                                            }
-                                            Spacer()
-                                            Text("in \(result.deckName)")
-                                                .font(.caption)
-                                                .foregroundColor(.blue)
-                                                .padding(.horizontal, 8)
-                                                .padding(.vertical, 4)
-                                                .background(Color.blue.opacity(0.1))
-                                                .cornerRadius(8)
-                                        }
-                                    }
-                                    .padding(.vertical, 4)
-                                }
-                                .buttonStyle(PlainButtonStyle())
-                            }
-                        }
-                    }
-                } else {
-                    // Regular deck display when not searching
-                    Section {
-                        Button(action: {
-                            showingAddDeck = true
-                        }) {
-                            HStack {
-                                Image(systemName: "plus.circle.fill")
-                                Text("Add New Deck")
-                            }
-                            .foregroundColor(.blue)
-                        }
-                        
-                        ForEach(viewModel.getAllDecksHierarchical()) { deck in
-                            HStack {
-                                if isSelectionMode {
-                                    let canSelect = deck.name != "Uncategorized" && deck.name != "Learning" && deck.name != "Learnt"
-                                    Button(action: {
-                                        if canSelect {
-                                            if selectedDeckIds.contains(deck.id) {
-                                                selectedDeckIds.remove(deck.id)
-                                            } else {
-                                                selectedDeckIds.insert(deck.id)
-                                            }
-                                            HapticManager.shared.multiSelectToggle()
-                                        }
-                                    }) {
-                                        if canSelect {
-                                            Image(systemName: selectedDeckIds.contains(deck.id) ? "checkmark.circle.fill" : "circle")
-                                                .foregroundColor(selectedDeckIds.contains(deck.id) ? .blue : .gray)
-                                        } else {
-                                            Image(systemName: "minus.circle")
-                                                .foregroundColor(.gray.opacity(0.5))
-                                        }
-                                    }
-                                    .buttonStyle(PlainButtonStyle())
-                                    .disabled(!canSelect)
-                                }
-                                
+                            ForEach(searchResults) { deck in
                                 NavigationLink {
                                     DeckView(viewModel: viewModel, deck: deck)
                                 } label: {
@@ -176,30 +168,246 @@ struct ManageDecksView: View {
                                             .foregroundColor(.secondary)
                                     }
                                 }
-                                .disabled(isSelectionMode)
+                                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                    // Only show swipe actions for user-created decks (not system decks)
+                                    let canModify = deck.name != "Uncategorized" && deck.name != "Learning" && deck.name != "Learnt" && deck.name != "Review"
+                                    
+                                    if canModify {
+                                        Button(role: .destructive) {
+                                            deckToDelete = deck
+                                            showingDeleteDeckAlert = true
+                                            HapticManager.shared.lightImpact()
+                                        } label: {
+                                            Image(systemName: "trash")
+                                        }
+                                        
+                                        Button {
+                                            deckToMove = deck
+                                            showingMoveDeckSheet = true
+                                            HapticManager.shared.lightImpact()
+                                        } label: {
+                                            Image(systemName: "folder")
+                                        }
+                                        .tint(.orange)
+                                        
+                                        Button {
+                                            deckToRename = deck
+                                            newDeckName = deck.name
+                                            showingRenameDeckAlert = true
+                                            HapticManager.shared.lightImpact()
+                                        } label: {
+                                            Image(systemName: "pencil")
+                                        }
+                                        .tint(.blue)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    // Regular deck display when not searching
+                    Section {
+                        Button(action: {
+                            showingAddDeck = true
+                        }) {
+                            HStack {
+                                Image(systemName: "plus.circle.fill")
+                                Text("Add New Deck")
+                            }
+                            .foregroundColor(.blue)
+                        }
+                    }
+                    
+                    // My Decks Section (Editable) - Now First
+                    if !userDecks.isEmpty {
+                        Section(header: 
+                            HStack {
+                                Image(systemName: "folder.fill")
+                                    .foregroundColor(.blue)
+                                    .font(.caption)
+                                Text("My Decks")
+                                Spacer()
+                                Text("\(userDecks.count) decks")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        ) {
+                            ForEach(userDecks) { deck in
+                                HStack {
+                                    if isSelectionMode {
+                                        Button(action: {
+                                            if selectedDeckIds.contains(deck.id) {
+                                                selectedDeckIds.remove(deck.id)
+                                            } else {
+                                                selectedDeckIds.insert(deck.id)
+                                            }
+                                            HapticManager.shared.multiSelectToggle()
+                                        }) {
+                                            Image(systemName: selectedDeckIds.contains(deck.id) ? "checkmark.circle.fill" : "circle")
+                                                .foregroundColor(selectedDeckIds.contains(deck.id) ? .blue : .gray)
+                                        }
+                                        .buttonStyle(PlainButtonStyle())
+                                    }
+                                    
+                                    NavigationLink {
+                                        DeckView(viewModel: viewModel, deck: deck)
+                                    } label: {
+                                        HStack {
+                                            // Show indentation for sub-decks
+                                            if deck.isSubDeck {
+                                                HStack(spacing: 4) {
+                                                    Text("    ↳")
+                                                        .foregroundColor(.secondary)
+                                                    Text(deck.name)
+                                                }
+                                            } else {
+                                                Text(deck.name)
+                                            }
+                                            Spacer()
+                                            Text("\(deck.cards.count)")
+                                                .foregroundColor(.secondary)
+                                        }
+                                    }
+                                    .disabled(isSelectionMode)
+                                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                        Button(role: .destructive) {
+                                            deckToDelete = deck
+                                            showingDeleteDeckAlert = true
+                                            HapticManager.shared.lightImpact()
+                                        } label: {
+                                            Image(systemName: "trash")
+                                        }
+                                        
+                                        Button {
+                                            deckToMove = deck
+                                            showingMoveDeckSheet = true
+                                            HapticManager.shared.lightImpact()
+                                        } label: {
+                                            Image(systemName: "folder")
+                                        }
+                                        .tint(.orange)
+                                        
+                                        Button {
+                                            deckToRename = deck
+                                            newDeckName = deck.name
+                                            showingRenameDeckAlert = true
+                                            HapticManager.shared.lightImpact()
+                                        } label: {
+                                            Image(systemName: "pencil")
+                                        }
+                                        .tint(.blue)
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        Section(header: Text("My Decks")) {
+                            VStack(spacing: 12) {
+                                Image(systemName: "folder.badge.plus")
+                                    .font(.title2)
+                                    .foregroundColor(.secondary)
+                                
+                                Text("No custom decks yet")
+                                    .font(.headline)
+                                    .foregroundColor(.secondary)
+                                
+                                Text("Create your first deck to organize your flashcards")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .multilineTextAlignment(.center)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 20)
+                        }
+                    }
+                    
+                    // System Decks Section (Protected) - Now Second
+                    if !systemDecks.isEmpty {
+                        Section(header: 
+                            HStack {
+                                Image(systemName: "lock.fill")
+                                    .foregroundColor(.secondary)
+                                    .font(.caption)
+                                Text("System Decks")
+                                Spacer()
+                                Text("Protected")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        ) {
+                            ForEach(systemDecks) { deck in
+                                HStack {
+                                    if isSelectionMode {
+                                        // System decks cannot be selected
+                                        Image(systemName: "minus.circle")
+                                            .foregroundColor(.gray.opacity(0.5))
+                                    }
+                                    
+                                    NavigationLink {
+                                        DeckView(viewModel: viewModel, deck: deck)
+                                    } label: {
+                                        HStack {
+                                            Text(deck.name)
+                                            Spacer()
+                                            Text("\(deck.cards.count)")
+                                                .foregroundColor(.secondary)
+                                        }
+                                    }
+                                    .disabled(isSelectionMode)
+                                }
                             }
                         }
                     }
                 }
             }
             .navigationTitle("Manage Decks")
+            .navigationBarTitleDisplayMode(.large)
+            .navigationBarBackButtonHidden(true)
             .toolbar(content: {
+                // Back button - TOP LEFT
                 ToolbarItem(placement: .navigationBarLeading) {
-                    if isSelectionMode {
-                        Button("Cancel") {
+                    Button(action: {
+                        if isSelectionMode {
                             isSelectionMode = false
                             selectedDeckIds.removeAll()
+                        } else {
+                            dismiss()
                         }
-                    } else {
-                        EmptyView()
+                    }) {
+                        Text(isSelectionMode ? "Cancel" : "Back")
                     }
                 }
                 
-                ToolbarItem(placement: .navigationBarTrailing) {
+                // Select button - MIDDLE
+                ToolbarItem(placement: .principal) {
                     if !isSelectionMode {
                         Button("Select") {
                             isSelectionMode = true
                         }
+                        .font(.headline)
+                    } else {
+                        Text("Select Decks")
+                            .font(.headline)
+                            .bold()
+                    }
+                }
+                
+                // Sort button - TOP RIGHT
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    if !isSelectionMode {
+                        Menu {
+                            Picker("Sort", selection: $sortOption) {
+                                Label(SortOption.alphabetical.label, systemImage: "textformat.abc")
+                                    .tag(SortOption.alphabetical)
+                                Label(SortOption.reverseAlphabetical.label, systemImage: "textformat.abc")
+                                    .tag(SortOption.reverseAlphabetical)
+                            }
+                        } label: {
+                            Image(systemName: "arrow.up.arrow.down")
+                        }
+                    } else {
+                        // Empty space in selection mode
+                        Text("")
                     }
                 }
             })
@@ -211,7 +419,7 @@ struct ManageDecksView: View {
                 if isSelectionMode && !selectedDeckIds.isEmpty {
                     let selectedDecks = viewModel.decks.filter { selectedDeckIds.contains($0.id) }
                     let canModifyDecks = selectedDecks.allSatisfy { deck in
-                        deck.name != "Uncategorized" && deck.name != "Learning" && deck.name != "Learnt"
+                        deck.name != "Uncategorized" && deck.name != "Learning" && deck.name != "Learnt" && deck.name != "Review"
                     }
                     
                     if canModifyDecks {
@@ -223,6 +431,11 @@ struct ManageDecksView: View {
                                 Text("Delete (\(selectedDeckIds.count))")
                             }
                             .foregroundColor(.red)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color(.secondarySystemGroupedBackground))
+                            .cornerRadius(12)
+                            .shadow(color: .red.opacity(0.2), radius: 3, x: 0, y: 1)
                         }
                         .frame(maxWidth: .infinity)
                         
@@ -234,6 +447,11 @@ struct ManageDecksView: View {
                                 Text("Move (\(selectedDeckIds.count))")
                             }
                             .foregroundColor(.orange)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color(.secondarySystemGroupedBackground))
+                            .cornerRadius(12)
+                            .shadow(color: .orange.opacity(0.2), radius: 3, x: 0, y: 1)
                         }
                         .frame(maxWidth: .infinity)
                         
@@ -250,6 +468,11 @@ struct ManageDecksView: View {
                                     Text("Edit")
                                 }
                                 .foregroundColor(.blue)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color(.secondarySystemGroupedBackground))
+                                .cornerRadius(12)
+                                .shadow(color: .blue.opacity(0.2), radius: 3, x: 0, y: 1)
                             }
                             .frame(maxWidth: .infinity)
                         }
@@ -262,10 +485,7 @@ struct ManageDecksView: View {
                 } else if isSelectionMode {
                     // Show Select All when in selection mode but no decks selected
                     Button(action: {
-                        let selectableDecks = viewModel.getAllDecksHierarchical().filter { deck in
-                            deck.name != "Uncategorized" && deck.name != "Learning" && deck.name != "Learnt"
-                        }
-                        selectedDeckIds = Set(selectableDecks.map { $0.id })
+                        selectedDeckIds = Set(userDecks.map { $0.id })
                         HapticManager.shared.mediumImpact()
                     }) {
                         VStack {
@@ -273,26 +493,11 @@ struct ManageDecksView: View {
                             Text("Select All")
                         }
                         .foregroundColor(.blue)
-                    }
-                    .frame(maxWidth: .infinity)
-                    
-                    Button(action: {
-                        dismiss()
-                    }) {
-                        VStack {
-                            Image(systemName: "chevron.backward")
-                            Text("Back")
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
-                } else {
-                    Button(action: {
-                        dismiss()
-                    }) {
-                        VStack {
-                            Image(systemName: "chevron.backward")
-                            Text("Back")
-                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color(.secondarySystemGroupedBackground))
+                        .cornerRadius(12)
+                        .shadow(color: .blue.opacity(0.2), radius: 3, x: 0, y: 1)
                     }
                     .frame(maxWidth: .infinity)
                 }
@@ -419,9 +624,13 @@ struct MoveDeckSheet: View {
     @State private var selectedParentId: UUID?
     
     private var availableParentDecks: [Deck] {
-        // Get top-level decks, excluding the deck being moved and Uncategorized
+        // Get top-level decks, excluding the deck being moved and all system decks
         return viewModel.getTopLevelDecks().filter { 
-            $0.name != "Uncategorized" && $0.id != deck.id 
+            $0.name != "Uncategorized" && 
+            $0.name != "Learning" && 
+            $0.name != "Learnt" && 
+            $0.name != "Review" && 
+            $0.id != deck.id 
         }
     }
     
@@ -552,9 +761,13 @@ struct BulkMoveDeckSheet: View {
     }
     
     private var availableParentDecks: [Deck] {
-        // Get top-level decks, excluding the decks being moved and Uncategorized
+        // Get top-level decks, excluding the decks being moved and all system decks
         return viewModel.getTopLevelDecks().filter { 
-            $0.name != "Uncategorized" && !deckIds.contains($0.id)
+            $0.name != "Uncategorized" && 
+            $0.name != "Learning" && 
+            $0.name != "Learnt" && 
+            $0.name != "Review" && 
+            !deckIds.contains($0.id)
         }
     }
     

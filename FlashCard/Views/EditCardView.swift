@@ -387,18 +387,22 @@ struct EditCardView: View {
         logger.debug("🔄 Manual translation request for: '\(trimmedWord)'")
         
         // Use the same translation service that photo import uses for consistency
-        Task {
-            let translation = await TranslationService.shared.getTranslationWithFallback(for: trimmedWord)
-            
-            await MainActor.run {
+        Task { @MainActor in
+            do {
+                let translation = await TranslationService.shared.getTranslationWithFallback(for: trimmedWord)
+                
                 if !translation.isEmpty {
-                    definition = translation
+                    self.definition = translation
                     logger.debug("✅ Translation found: '\(translation)'")
                 } else {
-                    validationMessage = "No translation found for: '\(trimmedWord)'"
-                    showingValidationAlert = true
+                    self.validationMessage = "No translation found for: '\(trimmedWord)'"
+                    self.showingValidationAlert = true
                     logger.debug("❌ No translation found for: '\(trimmedWord)'")
                 }
+            } catch {
+                logger.error("❌ Translation error: \(error.localizedDescription)")
+                self.validationMessage = "Translation failed: \(error.localizedDescription)"
+                self.showingValidationAlert = true
             }
         }
         

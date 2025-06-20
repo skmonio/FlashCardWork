@@ -16,9 +16,21 @@ struct DeckSelectionView: View {
     @State private var showingAddCardView = false
     @State private var showingAddDeckView = false
     @State private var showingImageImportView = false
+    @State private var showingStudyInfo = false
+    @State private var showingTestInfo = false
+    @State private var showingTrueFalseInfo = false
+    @State private var showingWritingInfo = false
+    @State private var showingMemoryGameInfo = false
+    @State private var showingWordScrambleInfo = false
+    @State private var showingCardsInfo = false
     
-    enum StudyMode {
-        case study, test, game, truefalse, writing, wordScramble
+    enum StudyMode: String {
+        case study = "study"
+        case test = "test" 
+        case game = "game"
+        case truefalse = "truefalse"
+        case writing = "writing"
+        case wordScramble = "wordScramble"
         
         var title: String {
             switch self {
@@ -238,111 +250,18 @@ struct DeckSelectionView: View {
         }
     }
     
-    private var cardsContent: some View {
-        VStack(spacing: 16) {
-            if viewModel.flashCards.isEmpty && viewModel.decks.isEmpty {
-                // Empty state
-                VStack(spacing: 16) {
-                    Image(systemName: "rectangle.stack")
-                        .font(.system(size: 60))
-                        .foregroundColor(.secondary)
-                    
-                    Text("No Cards Yet")
-                        .font(.title2)
-                        .bold()
-                    
-                    Text("Start building your flashcard collection by adding your first card or creating a deck.")
-                        .font(.body)
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal)
-                }
-                .padding(.top, 60)
-                
-                // Quick action buttons
-                VStack(spacing: 12) {
-                    Button(action: {
-                        showingAddCardView = true
-                    }) {
-                        MenuButton(title: "Add Your First Card", icon: "plus.rectangle.fill", color: .orange)
-                    }
-                    
-                    Button(action: {
-                        showingAddDeckView = true
-                    }) {
-                        MenuButton(title: "Create Your First Deck", icon: "folder.badge.plus", color: .teal)
-                    }
-                }
-                .padding(.horizontal)
-                .padding(.top)
-            } else {
-                // Quick stats
-                VStack(spacing: 12) {
-                    HStack {
-                        VStack(alignment: .leading) {
-                            Text("Total Cards")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                            Text("\(viewModel.flashCards.count)")
-                                .font(.title2)
-                                .bold()
-                        }
-                        Spacer()
-                        VStack(alignment: .trailing) {
-                            Text("Total Decks")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                            Text("\(viewModel.decks.count)")
-                                .font(.title2)
-                                .bold()
-                        }
-                    }
-                    .padding()
-                    .background(Color(.secondarySystemGroupedBackground))
-                    .cornerRadius(12)
-                    .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 2)
-                }
-                .padding(.horizontal)
-                .padding(.top)
-                
-                // Navigate to manage cards
-                VStack(spacing: 12) {
-                    NavigationLink(destination: ManageDecksView(viewModel: viewModel)) {
-                        MenuButton(title: "Manage Your Decks", icon: "folder.fill", color: .teal)
-                    }
-                    
-                    Button(action: {
-                        showingAddCardView = true
-                    }) {
-                        MenuButton(title: "Add New Card", icon: "plus.rectangle.fill", color: .orange)
-                    }
-                    
-                    Button(action: {
-                        showingAddDeckView = true
-                    }) {
-                        MenuButton(title: "Create New Deck", icon: "folder.badge.plus", color: Color(red: 1.0, green: 0.4, blue: 0.3))
-                    }
-                    
-                    Button(action: {
-                        showingImageImportView = true
-                    }) {
-                        MenuButton(title: "Import from Image", icon: "photo.on.rectangle.angled", color: Color(red: 1.0, green: 0.6, blue: 0.0))
-                    }
-                }
-                .padding(.horizontal)
-            }
-            
-            Spacer()
-        }
-    }
-
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
                 // Show different content based on selection
                 if showingCardsContent {
                     ScrollView {
-                        cardsContent
+                        CardsManagementView(
+                            viewModel: viewModel,
+                            showingAddCardView: $showingAddCardView,
+                            showingAddDeckView: $showingAddDeckView,
+                            showingImageImportView: $showingImageImportView
+                        )
                     }
                 } else if showingSettingsContent {
                     SettingsView(viewModel: viewModel, isSheet: false)
@@ -350,16 +269,66 @@ struct DeckSelectionView: View {
                     deckSelectionContent
                 }
                 
-                // Bottom Navigation
+                // Bottom Navigation - always show for consistent UX
                 BottomNavigationView(
                     viewModel: viewModel,
-                    selectedTab: showingCardsContent ? .constant(.cards) : 
-                                 showingSettingsContent ? .constant(.settings) : .constant(.home),
+                    selectedTab: .constant(showingCardsContent ? .cards : showingSettingsContent ? .settings : .home),
                     onNavigate: handleBottomNavigation
                 )
             }
-            .navigationTitle(mode.title)
+            .background(showingCardsContent ? Color(.systemGroupedBackground) : Color(.systemBackground))
+            .navigationTitle(showingCardsContent ? "" : 
+                           showingSettingsContent ? "Settings" : mode.title)
+            .navigationBarTitleDisplayMode(.large)
             .navigationBarBackButtonHidden(true)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    if !showingCardsContent && !showingSettingsContent {
+                        // Show back button only in main deck selection view
+                        Button("Back") {
+                            dismiss()
+                        }
+                    }
+                }
+                
+                // Custom title for cards content (like HomeView)
+                if showingCardsContent {
+                    ToolbarItem(placement: .principal) {
+                        Text("Taal Trek")
+                            .font(.largeTitle)
+                            .fontWeight(.bold)
+                    }
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    if showingCardsContent {
+                        // Show "How to Add Cards" button when in cards content (like HomeView)
+                        Button("How to Add Cards") {
+                            showingCardsInfo = true
+                        }
+                        .font(.caption)
+                        .foregroundColor(.blue)
+                    } else if !showingSettingsContent {
+                        // Show "How to Play" button when in deck selection mode (not in settings or cards)
+                        Button(action: {
+                            showInfoPopup()
+                        }) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "questionmark.circle")
+                                    .font(.caption)
+                                Text("How to Play")
+                                    .font(.caption)
+                            }
+                            .foregroundColor(.blue)
+                        }
+                        .onLongPressGesture {
+                            // Debug function: reset first-visit flags
+                            resetFirstVisitFlags()
+                        }
+                    }
+                    // No button shown when in settings content
+                }
+            }
             
             .navigationDestination(isPresented: Binding(
                 get: { viewModel.shouldNavigateToManageDecks },
@@ -445,6 +414,27 @@ struct DeckSelectionView: View {
         .sheet(isPresented: $showingImageImportView) {
             ImageImportView(viewModel: viewModel)
         }
+        .sheet(isPresented: $showingStudyInfo) {
+            StudyInfoView(viewModel: viewModel)
+        }
+        .sheet(isPresented: $showingTestInfo) {
+            TestInfoView(viewModel: viewModel)
+        }
+        .sheet(isPresented: $showingTrueFalseInfo) {
+            TrueFalseInfoView(viewModel: viewModel)
+        }
+        .sheet(isPresented: $showingWritingInfo) {
+            WritingInfoView(viewModel: viewModel)
+        }
+        .sheet(isPresented: $showingMemoryGameInfo) {
+            MemoryGameInfoView(viewModel: viewModel)
+        }
+        .sheet(isPresented: $showingWordScrambleInfo) {
+            WordScrambleInfoView(viewModel: viewModel)
+        }
+        .sheet(isPresented: $showingCardsInfo) {
+            CardsInfoView()
+        }
         .onAppear {
             // Reset navigation state when view appears
             shouldStartGame = false
@@ -453,6 +443,12 @@ struct DeckSelectionView: View {
             showingSaveOverwriteWarning = false
             showingCardsContent = false
             showingSettingsContent = false
+            
+            // Show appropriate info popup only on first visit
+            if isFirstVisit(for: mode) {
+                showInfoPopup()
+                markAsVisited(for: mode)
+            }
         }
     }
     
@@ -484,14 +480,29 @@ struct DeckSelectionView: View {
             // Always go back to actual HomeView, not just deck selection
             dismiss()
         case .cards:
-            // Show cards content instead of navigating to ManageDecksView
+            // Reset all popup states when navigating to cards
+            resetAllPopupStates()
+            // Show AllCardsView content like from home screen
             showingCardsContent = true
             showingSettingsContent = false
         case .settings:
+            // Reset all popup states when navigating to settings
+            resetAllPopupStates()
             // Show settings content instead of navigating to SettingsView
             showingCardsContent = false
             showingSettingsContent = true
         }
+    }
+    
+    // Helper function to reset all popup states
+    private func resetAllPopupStates() {
+        showingStudyInfo = false
+        showingTestInfo = false
+        showingTrueFalseInfo = false
+        showingWritingInfo = false
+        showingMemoryGameInfo = false
+        showingWordScrambleInfo = false
+        showingCardsInfo = false
     }
     
     @ViewBuilder
@@ -542,6 +553,46 @@ struct DeckSelectionView: View {
                 shouldContinue: shouldContinueGame
             )
         }
+    }
+    
+    // Helper function to check if it's the first time visiting this mode
+    private func isFirstVisit(for mode: StudyMode) -> Bool {
+        let key = "hasVisited_\(mode.rawValue)"
+        return !UserDefaults.standard.bool(forKey: key)
+    }
+    
+    // Helper function to mark mode as visited
+    private func markAsVisited(for mode: StudyMode) {
+        let key = "hasVisited_\(mode.rawValue)"
+        UserDefaults.standard.set(true, forKey: key)
+    }
+    
+    // Helper function to show info popup for current mode
+    private func showInfoPopup() {
+        switch mode {
+        case .study:
+            showingStudyInfo = true
+        case .test:
+            showingTestInfo = true
+        case .truefalse:
+            showingTrueFalseInfo = true
+        case .writing:
+            showingWritingInfo = true
+        case .game:
+            showingMemoryGameInfo = true
+        case .wordScramble:
+            showingWordScrambleInfo = true
+        }
+    }
+    
+    // Debug function to reset first-visit flags
+    private func resetFirstVisitFlags() {
+        let allModes = [StudyMode.study, .test, .game, .truefalse, .writing, .wordScramble]
+        for mode in allModes {
+            let key = "hasVisited_\(mode.rawValue)"
+            UserDefaults.standard.set(false, forKey: key)
+        }
+        print("🆕 First-visit flags reset")
     }
 }
 

@@ -387,14 +387,6 @@ struct WritingView: View {
         } message: {
             Text("Are you sure your answer was correct? This will count as a correct answer.")
         }
-        .onAppear {
-            // Auto-play pronunciation for incorrect answers
-            if isCorrect == false {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                    speakCurrentWord()
-                }
-            }
-        }
     }
     
     private var resultsView: some View {

@@ -273,7 +273,7 @@ struct GameView: View {
                     currentIndex: score + 1,
                     totalCards: cards.count,
                     score: score * 10, // Convert to scoring system like other games
-                    combo: comboCount,
+                    combo: 0, // No combo system for Memory Game
                     knownCount: nil,
                     unknownCount: nil,
                     skippedCount: nil

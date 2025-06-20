@@ -283,19 +283,11 @@ struct TestView: View {
                 HapticManager.shared.lightImpact()
             }) {
                 VStack(spacing: 16) {
-                    // Word with optional article
-                    VStack(spacing: 4) {
-                        if !currentCard.article.isEmpty {
-                            Text(currentCard.article)
-                                .font(.caption)
-                                .foregroundColor(.blue)
-                                .bold()
-                        }
-                        Text(currentCard.word)
-                            .font(.system(size: 32, weight: .bold, design: .rounded))
-                            .foregroundColor(.primary)
-                            .multilineTextAlignment(.center)
-                    }
+                    // Word only (removed article display)
+                    Text(currentCard.word)
+                        .font(.system(size: 32, weight: .bold, design: .rounded))
+                        .foregroundColor(.primary)
+                        .multilineTextAlignment(.center)
                     
                     // Example (if showing) - plain text, centered
                     if isShowingExample && !currentCard.example.isEmpty {

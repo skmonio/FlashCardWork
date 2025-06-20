@@ -376,6 +376,14 @@ struct WordScrambleView: View {
         guard !selectedChunks.contains(chunk) else { return }
         selectedChunks.append(chunk)
         HapticManager.shared.lightImpact()
+        
+        // Auto-submit when all chunks are selected
+        if selectedChunks.count == wordChunks.count && !hasAnswered {
+            // Add a slight delay for better UX
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                checkAnswer()
+            }
+        }
     }
     
     private func removeChunk(_ chunk: WordChunk) {
