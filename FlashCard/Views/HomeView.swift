@@ -27,7 +27,7 @@ struct HomeView: View {
                     .toolbar(content: {
                         // Streak in top left
                         ToolbarItem(placement: .navigationBarLeading) {
-                            if selectedTab == .home {
+                        if selectedTab == .home {
                                 // Flame icon with day streak
                                 HStack(spacing: 8) {
                                     Image(systemName: "flame.fill")
@@ -193,7 +193,7 @@ struct HomeView: View {
             showingAddDeckView: $showingAddDeckView,
             showingImageImportView: $showingImageImportView
         )
-    }
+            }
     
     private func handleNavigation(_ tab: BottomNavigationView.TabItem) {
         selectedTab = tab
@@ -205,17 +205,17 @@ struct HomeView: View {
                 markCardsAsVisited()
             }
         }
-    }
-    
+                }
+                
     // MARK: - Cards Info Helpers
     private func isFirstVisitCards() -> Bool {
         return !UserDefaults.standard.bool(forKey: "hasVisited_cards")
-    }
+                    }
     
     private func markCardsAsVisited() {
         UserDefaults.standard.set(true, forKey: "hasVisited_cards")
-    }
-    
+                }
+                
     // MARK: - First Launch Helpers
     private func isFirstLaunch() -> Bool {
         return !UserDefaults.standard.bool(forKey: "hasLaunched")

@@ -59,11 +59,11 @@ struct GameCardView: View {
         card: FlashCard,
         isShowingFront: Binding<Bool> = .constant(true),
         isShowingExample: Binding<Bool> = .constant(false),
-        onSwipeLeft: (() -> Void)? = nil,
-        onSwipeRight: (() -> Void)? = nil,
-        onSwipeUp: (() -> Void)? = nil,
-        onSwipeDown: (() -> Void)? = nil,
-        onDragChanged: ((CGFloat) -> Void)? = nil,
+         onSwipeLeft: (() -> Void)? = nil,
+         onSwipeRight: (() -> Void)? = nil,
+         onSwipeUp: (() -> Void)? = nil,
+         onSwipeDown: (() -> Void)? = nil,
+         onDragChanged: ((CGFloat) -> Void)? = nil,
         onVerticalDragChanged: ((CGFloat) -> Void)? = nil,
         onDragEnded: (() -> Void)? = nil
     ) {
@@ -89,12 +89,12 @@ struct GameCardView: View {
                 } else {
                     backView
                 }
-            }
-            .frame(maxWidth: .infinity)
+                }
+                .frame(maxWidth: .infinity)
             .frame(height: 450) // Increased from 300 to 450
-            .background(
+                .background(
                 RoundedRectangle(cornerRadius: 24) // Slightly more rounded for card feel
-                    .fill(Color(.secondarySystemGroupedBackground))
+                        .fill(Color(.secondarySystemGroupedBackground))
                     .overlay(
                         RoundedRectangle(cornerRadius: 24)
                             .stroke(
@@ -111,10 +111,10 @@ struct GameCardView: View {
                     )
                     .shadow(color: cardBorderColor.opacity(0.3), radius: 12, x: 0, y: 6)
                     .shadow(color: .black.opacity(0.15), radius: 20, x: 0, y: 10)
-            )
+                )
             .padding(.horizontal, 16) // Reduced padding for bigger cards
-            .offset(x: offset.width, y: offset.height)
-            .rotationEffect(.degrees(rotationOffset))
+                .offset(x: offset.width, y: offset.height)
+                .rotationEffect(.degrees(rotationOffset))
             .rotation3DEffect(.degrees(isShowingFront ? 0 : 180), axis: (x: 0, y: 1, z: 0))
             .gesture(cardGesture)
             .onTapGesture(count: 3) {
@@ -141,7 +141,7 @@ struct GameCardView: View {
             }
         }
     }
-
+    
     // MARK: - Card Views
     
     private var frontView: some View {

@@ -28,6 +28,7 @@ class NavigationCoordinator: ObservableObject {
         case exportImport
         case gameInfo(GameInfoType)
         case cardsInfo
+        case dutchVocabulary
         
         var id: String {
             switch self {
@@ -41,6 +42,7 @@ class NavigationCoordinator: ObservableObject {
             case .exportImport: return "exportImport"
             case .gameInfo: return "gameInfo"
             case .cardsInfo: return "cardsInfo"
+            case .dutchVocabulary: return "dutchVocabulary"
             }
         }
     }
@@ -147,6 +149,7 @@ enum NavigationDestination: Hashable {
     case trueFalseView([FlashCard], [UUID])
     case writingView([FlashCard], [UUID])
     case wordScrambleView([FlashCard], [UUID])
+    case dutchVocabulary
 }
 
 // MARK: - Simplified Navigation Extensions

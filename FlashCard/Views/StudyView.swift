@@ -237,7 +237,7 @@ struct StudyView: View {
                             .foregroundColor(swipeDirection.color)
                             .scaleEffect(min(swipeIntensity / 120, 1.2))
                             .animation(.spring(response: 0.3, dampingFraction: 0.6), value: swipeIntensity)
-                    }
+            }
                     .padding()
                     .background(
                         RoundedRectangle(cornerRadius: 20)

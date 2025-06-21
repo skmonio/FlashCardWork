@@ -7,32 +7,220 @@ class TranslationService: ObservableObject {
     
     private let logger = Logger(subsystem: "com.flashcards", category: "TranslationService")
     
+    // Access to our comprehensive vocabulary databases
+    private let dutchDatabase = DutchVocabularyDatabase.shared
+    
     private init() {
         // Initialize without TranslationSession for compatibility
         // Translation framework integration is handled in CompatibilityHelper
     }
     
-    /// Get translation with fallback to local dictionary
+    /// Get translation with comprehensive vocabulary database lookup first, then fallback to local dictionary
     func getTranslationWithFallback(for word: String) async -> String {
         // Ensure we're working with a clean word
         let cleanWord = word.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !cleanWord.isEmpty else { return "" }
         
         do {
-            // For now, use local dictionary as primary source
-            // In the future, this can be enhanced with Apple's Translation framework
+            // First, search our comprehensive Dutch vocabulary database
+            if let vocabularyMatch = searchVocabularyDatabase(for: cleanWord) {
+                logger.debug("✅ Found in vocabulary database for '\(cleanWord)': '\(vocabularyMatch.definition)'")
+                return vocabularyMatch.definition
+            }
+            
+            // Fallback to local dictionary
             if let dictionaryTranslation = getDictionaryTranslation(for: cleanWord) {
-                logger.debug("✅ Found translation for '\(cleanWord)': '\(dictionaryTranslation)'")
+                logger.debug("✅ Found in local dictionary for '\(cleanWord)': '\(dictionaryTranslation)'")
                 return dictionaryTranslation
             }
             
             logger.debug("❌ No translation found for '\(cleanWord)'")
-            // Return empty string instead of "translation needed"
             return ""
         } catch {
             logger.error("❌ Translation error for '\(cleanWord)': \(error.localizedDescription)")
             return ""
         }
+    }
+    
+    /// Get comprehensive translation data from our vocabulary database
+    func getComprehensiveTranslation(for word: String) async -> ComprehensiveTranslation? {
+        let cleanWord = word.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !cleanWord.isEmpty else { return nil }
+        
+        // Search our comprehensive vocabulary database
+        if let vocabularyMatch = searchVocabularyDatabase(for: cleanWord) {
+            logger.debug("✅ Found comprehensive data for '\(cleanWord)'")
+            
+            // Check if there are multiple versions of this word
+            let allMatches = getAllMatches(for: cleanWord)
+            let hasAlternatives = allMatches.count > 1
+            
+            return ComprehensiveTranslation(
+                originalWord: cleanWord,
+                definition: vocabularyMatch.definition,
+                example: vocabularyMatch.example,
+                article: vocabularyMatch.article.isEmpty ? nil : vocabularyMatch.article,
+                plural: vocabularyMatch.plural.isEmpty ? nil : vocabularyMatch.plural,
+                pastTense: vocabularyMatch.pastTense.isEmpty ? nil : vocabularyMatch.pastTense,
+                futureTense: vocabularyMatch.futureTense.isEmpty ? nil : vocabularyMatch.futureTense,
+                pastParticiple: vocabularyMatch.pastParticiple.isEmpty ? nil : vocabularyMatch.pastParticiple,
+                wordType: vocabularyMatch.wordType,
+                level: vocabularyMatch.level,
+                category: vocabularyMatch.category,
+                confidence: 0.95,
+                hasAlternatives: hasAlternatives,
+                alternativeCount: allMatches.count
+            )
+        }
+        
+        // Fallback to basic translation with enhanced info
+        let basicTranslation = await getTranslationWithFallback(for: cleanWord)
+        if !basicTranslation.isEmpty {
+            let wordType = determineWordType(cleanWord)
+            return ComprehensiveTranslation(
+                originalWord: cleanWord,
+                definition: basicTranslation,
+                example: nil,
+                article: wordType == .noun ? guessArticle(for: cleanWord) : nil,
+                plural: wordType == .noun ? guessPluralForm(for: cleanWord) : nil,
+                pastTense: nil,
+                futureTense: nil,
+                pastParticiple: nil,
+                wordType: WordType.fromDutchWordType(wordType),
+                level: nil,
+                category: nil,
+                confidence: 0.75,
+                hasAlternatives: false,
+                alternativeCount: 1
+            )
+        }
+        
+        return nil
+    }
+    
+    /// Search through our comprehensive Dutch vocabulary database
+    private func searchVocabularyDatabase(for word: String) -> DutchWord? {
+        let searchWord = word.lowercased()
+        var allMatches: [DutchWord] = []
+        
+        // Search main vocabulary database
+        let allMainWords = dutchDatabase.getAllWords()
+        for dutchWord in allMainWords {
+            if dutchWord.word.lowercased() == searchWord {
+                allMatches.append(dutchWord)
+            }
+        }
+        
+        // Search expanded vocabulary database through DutchVocabularyDatabase
+        let allExpandedPacks = DutchVocabularyDatabase.expandedPacks
+        for pack in allExpandedPacks {
+            for dutchWord in pack.words {
+                if dutchWord.word.lowercased() == searchWord {
+                    allMatches.append(dutchWord)
+                }
+            }
+        }
+        
+        // If we found exact matches, return the highest level one
+        if !allMatches.isEmpty {
+            return selectBestMatch(from: allMatches)
+        }
+        
+        // Try partial matches for compound words or variations
+        for dutchWord in allMainWords {
+            if dutchWord.word.lowercased().contains(searchWord) || searchWord.contains(dutchWord.word.lowercased()) {
+                allMatches.append(dutchWord)
+            }
+        }
+        
+        for pack in allExpandedPacks {
+            for dutchWord in pack.words {
+                if dutchWord.word.lowercased().contains(searchWord) || searchWord.contains(dutchWord.word.lowercased()) {
+                    allMatches.append(dutchWord)
+                }
+            }
+        }
+        
+        // Return best partial match if found
+        if !allMatches.isEmpty {
+            return selectBestMatch(from: allMatches)
+        }
+        
+        return nil
+    }
+    
+    /// Select the best match from multiple options - prioritizes higher levels and more complete information
+    private func selectBestMatch(from matches: [DutchWord]) -> DutchWord {
+        guard !matches.isEmpty else { return matches[0] }
+        
+        // Sort by priority: B1 > A2 > A1, then by completeness of information
+        let sortedMatches = matches.sorted { match1, match2 in
+            // First priority: level (B1 > A2 > A1)
+            let level1Priority = levelPriority(match1.level)
+            let level2Priority = levelPriority(match2.level)
+            
+            if level1Priority != level2Priority {
+                return level1Priority > level2Priority
+            }
+            
+            // Second priority: completeness of information
+            let completeness1 = calculateCompleteness(match1)
+            let completeness2 = calculateCompleteness(match2)
+            
+            return completeness1 > completeness2
+        }
+        
+        return sortedMatches[0]
+    }
+    
+    /// Get priority value for language level (higher = better)
+    private func levelPriority(_ level: LanguageLevel) -> Int {
+        switch level {
+        case .b1: return 3
+        case .a2: return 2
+        case .a1: return 1
+        }
+    }
+    
+    /// Calculate completeness score based on how much information the word entry has
+    private func calculateCompleteness(_ word: DutchWord) -> Int {
+        var score = 0
+        
+        if !word.definition.isEmpty { score += 1 }
+        if !word.example.isEmpty { score += 1 }
+        if !word.article.isEmpty { score += 1 }
+        if !word.plural.isEmpty { score += 1 }
+        if !word.pastTense.isEmpty { score += 1 }
+        if !word.futureTense.isEmpty { score += 1 }
+        if !word.pastParticiple.isEmpty { score += 1 }
+        
+        return score
+    }
+    
+    /// Get all matches for a word (useful for showing alternatives to users)
+    func getAllMatches(for word: String) -> [DutchWord] {
+        let searchWord = word.lowercased()
+        var allMatches: [DutchWord] = []
+        
+        // Search main vocabulary database
+        let allMainWords = dutchDatabase.getAllWords()
+        for dutchWord in allMainWords {
+            if dutchWord.word.lowercased() == searchWord {
+                allMatches.append(dutchWord)
+            }
+        }
+        
+        // Search expanded vocabulary database
+        let allExpandedPacks = DutchVocabularyDatabase.expandedPacks
+        for pack in allExpandedPacks {
+            for dutchWord in pack.words {
+                if dutchWord.word.lowercased() == searchWord {
+                    allMatches.append(dutchWord)
+                }
+            }
+        }
+        
+        return allMatches
     }
     
     /// Batch translate multiple words
@@ -41,7 +229,20 @@ class TranslationService: ObservableObject {
         
         for word in words {
             let translation = await getTranslationWithFallback(for: word)
-            if translation != "translation needed" {
+            if !translation.isEmpty {
+                translations[word] = translation
+            }
+        }
+        
+        return translations
+    }
+    
+    /// Get comprehensive translations for multiple words
+    func getComprehensiveTranslations(_ words: [String]) async -> [String: ComprehensiveTranslation] {
+        var translations: [String: ComprehensiveTranslation] = [:]
+        
+        for word in words {
+            if let translation = await getComprehensiveTranslation(for: word) {
                 translations[word] = translation
             }
         }
@@ -973,6 +1174,23 @@ class TranslationService: ObservableObject {
 
 // MARK: - Supporting Types
 
+struct ComprehensiveTranslation {
+    let originalWord: String
+    let definition: String
+    let example: String?
+    let article: String?
+    let plural: String?
+    let pastTense: String?
+    let futureTense: String?
+    let pastParticiple: String?
+    let wordType: WordType?
+    let level: LanguageLevel?
+    let category: VocabularyCategory?
+    let confidence: Float
+    let hasAlternatives: Bool
+    let alternativeCount: Int
+}
+
 struct EnhancedTranslation {
     let originalWord: String
     let translation: String
@@ -990,17 +1208,19 @@ enum DutchWordType {
     case preposition
     case conjunction
     case unknown
-    
-    var displayName: String {
-        switch self {
-        case .noun: return "Noun"
-        case .verb: return "Verb"
-        case .adjective: return "Adjective"
-        case .adverb: return "Adverb"
-        case .pronoun: return "Pronoun"
-        case .preposition: return "Preposition"
-        case .conjunction: return "Conjunction"
-        case .unknown: return "Unknown"
+}
+
+extension WordType {
+    static func fromDutchWordType(_ dutchWordType: DutchWordType) -> WordType? {
+        switch dutchWordType {
+        case .noun: return .noun
+        case .verb: return .verb
+        case .adjective: return .adjective
+        case .adverb: return .adverb
+        case .pronoun: return .pronoun
+        case .preposition: return .preposition
+        case .conjunction: return .conjunction
+        case .unknown: return nil
         }
     }
 }

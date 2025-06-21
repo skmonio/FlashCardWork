@@ -152,7 +152,7 @@ struct ManageDecksView: View {
                                 NavigationLink {
                                     DeckView(viewModel: viewModel, deck: deck)
                                 } label: {
-                                    HStack {
+                                        HStack {
                                         // Show indentation for sub-decks
                                         if deck.isSubDeck {
                                             HStack(spacing: 4) {
@@ -162,8 +162,8 @@ struct ManageDecksView: View {
                                             }
                                         } else {
                                             Text(deck.name)
-                                        }
-                                        Spacer()
+                                            }
+                                            Spacer()
                                         Text("\(deck.cards.count)")
                                             .foregroundColor(.secondary)
                                     }
@@ -187,7 +187,7 @@ struct ManageDecksView: View {
                                             HapticManager.shared.lightImpact()
                                         } label: {
                                             Image(systemName: "folder")
-                                        }
+                                    }
                                         .tint(.orange)
                                         
                                         Button {
@@ -233,42 +233,42 @@ struct ManageDecksView: View {
                             }
                         ) {
                             ForEach(userDecks) { deck in
-                                HStack {
-                                    if isSelectionMode {
-                                        Button(action: {
+                            HStack {
+                                if isSelectionMode {
+                                    Button(action: {
                                             if selectedDeckIds.contains(deck.id) {
                                                 selectedDeckIds.remove(deck.id)
                                             } else {
                                                 selectedDeckIds.insert(deck.id)
                                             }
                                             HapticManager.shared.multiSelectToggle()
-                                        }) {
+                                    }) {
                                             Image(systemName: selectedDeckIds.contains(deck.id) ? "checkmark.circle.fill" : "circle")
                                                 .foregroundColor(selectedDeckIds.contains(deck.id) ? .blue : .gray)
                                         }
-                                        .buttonStyle(PlainButtonStyle())
-                                    }
-                                    
-                                    NavigationLink {
-                                        DeckView(viewModel: viewModel, deck: deck)
-                                    } label: {
-                                        HStack {
-                                            // Show indentation for sub-decks
-                                            if deck.isSubDeck {
-                                                HStack(spacing: 4) {
-                                                    Text("    ↳")
-                                                        .foregroundColor(.secondary)
-                                                    Text(deck.name)
-                                                }
-                                            } else {
+                                    .buttonStyle(PlainButtonStyle())
+                                }
+                                
+                                NavigationLink {
+                                    DeckView(viewModel: viewModel, deck: deck)
+                                } label: {
+                                    HStack {
+                                        // Show indentation for sub-decks
+                                        if deck.isSubDeck {
+                                            HStack(spacing: 4) {
+                                                Text("    ↳")
+                                                    .foregroundColor(.secondary)
                                                 Text(deck.name)
                                             }
-                                            Spacer()
-                                            Text("\(deck.cards.count)")
-                                                .foregroundColor(.secondary)
+                                        } else {
+                                            Text(deck.name)
                                         }
+                                        Spacer()
+                                        Text("\(deck.cards.count)")
+                                            .foregroundColor(.secondary)
                                     }
-                                    .disabled(isSelectionMode)
+                                }
+                                .disabled(isSelectionMode)
                                     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                                         Button(role: .destructive) {
                                             deckToDelete = deck
@@ -367,7 +367,7 @@ struct ManageDecksView: View {
                 // Back button - TOP LEFT
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button(action: {
-                        if isSelectionMode {
+                    if isSelectionMode {
                             isSelectionMode = false
                             selectedDeckIds.removeAll()
                         } else {
@@ -493,7 +493,7 @@ struct ManageDecksView: View {
                             Text("Select All")
                         }
                         .foregroundColor(.blue)
-                        .frame(maxWidth: .infinity)
+                    .frame(maxWidth: .infinity)
                         .padding()
                         .background(Color(.secondarySystemGroupedBackground))
                         .cornerRadius(12)

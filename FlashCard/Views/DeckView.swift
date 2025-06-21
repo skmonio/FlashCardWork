@@ -233,7 +233,7 @@ struct DeckView: View {
                 // Back button - TOP LEFT
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button(action: {
-                        if isSelectionMode {
+                    if isSelectionMode {
                             isSelectionMode = false
                             selectedCards.removeAll()
                         } else {
@@ -246,10 +246,10 @@ struct DeckView: View {
                 
                 // Select button - CENTER
                 ToolbarItem(placement: .principal) {
-                    if !isSelectionMode {
-                        Button("Select") {
-                            isSelectionMode = true
-                        }
+                        if !isSelectionMode {
+                            Button("Select") {
+                                isSelectionMode = true
+                            }
                         .font(.headline)
                     } else {
                         Text("Select Cards")
@@ -309,7 +309,7 @@ struct DeckView: View {
                 }
             } message: {
                 if let card = cardToDelete {
-                    Text("This card exists in multiple decks. Would you like to remove it only from \(deck.name) or from all decks?")
+                Text("This card exists in multiple decks. Would you like to remove it only from \(deck.name) or from all decks?")
                 }
             }
             .alert("Delete Selected Cards", isPresented: $showingBulkDeleteAlert) {
@@ -340,68 +340,68 @@ struct DeckView: View {
             
             // Bottom Navigation Bar (only show when in selection mode)
             if isSelectionMode {
-                HStack {
+            HStack {
                     if !selectedCards.isEmpty {
-                        Button(action: {
-                            showingBulkDeleteAlert = true
-                        }) {
-                            VStack {
-                                Image(systemName: "trash")
-                                Text("Delete (\(selectedCards.count))")
-                            }
-                            .foregroundColor(.red)
+                    Button(action: {
+                        showingBulkDeleteAlert = true
+                    }) {
+                        VStack {
+                            Image(systemName: "trash")
+                            Text("Delete (\(selectedCards.count))")
+                        }
+                        .foregroundColor(.red)
                             .frame(maxWidth: .infinity)
                             .padding()
                             .background(Color(.secondarySystemGroupedBackground))
                             .cornerRadius(12)
                             .shadow(color: .red.opacity(0.2), radius: 3, x: 0, y: 1)
-                        }
-                        .frame(maxWidth: .infinity)
-                        
-                        Button(action: {
-                            showingMoveSheet = true
-                        }) {
-                            VStack {
-                                Image(systemName: "folder")
-                                Text("Move (\(selectedCards.count))")
-                            }
-                            .foregroundColor(.blue)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color(.secondarySystemGroupedBackground))
-                            .cornerRadius(12)
-                            .shadow(color: .blue.opacity(0.2), radius: 3, x: 0, y: 1)
-                        }
-                        .frame(maxWidth: .infinity)
-                    } else {
-                        // Show Select All when in selection mode but no cards selected
-                        Button(action: {
-                            selectedCards = Set(filteredAndSortedCards.map { $0.id })
-                            HapticManager.shared.mediumImpact()
-                        }) {
-                            VStack {
-                                Image(systemName: "checkmark.circle")
-                                Text("Select All")
-                            }
-                            .foregroundColor(.blue)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color(.secondarySystemGroupedBackground))
-                            .cornerRadius(12)
-                            .shadow(color: .blue.opacity(0.2), radius: 3, x: 0, y: 1)
-                        }
-                        .frame(maxWidth: .infinity)
                     }
+                    .frame(maxWidth: .infinity)
+                    
+                    Button(action: {
+                        showingMoveSheet = true
+                    }) {
+                        VStack {
+                            Image(systemName: "folder")
+                            Text("Move (\(selectedCards.count))")
+                        }
+                        .foregroundColor(.blue)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color(.secondarySystemGroupedBackground))
+                            .cornerRadius(12)
+                            .shadow(color: .blue.opacity(0.2), radius: 3, x: 0, y: 1)
+                    }
+                    .frame(maxWidth: .infinity)
+                    } else {
+                    // Show Select All when in selection mode but no cards selected
+                    Button(action: {
+                        selectedCards = Set(filteredAndSortedCards.map { $0.id })
+                        HapticManager.shared.mediumImpact()
+                    }) {
+                        VStack {
+                            Image(systemName: "checkmark.circle")
+                            Text("Select All")
+                        }
+                        .foregroundColor(.blue)
+                    .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color(.secondarySystemGroupedBackground))
+                            .cornerRadius(12)
+                            .shadow(color: .blue.opacity(0.2), radius: 3, x: 0, y: 1)
+                    }
+                    .frame(maxWidth: .infinity)
                 }
-                .padding()
-                .background(Color(.systemBackground))
-                .overlay(
-                    Rectangle()
-                        .frame(height: 1)
-                        .foregroundColor(.gray)
-                        .opacity(0.2),
-                    alignment: .top
-                )
+            }
+            .padding()
+            .background(Color(.systemBackground))
+            .overlay(
+                Rectangle()
+                    .frame(height: 1)
+                    .foregroundColor(.gray)
+                    .opacity(0.2),
+                alignment: .top
+            )
             }
         }
         .id(refreshID)

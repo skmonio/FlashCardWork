@@ -386,18 +386,68 @@ struct EditCardView: View {
         
         logger.debug("🔄 Manual translation request for: '\(trimmedWord)'")
         
-        // Use the same translation service that photo import uses for consistency
+        // Use comprehensive translation service to get rich vocabulary data
         Task { @MainActor in
             do {
-                let translation = await TranslationService.shared.getTranslationWithFallback(for: trimmedWord)
-                
-                if !translation.isEmpty {
-                    self.definition = translation
-                    logger.debug("✅ Translation found: '\(translation)'")
-                } else {
-                    self.validationMessage = "No translation found for: '\(trimmedWord)'"
+                // First try to get comprehensive translation from our vocabulary database
+                if let comprehensiveTranslation = await TranslationService.shared.getComprehensiveTranslation(for: trimmedWord) {
+                    // Auto-fill all available fields from our vocabulary database
+                    self.definition = comprehensiveTranslation.definition
+                    
+                    if let example = comprehensiveTranslation.example, !example.isEmpty {
+                        self.example = example
+                    }
+                    
+                    if let article = comprehensiveTranslation.article, !article.isEmpty {
+                        self.article = article
+                    }
+                    
+                    if let plural = comprehensiveTranslation.plural, !plural.isEmpty {
+                        self.plural = plural
+                    }
+                    
+                    if let pastTense = comprehensiveTranslation.pastTense, !pastTense.isEmpty {
+                        self.pastTense = pastTense
+                    }
+                    
+                    if let futureTense = comprehensiveTranslation.futureTense, !futureTense.isEmpty {
+                        self.futureTense = futureTense
+                    }
+                    
+                    if let pastParticiple = comprehensiveTranslation.pastParticiple, !pastParticiple.isEmpty {
+                        self.pastParticiple = pastParticiple
+                    }
+                    
+                    // Create user-friendly success message
+                    var successMessage = "Nice addition! I have filled in remaining fields for you."
+                    
+                    if let level = comprehensiveTranslation.level, let category = comprehensiveTranslation.category {
+                        successMessage += "\n\nCheck out similar words in the following pack:\n\(level.rawValue) - \(category.rawValue)"
+                    }
+                    
+                    // Inform user about alternative versions if they exist
+                    if comprehensiveTranslation.hasAlternatives {
+                        successMessage += "\n\n💡 Note: This word appears in \(comprehensiveTranslation.alternativeCount) different levels/contexts. I've selected the most advanced version (\(comprehensiveTranslation.level?.rawValue ?? "Unknown"))."
+                    }
+                    
+                    self.validationMessage = successMessage
                     self.showingValidationAlert = true
-                    logger.debug("❌ No translation found for: '\(trimmedWord)'")
+                    
+                    logger.debug("✅ Comprehensive translation found with 95% confidence")
+                } else {
+                    // Fallback to basic translation
+                    let translation = await TranslationService.shared.getTranslationWithFallback(for: trimmedWord)
+                    
+                    if !translation.isEmpty {
+                        self.definition = translation
+                        self.validationMessage = "✅ Basic translation found\nConsider adding more details manually"
+                        self.showingValidationAlert = true
+                        logger.debug("✅ Basic translation found: '\(translation)'")
+                    } else {
+                        self.validationMessage = "❌ No translation found for: '\(trimmedWord)'\n\nTip: Check spelling or try a different form of the word"
+                        self.showingValidationAlert = true
+                        logger.debug("❌ No translation found for: '\(trimmedWord)'")
+                    }
                 }
             } catch {
                 logger.error("❌ Translation error: \(error.localizedDescription)")

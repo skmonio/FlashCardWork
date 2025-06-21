@@ -135,56 +135,56 @@ struct AllCardsView: View {
     }
     
     var body: some View {
-        VStack(spacing: 0) {
-            // Search and Sort Controls
-            VStack(spacing: 12) {
-                // Search Bar
-                HStack {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundColor(.secondary)
-                    
-                    TextField("Search cards...", text: $searchText)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                    
-                    if !searchText.isEmpty {
-                        Button(action: {
-                            searchText = ""
-                        }) {
-                            Image(systemName: "xmark.circle.fill")
-                                .foregroundColor(.secondary)
+            VStack(spacing: 0) {
+                // Search and Sort Controls
+                VStack(spacing: 12) {
+                    // Search Bar
+                    HStack {
+                        Image(systemName: "magnifyingglass")
+                            .foregroundColor(.secondary)
+                        
+                        TextField("Search cards...", text: $searchText)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                        
+                        if !searchText.isEmpty {
+                            Button(action: {
+                                searchText = ""
+                            }) {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundColor(.secondary)
+                            }
                         }
                     }
+                    .padding(.horizontal)
                 }
-                .padding(.horizontal)
-            }
-            .padding(.vertical, 8)
-            .background(Color(.systemGroupedBackground))
-            
-            // Cards List
-            if filteredAndSortedCards.isEmpty {
-                // Empty State
-                VStack(spacing: 16) {
-                    Image(systemName: searchText.isEmpty ? "rectangle.stack" : "magnifyingglass")
-                        .font(.system(size: 50))
-                        .foregroundColor(.secondary)
-                    
-                    Text(searchText.isEmpty ? "No Cards Yet" : "No Matching Cards")
-                        .font(.title2)
-                        .bold()
-                    
-                    Text(searchText.isEmpty ? 
-                         "Start adding cards to see them here." : 
-                         "Try a different search term.")
-                        .font(.body)
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
-                }
-                .padding()
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else {
+                .padding(.vertical, 8)
+                .background(Color(.systemGroupedBackground))
+                
                 // Cards List
-                List {
-                    ForEach(filteredAndSortedCards) { card in
+                if filteredAndSortedCards.isEmpty {
+                    // Empty State
+                    VStack(spacing: 16) {
+                        Image(systemName: searchText.isEmpty ? "rectangle.stack" : "magnifyingglass")
+                            .font(.system(size: 50))
+                            .foregroundColor(.secondary)
+                        
+                        Text(searchText.isEmpty ? "No Cards Yet" : "No Matching Cards")
+                            .font(.title2)
+                            .bold()
+                        
+                        Text(searchText.isEmpty ? 
+                             "Start adding cards to see them here." : 
+                             "Try a different search term.")
+                            .font(.body)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    .padding()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    // Cards List
+                    List {
+                        ForEach(filteredAndSortedCards) { card in
                         HStack {
                             if isSelectionMode {
                                 Button(action: {
@@ -211,8 +211,8 @@ struct AllCardsView: View {
                                             selectedCards.insert(card.id)
                                         }
                                     } else {
-                                        selectedCard = card
-                                        showingEditCardView = true
+                                    selectedCard = card
+                                    showingEditCardView = true
                                     }
                                 },
                                 onDelete: {
@@ -220,17 +220,17 @@ struct AllCardsView: View {
                                     if isCardInMultipleDecks(card) {
                                         showingDeckSpecificDeleteAlert = true
                                     } else {
-                                        showingDeleteAlert = true
-                                    }
+                                    showingDeleteAlert = true
+                                }
                                 },
                                 isCardInMultipleDecks: isCardInMultipleDecks(card)
                             )
                             .disabled(isSelectionMode)
                         }
+                        }
                     }
+                    .listStyle(PlainListStyle())
                 }
-                .listStyle(PlainListStyle())
-            }
             
             // Bottom Navigation Bar (only show when in selection mode)
             if isSelectionMode {
@@ -296,9 +296,9 @@ struct AllCardsView: View {
                     alignment: .top
                 )
             }
-        }
-        .navigationTitle("All Cards (\(filteredAndSortedCards.count))")
-        .navigationBarTitleDisplayMode(.large)
+            }
+            .navigationTitle("All Cards (\(filteredAndSortedCards.count))")
+            .navigationBarTitleDisplayMode(.large)
         .navigationBarBackButtonHidden(true)
         .toolbar(content: {
             // Back button - TOP LEFT
@@ -347,7 +347,7 @@ struct AllCardsView: View {
                         }
                     } label: {
                         Image(systemName: "arrow.up.arrow.down")
-                    }
+        }
                 }
             }
         })
@@ -446,54 +446,54 @@ struct CardRowView: View {
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             // Left side content
-            VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 4) {
                 // Word and Article
-                HStack {
-                    Text(card.word)
-                        .font(.headline)
-                        .bold()
-                    
-                    if !card.article.isEmpty {
-                        Text(card.article)
-                            .font(.caption)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(Color.blue.opacity(0.2))
-                            .cornerRadius(4)
-                            .foregroundColor(.blue)
-                    }
+                    HStack {
+                        Text(card.word)
+                            .font(.headline)
+                            .bold()
+                        
+                        if !card.article.isEmpty {
+                            Text(card.article)
+                                .font(.caption)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(Color.blue.opacity(0.2))
+                                .cornerRadius(4)
+                                .foregroundColor(.blue)
+                        }
                 }
-                
+                        
                 // Definition
-                Text(card.definition)
-                    .font(.body)
-                    .foregroundColor(.primary)
-                
+                    Text(card.definition)
+                        .font(.body)
+                        .foregroundColor(.primary)
+                    
                 // Example
-                if !card.example.isEmpty {
-                    Text(card.example)
+                    if !card.example.isEmpty {
+                        Text(card.example)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .italic()
+                    }
+            
+                // Deck info
+            if !cardDecks.isEmpty {
+                HStack {
+                    Image(systemName: "folder")
                         .font(.caption)
                         .foregroundColor(.secondary)
-                        .italic()
-                }
-                
-                // Deck info
-                if !cardDecks.isEmpty {
-                    HStack {
-                        Image(systemName: "folder")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        
-                        Text(cardDecks.map { $0.name }.joined(separator: ", "))
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .lineLimit(1)
+                    
+                    Text(cardDecks.map { $0.name }.joined(separator: ", "))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
                     }
                 }
             }
-            
-            Spacer()
-            
+                    
+                    Spacer()
+                    
             // Right side content
             VStack(alignment: .trailing, spacing: 0) {
                 // Success indicator (checkmark) - TOP RIGHT
@@ -522,7 +522,7 @@ struct CardRowView: View {
                 // Date - BOTTOM RIGHT
                 Text(card.dateCreated.formatted(date: .abbreviated, time: .omitted))
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                        .foregroundColor(.secondary)
             }
         }
         .padding()

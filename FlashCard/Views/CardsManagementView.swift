@@ -149,6 +149,41 @@ struct CardsManagementView: View {
                     .cornerRadius(12)
                     .shadow(color: .red.opacity(0.2), radius: 3, x: 0, y: 1)
                 }
+                
+                // Dutch Vocabulary Import
+                Button(action: {
+                    navigationCoordinator.presentSheet(.dutchVocabulary)
+                }) {
+                    HStack {
+                        Image(systemName: "globe.europe.africa.fill")
+                            .font(.title2)
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: [.orange, .red],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                        
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Dutch Vocabulary")
+                                .font(.headline)
+                                .foregroundColor(.primary)
+                            Text("A1-B1 Level Packs")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        
+                        Spacer()
+                        
+                        Image(systemName: "chevron.right")
+                            .foregroundColor(.secondary)
+                    }
+                    .padding()
+                    .background(Color(.secondarySystemGroupedBackground))
+                    .cornerRadius(12)
+                    .shadow(color: .orange.opacity(0.2), radius: 3, x: 0, y: 1)
+                }
             }
             .padding(.horizontal)
             

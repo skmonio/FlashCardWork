@@ -162,6 +162,12 @@ struct MainNavigationView: View {
             WritingView(viewModel: viewModel, cards: cards, deckIds: deckIds, shouldLoadSaveState: false)
         case .wordScrambleView(let cards, let deckIds):
             WordScrambleView(viewModel: viewModel, cards: cards, deckIds: deckIds, shouldLoadSaveState: false)
+        case .dutchVocabulary:
+            NavigationView {
+                DutchVocabularyImportView(
+                    viewModel: viewModel
+                )
+            }
         }
     }
     
@@ -195,6 +201,12 @@ struct MainNavigationView: View {
             gameInfoView(for: gameType)
         case .cardsInfo:
             CardsInfoView()
+        case .dutchVocabulary:
+            NavigationView {
+                DutchVocabularyImportView(
+                    viewModel: viewModel
+                )
+            }
         }
     }
     

@@ -251,10 +251,10 @@ struct TrueFalseView: View {
                     }) {
                         VStack(spacing: 16) {
                             // Word only (removed article display)
-                            Text(question.word)
-                                .font(.system(size: 32, weight: .bold, design: .rounded))
-                                .foregroundColor(.primary)
-                                .multilineTextAlignment(.center)
+                                Text(question.word)
+                                    .font(.system(size: 32, weight: .bold, design: .rounded))
+                                    .foregroundColor(.primary)
+                                    .multilineTextAlignment(.center)
                             
                             // Example (if showing) - plain text, centered
                             if isShowingExample && !question.originalCard.example.isEmpty {
