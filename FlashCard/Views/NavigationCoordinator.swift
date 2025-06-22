@@ -29,6 +29,7 @@ class NavigationCoordinator: ObservableObject {
         case gameInfo(GameInfoType)
         case cardsInfo
         case dutchVocabulary
+        case dutchGrammar
         
         var id: String {
             switch self {
@@ -43,6 +44,7 @@ class NavigationCoordinator: ObservableObject {
             case .gameInfo: return "gameInfo"
             case .cardsInfo: return "cardsInfo"
             case .dutchVocabulary: return "dutchVocabulary"
+            case .dutchGrammar: return "dutchGrammar"
             }
         }
     }

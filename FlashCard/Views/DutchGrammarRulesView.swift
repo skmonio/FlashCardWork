@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct DutchGrammarRulesView: View {
+    @Environment(\.dismiss) private var dismiss
     @State private var selectedLevel: LanguageLevel = .a1
     @State private var selectedRuleType: GrammarRuleType? = nil
     @State private var selectedRule: DutchGrammarRule? = nil
@@ -10,157 +11,155 @@ struct DutchGrammarRulesView: View {
     @State private var showingAnswer = false
     @State private var exerciseScore = 0
     @State private var completedExercises: Set<String> = []
+    @State private var shuffledExercises: [GrammarExercise] = []
+    @State private var searchText = ""
     
     private let grammarDB = DutchGrammarRulesDatabase.shared
     
+    var filteredRules: [DutchGrammarRule] {
+        let levelRules = grammarDB.getRulesByLevel(selectedLevel)
+        if searchText.isEmpty {
+            return levelRules
+        } else {
+            return levelRules.filter { rule in
+                rule.title.localizedCaseInsensitiveContains(searchText) ||
+                rule.explanation.localizedCaseInsensitiveContains(searchText) ||
+                rule.type.rawValue.localizedCaseInsensitiveContains(searchText)
+            }
+        }
+    }
+    
     var body: some View {
-        NavigationView {
-            VStack(spacing: 0) {
-                // Level Selection Header
-                levelSelectionHeader
-                
-                if selectedRule == nil {
-                    // Rules Overview
-                    rulesOverviewView
-                } else {
-                    // Detailed Rule View
-                    ruleDetailView
-                }
-            }
-            .navigationTitle("Nederlandse Grammatica")
-            .navigationBarTitleDisplayMode(.large)
-        }
-        .sheet(isPresented: $showingExercises) {
-            exerciseSheet
-        }
-    }
-    
-    // MARK: - Level Selection Header
-    
-    private var levelSelectionHeader: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 0) {
+            // Top bar with X button
             HStack {
-                Text("Kies je niveau:")
-                    .font(.headline)
-                    .foregroundColor(.primary)
-                Spacer()
-            }
-            
-            HStack(spacing: 12) {
-                ForEach(LanguageLevel.allCases, id: \.self) { level in
-                    Button(action: {
-                        selectedLevel = level
-                        selectedRule = nil
-                        selectedRuleType = nil
-                    }) {
-                        VStack(spacing: 4) {
-                            Text(level.rawValue)
-                                .font(.title2)
-                                .fontWeight(.bold)
-                            
-                            Text(levelDescription(for: level))
-                                .font(.caption)
-                                .multilineTextAlignment(.center)
-                        }
-                        .foregroundColor(selectedLevel == level ? .white : .primary)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(selectedLevel == level ? Color.blue : Color.gray.opacity(0.1))
-                        )
-                    }
-                }
-            }
-            
-            // Rule count for selected level
-            Text("\(grammarDB.getRulesByLevel(selectedLevel).count) regels beschikbaar")
-                .font(.caption)
-                .foregroundColor(.secondary)
-        }
-        .padding()
-        .background(Color(.systemBackground))
-    }
-    
-    // MARK: - Rules Overview
-    
-    private var rulesOverviewView: some View {
-        ScrollView {
-            LazyVStack(spacing: 16) {
-                // Rule Types for Selected Level
-                let availableTypes = Set(grammarDB.getRulesByLevel(selectedLevel).map { $0.type })
-                
-                ForEach(Array(availableTypes), id: \.self) { ruleType in
-                    ruleTypeSection(for: ruleType)
-                }
-            }
-            .padding()
-        }
-    }
-    
-    private func ruleTypeSection(for ruleType: GrammarRuleType) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Image(systemName: iconFor(ruleType: ruleType))
-                    .foregroundColor(.blue)
-                    .font(.title2)
-                
-                Text(ruleType.rawValue)
+                Text("📚 Dutch Grammar Rules")
                     .font(.headline)
                     .fontWeight(.semibold)
                 
                 Spacer()
                 
-                let rulesCount = grammarDB.getRulesByType(ruleType).filter { $0.level == selectedLevel }.count
-                Text("\(rulesCount)")
-                    .font(.caption)
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Color.blue)
-                    .clipShape(Capsule())
-            }
-            
-            let rules = grammarDB.getRulesByType(ruleType).filter { $0.level == selectedLevel }
-            
-            ForEach(rules, id: \.id) { rule in
-                Button(action: {
-                    selectedRule = rule
-                }) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Text(rule.title)
-                                .font(.subheadline)
-                                .fontWeight(.medium)
-                                .foregroundColor(.primary)
-                            
-                            Spacer()
-                            
-                            if completedExercises.contains(rule.id) {
-                                Image(systemName: "checkmark.circle.fill")
-                                    .foregroundColor(.green)
-                            }
-                            
-                            Image(systemName: "chevron.right")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                        
-                        Text(String(rule.explanation.prefix(100)) + "...")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .lineLimit(2)
-                    }
-                    .padding()
-                    .background(Color(.systemGray6))
-                    .cornerRadius(8)
+                Button(action: { dismiss() }) {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.title2)
+                        .foregroundColor(.gray)
                 }
             }
+            .padding()
+            
+            // Search Bar
+            HStack {
+                Image(systemName: "magnifyingglass")
+                    .foregroundColor(.secondary)
+                
+                TextField("Search grammar rules...", text: $searchText)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                
+                if !searchText.isEmpty {
+                    Button("Clear") {
+                        searchText = ""
+                    }
+                    .font(.caption)
+                    .foregroundColor(.blue)
+                }
+            }
+            .padding(.horizontal)
+            
+            // Level Selection Tabs
+            HStack(spacing: 0) {
+                ForEach(LanguageLevel.allCases, id: \.self) { level in
+                    Button(action: {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            selectedLevel = level
+                            selectedRule = nil
+                            selectedRuleType = nil
+                        }
+                    }) {
+                        VStack(spacing: 4) {
+                            Text(level.rawValue)
+                                .font(.title3)
+                                .fontWeight(.bold)
+                            
+                            Text("\(grammarDB.getRulesByLevel(level).count) rules")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(selectedLevel == level ? Color.blue : Color.clear)
+                        .foregroundColor(selectedLevel == level ? .white : .primary)
+                    }
+                }
+            }
+            .background(Color(.systemGray6))
+            .padding(.top, 8)
+            
+            if selectedRule == nil {
+                // Rules List
+                ScrollView {
+                    LazyVStack(spacing: 8) {
+                        ForEach(filteredRules, id: \.id) { rule in
+                            Button(action: {
+                                selectedRule = rule
+                            }) {
+                                HStack(spacing: 12) {
+                                    // Icon
+                                    Image(systemName: iconFor(ruleType: rule.type))
+                                        .font(.system(size: 18))
+                                        .foregroundColor(.blue)
+                                        .frame(width: 24, height: 24)
+                                    
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(rule.title)
+                                            .font(.system(size: 16, weight: .medium))
+                                            .foregroundColor(.primary)
+                                            .multilineTextAlignment(.leading)
+                                        
+                                        Text(rule.type.rawValue)
+                                            .font(.system(size: 14))
+                                            .foregroundColor(.secondary)
+                                    }
+                                    
+                                    Spacer()
+                                    
+                                    VStack(spacing: 4) {
+                                        if completedExercises.contains(rule.id) {
+                                            Image(systemName: "checkmark.circle.fill")
+                                                .foregroundColor(.green)
+                                                .font(.system(size: 16))
+                                        }
+                                        
+                                        Text("\(rule.exercises.count)")
+                                            .font(.system(size: 12, weight: .medium))
+                                            .foregroundColor(.white)
+                                            .frame(width: 20, height: 20)
+                                            .background(Color.blue)
+                                            .clipShape(Circle())
+                                    }
+                                    
+                                    Image(systemName: "chevron.right")
+                                        .font(.system(size: 12, weight: .medium))
+                                        .foregroundColor(.gray)
+                                }
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 12)
+                                .background(Color(.systemBackground))
+                                .cornerRadius(8)
+                                .shadow(color: .black.opacity(0.05), radius: 1, x: 0, y: 1)
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.top, 16)
+                }
+            } else {
+                // Detailed Rule View
+                ruleDetailView
+            }
         }
-        .padding()
-        .background(Color(.systemBackground))
-        .cornerRadius(12)
-        .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
+        .sheet(isPresented: $showingExercises) {
+            exerciseSheet
+        }
     }
     
     // MARK: - Rule Detail View
@@ -170,18 +169,22 @@ struct DutchGrammarRulesView: View {
             VStack(alignment: .leading, spacing: 20) {
                 // Back Button and Title
                 HStack {
-                    Button("← Terug") {
+                    Button("← Back") {
                         selectedRule = nil
                     }
                     .foregroundColor(.blue)
                     
                     Spacer()
                     
-                    Button("Oefeningen") {
+                    Button("Exercises") {
+                        if let rule = selectedRule {
+                            shuffledExercises = rule.exercises.shuffled()
+                        }
                         showingExercises = true
                         currentExerciseIndex = 0
                         selectedAnswer = nil
                         showingAnswer = false
+                        exerciseScore = 0
                     }
                     .foregroundColor(.white)
                     .padding(.horizontal, 16)
@@ -215,7 +218,7 @@ struct DutchGrammarRulesView: View {
                     
                     // Explanation
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("Uitleg")
+                        Text("Explanation")
                             .font(.headline)
                             .foregroundColor(.primary)
                         
@@ -230,7 +233,7 @@ struct DutchGrammarRulesView: View {
                     // Key Points
                     if !rule.keyPoints.isEmpty {
                         VStack(alignment: .leading, spacing: 12) {
-                            Text("Belangrijke Punten")
+                            Text("Key Points")
                                 .font(.headline)
                                 .foregroundColor(.primary)
                             
@@ -249,23 +252,10 @@ struct DutchGrammarRulesView: View {
                         .cornerRadius(12)
                     }
                     
-                    // Examples
-                    if !rule.examples.isEmpty {
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("Voorbeelden")
-                                .font(.headline)
-                                .foregroundColor(.primary)
-                            
-                            ForEach(Array(rule.examples.enumerated()), id: \.offset) { index, example in
-                                exampleCard(example: example)
-                            }
-                        }
-                    }
-                    
                     // Common Mistakes
                     if !rule.commonMistakes.isEmpty {
                         VStack(alignment: .leading, spacing: 12) {
-                            Text("Veelgemaakte Fouten")
+                            Text("Common Mistakes")
                                 .font(.headline)
                                 .foregroundColor(.primary)
                             
@@ -275,31 +265,10 @@ struct DutchGrammarRulesView: View {
                         }
                     }
                     
-                    // Tips
-                    if !rule.tips.isEmpty {
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("Tips")
-                                .font(.headline)
-                                .foregroundColor(.primary)
-                            
-                            ForEach(Array(rule.tips.enumerated()), id: \.offset) { index, tip in
-                                HStack(alignment: .top, spacing: 8) {
-                                    Image(systemName: "lightbulb.fill")
-                                        .foregroundColor(.yellow)
-                                    Text(tip)
-                                        .font(.body)
-                                }
-                            }
-                        }
-                        .padding()
-                        .background(Color.yellow.opacity(0.1))
-                        .cornerRadius(12)
-                    }
-                    
                     // Related Rules
                     if !rule.relatedRules.isEmpty {
                         VStack(alignment: .leading, spacing: 12) {
-                            Text("Gerelateerde Regels")
+                            Text("Related Rules")
                                 .font(.headline)
                                 .foregroundColor(.primary)
                             
@@ -328,47 +297,6 @@ struct DutchGrammarRulesView: View {
             }
             .padding()
         }
-    }
-    
-    // MARK: - Example Card
-    
-    private func exampleCard(example: GrammarExample) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(example.dutch)
-                .font(.body)
-                .fontWeight(.semibold)
-                .foregroundColor(.primary)
-            
-            Text(example.english)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .italic()
-            
-            if let breakdown = example.breakdown {
-                Text(breakdown)
-                    .font(.caption)
-                    .foregroundColor(.blue)
-                    .padding(.top, 4)
-            }
-            
-            if let audioHint = example.audioHint {
-                HStack {
-                    Image(systemName: "speaker.wave.2")
-                        .foregroundColor(.orange)
-                    Text("[\(audioHint)]")
-                        .font(.caption)
-                        .foregroundColor(.orange)
-                        .fontFamily(.monospaced)
-                }
-            }
-        }
-        .padding()
-        .background(Color(.systemBackground))
-        .overlay(
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(Color.green.opacity(0.3), lineWidth: 1)
-        )
-        .cornerRadius(8)
     }
     
     // MARK: - Mistake Card
@@ -413,11 +341,12 @@ struct DutchGrammarRulesView: View {
         NavigationView {
             VStack(spacing: 20) {
                 if let rule = selectedRule, !rule.exercises.isEmpty {
-                    let exercise = rule.exercises[currentExerciseIndex]
+                    let exercise = shuffledExercises.isEmpty ? rule.exercises[currentExerciseIndex] : shuffledExercises[currentExerciseIndex]
+                    let totalCount = shuffledExercises.isEmpty ? rule.exercises.count : shuffledExercises.count
                     
                     // Progress
                     HStack {
-                        Text("Vraag \(currentExerciseIndex + 1) van \(rule.exercises.count)")
+                        Text("Question \(currentExerciseIndex + 1) of \(totalCount)")
                             .font(.headline)
                         Spacer()
                         Text("Score: \(exerciseScore)/\(currentExerciseIndex + (showingAnswer ? 1 : 0))")
@@ -475,21 +404,40 @@ struct DutchGrammarRulesView: View {
                         
                         // Explanation and Hint
                         if showingAnswer {
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Uitleg:")
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("Explanation:")
                                     .font(.headline)
-                                Text(exercise.explanation)
-                                    .font(.body)
+                                    .foregroundColor(.primary)
                                 
-                                if let hint = exercise.hint {
-                                    Text("Tip: \(hint)")
-                                        .font(.caption)
-                                        .foregroundColor(.blue)
+                                ScrollView {
+                                    VStack(alignment: .leading, spacing: 8) {
+                                        Text(exercise.explanation)
+                                            .font(.body)
+                                            .fixedSize(horizontal: false, vertical: true)
+                                            .lineLimit(nil)
+                                        
+                                        if let hint = exercise.hint {
+                                            Divider()
+                                                .padding(.vertical, 4)
+                                            
+                                            Text("Tip: \(hint)")
+                                                .font(.caption)
+                                                .foregroundColor(.blue)
+                                                .fixedSize(horizontal: false, vertical: true)
+                                                .lineLimit(nil)
+                                        }
+                                    }
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 8)
                                 }
+                                .frame(minHeight: 80, maxHeight: 180)
+                                .background(Color.blue.opacity(0.1))
+                                .cornerRadius(8)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(Color.blue.opacity(0.3), lineWidth: 1)
+                                )
                             }
-                            .padding()
-                            .background(Color.blue.opacity(0.1))
-                            .cornerRadius(8)
                         }
                     }
                     
@@ -498,7 +446,7 @@ struct DutchGrammarRulesView: View {
                     // Navigation Buttons
                     HStack(spacing: 20) {
                         if currentExerciseIndex > 0 {
-                            Button("Vorige") {
+                            Button("Previous") {
                                 currentExerciseIndex -= 1
                                 selectedAnswer = nil
                                 showingAnswer = false
@@ -509,8 +457,8 @@ struct DutchGrammarRulesView: View {
                         Spacer()
                         
                         if showingAnswer {
-                            if currentExerciseIndex < rule.exercises.count - 1 {
-                                Button("Volgende") {
+                            if currentExerciseIndex < totalCount - 1 {
+                                Button("Next") {
                                     currentExerciseIndex += 1
                                     selectedAnswer = nil
                                     showingAnswer = false
@@ -521,7 +469,7 @@ struct DutchGrammarRulesView: View {
                                 .background(Color.blue)
                                 .cornerRadius(8)
                             } else {
-                                Button("Voltooien") {
+                                Button("Complete") {
                                     completedExercises.insert(rule.id)
                                     showingExercises = false
                                 }
@@ -536,26 +484,19 @@ struct DutchGrammarRulesView: View {
                 }
             }
             .padding()
-            .navigationTitle("Oefeningen")
+            .navigationTitle("Exercises")
             .navigationBarTitleDisplayMode(.inline)
-            .navigationBarItems(trailing: Button("Sluiten") {
-                showingExercises = false
-            })
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Close") {
+                        showingExercises = false
+                    }
+                }
+            }
         }
     }
     
     // MARK: - Helper Functions
-    
-    private func levelDescription(for level: LanguageLevel) -> String {
-        switch level {
-        case .a1:
-            return "Beginner\nBasis regels"
-        case .a2:
-            return "Elementair\nUitgebreide regels"
-        case .b1:
-            return "Intermediate\nComplexe regels"
-        }
-    }
     
     private func iconFor(ruleType: GrammarRuleType) -> String {
         switch ruleType {

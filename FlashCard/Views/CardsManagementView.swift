@@ -184,6 +184,41 @@ struct CardsManagementView: View {
                     .cornerRadius(12)
                     .shadow(color: .orange.opacity(0.2), radius: 3, x: 0, y: 1)
                 }
+                
+                // Dutch Grammar Rules
+                Button(action: {
+                    navigationCoordinator.presentSheet(.dutchGrammar)
+                }) {
+                    HStack {
+                        Image(systemName: "book.pages.fill")
+                            .font(.title2)
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: [.blue, .purple],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                        
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Dutch Grammar")
+                                .font(.headline)
+                                .foregroundColor(.primary)
+                            Text("A1-B1 Grammar Rules")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        
+                        Spacer()
+                        
+                        Image(systemName: "chevron.right")
+                            .foregroundColor(.secondary)
+                    }
+                    .padding()
+                    .background(Color(.secondarySystemGroupedBackground))
+                    .cornerRadius(12)
+                    .shadow(color: .blue.opacity(0.2), radius: 3, x: 0, y: 1)
+                }
             }
             .padding(.horizontal)
             

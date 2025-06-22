@@ -207,6 +207,10 @@ struct MainNavigationView: View {
                     viewModel: viewModel
                 )
             }
+        case .dutchGrammar:
+            NavigationView {
+                DutchGrammarRulesView()
+            }
         }
     }
     
