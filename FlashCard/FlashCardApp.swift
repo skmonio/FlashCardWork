@@ -15,6 +15,7 @@ struct FlashCardApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(NavigationCoordinator.shared)
                 .preferredColorScheme(settingsManager.getCurrentColorScheme())
                 .onAppear {
                     // Lock orientation to portrait

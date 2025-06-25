@@ -28,6 +28,7 @@ class NavigationCoordinator: ObservableObject {
         case exportImport
         case gameInfo(GameInfoType)
         case cardsInfo
+        case dutchGrammarInfo
         
         var id: String {
             switch self {
@@ -41,6 +42,7 @@ class NavigationCoordinator: ObservableObject {
             case .exportImport: return "exportImport"
             case .gameInfo: return "gameInfo"
             case .cardsInfo: return "cardsInfo"
+            case .dutchGrammarInfo: return "dutchGrammarInfo"
             }
         }
     }
@@ -114,8 +116,8 @@ class NavigationCoordinator: ObservableObject {
     }
 }
 
-// MARK: - Study Mode Enum
-enum StudyMode: String, CaseIterable {
+// MARK: - Game Mode Enum
+enum GameMode: String, CaseIterable {
     case study = "study"
     case test = "test" 
     case game = "game"
@@ -133,11 +135,43 @@ enum StudyMode: String, CaseIterable {
         case .wordScramble: return "Jumble Your Cards"
         }
     }
+    
+    var saveStateType: GameSaveState.SavedGameType {
+        switch self {
+        case .study: return .study
+        case .test: return .test
+        case .game: return .memoryGame
+        case .truefalse: return .trueFalse
+        case .writing: return .writing
+        case .wordScramble: return .wordScramble
+        }
+    }
+    
+    var gameInfoType: NavigationCoordinator.GameInfoType {
+        switch self {
+        case .study:
+            return .study
+        case .test:
+            return .test
+        case .truefalse:
+            return .truefalse
+        case .writing:
+            return .writing
+        case .game:
+            return .memoryGame
+        case .wordScramble:
+            return .wordScramble
+        }
+    }
 }
 
 // MARK: - Navigation Destination Enum
 enum NavigationDestination: Hashable {
-    case deckSelection(StudyMode)
+    case deckSelection(GameMode)
+    case studyModeSelection(GameMode)
+    case studyTypeSelection(GameMode, StudyMode)
+    case quickStudy(GameMode, StudyMode, Int)
+    case normalStudy(GameMode, StudyMode)
     case deck(Deck)
     case allCards
     case manageDecks
@@ -149,7 +183,6 @@ enum NavigationDestination: Hashable {
     case wordScrambleView([FlashCard], [UUID])
     case dutchVocabulary
     case dutchGrammar
-    case card3DShowcase
 }
 
 // MARK: - Simplified Navigation Extensions

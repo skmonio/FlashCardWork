@@ -97,14 +97,14 @@ struct ManageDecksView: View {
     // Computed property for system decks (protected)
     private var systemDecks: [Deck] {
         return sortedDecks.filter { deck in
-            deck.name == "Uncategorized" || deck.name == "Learning" || deck.name == "Learnt" || deck.name == "Review"
+            deck.name == "Uncategorized" || deck.name == "Review"
         }
     }
     
     // Computed property for user-created decks (editable)
     private var userDecks: [Deck] {
         return sortedDecks.filter { deck in
-            deck.name != "Uncategorized" && deck.name != "Learning" && deck.name != "Learnt" && deck.name != "Review"
+            deck.name != "Uncategorized" && deck.name != "Review"
         }
     }
     
@@ -170,7 +170,7 @@ struct ManageDecksView: View {
                                 }
                                 .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                                     // Only show swipe actions for user-created decks (not system decks)
-                                    let canModify = deck.name != "Uncategorized" && deck.name != "Learning" && deck.name != "Learnt" && deck.name != "Review"
+                                    let canModify = deck.name != "Uncategorized" && deck.name != "Review"
                                     
                                     if canModify {
                                         Button(role: .destructive) {
@@ -419,7 +419,7 @@ struct ManageDecksView: View {
                 if isSelectionMode && !selectedDeckIds.isEmpty {
                     let selectedDecks = viewModel.decks.filter { selectedDeckIds.contains($0.id) }
                     let canModifyDecks = selectedDecks.allSatisfy { deck in
-                        deck.name != "Uncategorized" && deck.name != "Learning" && deck.name != "Learnt" && deck.name != "Review"
+                        deck.name != "Uncategorized" && deck.name != "Review"
                     }
                     
                     if canModifyDecks {
@@ -627,8 +627,6 @@ struct MoveDeckSheet: View {
         // Get top-level decks, excluding the deck being moved and all system decks
         return viewModel.getTopLevelDecks().filter { 
             $0.name != "Uncategorized" && 
-            $0.name != "Learning" && 
-            $0.name != "Learnt" && 
             $0.name != "Review" && 
             $0.id != deck.id 
         }
@@ -762,12 +760,8 @@ struct BulkMoveDeckSheet: View {
     
     private var availableParentDecks: [Deck] {
         // Get top-level decks, excluding the decks being moved and all system decks
-        return viewModel.getTopLevelDecks().filter { 
-            $0.name != "Uncategorized" && 
-            $0.name != "Learning" && 
-            $0.name != "Learnt" && 
-            $0.name != "Review" && 
-            !deckIds.contains($0.id)
+        return viewModel.getTopLevelDecks().filter {
+            $0.name != "Uncategorized" && $0.name != "Review" && !deckIds.contains($0.id)
         }
     }
     

@@ -169,32 +169,6 @@ struct SettingsView: View {
                         .foregroundColor(.secondary)
                 }
                 
-                HStack {
-                    Image(systemName: "rectangle.stack")
-                        .foregroundColor(.teal)
-                        .frame(width: 24)
-                    
-                    Text("Total Cards")
-                    
-                    Spacer()
-                    
-                    Text("\(viewModel.flashCards.count)")
-                        .foregroundColor(.secondary)
-                }
-                
-                HStack {
-                    Image(systemName: "folder")
-                        .foregroundColor(Color(red: 1.0, green: 0.4, blue: 0.3))
-                        .frame(width: 24)
-                    
-                    Text("Total Decks")
-                    
-                    Spacer()
-                    
-                    Text("\(viewModel.decks.count)")
-                        .foregroundColor(.secondary)
-                }
-                
                 Button(action: {
                     showingExportImport = true
                 }) {

@@ -17,10 +17,19 @@ struct MainNavigationView: View {
                     .navigationTitle(navigationTitle)
                     .navigationBarTitleDisplayMode(.large)
                     .toolbar {
-                        // Streak in top left
-                        ToolbarItem(placement: .navigationBarLeading) {
+                        // Custom title for home screen
+                        ToolbarItem(placement: .principal) {
                             if navigationCoordinator.currentTab == .home {
-                                streakView
+                                VStack(spacing: 0) {
+                                    Text("Taal")
+                                        .font(.title2)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(.primary)
+                                    Text("Trek")
+                                        .font(.title2)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(.primary)
+                                }
                             }
                         }
                         
@@ -90,7 +99,7 @@ struct MainNavigationView: View {
     // MARK: - Computed Properties
     private var navigationTitle: String {
         switch navigationCoordinator.currentTab {
-        case .home: return "Taal Trek"
+        case .home: return ""
         case .cards: return "Cards"
         case .settings: return "Settings"
         }
@@ -100,19 +109,6 @@ struct MainNavigationView: View {
         switch navigationCoordinator.currentTab {
         case .cards: return Color(.systemGroupedBackground)
         default: return Color(.systemBackground)
-        }
-    }
-    
-    private var streakView: some View {
-        HStack(spacing: 8) {
-            Image(systemName: "flame.fill")
-                .font(.title2)
-                .foregroundColor(streakManager.currentStreak > 0 ? .orange : .gray)
-            
-            Text("\(streakManager.currentStreak)")
-                .font(.title2)
-                .bold()
-                .foregroundColor(streakManager.currentStreak > 0 ? .orange : .gray)
         }
     }
     
@@ -144,6 +140,14 @@ struct MainNavigationView: View {
         switch destination {
         case .deckSelection(let mode):
             SimplifiedDeckSelectionView(viewModel: viewModel, mode: mode)
+        case .studyModeSelection(let gameMode):
+            StudyModeSelectionView(viewModel: viewModel, gameMode: gameMode)
+        case .studyTypeSelection(let gameMode, let studyMode):
+            StudyTypeSelectionView(viewModel: viewModel, gameMode: gameMode)
+        case .quickStudy(let gameMode, let studyMode, let cardCount):
+            QuickStudyView(viewModel: viewModel, gameMode: gameMode, selectedStudyMode: studyMode)
+        case .normalStudy(let gameMode, let studyMode):
+            SimplifiedDeckSelectionView(viewModel: viewModel, mode: gameMode)
         case .deck(let deck):
             DeckView(viewModel: viewModel, deck: deck)
         case .allCards:
@@ -172,8 +176,6 @@ struct MainNavigationView: View {
             NavigationView {
                 DutchGrammarRulesView()
             }
-        case .card3DShowcase:
-            Card3DShowcaseView()
         }
     }
     
@@ -207,6 +209,8 @@ struct MainNavigationView: View {
             gameInfoView(for: gameType)
         case .cardsInfo:
             CardsInfoView()
+        case .dutchGrammarInfo:
+            DutchGrammarInfoView()
         }
     }
     
@@ -291,77 +295,127 @@ struct HomeContentView: View {
         VStack(spacing: 24) {
             // Study Modes Section
             VStack(alignment: .leading, spacing: 16) {
-                Text("Study Modes")
-                    .font(.headline)
-                    .foregroundColor(.secondary)
-                    .padding(.horizontal)
-                
                 VStack(spacing: 12) {
                     NavigationButton(
                         title: "Study Your Cards",
                         icon: "book.fill",
-                        color: .teal
-                    ) {
-                        navigationCoordinator.push(NavigationDestination.deckSelection(.study))
-                    }
+                        color: .teal,
+                        gameMode: .study,
+                        action: {
+                            navigationCoordinator.push(NavigationDestination.studyTypeSelection(.study, .adaptive))
+                        }
+                    )
                     
                     NavigationButton(
                         title: "Test Your Cards",
                         icon: "checkmark.circle.fill",
-                        color: .orange
-                    ) {
-                        navigationCoordinator.push(NavigationDestination.deckSelection(.test))
-                    }
+                        color: .orange,
+                        gameMode: .test,
+                        action: {
+                            navigationCoordinator.push(NavigationDestination.studyTypeSelection(.test, .adaptive))
+                        }
+                    )
                     
                     NavigationButton(
                         title: "True or False",
                         icon: "questionmark.circle.fill",
-                        color: Color(red: 1.0, green: 0.4, blue: 0.3)
-                    ) {
-                        navigationCoordinator.push(NavigationDestination.deckSelection(.truefalse))
-                    }
+                        color: Color(red: 1.0, green: 0.4, blue: 0.3),
+                        gameMode: .truefalse,
+                        action: {
+                            navigationCoordinator.push(NavigationDestination.studyTypeSelection(.truefalse, .adaptive))
+                        }
+                    )
                     
                     NavigationButton(
                         title: "Write Your Card",
                         icon: "pencil.and.scribble",
-                        color: Color(red: 1.0, green: 0.6, blue: 0.0)
-                    ) {
-                        navigationCoordinator.push(NavigationDestination.deckSelection(.writing))
-                    }
+                        color: Color(red: 1.0, green: 0.6, blue: 0.0),
+                        gameMode: .writing,
+                        action: {
+                            navigationCoordinator.push(NavigationDestination.studyTypeSelection(.writing, .adaptive))
+                        }
+                    )
+                    
+                    NavigationButton(
+                        title: "Remember Your Cards",
+                        icon: "brain.fill",
+                        color: .orange,
+                        gameMode: .game,
+                        action: {
+                            navigationCoordinator.push(NavigationDestination.studyTypeSelection(.game, .adaptive))
+                        }
+                    )
+                    
+                    NavigationButton(
+                        title: "Jumble Your Cards",
+                        icon: "textformat.abc",
+                        color: Color(red: 1.0, green: 0.4, blue: 0.3),
+                        gameMode: .wordScramble,
+                        action: {
+                            navigationCoordinator.push(NavigationDestination.studyTypeSelection(.wordScramble, .adaptive))
+                        }
+                    )
                 }
             }
             .padding(.top)
             
-            // Games Section
+            // Resources Section
             VStack(alignment: .leading, spacing: 16) {
-                Text("Games")
+                Text("Resources")
                     .font(.headline)
                     .foregroundColor(.secondary)
                     .padding(.horizontal)
                 
                 VStack(spacing: 12) {
-                    NavigationButton(
-                        title: "Remember Your Cards",
-                        icon: "brain.fill",
-                        color: .orange
-                    ) {
-                        navigationCoordinator.push(NavigationDestination.deckSelection(.game))
-                    }
-                    
-                    NavigationButton(
-                        title: "Jumble Your Cards",
-                        icon: "textformat.abc",
-                        color: Color(red: 1.0, green: 0.4, blue: 0.3)
-                    ) {
-                        navigationCoordinator.push(NavigationDestination.deckSelection(.wordScramble))
-                    }
-                    
-                    NavigationButton(
-                        title: "3D Card Experiments",
-                        icon: "cube.fill",
-                        color: .purple
-                    ) {
-                        navigationCoordinator.push(NavigationDestination.card3DShowcase)
+                    // Dutch Grammar Rules with info icon
+                    HStack(spacing: 12) {
+                        // Main button
+                        Button(action: {
+                            navigationCoordinator.push(NavigationDestination.dutchGrammar)
+                        }) {
+                            HStack {
+                                Image(systemName: "book.pages.fill")
+                                    .font(.title2)
+                                    .foregroundStyle(
+                                        LinearGradient(
+                                            colors: [.blue, .purple],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                                    .frame(width: 30)
+                                
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Dutch Grammar")
+                                        .font(.body)
+                                        .foregroundColor(.primary)
+                                    Text("A1-B1 Grammar Rules")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                                
+                                Spacer()
+                            }
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .background(Color(.secondarySystemGroupedBackground))
+                            .cornerRadius(12)
+                            .shadow(color: .blue.opacity(0.2), radius: 3, x: 0, y: 1)
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                        
+                        // Info button
+                        Button(action: {
+                            navigationCoordinator.presentSheet(.dutchGrammarInfo)
+                        }) {
+                            Image(systemName: "info.circle.fill")
+                                .font(.title2)
+                                .foregroundColor(.blue)
+                                .frame(width: 50, height: 50)
+                                .background(Color(.systemBackground))
+                                .clipShape(Circle())
+                                .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
+                        }
                     }
                 }
             }
@@ -375,27 +429,45 @@ struct NavigationButton: View {
     let title: String
     let icon: String
     let color: Color
+    let gameMode: GameMode
     let action: () -> Void
+    @EnvironmentObject var navigationCoordinator: NavigationCoordinator
     
     var body: some View {
-        Button(action: action) {
-            HStack {
-                Image(systemName: icon)
-                    .font(.title2)
-                    .foregroundColor(color)
-                    .frame(width: 30)
-                
-                Text(title)
-                    .font(.body)
-                    .foregroundColor(.primary)
-                
-                Spacer()
+        HStack(spacing: 12) {
+            // Main button
+            Button(action: action) {
+                HStack {
+                    Image(systemName: icon)
+                        .font(.title2)
+                        .foregroundColor(color)
+                        .frame(width: 30)
+                    
+                    Text(title)
+                        .font(.body)
+                        .foregroundColor(.primary)
+                    
+                    Spacer()
+                }
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(Color(.secondarySystemGroupedBackground))
+                .cornerRadius(12)
+                .shadow(color: color.opacity(0.2), radius: 3, x: 0, y: 1)
             }
-            .padding()
-            .frame(maxWidth: .infinity)
-            .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(12)
-            .shadow(color: color.opacity(0.2), radius: 3, x: 0, y: 1)
+            
+            // Info button
+            Button(action: {
+                navigationCoordinator.presentSheet(.gameInfo(gameMode.gameInfoType))
+            }) {
+                Image(systemName: "info.circle.fill")
+                    .font(.title2)
+                    .foregroundColor(.blue)
+                    .frame(width: 50, height: 50)
+                    .background(Color(.systemBackground))
+                    .clipShape(Circle())
+                    .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
+            }
         }
     }
 } 

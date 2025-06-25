@@ -26,6 +26,12 @@ struct TestView: View {
     private var deckIds: [UUID]
     private var shouldLoadSaveState: Bool
     
+    // Session tracking for SRS
+    @State private var currentSession: StudySession?
+    @State private var sessionStartTime: Date = Date()
+    @StateObject private var statsManager = StatisticsManager.shared
+    @StateObject private var srsManager = SRSManager.shared
+    
     // Computed property to check if there's significant progress to save
     private var hasSignificantProgress: Bool {
         return currentIndex > 0 || correctAnswers > 0
@@ -95,14 +101,23 @@ struct TestView: View {
             selectedAnswer = option
             hasAnswered = true
             let isCorrect = option == currentCard.definition
+            
             if isCorrect {
                 correctAnswers += 1
                 HapticManager.shared.testCorrectHaptic() // Haptic only, no system sound
                 SoundManager.shared.playTestCorrectSound() // Play custom correct sound
+                
+                // Apply SRS logic for correct answer
+                let updatedCard = srsManager.processSimpleReview(for: currentCard, simpleQuality: .know)
+                viewModel.updateCardWithSRSData(updatedCard)
             } else {
                 incorrectCards.insert(currentCard.id)
                 HapticManager.shared.testWrongHaptic() // Haptic only, no system sound
                 SoundManager.shared.playTestWrongSound() // Play custom wrong sound
+                
+                // Apply SRS logic for incorrect answer
+                let updatedCard = srsManager.processSimpleReview(for: currentCard, simpleQuality: .dontKnow)
+                viewModel.updateCardWithSRSData(updatedCard)
             }
             
             // Record learning statistics - card was shown and answered correctly/incorrectly
@@ -129,41 +144,38 @@ struct TestView: View {
                 saveCurrentProgress()
             }
         } else {
-            // End of current round - check if there are incorrect cards to replay
-            if !incorrectCards.isEmpty {
-                // Auto-replay incorrect cards with intelligent ordering
-                let incorrectCardsList = cards.filter { incorrectCards.contains($0.id) }
-                cards = viewModel.sortCardsForLearning(incorrectCardsList)
-                currentIndex = 0
-                selectedAnswer = nil
-                hasAnswered = false
-                incorrectCards.removeAll() // Reset for next round
-                shuffledOptions = generateOptions()
-                
-                HapticManager.shared.mediumImpact() // Feedback for round transition
-                
-                // Optional: Show a brief message that we're replaying incorrect cards
-                // For now, just continue seamlessly
-            } else {
-                // All cards answered correctly - show completion
-                HapticManager.shared.gameComplete()
-                
-                // Clear saved progress since test is complete
-                clearSavedProgress()
-                
+            // End of test - show completion
+            HapticManager.shared.gameComplete()
+            
+            // End session tracking
+            if var session = currentSession {
+                session.knownCards = correctAnswers
+                session.unknownCards = originalCardCount - correctAnswers
+                session.skippedCards = 0 // No skipped cards in test mode
+                session.endTime = Date()
+                session.duration = session.endTime!.timeIntervalSince(session.startTime)
+                statsManager.endSession(
+                    session,
+                    knownCards: correctAnswers,
+                    unknownCards: originalCardCount - correctAnswers,
+                    skippedCards: 0
+                )
+                currentSession = session
+            }
+            
+            // Clear saved progress since test is complete
+            clearSavedProgress()
+            
+            withAnimation {
                 StreakManager.shared.recordGameCompletion(); showingResults = true
             }
         }
     }
     
-    private func resetTest(onlyIncorrect: Bool = false) {
-        if onlyIncorrect {
-            cards = cards.filter { incorrectCards.contains($0.id) }
-        } else {
-            cards = viewModel.sortCardsForLearning(cards)
-            // Reset original card count for new test
-            originalCardCount = cards.count
-        }
+    private func resetTest() {
+        cards = viewModel.sortCardsForLearning(cards)
+        // Reset original card count for new test
+        originalCardCount = cards.count
         currentIndex = 0
         correctAnswers = 0
         showingResults = false
@@ -172,6 +184,10 @@ struct TestView: View {
         isShowingExample = false // Reset example state
         incorrectCards.removeAll()
         shuffledOptions = generateOptions()
+        
+        // Start new session tracking
+        sessionStartTime = Date()
+        currentSession = statsManager.startSession(deckIds: deckIds, cardCount: cards.count)
         
         // Clear any saved progress when resetting
         clearSavedProgress()
@@ -238,6 +254,10 @@ struct TestView: View {
             Text(hasSignificantProgress ? "Would you like to save your progress?" : "Are you sure you want to close?")
         }
         .onAppear {
+            // Start session tracking
+            sessionStartTime = Date()
+            currentSession = statsManager.startSession(deckIds: deckIds, cardCount: cards.count)
+            
             if shouldLoadSaveState {
                 loadSavedProgress()
             } else {
@@ -364,52 +384,64 @@ struct TestView: View {
     }
     
     private var resultsView: some View {
-        VStack(spacing: 30) {
-            Image(systemName: "trophy.fill")
-                .font(.system(size: 60))
-                .foregroundColor(.yellow)
-            
-            Text("Test Complete!")
-                .font(.largeTitle)
-                .bold()
-                .multilineTextAlignment(.center)
-            
-            Text("All cards have been mastered! 🎉")
-                .font(.title2)
-                .multilineTextAlignment(.center)
-                .foregroundColor(.green)
-            
-            VStack(spacing: 16) {
-                Button(action: {
-                    // Explicitly save all ViewModel data to ensure statistics persist
-                    viewModel.saveAllData()
-                    
-                    // Force UI refresh
-                    DispatchQueue.main.async {
-                        viewModel.objectWillChange.send()
+        Group {
+            if let session = currentSession {
+                StudySessionResultsView(
+                    session: session,
+                    viewModel: viewModel,
+                    onStudyAgain: {
+                        resetTest()
+                    },
+                    onReviewUnknown: {
+                        // For test mode, just retest all cards (don't retest only incorrect ones)
+                        resetTest()
+                    },
+                    onDone: {
+                        dismissToRoot()
                     }
+                )
+            } else {
+                // Fallback if session is nil
+                VStack(spacing: 30) {
+                    Image(systemName: "trophy.fill")
+                        .font(.system(size: 60))
+                        .foregroundColor(.yellow)
                     
-                    resetTest()
-                }) {
-                    Text("Test All Cards Again")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.blue)
-                        .cornerRadius(10)
+                    Text("Test Complete!")
+                        .font(.largeTitle)
+                        .bold()
+                        .multilineTextAlignment(.center)
+                    
+                    Text("All cards have been mastered! 🎉")
+                        .font(.title2)
+                        .multilineTextAlignment(.center)
+                    .foregroundColor(.green)
+                    
+                    VStack(spacing: 16) {
+                        Button(action: {
+                            resetTest()
+                        }) {
+                            Text("Test All Cards Again")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color.blue)
+                                .cornerRadius(10)
+                        }
+                        
+                        Button(action: {
+                            dismissToRoot()
+                        }) {
+                            Text("Done")
+                                .font(.headline)
+                                .foregroundColor(.blue)
+                        }
+                    }
                 }
-                
-                Button(action: {
-                    dismissToRoot()
-                }) {
-                    Text("Done")
-                        .font(.headline)
-                        .foregroundColor(.blue)
-                }
+                .padding()
             }
         }
-        .padding()
     }
     
     private var emptyStateView: some View {

@@ -37,6 +37,12 @@ struct TrueFalseView: View {
     private var deckIds: [UUID]
     private var shouldLoadSaveState: Bool
     
+    // Session tracking for SRS
+    @State private var currentSession: StudySession?
+    @State private var sessionStartTime: Date = Date()
+    @StateObject private var statsManager = StatisticsManager.shared
+    @StateObject private var srsManager = SRSManager.shared
+    
     // Add speech service for pronunciation
     @ObservedObject private var speechService = DutchSpeechService.shared
     
@@ -118,6 +124,10 @@ struct TrueFalseView: View {
             dismiss()
         }
         .onAppear {
+            // Start session tracking
+            sessionStartTime = Date()
+            currentSession = statsManager.startSession(deckIds: deckIds, cardCount: cards.count)
+            
             if shouldLoadSaveState {
                 loadSavedProgress()
             } else {
@@ -356,64 +366,76 @@ struct TrueFalseView: View {
     }
     
     private var resultsView: some View {
-        VStack(spacing: 30) {
-            Image(systemName: "trophy.fill")
-                .font(.system(size: 60))
-                .foregroundColor(.yellow)
-            
-            Text("True or False Complete!")
-                .font(.largeTitle)
-                .bold()
-                .multilineTextAlignment(.center)
-            
-            VStack(spacing: 15) {
-                Text("Final Score")
-                    .font(.headline)
-                    .foregroundColor(.secondary)
-                
-                Text("\(correctAnswers) / \(correctAnswers + incorrectAnswers)")
-                    .font(.system(size: 48, weight: .bold))
-                    .foregroundColor(Double(correctAnswers)/Double(correctAnswers + incorrectAnswers) >= 0.7 ? .green : .orange)
-                
-                let totalQuestions = correctAnswers + incorrectAnswers
-                let percentage = totalQuestions > 0 ? Int((Double(correctAnswers) / Double(totalQuestions)) * 100) : 0
-                Text("\(percentage)%")
-                    .font(.title)
-                    .foregroundColor(.secondary)
-            }
-            
-            VStack(spacing: 16) {
-                Button(action: {
-                    // Explicitly save all ViewModel data to ensure statistics persist
-                    viewModel.saveAllData()
+        Group {
+            if let session = currentSession {
+                StudySessionResultsView(
+                    session: session,
+                    viewModel: viewModel,
+                    onStudyAgain: {
+                        resetGame()
+                    },
+                    onReviewUnknown: {
+                        // For True/False mode, just play again (don't retest only incorrect ones)
+                        resetGame()
+                    },
+                    onDone: {
+                        dismissToRoot()
+                    }
+                )
+            } else {
+                // Fallback if session is nil
+                VStack(spacing: 30) {
+                    Image(systemName: "trophy.fill")
+                        .font(.system(size: 60))
+                        .foregroundColor(.yellow)
                     
-                    // Force UI refresh
-                    DispatchQueue.main.async {
-                        viewModel.objectWillChange.send()
+                    Text("True or False Complete!")
+                        .font(.largeTitle)
+                        .bold()
+                        .multilineTextAlignment(.center)
+                    
+                    VStack(spacing: 15) {
+                        Text("Final Score")
+                            .font(.headline)
+                            .foregroundColor(.secondary)
+                        
+                        Text("\(correctAnswers) / \(correctAnswers + incorrectAnswers)")
+                            .font(.system(size: 48, weight: .bold))
+                            .foregroundColor(Double(correctAnswers)/Double(correctAnswers + incorrectAnswers) >= 0.7 ? .green : .orange)
+                        
+                        let totalQuestions = correctAnswers + incorrectAnswers
+                        let percentage = totalQuestions > 0 ? Int((Double(correctAnswers) / Double(totalQuestions)) * 100) : 0
+                        Text("\(percentage)%")
+                            .font(.title)
+                            .foregroundColor(.secondary)
                     }
                     
-                    resetGame()
-                    showingResults = false
-                }) {
-                    Text("Play Again")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.blue)
-                        .cornerRadius(10)
+                    VStack(spacing: 16) {
+                        Button(action: {
+                            resetGame()
+                            showingResults = false
+                        }) {
+                            Text("Play Again")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color.blue)
+                                .cornerRadius(10)
+                        }
+                        
+                        Button(action: {
+                            dismissToRoot()
+                        }) {
+                            Text("Done")
+                                .font(.headline)
+                                .foregroundColor(.blue)
+                        }
+                    }
                 }
-                
-                Button(action: {
-                    dismissToRoot()
-                }) {
-                    Text("Done")
-                        .font(.headline)
-                        .foregroundColor(.blue)
-                }
+                .padding()
             }
         }
-        .padding()
     }
     
     private func setupNextQuestion() {
@@ -476,6 +498,11 @@ struct TrueFalseView: View {
             // Use custom sound for games (not study mode)
             HapticManager.shared.successNotification() // Haptic only
             SoundManager.shared.playTestCorrectSound() // Custom Correct.wav
+            
+            // Apply SRS logic for correct answer (50/50 consideration)
+            // Since True/False is easier than multiple choice, we use a more conservative approach
+            let updatedCard = srsManager.processSimpleReview(for: question.originalCard, simpleQuality: .know)
+            viewModel.updateCardWithSRSData(updatedCard)
         } else {
             incorrectAnswers += 1
             
@@ -486,6 +513,11 @@ struct TrueFalseView: View {
             // Use custom sound for games (not study mode)
             HapticManager.shared.errorNotification() // Haptic only
             SoundManager.shared.playTestWrongSound() // Custom Wrong.wav
+            
+            // Apply SRS logic for incorrect answer (50/50 consideration)
+            // Since True/False is easier, incorrect answers are penalized more heavily
+            let updatedCard = srsManager.processSimpleReview(for: question.originalCard, simpleQuality: .dontKnow)
+            viewModel.updateCardWithSRSData(updatedCard)
         }
         
         // Record learning statistics - only count when the question shows the correct definition
@@ -501,10 +533,28 @@ struct TrueFalseView: View {
         // Clear feedback and show next question after delay
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
             if remainingCards.isEmpty {
+                // End session tracking
+                if var session = currentSession {
+                    session.knownCards = correctAnswers
+                    session.unknownCards = incorrectAnswers
+                    session.skippedCards = 0 // No skipped cards in True/False mode
+                    session.endTime = Date()
+                    session.duration = session.endTime!.timeIntervalSince(session.startTime)
+                    statsManager.endSession(
+                        session,
+                        knownCards: correctAnswers,
+                        unknownCards: incorrectAnswers,
+                        skippedCards: 0
+                    )
+                    currentSession = session
+                }
+                
                 // Clear saved progress since game is complete
                 clearSavedProgress()
                 HapticManager.shared.gameComplete()
-                StreakManager.shared.recordGameCompletion(); showingResults = true
+                withAnimation {
+                    StreakManager.shared.recordGameCompletion(); showingResults = true
+                }
             } else {
                 setupNextQuestion()
             }
@@ -520,6 +570,10 @@ struct TrueFalseView: View {
         showingResults = false
         isShowingExample = false
         setupNextQuestion()
+        
+        // Start new session tracking
+        sessionStartTime = Date()
+        currentSession = statsManager.startSession(deckIds: deckIds, cardCount: cards.count)
         
         // Clear any saved progress when resetting
         clearSavedProgress()

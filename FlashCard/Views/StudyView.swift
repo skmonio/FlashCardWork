@@ -1,4 +1,5 @@
 import SwiftUI
+import AVFoundation
 
 struct StudyView: View {
     @ObservedObject var viewModel: FlashCardViewModel
@@ -14,6 +15,7 @@ struct StudyView: View {
     @State private var verticalDragOffset: CGFloat = 0
     @State private var nextCardActive = false
     @State private var selectedCardForEdit: FlashCard?
+    @State private var showingEditCardView = false
     @State private var refreshID = UUID()
     @State private var forceRefreshID = UUID()
     @State private var showingCloseConfirmation = false
@@ -29,6 +31,13 @@ struct StudyView: View {
     // Add new state variables for directional locking
     @State private var swipeDirection: SwipeDirection = .none
     @State private var swipeIntensity: CGFloat = 0
+    
+    // Session tracking
+    @State private var currentSession: StudySession?
+    @State private var sessionStartTime: Date = Date()
+    
+    @StateObject private var statsManager = StatisticsManager.shared
+    @StateObject private var smartStudyManager = SmartStudyManager.shared
     
     enum SwipeDirection {
         case none, left, right, up, down
@@ -104,8 +113,7 @@ struct StudyView: View {
     
     init(viewModel: FlashCardViewModel, cards: [FlashCard], deckIds: [UUID] = [], shouldLoadSaveState: Bool = false) {
         self.viewModel = viewModel
-        // Apply intelligent ordering: less-known cards first, well-known cards later
-        _cards = State(initialValue: viewModel.sortCardsForLearning(cards))
+        _cards = State(initialValue: SmartStudyManager.shared.sortCardsForStudyMode(cards, mode: SmartStudyManager.shared.currentStudyMode))
         self.deckIds = deckIds
         self.shouldLoadSaveState = shouldLoadSaveState
     }
@@ -158,6 +166,10 @@ struct StudyView: View {
         .onAppear {
             // Pause CloudKit sync during active study session to prevent interference
             viewModel.pauseCloudKitSync()
+            
+            // Start session tracking
+            sessionStartTime = Date()
+            currentSession = statsManager.startSession(deckIds: deckIds, cardCount: cards.count)
             
             if shouldLoadSaveState {
                 loadSavedProgress()  
@@ -237,7 +249,7 @@ struct StudyView: View {
                             .foregroundColor(swipeDirection.color)
                             .scaleEffect(min(swipeIntensity / 120, 1.2))
                             .animation(.spring(response: 0.3, dampingFraction: 0.6), value: swipeIntensity)
-            }
+                    }
                     .padding()
                     .background(
                         RoundedRectangle(cornerRadius: 20)
@@ -261,7 +273,10 @@ struct StudyView: View {
                     combo: combo,
                     knownCount: nil,
                     unknownCount: nil,
-                    skippedCount: nil
+                    skippedCount: nil,
+                    studyMode: smartStudyManager.currentStudyMode,
+                    currentRound: smartStudyManager.currentRound,
+                    totalRounds: smartStudyManager.totalRounds
                 )
                 
                 Spacer()
@@ -320,133 +335,24 @@ struct StudyView: View {
         }
     }
     
-    private var resultsView: some View {
-        VStack(spacing: 20) {
-            Text("Study Session Complete! 🎉")
-                .font(.title)
-                .multilineTextAlignment(.center)
-            
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.green)
-                    Text("Known: \(knownCards.count) cards")
-                        .foregroundColor(.green)
-                }
-                
-                HStack {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(.red)
-                    Text("Need Review: \(unknownCards.count) cards")
-                        .foregroundColor(.red)
-                }
-                
-                HStack {
-                    Image(systemName: "minus.circle.fill")
-                        .foregroundColor(.blue)
-                    Text("Skipped: \(skippedCards.count) cards")
-                        .foregroundColor(.blue)
-                }
-            }
-            .font(.title3)
-            
-            VStack(spacing: 16) {
-                Button(action: {
-                    // Save the status of all cards
-                    for cardId in knownCards {
-                        viewModel.setCardStatus(cardId: cardId, status: .known)
-                    }
-                    for cardId in unknownCards {
-                        viewModel.setCardStatus(cardId: cardId, status: .unknown)
-                    }
-                    
-                    // Explicitly save all ViewModel data to ensure statistics persist
-                    viewModel.saveAllData()
-                    
-                    // Force UI refresh
-                    DispatchQueue.main.async {
-                        viewModel.objectWillChange.send()
-                    }
-                    
-                    // Reset all states for new session
-                    resetForNewSession()
-                }) {
-                    Text("Study All Cards Again")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.blue)
-                        .cornerRadius(10)
-                }
-                
-                if !unknownCards.isEmpty {
-                    Button(action: {
-                        // Save the status of all cards
-                        for cardId in knownCards {
-                            viewModel.setCardStatus(cardId: cardId, status: .known)
-                        }
-                        for cardId in unknownCards {
-                            viewModel.setCardStatus(cardId: cardId, status: .unknown)
-                        }
-                        
-                        // Explicitly save all ViewModel data to ensure statistics persist
-                        viewModel.saveAllData()
-                        
-                        // Force UI refresh
-                        DispatchQueue.main.async {
-                            viewModel.objectWillChange.send()
-                        }
-                        
-                        // Filter cards to only unknown ones and restart
-                        cards = cards.filter { unknownCards.contains($0.id) }
-                        resetForNewSession()
-                    }) {
-                        Text("Review Unknown Cards")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.red)
-                            .cornerRadius(10)
-                    }
-                }
-                
-                Button(action: {
-                    // Save the status of all cards before dismissing
-                    for cardId in knownCards {
-                        viewModel.setCardStatus(cardId: cardId, status: .known)
-                    }
-                    for cardId in unknownCards {
-                        viewModel.setCardStatus(cardId: cardId, status: .unknown)
-                    }
-                    dismissToRoot()
-                }) {
-                    Text("Done")
-                        .font(.headline)
-                        .foregroundColor(.blue)
-                }
-            }
-            .padding(.top)
-        }
-        .padding()
-    }
-    
     private func handleSwipeRight() {
         print("👆 SWIPE RIGHT - Starting handler")
         print("👆 Current state: index=\(currentIndex), card='\(cards[currentIndex].word)'")
-        
         HapticManager.shared.cardSwipeRight() // Success haptic for "I know this"
         let cardId = cards[currentIndex].id
         knownCards.insert(cardId)
         unknownCards.remove(cardId)
         viewModel.setCardStatus(cardId: cardId, status: .known)
-        
+        // SRS logic: process as 'know'
+        let updatedCard = SRSManager.shared.processSimpleReviewWithStudyMode(
+            for: cards[currentIndex], 
+            simpleQuality: .know,
+            mode: smartStudyManager.currentStudyMode
+        )
+        viewModel.updateCardWithSRSData(updatedCard)
         print("👆 About to record card shown...")
-        // Record learning statistics - card was shown and answered correctly
         viewModel.recordCardShown(cardId, isCorrect: true)
         print("👆 Card shown recorded, about to move to next card...")
-        
         withAnimation(.easeOut(duration: 0.3)) {
             moveToNextCard()
         }
@@ -456,18 +362,21 @@ struct StudyView: View {
     private func handleSwipeLeft() {
         print("👈 SWIPE LEFT - Starting handler")
         print("👈 Current state: index=\(currentIndex), card='\(cards[currentIndex].word)'")
-        
         HapticManager.shared.cardSwipeLeft() // Warning haptic for "I don't know this"
         let cardId = cards[currentIndex].id
         unknownCards.insert(cardId)
         knownCards.remove(cardId)
         viewModel.setCardStatus(cardId: cardId, status: .unknown)
-        
+        // SRS logic: process as 'dontKnow'
+        let updatedCard = SRSManager.shared.processSimpleReviewWithStudyMode(
+            for: cards[currentIndex], 
+            simpleQuality: .dontKnow,
+            mode: smartStudyManager.currentStudyMode
+        )
+        viewModel.updateCardWithSRSData(updatedCard)
         print("👈 About to record card shown...")
-        // Record learning statistics - card was shown and answered incorrectly
         viewModel.recordCardShown(cardId, isCorrect: false)
         print("👈 Card shown recorded, about to move to next card...")
-        
         withAnimation(.easeOut(duration: 0.3)) {
             moveToNextCard()
         }
@@ -548,6 +457,22 @@ struct StudyView: View {
         } else {
             print("🃏 Reached end of cards - showing results")
             HapticManager.shared.gameComplete() // Strong haptic for session completion
+            
+            // End session tracking
+            if var session = currentSession {
+                session.knownCards = knownCards.count
+                session.unknownCards = unknownCards.count
+                session.skippedCards = skippedCards.count
+                session.endTime = Date()
+                session.duration = session.endTime!.timeIntervalSince(session.startTime)
+                statsManager.endSession(
+                    session,
+                    knownCards: knownCards.count,
+                    unknownCards: unknownCards.count,
+                    skippedCards: skippedCards.count
+                )
+                currentSession = session
+            }
             
             // Clear saved progress since session is complete
             clearSavedProgress()
@@ -670,6 +595,10 @@ struct StudyView: View {
         unknownCards.removeAll()
         skippedCards.removeAll()
         
+        // Start new session tracking
+        sessionStartTime = Date()
+        currentSession = statsManager.startSession(deckIds: deckIds, cardCount: cards.count)
+        
         // Clear any saved progress when starting fresh
         clearSavedProgress()
     }
@@ -686,6 +615,10 @@ struct StudyView: View {
         unknownCards.removeAll()
         skippedCards.removeAll()
         cards = viewModel.sortCardsForLearning(cards) // Use intelligent ordering for new session
+        
+        // Start session tracking
+        sessionStartTime = Date()
+        currentSession = statsManager.startSession(deckIds: deckIds, cardCount: cards.count)
         
         // Clear any saved progress when resetting
         clearSavedProgress()
@@ -741,6 +674,82 @@ struct StudyView: View {
             swipeIntensity = verticalDistance
         case .none:
             swipeIntensity = 0
+        }
+    }
+    
+    private func speakCurrentWord() {
+        guard let card = currentCard else { return }
+        
+        let utterance = AVSpeechUtterance(string: card.word)
+        utterance.voice = AVSpeechSynthesisVoice(language: "nl-NL") // Dutch
+        utterance.rate = 0.5
+        utterance.pitchMultiplier = 1.0
+        utterance.volume = 0.8
+        
+        let synthesizer = AVSpeechSynthesizer()
+        synthesizer.speak(utterance)
+    }
+    
+    private var resultsView: some View {
+        // Use enhanced results view
+        if let session = currentSession {
+            AnyView(StudySessionResultsView(
+                session: session,
+                viewModel: viewModel,
+                onStudyAgain: {
+                    // Save the status of all cards
+                    for cardId in knownCards {
+                        viewModel.setCardStatus(cardId: cardId, status: .known)
+                    }
+                    for cardId in unknownCards {
+                        viewModel.setCardStatus(cardId: cardId, status: .unknown)
+                    }
+                    
+                    // Explicitly save all ViewModel data to ensure statistics persist
+                    viewModel.saveAllData()
+                    
+                    // Force UI refresh
+                    DispatchQueue.main.async {
+                        viewModel.objectWillChange.send()
+                    }
+                    
+                    // Reset all states for new session
+                    resetForNewSession()
+                },
+                onReviewUnknown: {
+                    // Save the status of all cards
+                    for cardId in knownCards {
+                        viewModel.setCardStatus(cardId: cardId, status: .known)
+                    }
+                    for cardId in unknownCards {
+                        viewModel.setCardStatus(cardId: cardId, status: .unknown)
+                    }
+                    
+                    // Explicitly save all ViewModel data to ensure statistics persist
+                    viewModel.saveAllData()
+                    
+                    // Force UI refresh
+                    DispatchQueue.main.async {
+                        viewModel.objectWillChange.send()
+                    }
+                    
+                    // Filter cards to only unknown ones and restart
+                    cards = cards.filter { unknownCards.contains($0.id) }
+                    resetForNewSession()
+                },
+                onDone: {
+                    // Save the status of all cards before dismissing
+                    for cardId in knownCards {
+                        viewModel.setCardStatus(cardId: cardId, status: .known)
+                    }
+                    for cardId in unknownCards {
+                        viewModel.setCardStatus(cardId: cardId, status: .unknown)
+                    }
+                    dismissToRoot()
+                }
+            ))
+        } else {
+            AnyView(EmptyView())
         }
     }
 } 

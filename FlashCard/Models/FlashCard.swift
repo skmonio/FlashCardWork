@@ -18,6 +18,15 @@ struct FlashCard: Identifiable, Codable, Hashable {
     var timesShown: Int = 0
     var timesCorrect: Int = 0
     
+    // Spaced Repetition System (SRS) fields
+    var srsLevel: Int = 0 // 0 = new, 1-10 = learning levels
+    var nextReviewDate: Date? // When this card should be reviewed next
+    var consecutiveCorrect: Int = 0 // Streak of correct answers
+    var consecutiveIncorrect: Int = 0 // Streak of incorrect answers
+    var easeFactor: Double = 2.5 // Multiplier for interval (starts at 2.5)
+    var lastReviewDate: Date? // When this card was last reviewed
+    var totalReviews: Int = 0 // Total number of reviews (not just shown)
+    
     // Additional grammatical fields
     var article: String = "" // "het" or "de" for nouns
     var plural: String = "" // Plural form for nouns
@@ -34,6 +43,48 @@ struct FlashCard: Identifiable, Codable, Hashable {
     // Check if card is fully learned (5+ correct answers)
     var isFullyLearned: Bool {
         return timesCorrect >= 5
+    }
+    
+    // MARK: - SRS Computed Properties
+    
+    // Check if card is due for review
+    var isDueForReview: Bool {
+        guard let nextReview = nextReviewDate else { return true }
+        return Date() >= nextReview
+    }
+    
+    // Check if card is new (never reviewed)
+    var isNew: Bool {
+        return srsLevel == 0 && totalReviews == 0
+    }
+    
+    // Check if card is in learning phase (levels 1-3)
+    var isLearning: Bool {
+        return srsLevel >= 1 && srsLevel <= 3
+    }
+    
+    // Check if card is in review phase (levels 4+)
+    var isReviewing: Bool {
+        return srsLevel >= 4
+    }
+    
+    // Get the current interval in days
+    var currentInterval: Int {
+        switch srsLevel {
+        case 0: return 0 // New card
+        case 1: return 1 // 1 day
+        case 2: return 6 // 6 days
+        case 3: return 15 // 15 days
+        default: return Int(pow(easeFactor, Double(srsLevel - 3)).rounded())
+        }
+    }
+    
+    // Get days until next review
+    var daysUntilReview: Int? {
+        guard let nextReview = nextReviewDate else { return nil }
+        let calendar = Calendar.current
+        let now = Date()
+        return calendar.dateComponents([.day], from: now, to: nextReview).day
     }
     
     init(word: String = "", definition: String = "", example: String = "", deckIds: Set<UUID> = [], article: String = "", plural: String = "", pastTense: String = "", futureTense: String = "", pastParticiple: String = "", cardId: UUID? = nil, dateCreated: Date? = nil) {
@@ -80,12 +131,22 @@ struct FlashCard: Identifiable, Codable, Hashable {
         pastTense = try container.decodeIfPresent(String.self, forKey: .pastTense) ?? ""
         futureTense = try container.decodeIfPresent(String.self, forKey: .futureTense) ?? ""
         pastParticiple = try container.decodeIfPresent(String.self, forKey: .pastParticiple) ?? ""
+        
+        // SRS fields with defaults for backward compatibility
+        srsLevel = try container.decodeIfPresent(Int.self, forKey: .srsLevel) ?? 0
+        nextReviewDate = try container.decodeIfPresent(Date.self, forKey: .nextReviewDate)
+        consecutiveCorrect = try container.decodeIfPresent(Int.self, forKey: .consecutiveCorrect) ?? 0
+        consecutiveIncorrect = try container.decodeIfPresent(Int.self, forKey: .consecutiveIncorrect) ?? 0
+        easeFactor = try container.decodeIfPresent(Double.self, forKey: .easeFactor) ?? 2.5
+        lastReviewDate = try container.decodeIfPresent(Date.self, forKey: .lastReviewDate)
+        totalReviews = try container.decodeIfPresent(Int.self, forKey: .totalReviews) ?? 0
     }
     
     private enum CodingKeys: String, CodingKey {
         case id, word, definition, example, deckIds, successCount, dateCreated, lastModified
         case timesShown, timesCorrect, article, plural, pastTense, futureTense, pastParticiple
-        case cloudKitRecordName
+        case cloudKitRecordName, srsLevel, nextReviewDate, consecutiveCorrect, consecutiveIncorrect
+        case easeFactor, lastReviewDate, totalReviews
     }
     
     // Implement Hashable
@@ -134,6 +195,19 @@ struct FlashCard: Identifiable, Codable, Hashable {
         record["futureTense"] = futureTense
         record["pastParticiple"] = pastParticiple
         
+        // SRS fields
+        record["srsLevel"] = srsLevel
+        if let nextReviewDate = nextReviewDate {
+            record["nextReviewDate"] = nextReviewDate
+        }
+        record["consecutiveCorrect"] = consecutiveCorrect
+        record["consecutiveIncorrect"] = consecutiveIncorrect
+        record["easeFactor"] = easeFactor
+        if let lastReviewDate = lastReviewDate {
+            record["lastReviewDate"] = lastReviewDate
+        }
+        record["totalReviews"] = totalReviews
+        
         return record
     }
     
@@ -172,6 +246,15 @@ struct FlashCard: Identifiable, Codable, Hashable {
         card.pastTense = record["pastTense"] as? String ?? ""
         card.futureTense = record["futureTense"] as? String ?? ""
         card.pastParticiple = record["pastParticiple"] as? String ?? ""
+        
+        // SRS fields
+        card.srsLevel = record["srsLevel"] as? Int ?? 0
+        card.nextReviewDate = record["nextReviewDate"] as? Date
+        card.consecutiveCorrect = record["consecutiveCorrect"] as? Int ?? 0
+        card.consecutiveIncorrect = record["consecutiveIncorrect"] as? Int ?? 0
+        card.easeFactor = record["easeFactor"] as? Double ?? 2.5
+        card.lastReviewDate = record["lastReviewDate"] as? Date
+        card.totalReviews = record["totalReviews"] as? Int ?? 0
         
         // Store CloudKit metadata
         card.cloudKitRecordName = record.recordID.recordName

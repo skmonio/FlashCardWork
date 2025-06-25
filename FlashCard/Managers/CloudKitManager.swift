@@ -461,7 +461,7 @@ class CloudKitManager: ObservableObject {
         var mergedDecksDict: [UUID: Deck] = [:]
         
         // Define system deck names that should be merged by name
-        let systemDeckNames = ["Uncategorized", "Learnt", "Learning", "Review"]
+        let systemDeckNames = ["Uncategorized", "Review"]
         
         // Start with all cloud decks
         for cloudDeck in cloudDecks {

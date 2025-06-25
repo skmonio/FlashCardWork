@@ -436,10 +436,8 @@ struct CardRowView: View {
     
     private var cardDecks: [Deck] {
         return viewModel.decks.filter { deck in
-            card.deckIds.contains(deck.id) && 
-            deck.name != "Review" && 
-            deck.name != "Learning" && 
-            deck.name != "Learnt" && 
+            card.deckIds.contains(deck.id) &&
+            deck.name != "Review" &&
             deck.name != "Uncategorized"
         }
     }

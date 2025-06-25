@@ -10,8 +10,11 @@ struct GameHeaderView: View {
     let skippedCount: Int?
     let onAudioTapped: (() -> Void)?
     let isAudioPlaying: Bool
+    let studyMode: StudyMode?
+    let currentRound: Int?
+    let totalRounds: Int?
     
-    init(currentIndex: Int, totalCards: Int, score: Int, combo: Int, knownCount: Int? = nil, unknownCount: Int? = nil, skippedCount: Int? = nil, onAudioTapped: (() -> Void)? = nil, isAudioPlaying: Bool = false) {
+    init(currentIndex: Int, totalCards: Int, score: Int, combo: Int, knownCount: Int? = nil, unknownCount: Int? = nil, skippedCount: Int? = nil, onAudioTapped: (() -> Void)? = nil, isAudioPlaying: Bool = false, studyMode: StudyMode? = nil, currentRound: Int? = nil, totalRounds: Int? = nil) {
         self.currentIndex = currentIndex
         self.totalCards = totalCards
         self.score = score
@@ -21,6 +24,9 @@ struct GameHeaderView: View {
         self.skippedCount = skippedCount
         self.onAudioTapped = onAudioTapped
         self.isAudioPlaying = isAudioPlaying
+        self.studyMode = studyMode
+        self.currentRound = currentRound
+        self.totalRounds = totalRounds
     }
     
     // Computed properties
@@ -44,6 +50,34 @@ struct GameHeaderView: View {
                         .font(.subheadline)
                         .fontWeight(.medium)
                         .foregroundColor(.primary)
+                    
+                    Spacer()
+                    
+                    // Study mode indicator
+                    if let studyMode = studyMode {
+                        HStack(spacing: 6) {
+                            Image(systemName: studyMode.icon)
+                                .foregroundColor(studyMode.color)
+                                .font(.system(size: 14))
+                            Text(studyMode.displayName)
+                                .font(.caption)
+                                .fontWeight(.medium)
+                                .foregroundColor(studyMode.color)
+                            
+                            // Round indicator for cram mode
+                            if studyMode == .cram, let currentRound = currentRound, let totalRounds = totalRounds {
+                                Text("• Round \(currentRound)/\(totalRounds)")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(studyMode.color.opacity(0.1))
+                        )
+                    }
                     
                     Spacer()
                     
@@ -178,7 +212,10 @@ struct GameHeaderView_Previews: PreviewProvider {
                 unknownCount: 2,
                 skippedCount: 1,
                 onAudioTapped: nil,
-                isAudioPlaying: false
+                isAudioPlaying: false,
+                studyMode: nil,
+                currentRound: nil,
+                totalRounds: nil
             )
             
             Spacer()

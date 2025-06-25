@@ -47,8 +47,6 @@ class FlashCardViewModel: ObservableObject {
     private let decksDefaultsKey = "SavedDecks"
     private let cardStatusKey = "CardStatus"
     private var uncategorizedDeckId: UUID?
-    private var learntDeckId: UUID?
-    private var learningDeckId: UUID?
     private var reviewDeckId: UUID?
     
     enum CardStatus: String, Codable {
@@ -87,7 +85,8 @@ class FlashCardViewModel: ObservableObject {
         print("✅ Card status loaded")
         
         print("🏗️ Creating system decks...")
-        // Create "Uncategorized" deck if it doesn't exist
+        // Remove creation of 'Learnt' and 'Learning' decks
+        // Only create 'Uncategorized' and 'Review' decks as system decks
         if !decks.contains(where: { $0.name == "Uncategorized" }) {
             let uncategorizedDeck = Deck(name: "Uncategorized")
             uncategorizedDeckId = uncategorizedDeck.id
@@ -97,30 +96,6 @@ class FlashCardViewModel: ObservableObject {
             uncategorizedDeckId = decks.first(where: { $0.name == "Uncategorized" })?.id
             print("✅ Found existing Uncategorized deck")
         }
-        
-        // Create "Learnt" deck if it doesn't exist
-        if !decks.contains(where: { $0.name == "Learnt" }) {
-            let learntDeck = Deck(name: "Learnt")
-            learntDeckId = learntDeck.id
-            decks.append(learntDeck)
-            print("✅ Created Learnt deck")
-        } else {
-            learntDeckId = decks.first(where: { $0.name == "Learnt" })?.id
-            print("✅ Found existing Learnt deck")
-        }
-        
-        // Create "Learning" deck if it doesn't exist
-        if !decks.contains(where: { $0.name == "Learning" }) {
-            let learningDeck = Deck(name: "Learning")
-            learningDeckId = learningDeck.id
-            decks.append(learningDeck)
-            print("✅ Created Learning deck")
-        } else {
-            learningDeckId = decks.first(where: { $0.name == "Learning" })?.id
-            print("✅ Found existing Learning deck")
-        }
-        
-        // Create "Review" deck if it doesn't exist
         if !decks.contains(where: { $0.name == "Review" }) {
             let reviewDeck = Deck(name: "Review")
             reviewDeckId = reviewDeck.id
@@ -130,7 +105,8 @@ class FlashCardViewModel: ObservableObject {
             reviewDeckId = decks.first(where: { $0.name == "Review" })?.id
             print("✅ Found existing Review deck")
         }
-        
+        // Remove any loaded decks named 'Learnt' or 'Learning'
+        decks.removeAll { $0.name == "Learnt" || $0.name == "Learning" }
         print("📚 Total decks after system deck creation: \(decks.count)")
         
         // Add example Dutch cards if no cards exist
@@ -485,6 +461,26 @@ class FlashCardViewModel: ObservableObject {
         }
     }
     
+    /// Update a card with SRS data (used by SRS study mode)
+    func updateCardWithSRSData(_ updatedCard: FlashCard) {
+        if let index = flashCards.firstIndex(where: { $0.id == updatedCard.id }) {
+            // Update SRS-specific fields
+            flashCards[index].srsLevel = updatedCard.srsLevel
+            flashCards[index].nextReviewDate = updatedCard.nextReviewDate
+            flashCards[index].consecutiveCorrect = updatedCard.consecutiveCorrect
+            flashCards[index].consecutiveIncorrect = updatedCard.consecutiveIncorrect
+            flashCards[index].easeFactor = updatedCard.easeFactor
+            flashCards[index].lastReviewDate = updatedCard.lastReviewDate
+            flashCards[index].totalReviews = updatedCard.totalReviews
+            
+            // Mark as modified for CloudKit
+            flashCards[index].markAsModified()
+            
+            // Save changes
+            saveCards()
+        }
+    }
+    
     func deleteCard(at offsets: IndexSet) {
         // Remove the card from all decks first
         offsets.forEach { index in
@@ -631,45 +627,50 @@ class FlashCardViewModel: ObservableObject {
     
     // MARK: - Export Functionality
     
-    func exportCardsToCSV() -> String {
-        print("🔍 Export Debug: Starting exportCardsToCSV")
-        print("🔍 Export Debug: flashCards.count = \(flashCards.count)")
-        
-        let headers = ["Word", "Translation", "Example", "Article", "Plural", "Past Tense", "Future Tense", "Past Participle", "Decks", "Success Count", "Times Shown", "Times Correct"]
-        var csvContent = headers.joined(separator: ",") + "\n"
-        
-        print("🔍 Export Debug: Headers added, csvContent length = \(csvContent.count)")
-        
-        for (index, card) in flashCards.enumerated() {
-            let deckNames = getDeckNamesForCard(card).joined(separator: "; ")
-            
-            let row = [
-                escapeCSVField(card.word),
-                escapeCSVField(card.definition),
-                escapeCSVField(card.example),
-                escapeCSVField(card.article),
-                escapeCSVField(card.plural),
-                escapeCSVField(card.pastTense),
-                escapeCSVField(card.futureTense),
-                escapeCSVField(card.pastParticiple),
-                escapeCSVField(deckNames),
-                String(card.successCount),
-                String(card.timesShown),
-                String(card.timesCorrect)
-            ]
-            
-            csvContent += row.joined(separator: ",") + "\n"
-            
-            if index < 3 { // Log first 3 cards for debugging
-                print("🔍 Export Debug: Card \(index + 1): \(card.word) -> \(card.definition)")
-            }
+func exportCardsToCSV() -> String {
+    print("🔍 Export Debug: Starting exportCardsToCSV")
+    print("🔍 Export Debug: flashCards.count = \(flashCards.count)")
+
+    let headers = ["Word", "Translation", "Example", "Article", "Plural", "Past Tense", "Future Tense", "Past Participle", "Decks", "Success Count", "Times Shown", "Times Correct"]
+    var csvContent = headers.joined(separator: ",") + "\n"
+
+    print("🔍 Export Debug: Headers added, csvContent length = \(csvContent.count)")
+
+    // Export all cards as before
+    for (index, card) in flashCards.enumerated() {
+        let deckNames = getDeckNamesForCard(card).joined(separator: "; ")
+        let row = [
+            escapeCSVField(card.word),
+            escapeCSVField(card.definition),
+            escapeCSVField(card.example),
+            escapeCSVField(card.article),
+            escapeCSVField(card.plural),
+            escapeCSVField(card.pastTense),
+            escapeCSVField(card.futureTense),
+            escapeCSVField(card.pastParticiple),
+            escapeCSVField(deckNames),
+            String(card.successCount),
+            String(card.timesShown),
+            String(card.timesCorrect)
+        ]
+        csvContent += row.joined(separator: ",") + "\n"
+        if index < 3 { // Log first 3 cards for debugging
+            print("🔍 Export Debug: Card \(index + 1): \(card.word) -> \(card.definition)")
         }
-        
-        print("🔍 Export Debug: Final csvContent length = \(csvContent.count)")
-        print("🔍 Export Debug: First 200 chars: \(String(csvContent.prefix(200)))")
-        
-        return csvContent
     }
+
+    // Add a row for every deck with zero cards
+    let decksWithNoCards = decks.filter { $0.cards.isEmpty }
+    for deck in decksWithNoCards {
+        let row = [String](repeating: "", count: 8) + [escapeCSVField(deck.name)] + [String](repeating: "", count: 3)
+        csvContent += row.joined(separator: ",") + "\n"
+    }
+
+    print("🔍 Export Debug: Final csvContent length = \(csvContent.count)")
+    print("🔍 Export Debug: First 200 chars: \(String(csvContent.prefix(200)))")
+
+    return csvContent
+}
     
     func exportDeckToCSV(_ deck: Deck) -> String {
         let headers = ["Word", "Translation", "Example", "Article", "Plural", "Past Tense", "Future Tense", "Past Participle", "Decks", "Success Count", "Times Shown", "Times Correct"]
@@ -1234,9 +1235,6 @@ class FlashCardViewModel: ObservableObject {
         // Mark as modified for CloudKit (but don't trigger sync immediately)
         flashCards[cardIndex].markAsModified()
         
-        // Update learning decks with the updated card
-        updateLearningDecks(for: flashCards[cardIndex])
-        
         // Save changes to local storage (but CloudKit sync is paused during study)
         saveCards()
         
@@ -1248,44 +1246,13 @@ class FlashCardViewModel: ObservableObject {
         }
     }
     
-    private func updateLearningDecks(for card: FlashCard) {
-        guard let learntDeckId = learntDeckId,
-              let learningDeckId = learningDeckId,
-              let cardIndex = flashCards.firstIndex(where: { $0.id == card.id }) else { return }
-        
-        // Remove card from both learning decks first
-        flashCards[cardIndex].deckIds.remove(learntDeckId)
-        flashCards[cardIndex].deckIds.remove(learningDeckId)
-        
-        // Add to appropriate deck based on learning status
-        if flashCards[cardIndex].isFullyLearned {
-            flashCards[cardIndex].deckIds.insert(learntDeckId)
-            print("📚 Card '\(flashCards[cardIndex].word)' moved to LEARNT deck (\(flashCards[cardIndex].learningPercentage ?? 0)%)")
-        } else if flashCards[cardIndex].learningPercentage != nil {
-            // Only add to learning deck if the card has been shown at least once
-            flashCards[cardIndex].deckIds.insert(learningDeckId)
-            print("📖 Card '\(flashCards[cardIndex].word)' moved to LEARNING deck (\(flashCards[cardIndex].learningPercentage ?? 0)%)")
-        }
-        
-        // Defer heavy deck association updates to reduce blocking during study sessions
-        // The full updateCardDeckAssociations will be called when study session ends
-        print("📖 Learning deck assignment updated for '\(flashCards[cardIndex].word)' - full sync deferred")
-    }
-    
     func resetLearningStatistics() {
         // Reset all card statistics
         for index in flashCards.indices {
             flashCards[index].timesShown = 0
             flashCards[index].timesCorrect = 0
-            
-            // Remove cards from learning decks
-            if let learntDeckId = learntDeckId,
-               let learningDeckId = learningDeckId {
-                flashCards[index].deckIds.remove(learntDeckId)
-                flashCards[index].deckIds.remove(learningDeckId)
-            }
+            // Remove cards from learning decks (no longer needed)
         }
-        
         // Update deck associations and save
         updateCardDeckAssociations()
         saveCards()
@@ -1357,13 +1324,13 @@ class FlashCardViewModel: ObservableObject {
     }
     
     func canDeleteDeck(_ deck: Deck) -> Bool {
-        // Prevent deletion of special learning decks
-        return deck.name != "Uncategorized" && deck.name != "Learnt" && deck.name != "Learning" && deck.name != "Review"
+        // Prevent deletion of special decks
+        return deck.name != "Uncategorized" && deck.name != "Review"
     }
     
     func canRenameDeck(_ deck: Deck) -> Bool {
-        // Prevent renaming of special learning decks
-        return deck.name != "Uncategorized" && deck.name != "Learnt" && deck.name != "Learning" && deck.name != "Review"
+        // Prevent renaming of special decks
+        return deck.name != "Uncategorized" && deck.name != "Review"
     }
     
     func saveAllData() {
