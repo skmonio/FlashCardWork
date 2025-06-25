@@ -19,23 +19,15 @@ struct QuickStudyView: View {
     }
     
     var availableCards: [FlashCard] {
-        let shuffled = allCards.shuffled()
-        return Array(shuffled.prefix(selectedCardCount))
+        let total = allCards
+        guard !total.isEmpty else { return [] }
+        
+        // Simply return the user's selected number of cards randomly
+        return Array(total.shuffled().prefix(selectedCardCount))
     }
     
     var cardCountOptions: [Int] {
-        let total = allCards.count
-        if total <= 5 {
-            return [total]
-        } else if total <= 10 {
-            return [5, total]
-        } else if total <= 20 {
-            return [5, 10, total]
-        } else if total <= 50 {
-            return [5, 10, 20, total]
-        } else {
-            return [5, 10, 20, 50, total]
-        }
+        return [5, 10, 15, 20, 25, 30]
     }
     
     var hasSaveState: Bool {
@@ -60,18 +52,6 @@ struct QuickStudyView: View {
             
             // Card Count Selection
             VStack(spacing: 20) {
-                HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Cards to Study:")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                        Text("\(availableCards.count) of \(allCards.count)")
-                            .font(.title)
-                            .fontWeight(.bold)
-                    }
-                    Spacer()
-                }
-                
                 // Card Count Buttons
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 12) {
                     ForEach(cardCountOptions, id: \.self) { count in

@@ -23,6 +23,12 @@ struct WritingView: View {
     // Add speech service for pronunciation
     @StateObject private var speechService = DutchSpeechService.shared
     
+    // Add user profile manager for XP tracking
+    @StateObject private var userProfileManager = UserProfileManager.shared
+    
+    // Session XP tracking
+    @State private var sessionXP: Int = 0 // Track XP gained during current session
+    
     // Save state properties
     private var deckIds: [UUID]
     private var shouldLoadSaveState: Bool
@@ -140,11 +146,12 @@ struct WritingView: View {
             GameHeaderView(
                 currentIndex: currentIndex + 1,
                 totalCards: cards.count,
-                score: correctAnswers * 10, // Convert to scoring system like other games
+                score: userProfileManager.xp, // Use current XP instead of calculated score
                 combo: comboCount,
                 knownCount: nil,
                 unknownCount: nil,
-                skippedCount: nil
+                skippedCount: nil,
+                sessionXP: sessionXP
             )
             
             if let card = currentCard {
@@ -478,12 +485,20 @@ struct WritingView: View {
             HapticManager.shared.successNotification() // Haptic only
             SoundManager.shared.playTestCorrectSound() // Custom Correct.wav
             viewModel.setCardStatus(cardId: card.id, status: .known)
+            
+            // Add XP for correct answer
+            userProfileManager.addXP(15)
+            sessionXP += 15
         } else {
             comboCount = 0
             // Use custom sound for games (not study mode)
             HapticManager.shared.errorNotification() // Haptic only
             SoundManager.shared.playTestWrongSound() // Custom Wrong.wav
             viewModel.setCardStatus(cardId: card.id, status: .unknown)
+            
+            // Add XP for attempting (even if wrong)
+            userProfileManager.addXP(5)
+            sessionXP += 5
         }
         
         // Record learning statistics

@@ -11,9 +11,6 @@ struct HomeView: View {
     @State private var showingImageImportView = false
     @State private var showingCardsInfoView = false
     
-    // Welcome popup state
-    @State private var showingWelcome = false
-    
     // Settings manager for theme
     @StateObject private var settingsManager = SettingsManager.shared
     
@@ -51,13 +48,7 @@ struct HomeView: View {
                         
                         // What is Taal Trek button in top right
                         ToolbarItem(placement: .navigationBarTrailing) {
-                            if selectedTab == .home {
-                                Button("What is Taal Trek") {
-                                    showingWelcome = true
-                                }
-                                .font(.caption)
-                                .foregroundColor(.blue)
-                            } else if selectedTab == .cards {
+                            if selectedTab == .cards {
                                 Button("How to Add Cards") {
                                     showingCardsInfoView = true
                                 }
@@ -89,9 +80,6 @@ struct HomeView: View {
         .sheet(isPresented: $showingCardsInfoView) {
             CardsInfoView()
         }
-        .sheet(isPresented: $showingWelcome) {
-            WelcomeView(isPresented: $showingWelcome)
-        }
         .onAppear {
             // Reset navigation state when returning to home
             viewModel.resetNavigationToRoot()
@@ -101,7 +89,7 @@ struct HomeView: View {
             // Show welcome popup on first launch
             if isFirstLaunch() {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                    showingWelcome = true
+                    // Show WelcomeView from SettingsView now, or keep this for first launch only
                     markFirstLaunchComplete()
                 }
             }

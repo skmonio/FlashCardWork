@@ -40,8 +40,10 @@ struct TrueFalseView: View {
     // Session tracking for SRS
     @State private var currentSession: StudySession?
     @State private var sessionStartTime: Date = Date()
+    @State private var sessionXP: Int = 0 // Track XP gained during current session
     @StateObject private var statsManager = StatisticsManager.shared
     @StateObject private var srsManager = SRSManager.shared
+    @StateObject private var userProfileManager = UserProfileManager.shared
     
     // Add speech service for pronunciation
     @ObservedObject private var speechService = DutchSpeechService.shared
@@ -227,11 +229,12 @@ struct TrueFalseView: View {
                 GameHeaderView(
                     currentIndex: questionsAnswered + 1,
                     totalCards: max(remainingCards.count + questionsAnswered, 1),
-                    score: score * 10, // Convert to scoring system like other games
+                    score: userProfileManager.xp, // Use current XP instead of calculated score
                     combo: 0, // No combo system for True/False
                     knownCount: nil,
                     unknownCount: nil,
-                    skippedCount: nil
+                    skippedCount: nil,
+                    sessionXP: sessionXP
                 )
                 
                 Spacer()
@@ -495,6 +498,10 @@ struct TrueFalseView: View {
             gameScene.createSuccessParticles(at: centerPoint)
             gameScene.createFloatingScore(score: "+10", at: centerPoint, color: .systemGreen)
             
+            // Add XP for correct answer
+            userProfileManager.addXP(12)
+            sessionXP += 12
+            
             // Use custom sound for games (not study mode)
             HapticManager.shared.successNotification() // Haptic only
             SoundManager.shared.playTestCorrectSound() // Custom Correct.wav
@@ -509,6 +516,10 @@ struct TrueFalseView: View {
             // Show SpriteKit error effect instead of text
             let centerPoint = CGPoint(x: gameScene.size.width / 2, y: gameScene.size.height / 2)
             gameScene.createErrorEffect(at: centerPoint)
+            
+            // Add XP for attempting (even if wrong)
+            userProfileManager.addXP(5)
+            sessionXP += 5
             
             // Use custom sound for games (not study mode)
             HapticManager.shared.errorNotification() // Haptic only

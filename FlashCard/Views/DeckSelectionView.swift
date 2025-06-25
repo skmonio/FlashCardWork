@@ -60,7 +60,46 @@ struct DeckSelectionView: View {
                 uniqueCards.formUnion(deck.cards)
             }
         }
-        return Array(uniqueCards)
+        let total = Array(uniqueCards)
+        guard !total.isEmpty else { return [] }
+        
+        switch selectedStudyMode {
+        case .adaptive:
+            // For adaptive mode, filter to focus on struggling cards (lower learning percentage)
+            let strugglingCards = total.filter { card in
+                let percentage = card.learningPercentage ?? 0
+                return percentage < 70 || card.consecutiveIncorrect > 0
+            }
+            
+            // If we have enough struggling cards, use them. Otherwise, use all cards but prioritize struggling ones
+            if strugglingCards.count >= Int(Double(total.count) * 0.3) {
+                return Array(strugglingCards.prefix(Int(Double(total.count) * 0.3)))
+            } else {
+                // Sort by adaptive score and take top 30%
+                let sortedCards = SmartStudyManager.shared.sortCardsForStudyMode(total, mode: .adaptive)
+                return Array(sortedCards.prefix(Int(Double(total.count) * 0.3)))
+            }
+            
+        case .cram:
+            // For cram mode, use all cards
+            return total
+            
+        case .maintenance:
+            // For maintenance mode, only include cards that are learned but need maintenance (70-90% learning percentage)
+            let maintenanceCards = total.filter { card in
+                let percentage = card.learningPercentage ?? 0
+                return percentage >= 70 && percentage <= 90
+            }
+            
+            // If we have enough maintenance cards, use them. Otherwise, use all cards but prioritize maintenance ones
+            if maintenanceCards.count >= Int(Double(total.count) * 0.7) {
+                return Array(maintenanceCards.prefix(Int(Double(total.count) * 0.7)))
+            } else {
+                // Sort by maintenance score and take top 70%
+                let sortedCards = SmartStudyManager.shared.sortCardsForStudyMode(total, mode: .maintenance)
+                return Array(sortedCards.prefix(Int(Double(total.count) * 0.7)))
+            }
+        }
     }
     
     var hasSaveState: Bool {
@@ -92,9 +131,24 @@ struct DeckSelectionView: View {
                                 Text("Number of Cards:")
                                     .font(.subheadline)
                                     .foregroundColor(.secondary)
-                                Text("\(availableCards.count)")
+                                
+                                // Show filtered count vs total count
+                                let totalCards = selectedDeckIds.isEmpty ? 0 : viewModel.decks
+                                    .filter { selectedDeckIds.contains($0.id) }
+                                    .reduce(0) { $0 + $1.cards.count }
+                                
+                                Text("\(availableCards.count) of \(totalCards)")
                                     .font(.title)
                                     .fontWeight(.bold)
+                                
+                                // Add study mode info
+                                Text(selectedStudyMode.displayName)
+                                    .font(.caption)
+                                    .foregroundColor(selectedStudyMode.color)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 2)
+                                    .background(selectedStudyMode.color.opacity(0.1))
+                                    .cornerRadius(4)
                             }
                             Spacer()
                             Button(action: {
@@ -382,23 +436,41 @@ struct DeckPickerView: View {
     var body: some View {
         NavigationStack {
             List {
-                Section(header: Text("Select Decks")) {
+                // Select All / Cancel Selection Section
+                Section {
                     Button(action: {
-                        if !selectedDeckIds.isEmpty {
-                            selectedDeckIds.removeAll()
-                        } else {
-                            selectedDeckIds = Set(viewModel.getAllDecksHierarchical().map { $0.id })
-                        }
+                        // Select all decks
+                        selectedDeckIds = Set(viewModel.getAllDecksHierarchical().map { $0.id })
                     }) {
                         HStack {
-                            Text(selectedDeckIds.isEmpty ? "Select All Decks" : "Deselect All")
-                                .foregroundColor(.primary)
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundColor(.blue)
+                            Text("Select All Decks")
+                                .font(.body)
+                                .foregroundColor(.blue)
                             Spacer()
-                            Text("\(selectedDeckIds.count) selected")
-                                .foregroundColor(.secondary)
                         }
                     }
+                    .buttonStyle(PlainButtonStyle())
                     
+                    Button(action: {
+                        // Clear all deck selections
+                        selectedDeckIds.removeAll()
+                    }) {
+                        HStack {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(.red)
+                            Text("Cancel Selection")
+                                .font(.body)
+                                .foregroundColor(.red)
+                            Spacer()
+                        }
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                }
+                
+                // Deck List Section
+                Section(header: Text("Select Decks")) {
                     ForEach(viewModel.getAllDecksHierarchical()) { deck in
                         Button(action: {
                             if selectedDeckIds.contains(deck.id) {

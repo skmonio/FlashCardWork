@@ -23,6 +23,24 @@ class SettingsManager: ObservableObject {
         }
     }
     
+    @Published var isNotificationsEnabled: Bool {
+        didSet {
+            UserDefaults.standard.set(isNotificationsEnabled, forKey: "NotificationsEnabled")
+        }
+    }
+    
+    @Published var notificationTime: Date {
+        didSet {
+            UserDefaults.standard.set(notificationTime, forKey: "NotificationTime")
+        }
+    }
+    
+    @Published var notificationFrequency: NotificationFrequency {
+        didSet {
+            UserDefaults.standard.set(notificationFrequency.rawValue, forKey: "NotificationFrequency")
+        }
+    }
+    
     // MARK: - Theme Options
     enum AppTheme: String, CaseIterable {
         case system = "system"
@@ -46,6 +64,29 @@ class SettingsManager: ObservableObject {
         }
     }
     
+    // MARK: - Notification Frequency Options
+    enum NotificationFrequency: String, CaseIterable {
+        case daily = "daily"
+        case everyOtherDay = "everyOtherDay"
+        case weekly = "weekly"
+        
+        var displayName: String {
+            switch self {
+            case .daily: return "Daily"
+            case .everyOtherDay: return "Every Other Day"
+            case .weekly: return "Weekly"
+            }
+        }
+        
+        var description: String {
+            switch self {
+            case .daily: return "Get reminded every day"
+            case .everyOtherDay: return "Get reminded every other day"
+            case .weekly: return "Get reminded once a week"
+            }
+        }
+    }
+    
     // MARK: - Initialization
     private init() {
         // Load saved preferences or use defaults
@@ -55,7 +96,14 @@ class SettingsManager: ObservableObject {
         let themeRawValue = UserDefaults.standard.string(forKey: "SelectedTheme") ?? AppTheme.system.rawValue
         self.selectedTheme = AppTheme(rawValue: themeRawValue) ?? .system
         
-        print("🔧 SettingsManager initialized - Sound: \(isSoundEnabled), Haptics: \(isHapticsEnabled), Theme: \(selectedTheme.displayName)")
+        // Load notification settings
+        self.isNotificationsEnabled = UserDefaults.standard.object(forKey: "NotificationsEnabled") as? Bool ?? false
+        self.notificationTime = UserDefaults.standard.object(forKey: "NotificationTime") as? Date ?? Calendar.current.date(from: DateComponents(hour: 9, minute: 0)) ?? Date()
+        
+        let frequencyRawValue = UserDefaults.standard.string(forKey: "NotificationFrequency") ?? NotificationFrequency.daily.rawValue
+        self.notificationFrequency = NotificationFrequency(rawValue: frequencyRawValue) ?? .daily
+        
+        print("🔧 SettingsManager initialized - Sound: \(isSoundEnabled), Haptics: \(isHapticsEnabled), Theme: \(selectedTheme.displayName), Notifications: \(isNotificationsEnabled)")
     }
     
     // MARK: - Public Methods
@@ -65,6 +113,10 @@ class SettingsManager: ObservableObject {
         isSoundEnabled = true
         isHapticsEnabled = true
         selectedTheme = .system
+        isNotificationsEnabled = false
+        notificationTime = Calendar.current.date(from: DateComponents(hour: 9, minute: 0)) ?? Date()
+        notificationFrequency = .daily
+        
         print("🔧 Settings reset to defaults")
     }
     

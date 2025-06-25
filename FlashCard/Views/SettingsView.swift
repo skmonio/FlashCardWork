@@ -3,6 +3,7 @@ import SwiftUI
 struct SettingsView: View {
     @ObservedObject var viewModel: FlashCardViewModel
     @StateObject private var settingsManager = SettingsManager.shared
+    @StateObject private var notificationManager = NotificationManager.shared
     @Environment(\.dismiss) private var dismiss
     
     // State for data management features
@@ -17,6 +18,9 @@ struct SettingsView: View {
     
     // Control whether this is shown as a sheet or inline
     var isSheet: Bool = true
+    
+    // Add state for WelcomeView popup
+    @State private var showingWelcome = false
     
     var body: some View {
         Group {
@@ -89,10 +93,6 @@ struct SettingsView: View {
                     // Developer tools - 10x tap opens CloudKit settings
                     showingCloudKitSettings = true
                 }
-            } header: {
-                Text("Cloud Sync")
-            } footer: {
-                Text("Sync your flash cards across all your devices using iCloud.")
             }
             
             // Audio & Haptic Settings in one section
@@ -131,7 +131,115 @@ struct SettingsView: View {
                             }
                         }
                 }
+            }
+            
+            // Notification Settings Section
+            Section {
+                HStack {
+                    Image(systemName: "bell")
+                        .foregroundColor(.blue)
+                        .frame(width: 24)
+                    
+                    Text("Study Reminders")
+                    
+                    Spacer()
+                    
+                    Toggle("", isOn: $settingsManager.isNotificationsEnabled)
+                        .onChange(of: settingsManager.isNotificationsEnabled) { newValue in
+                            if newValue {
+                                // Request permission first, then schedule if granted
+                                notificationManager.requestNotificationPermission { granted in
+                                    if granted {
+                                        notificationManager.scheduleNotifications()
+                                    } else {
+                                        // If permission denied, turn off the toggle
+                                        DispatchQueue.main.async {
+                                            settingsManager.isNotificationsEnabled = false
+                                        }
+                                    }
+                                }
+                            } else {
+                                notificationManager.cancelAllNotifications()
+                            }
+                            HapticManager.shared.lightImpact()
+                        }
+                }
                 
+                if settingsManager.isNotificationsEnabled {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Image(systemName: "clock")
+                                .foregroundColor(.green)
+                                .frame(width: 24)
+                            
+                            Text("Reminder Time")
+                            
+                            Spacer()
+                            
+                            DatePicker("", selection: $settingsManager.notificationTime, displayedComponents: .hourAndMinute)
+                                .onChange(of: settingsManager.notificationTime) { _ in
+                                    notificationManager.scheduleNotifications()
+                                }
+                        }
+                        
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Image(systemName: "calendar")
+                                    .foregroundColor(.purple)
+                                    .frame(width: 24)
+                                
+                                Text("Frequency")
+                                
+                                Spacer()
+                            }
+                            
+                            // Frequency selection with buttons
+                            VStack(spacing: 8) {
+                                ForEach(SettingsManager.NotificationFrequency.allCases, id: \.self) { frequency in
+                                    Button(action: {
+                                        settingsManager.notificationFrequency = frequency
+                                        notificationManager.scheduleNotifications()
+                                        HapticManager.shared.lightImpact()
+                                    }) {
+                                        HStack {
+                                            VStack(alignment: .leading, spacing: 2) {
+                                                Text(frequency.displayName)
+                                                    .font(.body)
+                                                    .fontWeight(.medium)
+                                                Text(frequency.description)
+                                                    .font(.caption)
+                                                    .foregroundColor(.secondary)
+                                            }
+                                            
+                                            Spacer()
+                                            
+                                            if settingsManager.notificationFrequency == frequency {
+                                                Image(systemName: "checkmark.circle.fill")
+                                                    .foregroundColor(.blue)
+                                                    .font(.title3)
+                                            } else {
+                                                Image(systemName: "circle")
+                                                    .foregroundColor(.gray)
+                                                    .font(.title3)
+                                            }
+                                        }
+                                        .padding(.vertical, 8)
+                                        .padding(.horizontal, 12)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 8)
+                                                .fill(settingsManager.notificationFrequency == frequency ? Color.blue.opacity(0.1) : Color(.systemGray6))
+                                        )
+                                    }
+                                    .buttonStyle(PlainButtonStyle())
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Theme Settings Section
+            Section {
                 HStack {
                     Image(systemName: "paintbrush")
                         .foregroundColor(Color(red: 1.0, green: 0.4, blue: 0.3))
@@ -236,8 +344,27 @@ struct SettingsView: View {
                     }
                 }
             }
+            
+            // Add About/Help section at the bottom
+            Section {
+                Button(action: {
+                    showingWelcome = true
+                }) {
+                    HStack {
+                        Image(systemName: "questionmark.circle")
+                            .foregroundColor(.blue)
+                            .frame(width: 24)
+                        Text("What is Taal Trek?")
+                            .foregroundColor(.primary)
+                        Spacer()
+                    }
+                }
+            }
         }
         .listStyle(InsetGroupedListStyle())
+        .sheet(isPresented: $showingWelcome) {
+            WelcomeView(isPresented: $showingWelcome)
+        }
     }
     
     // MARK: - Duplicate Detection Methods

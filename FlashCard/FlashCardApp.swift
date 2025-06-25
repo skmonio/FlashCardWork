@@ -11,6 +11,7 @@ import SpriteKit
 @main
 struct FlashCardApp: App {
     @StateObject private var settingsManager = SettingsManager.shared
+    @StateObject private var notificationManager = NotificationManager.shared
     
     var body: some Scene {
         WindowGroup {
@@ -20,6 +21,9 @@ struct FlashCardApp: App {
                 .onAppear {
                     // Lock orientation to portrait
                     UIDevice.current.setValue(UIInterfaceOrientation.portrait.rawValue, forKey: "orientation")
+                    
+                    // Initialize notification manager and schedule notifications
+                    notificationManager.scheduleNotifications()
                 }
         }
     }

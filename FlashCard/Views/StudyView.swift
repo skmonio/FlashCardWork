@@ -35,9 +35,11 @@ struct StudyView: View {
     // Session tracking
     @State private var currentSession: StudySession?
     @State private var sessionStartTime: Date = Date()
+    @State private var sessionXP: Int = 0 // Track XP gained during current session
     
     @StateObject private var statsManager = StatisticsManager.shared
     @StateObject private var smartStudyManager = SmartStudyManager.shared
+    @StateObject private var userProfileManager = UserProfileManager.shared
     
     enum SwipeDirection {
         case none, left, right, up, down
@@ -269,14 +271,15 @@ struct StudyView: View {
                 GameHeaderView(
                     currentIndex: currentIndex + 1,
                     totalCards: cards.count,
-                    score: score,
+                    score: userProfileManager.xp,
                     combo: combo,
                     knownCount: nil,
                     unknownCount: nil,
                     skippedCount: nil,
                     studyMode: smartStudyManager.currentStudyMode,
                     currentRound: smartStudyManager.currentRound,
-                    totalRounds: smartStudyManager.totalRounds
+                    totalRounds: smartStudyManager.totalRounds,
+                    sessionXP: sessionXP
                 )
                 
                 Spacer()
@@ -352,7 +355,12 @@ struct StudyView: View {
         viewModel.updateCardWithSRSData(updatedCard)
         print("👆 About to record card shown...")
         viewModel.recordCardShown(cardId, isCorrect: true)
-        print("👆 Card shown recorded, about to move to next card...")
+        
+        // Add XP for knowing the card
+        userProfileManager.addXP(10)
+        sessionXP += 10
+        
+        print("👆 About to move to next card...")
         withAnimation(.easeOut(duration: 0.3)) {
             moveToNextCard()
         }
@@ -360,27 +368,32 @@ struct StudyView: View {
     }
     
     private func handleSwipeLeft() {
-        print("👈 SWIPE LEFT - Starting handler")
-        print("👈 Current state: index=\(currentIndex), card='\(cards[currentIndex].word)'")
-        HapticManager.shared.cardSwipeLeft() // Warning haptic for "I don't know this"
+        print("👆 SWIPE LEFT - Starting handler")
+        print("👆 Current state: index=\(currentIndex), card='\(cards[currentIndex].word)'")
+        HapticManager.shared.cardSwipeLeft() // Different haptic for "I don't know this"
         let cardId = cards[currentIndex].id
         unknownCards.insert(cardId)
         knownCards.remove(cardId)
         viewModel.setCardStatus(cardId: cardId, status: .unknown)
-        // SRS logic: process as 'dontKnow'
+        // SRS logic: process as 'don't know'
         let updatedCard = SRSManager.shared.processSimpleReviewWithStudyMode(
             for: cards[currentIndex], 
             simpleQuality: .dontKnow,
             mode: smartStudyManager.currentStudyMode
         )
         viewModel.updateCardWithSRSData(updatedCard)
-        print("👈 About to record card shown...")
+        print("👆 About to record card shown...")
         viewModel.recordCardShown(cardId, isCorrect: false)
-        print("👈 Card shown recorded, about to move to next card...")
+        
+        // Add XP for attempting the card (even if you don't know it)
+        userProfileManager.addXP(5)
+        sessionXP += 5
+        
+        print("👆 About to move to next card...")
         withAnimation(.easeOut(duration: 0.3)) {
             moveToNextCard()
         }
-        print("👈 SWIPE LEFT - Handler complete")
+        print("👆 SWIPE LEFT - Handler complete")
     }
     
     private func handleSwipeUp() {
@@ -472,6 +485,14 @@ struct StudyView: View {
                     skippedCards: skippedCards.count
                 )
                 currentSession = session
+                
+                // Add XP for completing the study session
+                let baseXP = 50
+                let performanceBonus = knownCards.count * 5 // 5 XP per known card
+                let totalXP = baseXP + performanceBonus
+                userProfileManager.addXP(totalXP)
+                
+                print("🎮 Study session complete! Earned \(totalXP) XP (Base: \(baseXP), Performance: \(performanceBonus))")
             }
             
             // Clear saved progress since session is complete

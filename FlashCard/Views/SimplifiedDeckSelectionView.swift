@@ -26,7 +26,46 @@ struct SimplifiedDeckSelectionView: View {
     }
     
     var availableCards: [FlashCard] {
-        return totalAvailableCards
+        let total = totalAvailableCards
+        guard !total.isEmpty else { return [] }
+        
+        switch selectedStudyMode {
+        case .adaptive:
+            // For adaptive mode, filter to focus on struggling cards (lower learning percentage)
+            let strugglingCards = total.filter { card in
+                let percentage = card.learningPercentage ?? 0
+                return percentage < 70 || card.consecutiveIncorrect > 0
+            }
+            
+            // If we have enough struggling cards, use them. Otherwise, use all cards but prioritize struggling ones
+            if strugglingCards.count >= Int(Double(total.count) * 0.3) {
+                return Array(strugglingCards.prefix(Int(Double(total.count) * 0.3)))
+            } else {
+                // Sort by adaptive score and take top 30%
+                let sortedCards = SmartStudyManager.shared.sortCardsForStudyMode(total, mode: .adaptive)
+                return Array(sortedCards.prefix(Int(Double(total.count) * 0.3)))
+            }
+            
+        case .cram:
+            // For cram mode, use all cards
+            return total
+            
+        case .maintenance:
+            // For maintenance mode, only include cards that are learned but need maintenance (70-90% learning percentage)
+            let maintenanceCards = total.filter { card in
+                let percentage = card.learningPercentage ?? 0
+                return percentage >= 70 && percentage <= 90
+            }
+            
+            // If we have enough maintenance cards, use them. Otherwise, use all cards but prioritize maintenance ones
+            if maintenanceCards.count >= Int(Double(total.count) * 0.7) {
+                return Array(maintenanceCards.prefix(Int(Double(total.count) * 0.7)))
+            } else {
+                // Sort by maintenance score and take top 70%
+                let sortedCards = SmartStudyManager.shared.sortCardsForStudyMode(total, mode: .maintenance)
+                return Array(sortedCards.prefix(Int(Double(total.count) * 0.7)))
+            }
+        }
     }
     
     var hasSaveState: Bool {
@@ -74,42 +113,6 @@ struct SimplifiedDeckSelectionView: View {
                             }
                             .padding()
                             .background(Color(.systemGray6))
-                            .cornerRadius(8)
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                        
-                        Button(action: {
-                            // Select all decks
-                            selectedDeckIds = Set(viewModel.decks.map { $0.id })
-                        }) {
-                            HStack {
-                                Image(systemName: "checkmark.circle.fill")
-                                    .foregroundColor(.blue)
-                                Text("Select All Decks")
-                                    .font(.body)
-                                    .foregroundColor(.blue)
-                                Spacer()
-                            }
-                            .padding()
-                            .background(Color.blue.opacity(0.1))
-                            .cornerRadius(8)
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                        
-                        Button(action: {
-                            // Clear all deck selections
-                            selectedDeckIds.removeAll()
-                        }) {
-                            HStack {
-                                Image(systemName: "xmark.circle.fill")
-                                    .foregroundColor(.red)
-                                Text("Cancel Selection")
-                                    .font(.body)
-                                    .foregroundColor(.red)
-                                Spacer()
-                            }
-                            .padding()
-                            .background(Color.red.opacity(0.1))
                             .cornerRadius(8)
                         }
                         .buttonStyle(PlainButtonStyle())
@@ -317,17 +320,7 @@ struct SimplifiedDeckSelectionView: View {
     // MARK: - Study Mode Helpers
     
     private func getCardCountForMode() -> Int {
-        let total = totalAvailableCards.count
-        guard total > 0 else { return 0 } // Return 0 if no cards available
-        
-        switch selectedStudyMode {
-        case .adaptive:
-            return max(1, Int(Double(total) * 0.3)) // ~30% of cards
-        case .cram:
-            return total // 100% of cards
-        case .maintenance:
-            return max(1, Int(Double(total) * 0.7)) // ~70% of cards
-        }
+        return availableCards.count
     }
     
     private func getModeDescription() -> String {
@@ -352,34 +345,70 @@ struct SimplifiedDeckPickerView: View {
     var body: some View {
         NavigationStack {
             List {
-                ForEach(viewModel.decks) { deck in
+                // Select All / Cancel Selection Section
+                Section {
                     Button(action: {
-                        if selectedDeckIds.contains(deck.id) {
-                            selectedDeckIds.remove(deck.id)
-                        } else {
-                            selectedDeckIds.insert(deck.id)
-                        }
+                        // Select all decks
+                        selectedDeckIds = Set(viewModel.decks.map { $0.id })
                     }) {
                         HStack {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(deck.name)
-                                    .font(.headline)
-                                    .foregroundColor(.primary)
-                                Text("\(deck.cards.count) cards")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundColor(.blue)
+                            Text("Select All Decks")
+                                .font(.body)
+                                .foregroundColor(.blue)
                             Spacer()
-                            if selectedDeckIds.contains(deck.id) {
-                                Image(systemName: "checkmark.circle.fill")
-                                    .foregroundColor(.blue)
-                            } else {
-                                Image(systemName: "circle")
-                                    .foregroundColor(.gray)
-                            }
                         }
                     }
                     .buttonStyle(PlainButtonStyle())
+                    
+                    Button(action: {
+                        // Clear all deck selections
+                        selectedDeckIds.removeAll()
+                    }) {
+                        HStack {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(.red)
+                            Text("Cancel Selection")
+                                .font(.body)
+                                .foregroundColor(.red)
+                            Spacer()
+                        }
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                }
+                
+                // Deck List Section
+                Section {
+                    ForEach(viewModel.decks) { deck in
+                        Button(action: {
+                            if selectedDeckIds.contains(deck.id) {
+                                selectedDeckIds.remove(deck.id)
+                            } else {
+                                selectedDeckIds.insert(deck.id)
+                            }
+                        }) {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(deck.name)
+                                        .font(.headline)
+                                        .foregroundColor(.primary)
+                                    Text("\(deck.cards.count) cards")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                                Spacer()
+                                if selectedDeckIds.contains(deck.id) {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundColor(.blue)
+                                } else {
+                                    Image(systemName: "circle")
+                                        .foregroundColor(.gray)
+                                }
+                            }
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                    }
                 }
             }
             .navigationTitle("Select Decks")

@@ -180,20 +180,27 @@ struct AudioControlView: View {
     private func startRecording() {
         guard let audioManager = audioManager else { return }
         
-        if audioManager.hasPermission {
-            // Update UI immediately
-            localIsRecording = true
-            localRecordingTime = 0
-            
-            // Start the recording timer
-            recordingTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
-                localRecordingTime += 0.1
+        // Always try to start recording - AudioManager will handle permission request
+        // Update UI immediately
+        localIsRecording = true
+        localRecordingTime = 0
+        
+        // Start the recording timer
+        recordingTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
+            localRecordingTime += 0.1
+        }
+        
+        // Start actual recording (AudioManager will request permission if needed)
+        audioManager.startRecording(for: cardId) { success in
+            if !success {
+                // Recording failed (likely due to permission denial)
+                DispatchQueue.main.async {
+                    self.localIsRecording = false
+                    self.recordingTimer?.invalidate()
+                    self.recordingTimer = nil
+                    self.showingPermissionAlert = true
+                }
             }
-            
-            // Start actual recording
-            audioManager.startRecording(for: cardId)
-        } else {
-            showingPermissionAlert = true
         }
     }
     

@@ -40,6 +40,12 @@ struct GameView: View {
     private var deckIds: [UUID]
     private var shouldLoadSaveState: Bool
     
+    // Add user profile manager for XP tracking
+    @StateObject private var userProfileManager = UserProfileManager.shared
+    
+    // Session XP tracking
+    @State private var sessionXP: Int = 0 // Track XP gained during current session
+    
     // Computed property to check if there's significant progress to save
     private var hasSignificantProgress: Bool {
         return moves > 0 || score > 0
@@ -272,11 +278,12 @@ struct GameView: View {
                 GameHeaderView(
                     currentIndex: score + 1,
                     totalCards: cards.count,
-                    score: score * 10, // Convert to scoring system like other games
+                    score: userProfileManager.xp, // Use current XP instead of calculated score
                     combo: 0, // No combo system for Memory Game
                     knownCount: nil,
                     unknownCount: nil,
-                    skippedCount: nil
+                    skippedCount: nil,
+                    sessionXP: sessionXP
                 )
                 
                 // Game grid with proper safe area handling
@@ -406,6 +413,10 @@ struct GameView: View {
                 HapticManager.shared.cardMatch() // Strong haptic for successful match
                 score += 1
                 consecutiveMatches += 1
+                
+                // Add XP for successful match
+                userProfileManager.addXP(10)
+                sessionXP += 10
                 
                 // Create success particle effect at the center of the screen
                 let screenCenter = CGPoint(x: gameScene.size.width / 2, y: gameScene.size.height / 2)

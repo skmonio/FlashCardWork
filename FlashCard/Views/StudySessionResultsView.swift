@@ -9,7 +9,10 @@ struct StudySessionResultsView: View {
     let onDone: () -> Void
     
     @StateObject private var statsManager = StatisticsManager.shared
-    @State private var showingDetailedStats = false
+    @StateObject private var userProfile = UserProfileManager.shared
+    @State private var xpGained: Int = 0
+    @State private var showingXPAnimation = false
+    @State private var animatedProgress: Double = 0
     
     var body: some View {
         ScrollView {
@@ -31,16 +34,59 @@ struct StudySessionResultsView: View {
                         .multilineTextAlignment(.center)
                 }
                 
+                // XP Gain Section
+                VStack(spacing: 16) {
+                    VStack(spacing: 12) {
+                        // Centered XP Earned
+                        VStack(spacing: 8) {
+                            HStack {
+                                Image(systemName: "star.fill")
+                                    .foregroundColor(.yellow)
+                                    .font(.title2)
+                                Text("\(xpGained) XP")
+                                    .font(.title2)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.blue)
+                            }
+                        }
+                        
+                        // XP Progress Bar
+                        VStack(spacing: 8) {
+                            HStack {
+                                Text("Level \(userProfile.level)")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                Spacer()
+                                Text("Level \(userProfile.level + 1)")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            ProgressView(value: animatedProgress)
+                                .accentColor(.blue)
+                                .frame(height: 8)
+                                .scaleEffect(x: 1, y: 2, anchor: .center)
+                                .animation(.easeInOut(duration: 1.0), value: animatedProgress)
+                            
+                            HStack {
+                                Text("\(userProfile.xp) XP")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                Spacer()
+                                Text("\(userProfile.xpForLevel(userProfile.level + 1)) XP")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        .padding()
+                        .background(Color(.secondarySystemGroupedBackground))
+                        .cornerRadius(12)
+                    }
+                }
+                .padding(.horizontal)
+                
                 // Session Summary Card
                 SessionSummaryCard(session: session)
-                
-                // Quick Stats Grid
-                QuickStatsGrid(session: session, statsManager: statsManager)
-                
-                // Streak Information
-                if statsManager.currentStreak > 0 {
-                    StreakCard(statsManager: statsManager)
-                }
                 
                 // Action Buttons
                 ActionButtonsView(
@@ -50,26 +96,48 @@ struct StudySessionResultsView: View {
                     onDone: onDone
                 )
                 
-                // Detailed Stats Button
-                Button(action: {
-                    showingDetailedStats = true
-                }) {
-                    HStack {
-                        Image(systemName: "chart.bar.fill")
-                        Text("View Detailed Analytics")
-                    }
-                    .font(.headline)
-                    .foregroundColor(.blue)
-                    .padding()
-                    .frame(maxWidth: .infinity)
-                    .background(Color.blue.opacity(0.1))
-                    .cornerRadius(12)
-                }
+                Spacer(minLength: 20)
             }
-            .padding()
+            .padding(.vertical)
         }
-        .sheet(isPresented: $showingDetailedStats) {
-            DetailedAnalyticsView(viewModel: viewModel)
+        .onAppear {
+            calculateXPGained()
+            animateXPGain()
+            awardXP()
+            animateProgressBar()
+        }
+    }
+    
+    private func calculateXPGained() {
+        // Calculate XP based on session performance
+        let baseXP = 50
+        let performanceBonus = session.knownCards * 5 // 5 XP per known card
+        xpGained = baseXP + performanceBonus
+    }
+    
+    private func animateXPGain() {
+        // Animate the XP gain display
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            withAnimation(.easeInOut(duration: 1.0)) {
+                showingXPAnimation = true
+            }
+        }
+    }
+    
+    private func awardXP() {
+        // Award XP to the user based on session performance
+        userProfile.addXP(xpGained)
+    }
+    
+    private func animateProgressBar() {
+        // Start with 0 progress
+        animatedProgress = 0
+        
+        // Animate to the final progress value after a short delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+            withAnimation(.easeInOut(duration: 1.5)) {
+                animatedProgress = userProfile.progressToNextLevel
+            }
         }
     }
 }
@@ -176,22 +244,6 @@ struct QuickStatsGrid: View {
             GridItem(.flexible()),
             GridItem(.flexible())
         ], spacing: 12) {
-            QuickStatCard(
-                icon: "calendar",
-                title: "This Week",
-                value: "\(weeklyStats.totalSessions)",
-                subtitle: "sessions",
-                color: .blue
-            )
-            
-            QuickStatCard(
-                icon: "clock",
-                title: "Study Time",
-                value: weeklyStats.formattedTotalTime,
-                subtitle: "this week",
-                color: .orange
-            )
-            
             QuickStatCard(
                 icon: "target",
                 title: "Accuracy",

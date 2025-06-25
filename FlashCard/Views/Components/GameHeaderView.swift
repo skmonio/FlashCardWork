@@ -13,8 +13,11 @@ struct GameHeaderView: View {
     let studyMode: StudyMode?
     let currentRound: Int?
     let totalRounds: Int?
+    let sessionXP: Int // XP gained during current session
     
-    init(currentIndex: Int, totalCards: Int, score: Int, combo: Int, knownCount: Int? = nil, unknownCount: Int? = nil, skippedCount: Int? = nil, onAudioTapped: (() -> Void)? = nil, isAudioPlaying: Bool = false, studyMode: StudyMode? = nil, currentRound: Int? = nil, totalRounds: Int? = nil) {
+    @StateObject private var userProfile = UserProfileManager.shared
+    
+    init(currentIndex: Int, totalCards: Int, score: Int, combo: Int, knownCount: Int? = nil, unknownCount: Int? = nil, skippedCount: Int? = nil, onAudioTapped: (() -> Void)? = nil, isAudioPlaying: Bool = false, studyMode: StudyMode? = nil, currentRound: Int? = nil, totalRounds: Int? = nil, sessionXP: Int) {
         self.currentIndex = currentIndex
         self.totalCards = totalCards
         self.score = score
@@ -27,6 +30,7 @@ struct GameHeaderView: View {
         self.studyMode = studyMode
         self.currentRound = currentRound
         self.totalRounds = totalRounds
+        self.sessionXP = sessionXP
     }
     
     // Computed properties
@@ -53,38 +57,15 @@ struct GameHeaderView: View {
                     
                     Spacer()
                     
-                    // Study mode indicator
-                    if let studyMode = studyMode {
-                        HStack(spacing: 6) {
-                            Image(systemName: studyMode.icon)
-                                .foregroundColor(studyMode.color)
-                                .font(.system(size: 14))
-                            Text(studyMode.displayName)
-                                .font(.caption)
-                                .fontWeight(.medium)
-                                .foregroundColor(studyMode.color)
-                            
-                            // Round indicator for cram mode
-                            if studyMode == .cram, let currentRound = currentRound, let totalRounds = totalRounds {
-                                Text("• Round \(currentRound)/\(totalRounds)")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(studyMode.color.opacity(0.1))
-                        )
+                    HStack(spacing: 4) {
+                        Image(systemName: "star.fill")
+                            .foregroundColor(.yellow)
+                            .font(.system(size: 14))
+                        Text("+\(sessionXP) XP")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundColor(.primary)
                     }
-                    
-                    Spacer()
-                    
-                    Text("Score: \(score)")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .foregroundColor(.primary)
                 }
                 
                 // Progress bar
@@ -215,7 +196,8 @@ struct GameHeaderView_Previews: PreviewProvider {
                 isAudioPlaying: false,
                 studyMode: nil,
                 currentRound: nil,
-                totalRounds: nil
+                totalRounds: nil,
+                sessionXP: 0
             )
             
             Spacer()

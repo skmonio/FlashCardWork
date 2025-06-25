@@ -79,6 +79,28 @@ class AudioManager: NSObject, ObservableObject {
     
     // MARK: - Setup and Permissions
     
+    /// Request microphone permission - only called when user actually tries to record
+    func requestMicrophonePermission(completion: @escaping (Bool) -> Void = { _ in }) {
+        guard !isSimulator else {
+            // In simulator, assume permission is granted
+            hasPermission = true
+            completion(true)
+            return
+        }
+        
+        recordingSession.requestRecordPermission { [weak self] allowed in
+            DispatchQueue.main.async {
+                self?.hasPermission = allowed
+                if allowed {
+                    print("AudioManager: Recording permission granted")
+                } else {
+                    print("AudioManager: Recording permission denied")
+                }
+                completion(allowed)
+            }
+        }
+    }
+    
     private func setupRecordingSession() throws {
         do {
             recordingSession = AVAudioSession.sharedInstance()
@@ -89,16 +111,9 @@ class AudioManager: NSObject, ObservableObject {
             // Don't activate the session immediately - wait until we need to record
             print("AudioManager: Audio session category configured")
             
-            recordingSession.requestRecordPermission { [weak self] allowed in
-                DispatchQueue.main.async {
-                    self?.hasPermission = allowed
-                    if allowed {
-                        print("AudioManager: Recording permission granted")
-                    } else {
-                        print("AudioManager: Recording permission denied")
-                    }
-                }
-            }
+            // Don't request permission here - wait until user actually tries to record
+            // This prevents the permission popup from appearing when just viewing cards
+            
         } catch let error as NSError {
             print("AudioManager: Failed to set up recording session: \(error)")
             print("AudioManager: Error domain: \(error.domain), code: \(error.code)")
@@ -136,13 +151,8 @@ class AudioManager: NSObject, ObservableObject {
             return false
         }
         
-        do {
-            let url = getAudioURL(for: cardId)
-            return FileManager.default.fileExists(atPath: url.path)
-        } catch {
-            print("AudioManager: Error checking if audio exists: \(error)")
-            return false
-        }
+        let url = getAudioURL(for: cardId)
+        return FileManager.default.fileExists(atPath: url.path)
     }
     
     func deleteAudio(for cardId: UUID) {
@@ -163,11 +173,6 @@ class AudioManager: NSObject, ObservableObject {
             return false
         }
         
-        guard hasPermission else {
-            print("AudioManager: No recording permission")
-            return false
-        }
-        
         guard !isRecording else {
             print("AudioManager: Already recording")
             return false
@@ -184,14 +189,29 @@ class AudioManager: NSObject, ObservableObject {
     
     // MARK: - Recording
     
-    func startRecording(for cardId: UUID) {
+    func startRecording(for cardId: UUID, completion: @escaping (Bool) -> Void = { _ in }) {
         guard !isDisabled else {
             print("AudioManager: Disabled - cannot start recording")
+            completion(false)
             return
         }
         
         // Check if recording is possible
         guard canRecord() else {
+            // If we don't have permission, request it first
+            if !hasPermission {
+                requestMicrophonePermission { [weak self] granted in
+                    if granted {
+                        // Permission granted, try recording again
+                        self?.startRecording(for: cardId, completion: completion)
+                    } else {
+                        print("AudioManager: Permission denied - cannot record")
+                        completion(false)
+                    }
+                }
+            } else {
+                completion(false)
+            }
             return
         }
         
@@ -199,16 +219,17 @@ class AudioManager: NSObject, ObservableObject {
         if isSimulator {
             print("AudioManager: Cannot record in simulator - creating dummy audio file")
             createDummyAudioFile(for: cardId)
+            completion(true)
             return
         }
         
         // Ensure we're on main thread for audio session operations
         DispatchQueue.main.async { [weak self] in
-            self?.performRecording(for: cardId)
+            self?.performRecording(for: cardId, completion: completion)
         }
     }
     
-    private func performRecording(for cardId: UUID) {
+    private func performRecording(for cardId: UUID, completion: @escaping (Bool) -> Void = { _ in }) {
         do {
             // Ensure audio session is properly configured
             let session = AVAudioSession.sharedInstance()
@@ -243,6 +264,7 @@ class AudioManager: NSObject, ObservableObject {
             
             guard let recorder = audioRecorder else {
                 print("AudioManager: Failed to create audio recorder")
+                completion(false)
                 return
             }
             
@@ -250,6 +272,7 @@ class AudioManager: NSObject, ObservableObject {
             guard recorder.prepareToRecord() else {
                 print("AudioManager: Failed to prepare recorder")
                 audioRecorder = nil
+                completion(false)
                 return
             }
             
@@ -257,6 +280,7 @@ class AudioManager: NSObject, ObservableObject {
             guard recorder.record() else {
                 print("AudioManager: Failed to start recording")
                 audioRecorder = nil
+                completion(false)
                 return
             }
             
@@ -274,6 +298,7 @@ class AudioManager: NSObject, ObservableObject {
             
             HapticManager.shared.lightImpact()
             print("AudioManager: Recording started successfully")
+            completion(true)
             
         } catch {
             print("AudioManager: Could not start recording: \(error)")
@@ -285,6 +310,7 @@ class AudioManager: NSObject, ObservableObject {
             DispatchQueue.main.async {
                 // You could show an alert here if needed
                 print("AudioManager: Recording failed - please try again")
+                completion(false)
             }
         }
     }

@@ -29,8 +29,10 @@ struct TestView: View {
     // Session tracking for SRS
     @State private var currentSession: StudySession?
     @State private var sessionStartTime: Date = Date()
+    @State private var sessionXP: Int = 0 // Track XP gained during current session
     @StateObject private var statsManager = StatisticsManager.shared
     @StateObject private var srsManager = SRSManager.shared
+    @StateObject private var userProfileManager = UserProfileManager.shared
     
     // Computed property to check if there's significant progress to save
     private var hasSignificantProgress: Bool {
@@ -107,6 +109,10 @@ struct TestView: View {
                 HapticManager.shared.testCorrectHaptic() // Haptic only, no system sound
                 SoundManager.shared.playTestCorrectSound() // Play custom correct sound
                 
+                // Add XP for correct answer
+                userProfileManager.addXP(15)
+                sessionXP += 15
+                
                 // Apply SRS logic for correct answer
                 let updatedCard = srsManager.processSimpleReview(for: currentCard, simpleQuality: .know)
                 viewModel.updateCardWithSRSData(updatedCard)
@@ -114,6 +120,10 @@ struct TestView: View {
                 incorrectCards.insert(currentCard.id)
                 HapticManager.shared.testWrongHaptic() // Haptic only, no system sound
                 SoundManager.shared.playTestWrongSound() // Play custom wrong sound
+                
+                // Add XP for attempting (even if wrong)
+                userProfileManager.addXP(5)
+                sessionXP += 5
                 
                 // Apply SRS logic for incorrect answer
                 let updatedCard = srsManager.processSimpleReview(for: currentCard, simpleQuality: .dontKnow)
@@ -161,6 +171,14 @@ struct TestView: View {
                     skippedCards: 0
                 )
                 currentSession = session
+                
+                // Add XP for completing the test session
+                let baseXP = 50
+                let performanceBonus = correctAnswers * 10 // 10 XP per correct answer
+                let totalXP = baseXP + performanceBonus
+                userProfileManager.addXP(totalXP)
+                
+                print("🎮 Test session complete! Earned \(totalXP) XP (Base: \(baseXP), Performance: \(performanceBonus))")
             }
             
             // Clear saved progress since test is complete
@@ -280,11 +298,12 @@ struct TestView: View {
             GameHeaderView(
                 currentIndex: currentIndex + 1,
                 totalCards: cards.count,
-                score: correctAnswers * 10, // Convert to scoring system like other games
+                score: userProfileManager.xp, // Use current XP instead of calculated score
                 combo: 0, // No combo for test mode
                 knownCount: nil,
                 unknownCount: nil,
-                skippedCount: nil
+                skippedCount: nil,
+                sessionXP: sessionXP
             )
             
             Spacer()

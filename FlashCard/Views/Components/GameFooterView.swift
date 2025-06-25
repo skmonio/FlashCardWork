@@ -25,19 +25,21 @@ struct GameFooterView: View {
             
             Spacer()
             
-            // Close button (center)
-            Button(action: {
-                if hasSignificantProgress && !showingResults {
-                    showingCloseConfirmation = true
-                } else {
-                    onClose()
+            // Close button (center) - only show when not on results screen
+            if !showingResults {
+                Button(action: {
+                    if hasSignificantProgress && !showingResults {
+                        showingCloseConfirmation = true
+                    } else {
+                        onClose()
+                    }
+                }) {
+                    Image(systemName: "xmark")
+                        .font(.title2)
+                        .foregroundColor(.secondary)
+                        .padding(12)
+                        .background(Circle().fill(Color(.systemGray5)))
                 }
-            }) {
-                Image(systemName: "xmark")
-                    .font(.title2)
-                    .foregroundColor(.secondary)
-                    .padding(12)
-                    .background(Circle().fill(Color(.systemGray5)))
             }
             
             Spacer()

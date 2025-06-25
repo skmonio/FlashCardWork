@@ -6,9 +6,6 @@ struct MainNavigationView: View {
     @StateObject private var navigationCoordinator = NavigationCoordinator.shared
     @StateObject private var settingsManager = SettingsManager.shared
     
-    // Welcome popup state
-    @State private var showingWelcome = false
-    
     var body: some View {
         NavigationStack(path: $navigationCoordinator.navigationPath) {
             VStack(spacing: 0) {
@@ -17,6 +14,18 @@ struct MainNavigationView: View {
                     .navigationTitle(navigationTitle)
                     .navigationBarTitleDisplayMode(.large)
                     .toolbar {
+                        // User icon in top left
+                        ToolbarItem(placement: .navigationBarLeading) {
+                            if navigationCoordinator.currentTab == .home {
+                                Button(action: {
+                                    navigationCoordinator.presentSheet(.userProfile)
+                                }) {
+                                    Image(systemName: "person.crop.circle")
+                                        .font(.title2)
+                                        .foregroundColor(.blue)
+                                }
+                            }
+                        }
                         // Custom title for home screen
                         ToolbarItem(placement: .principal) {
                             if navigationCoordinator.currentTab == .home {
@@ -35,13 +44,7 @@ struct MainNavigationView: View {
                         
                         // What is Taal Trek button in top right
                         ToolbarItem(placement: .navigationBarTrailing) {
-                            if navigationCoordinator.currentTab == .home {
-                                Button("What is Taal Trek") {
-                                    showingWelcome = true
-                                }
-                                .font(.caption)
-                                .foregroundColor(.blue)
-                            } else if navigationCoordinator.currentTab == .cards {
+                            if navigationCoordinator.currentTab == .cards {
                                 Button("How to Add Cards") {
                                     navigationCoordinator.presentSheet(.cardsInfo)
                                 }
@@ -74,9 +77,6 @@ struct MainNavigationView: View {
         .sheet(item: $navigationCoordinator.presentedSheet) { sheet in
             sheetView(for: sheet)
         }
-        .sheet(isPresented: $showingWelcome) {
-            WelcomeView(isPresented: $showingWelcome)
-        }
         .alert(item: $navigationCoordinator.showingAlert) { alert in
             alertView(for: alert)
         }
@@ -89,7 +89,6 @@ struct MainNavigationView: View {
             // Show welcome popup on first launch
             if isFirstLaunch() {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                    showingWelcome = true
                     markFirstLaunchComplete()
                 }
             }
@@ -100,8 +99,8 @@ struct MainNavigationView: View {
     private var navigationTitle: String {
         switch navigationCoordinator.currentTab {
         case .home: return ""
-        case .cards: return "Cards"
-        case .settings: return "Settings"
+        case .cards: return ""
+        case .settings: return ""
         }
     }
     
@@ -211,6 +210,8 @@ struct MainNavigationView: View {
             CardsInfoView()
         case .dutchGrammarInfo:
             DutchGrammarInfoView()
+        case .userProfile:
+            UserProfileView()
         }
     }
     

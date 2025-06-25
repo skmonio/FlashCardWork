@@ -327,7 +327,7 @@ struct AddCardView: View {
             AudioManager.shared.stopRecording()
             AudioManager.shared.stopPlayback()
         }
-        .alert("Validation Error", isPresented: $showingValidationAlert) {
+        .alert("Word Found", isPresented: $showingValidationAlert) {
             Button("OK") { }
         } message: {
             Text(validationMessage)
@@ -366,9 +366,9 @@ struct AddCardView: View {
             saveCardWithoutDuplicateCheck(shouldResetForm: shouldResetForm)
             
         case .exactMatch:
-            // Show alert for exact match
+            // Show positive confirmation for exact match
             showingValidationAlert = true
-            validationMessage = "The word \"\(trimmedWord)\" already exists with identical information."
+            validationMessage = "✅ Great! The word \"\(trimmedWord)\" already exists in your collection with identical information."
             
         case .partialMatch:
             // Show resolution view for partial match

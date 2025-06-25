@@ -20,6 +20,8 @@ struct DutchGrammarRulesView: View {
     @State private var questionAnswers: [Int: Int] = [:] // Track answers for each question index
     @State private var questionScores: [Int: Bool] = [:] // Track if each question was answered correctly
     @State private var showingLeaveConfirmation = false
+    @State private var shuffledOptions: [[String]] = [] // Store shuffled options for each exercise
+    @State private var correctAnswerMapping: [Int: Int] = [:] // Map original correct answer to shuffled position
     
     private let grammarDB = DutchGrammarRulesDatabase.shared
     
@@ -222,7 +224,11 @@ struct DutchGrammarRulesView: View {
                     
                     Button("Exercises") {
                         if let rule = selectedRule {
-                            shuffledExercises = rule.exercises.shuffled()
+                            // Shuffle both the exercises and their options
+                            let (shuffledEx, shuffledOpts, answerMapping) = shuffleExerciseOptions(rule.exercises.shuffled())
+                            shuffledExercises = shuffledEx
+                            shuffledOptions = shuffledOpts
+                            correctAnswerMapping = answerMapping
                         }
                         showingExercises = true
                         currentExerciseIndex = 0
@@ -749,25 +755,63 @@ struct DutchGrammarRulesView: View {
         }
     }
     
-    // MARK: - Persistence Methods
-    
-    private func saveCompletedExercises() {
-        UserDefaults.standard.set(Array(completedExercises), forKey: completedExercisesKey)
-    }
-    
-    private func saveExerciseScores() {
-        UserDefaults.standard.set(exerciseScores, forKey: exerciseScoresKey)
+    private func shuffleExerciseOptions(_ exercises: [GrammarExercise]) -> ([GrammarExercise], [[String]], [Int: Int]) {
+        var shuffledExercises: [GrammarExercise] = []
+        var shuffledOptionsArray: [[String]] = []
+        var correctAnswerMapping: [Int: Int] = [:]
+        
+        for (exerciseIndex, exercise) in exercises.enumerated() {
+            // Create pairs of (option, originalIndex) for shuffling
+            let optionPairs = exercise.options.enumerated().map { ($0.element, $0.offset) }
+            let shuffledPairs = optionPairs.shuffled()
+            
+            // Extract shuffled options
+            let shuffledOptions = shuffledPairs.map { $0.0 }
+            shuffledOptionsArray.append(shuffledOptions)
+            
+            // Find the new position of the correct answer
+            let correctAnswerText = exercise.options[exercise.correctAnswer]
+            let newCorrectAnswerIndex = shuffledOptions.firstIndex(of: correctAnswerText) ?? 0
+            correctAnswerMapping[exerciseIndex] = newCorrectAnswerIndex
+            
+            // Create new exercise with shuffled options
+            let shuffledExercise = GrammarExercise(
+                question: exercise.question,
+                options: shuffledOptions,
+                correctAnswer: newCorrectAnswerIndex,
+                explanation: exercise.explanation,
+                hint: exercise.hint,
+                exerciseType: exercise.exerciseType
+            )
+            shuffledExercises.append(shuffledExercise)
+        }
+        
+        return (shuffledExercises, shuffledOptionsArray, correctAnswerMapping)
     }
     
     private func loadCompletedExercises() {
-        if let savedCompletedExercises = UserDefaults.standard.array(forKey: completedExercisesKey) as? [String] {
-            completedExercises = Set(savedCompletedExercises)
+        if let data = UserDefaults.standard.data(forKey: completedExercisesKey),
+           let completed = try? JSONDecoder().decode(Set<String>.self, from: data) {
+            completedExercises = completed
+        }
+    }
+    
+    private func saveCompletedExercises() {
+        if let data = try? JSONEncoder().encode(completedExercises) {
+            UserDefaults.standard.set(data, forKey: completedExercisesKey)
         }
     }
     
     private func loadExerciseScores() {
-        if let savedExerciseScores = UserDefaults.standard.object(forKey: exerciseScoresKey) as? [String: Int] {
-            exerciseScores = savedExerciseScores
+        if let data = UserDefaults.standard.data(forKey: exerciseScoresKey),
+           let scores = try? JSONDecoder().decode([String: Int].self, from: data) {
+            exerciseScores = scores
+        }
+    }
+    
+    private func saveExerciseScores() {
+        if let data = try? JSONEncoder().encode(exerciseScores) {
+            UserDefaults.standard.set(data, forKey: exerciseScoresKey)
         }
     }
 }
