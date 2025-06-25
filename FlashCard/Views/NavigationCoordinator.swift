@@ -149,6 +149,7 @@ enum NavigationDestination: Hashable {
     case wordScrambleView([FlashCard], [UUID])
     case dutchVocabulary
     case dutchGrammar
+    case card3DShowcase
 }
 
 // MARK: - Simplified Navigation Extensions

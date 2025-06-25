@@ -172,6 +172,8 @@ struct MainNavigationView: View {
             NavigationView {
                 DutchGrammarRulesView()
             }
+        case .card3DShowcase:
+            Card3DShowcaseView()
         }
     }
     
@@ -352,6 +354,14 @@ struct HomeContentView: View {
                         color: Color(red: 1.0, green: 0.4, blue: 0.3)
                     ) {
                         navigationCoordinator.push(NavigationDestination.deckSelection(.wordScramble))
+                    }
+                    
+                    NavigationButton(
+                        title: "3D Card Experiments",
+                        icon: "cube.fill",
+                        color: .purple
+                    ) {
+                        navigationCoordinator.push(NavigationDestination.card3DShowcase)
                     }
                 }
             }
