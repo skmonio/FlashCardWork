@@ -1,13 +1,47 @@
 import SwiftUI
+import CloudKit
 
 struct CloudKitSettingsView: View {
     @ObservedObject var viewModel: FlashCardViewModel
     @ObservedObject var cloudKitManager = CloudKitManager.shared
     @Environment(\.dismiss) private var dismiss
+    @State private var syncStatus = "Unknown"
+    @State private var lastSyncTime = "Never"
+    @State private var isCheckingStatus = false
     
     var body: some View {
         NavigationView {
-            List {
+            Form {
+                // MARK: - Current Status Section
+                Section(header: Text("Current Sync Status")) {
+                    HStack {
+                        Text("Status:")
+                        Spacer()
+                        if isCheckingStatus {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                        } else {
+                            Text(syncStatus)
+                                .foregroundColor(syncStatus.contains("✅") ? .green : 
+                                               syncStatus.contains("❌") ? .red : .orange)
+                        }
+                    }
+                    
+                    HStack {
+                        Text("Last Sync:")
+                        Spacer()
+                        Text(lastSyncTime)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    Button("Refresh Status") {
+                        Task {
+                            await refreshSyncStatus()
+                        }
+                    }
+                    .foregroundColor(.blue)
+                }
+                
                 Section {
                     // Sync Status
                     HStack {
@@ -69,6 +103,97 @@ struct CloudKitSettingsView: View {
                         }
                         .disabled(!viewModel.isCloudSyncEnabled || syncInProgress)
                         
+                        // Add diagnostic button
+                        Button(action: {
+                            Task {
+                                let diagnosis = await viewModel.diagnoseSyncIssue()
+                                print("🔍 SYNC DIAGNOSIS:\n\(diagnosis)")
+                            }
+                        }) {
+                            HStack {
+                                Image(systemName: "stethoscope")
+                                Text("Diagnose Sync Issue")
+                            }
+                        }
+                        .disabled(syncInProgress)
+                        
+                        // Add force upload button
+                        Button(action: {
+                            Task {
+                                let result = await viewModel.forceUploadAllData()
+                                print("🔄 FORCE UPLOAD RESULT: \(result.success ? "SUCCESS" : "FAILED")")
+                                print("📝 MESSAGE: \(result.message)")
+                            }
+                        }) {
+                            HStack {
+                                Image(systemName: "arrow.up.circle.fill")
+                                Text("Force Upload Local Data")
+                            }
+                        }
+                        .disabled(!viewModel.isCloudSyncEnabled || syncInProgress)
+                        
+                        // Add reset sync button
+                        Button(action: {
+                            viewModel.resetCloudKitSync()
+                        }) {
+                            HStack {
+                                Image(systemName: "arrow.clockwise.circle")
+                                Text("Reset CloudKit Sync")
+                            }
+                        }
+                        .disabled(syncInProgress)
+                        
+                        // Add force initial backup button for when safeguards are blocking sync
+                        Button(action: {
+                            Task {
+                                let result = await viewModel.forceInitialBackup()
+                                print("🔄 FORCE BACKUP RESULT: \(result.success ? "SUCCESS" : "FAILED")")
+                                print("📝 MESSAGE: \(result.message)")
+                            }
+                        }) {
+                            HStack {
+                                Image(systemName: "icloud.and.arrow.up.fill")
+                                    .foregroundColor(.orange)
+                                Text("Force Initial Backup")
+                                    .foregroundColor(.orange)
+                            }
+                        }
+                        .disabled(syncInProgress)
+                        
+                        // Add quota retry button
+                        Button(action: {
+                            Task {
+                                let result = await viewModel.retryAfterQuotaCooldown()
+                                print("⏰ QUOTA RETRY RESULT: \(result.success ? "SUCCESS" : "FAILED")")
+                                print("📝 MESSAGE: \(result.message)")
+                            }
+                        }) {
+                            HStack {
+                                Image(systemName: "clock.arrow.circlepath")
+                                    .foregroundColor(.blue)
+                                Text("Retry After Quota Cooldown")
+                                    .foregroundColor(.blue)
+                            }
+                        }
+                        .disabled(syncInProgress)
+                        
+                        // Add batch upload button
+                        Button(action: {
+                            Task {
+                                let result = await viewModel.uploadInSmallBatches()
+                                print("📦 BATCH UPLOAD RESULT: \(result.success ? "SUCCESS" : "FAILED")")
+                                print("📝 MESSAGE: \(result.message)")
+                            }
+                        }) {
+                            HStack {
+                                Image(systemName: "square.stack.3d.up")
+                                    .foregroundColor(.green)
+                                Text("Upload in Small Batches")
+                                    .foregroundColor(.green)
+                            }
+                        }
+                        .disabled(syncInProgress)
+                        
                         if let lastSync = cloudKitManager.lastSyncDate {
                             HStack {
                                 Image(systemName: "clock")
@@ -83,8 +208,14 @@ struct CloudKitSettingsView: View {
                     } footer: {
                         VStack(alignment: .leading, spacing: 8) {
                             Text("• **Sync Now**: Quick sync of recent changes")
-                            Text("• **Force Full Sync**: Complete sync of all data (use if having sync issues)")
+                            Text("• **Force Full Sync**: Complete sync of all data")
                             Text("• **Test CloudKit Quota**: Run diagnostics and test quota management")
+                            Text("• **Diagnose Sync Issue**: Check CloudKit status and identify problems")
+                            Text("• **Force Upload Local Data**: Upload all local data to CloudKit (use if sync is failing)")
+                            Text("• **Reset CloudKit Sync**: Reset sync state and restart fresh")
+                            Text("• **Force Initial Backup**: Bypasses safeguards for first-time backup (use if 'sync validation failed')")
+                            Text("• **Retry After Quota Cooldown**: Waits 6 minutes then retries upload (use for quota errors)")
+                            Text("• **Upload in Small Batches**: Uploads data slowly in small chunks (use for large collections)")
                         }
                         .font(.caption)
                         .foregroundColor(.secondary)
@@ -312,6 +443,136 @@ struct CloudKitSettingsView: View {
                         Text("Development Info")
                     }
                 }
+                
+                // MARK: - Diagnostic Section
+                Section(header: Text("Diagnostics & Testing")) {
+                    Button("Diagnose Sync Issue") {
+                        Task {
+                            await viewModel.diagnoseSyncIssue()
+                        }
+                    }
+                    .foregroundColor(.blue)
+                    
+                    Button("Check Detailed Sync Status") {
+                        Task {
+                            await viewModel.checkDetailedSyncStatus()
+                        }
+                    }
+                    .foregroundColor(.green)
+                    
+                    Button("Monitor Sync Progress (30s)") {
+                        Task {
+                            await viewModel.monitorSyncProgress()
+                        }
+                    }
+                    .foregroundColor(.orange)
+                }
+                
+                // MARK: - Recovery Section
+                Section(header: Text("Recovery Options")) {
+                    Button("Remove Duplicates") {
+                        Task {
+                            let result = await viewModel.removeDuplicates()
+                            print("🧹 DUPLICATE REMOVAL RESULT: \(result.success ? "SUCCESS" : "FAILED")")
+                            print("📝 MESSAGE: \(result.message)")
+                        }
+                    }
+                    .foregroundColor(.orange)
+                    
+                    Button("Remove Duplicates (Preserve Order)") {
+                        Task {
+                            let result = await viewModel.removeDuplicatesPreservingOrder()
+                            print("🧹 ORDERED DUPLICATE REMOVAL RESULT: \(result.success ? "SUCCESS" : "FAILED")")
+                            print("📝 MESSAGE: \(result.message)")
+                        }
+                    }
+                    .foregroundColor(.orange)
+                    
+                    Button("Sync Preserving Order") {
+                        Task {
+                            let result = await viewModel.syncPreservingOrder()
+                            print("🔄 ORDERED SYNC RESULT: \(result.success ? "SUCCESS" : "FAILED")")
+                            print("📝 MESSAGE: \(result.message)")
+                        }
+                    }
+                    .foregroundColor(.green)
+                    
+                    Button("Cleanup Deck-Card Associations") {
+                        Task {
+                            let result = await viewModel.cleanupDeckCardAssociations()
+                            print("🧹 ASSOCIATION CLEANUP RESULT: \(result.success ? "SUCCESS" : "FAILED")")
+                            print("📝 MESSAGE: \(result.message)")
+                        }
+                    }
+                    .foregroundColor(.purple)
+                    
+                    Button("Download All Data from CloudKit") {
+                        Task {
+                            let result = await viewModel.downloadAllDataFromCloudKit()
+                            print("📥 DOWNLOAD RESULT: \(result.success ? "SUCCESS" : "FAILED")")
+                            print("📝 MESSAGE: \(result.message)")
+                        }
+                    }
+                    .foregroundColor(.blue)
+                    
+                    Button("Force Upload Local Data") {
+                        Task {
+                            await viewModel.forceUploadAllData()
+                        }
+                    }
+                    .foregroundColor(.red)
+                    
+                    Button("Reset CloudKit Sync") {
+                        Task {
+                            await viewModel.resetCloudKitSync()
+                        }
+                    }
+                    .foregroundColor(.red)
+                    
+                    Button("Force Initial Backup") {
+                        Task {
+                            await viewModel.forceInitialBackup()
+                        }
+                    }
+                    .foregroundColor(.purple)
+                    
+                    Button("Retry After Quota Cooldown") {
+                        Task {
+                            await viewModel.retryAfterQuotaCooldown()
+                        }
+                    }
+                    .foregroundColor(.blue)
+                    
+                    Button("Upload in Small Batches") {
+                        Task {
+                            await viewModel.uploadInSmallBatches()
+                        }
+                    }
+                    .foregroundColor(.green)
+                    
+                    Button("Diagnose Deck-Card Relationships") {
+                        Task {
+                            await viewModel.diagnoseDeckCardRelationships()
+                        }
+                    }
+                    .foregroundColor(.orange)
+                    
+                    Button("Force Update Deck Associations") {
+                        Task {
+                            await viewModel.forceUpdateDeckAssociations()
+                        }
+                    }
+                    .foregroundColor(.red)
+                    
+                    Button("Reset CloudKit Data") {
+                        Task {
+                            let result = await viewModel.resetCloudKitData()
+                            print("🗑️ RESET RESULT: \(result.success ? "SUCCESS" : "FAILED")")
+                            print("📝 MESSAGE: \(result.message)")
+                        }
+                    }
+                    .foregroundColor(.red)
+                }
             }
             .navigationTitle("iCloud Sync")
             .navigationBarTitleDisplayMode(.large)
@@ -320,6 +581,11 @@ struct CloudKitSettingsView: View {
                     Button("Done") {
                         dismiss()
                     }
+                }
+            }
+            .onAppear {
+                Task {
+                    await refreshSyncStatus()
                 }
             }
         }
@@ -402,6 +668,54 @@ struct CloudKitSettingsView: View {
         if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
             UIApplication.shared.open(settingsURL)
         }
+    }
+    
+    private func refreshSyncStatus() async {
+        isCheckingStatus = true
+        syncStatus = "Checking..."
+        lastSyncTime = "Checking..."
+        
+        // Check CloudKit account status
+        do {
+            await CloudKitManager.shared.checkAccountStatus()
+            let accountAvailable = CloudKitManager.shared.isAccountAvailable
+            
+            if !accountAvailable {
+                syncStatus = "❌ CloudKit Unavailable"
+                lastSyncTime = "N/A"
+                isCheckingStatus = false
+                return
+            }
+            
+            // Count local vs cloud data
+            let localCards = viewModel.flashCards.count
+            let localDecks = viewModel.decks.count
+            
+            // Check CloudKit record counts using the new method
+            let (cloudCards, cloudDecks) = await CloudKitManager.shared.getCloudKitRecordCounts()
+            
+            // Determine status
+            if cloudCards == 0 && localCards > 0 {
+                syncStatus = "⚠️ No data in CloudKit"
+            } else if cloudCards > 0 {
+                syncStatus = "✅ Sync appears working"
+            } else {
+                syncStatus = "📭 No data to sync"
+            }
+            
+            // Get last sync time
+            if let lastSync = UserDefaults.standard.object(forKey: "lastCardSyncDate") as? Date {
+                lastSyncTime = formatDate(lastSync)
+            } else {
+                lastSyncTime = "Never"
+            }
+            
+        } catch {
+            syncStatus = "❌ Error checking status"
+            lastSyncTime = "Error"
+        }
+        
+        isCheckingStatus = false
     }
 }
 

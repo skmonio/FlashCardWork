@@ -18,6 +18,7 @@ struct AllCardsView: View {
     @State private var isSelectionMode = false
     @State private var selectedCards: Set<UUID> = []
     @State private var showingMoveSheet = false
+    @State private var isDeletingCards = false // Add loading state for bulk delete
     
     private let logger = Logger(subsystem: "com.flashcards", category: "AllCardsView")
     

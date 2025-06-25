@@ -11,10 +11,21 @@ struct DutchGrammarRulesView: View {
     @State private var showingAnswer = false
     @State private var exerciseScore = 0
     @State private var completedExercises: Set<String> = []
+    @State private var exerciseScores: [String: Int] = [:] // Store scores for each rule
     @State private var shuffledExercises: [GrammarExercise] = []
     @State private var searchText = ""
+    @State private var showingEndScreen = false
+    @State private var finalScore = 0
+    @State private var totalQuestions = 0
+    @State private var questionAnswers: [Int: Int] = [:] // Track answers for each question index
+    @State private var questionScores: [Int: Bool] = [:] // Track if each question was answered correctly
+    @State private var showingLeaveConfirmation = false
     
     private let grammarDB = DutchGrammarRulesDatabase.shared
+    
+    // UserDefaults keys
+    private let completedExercisesKey = "completedDutchGrammarExercises"
+    private let exerciseScoresKey = "dutchGrammarExerciseScores"
     
     var filteredRules: [DutchGrammarRule] {
         let levelRules = grammarDB.getRulesByLevel(selectedLevel)
@@ -31,19 +42,13 @@ struct DutchGrammarRulesView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // Top bar with X button
+            // Top bar without X button
             HStack {
                 Text("📚 Dutch Grammar Rules")
                     .font(.headline)
                     .fontWeight(.semibold)
                 
                 Spacer()
-                
-                Button(action: { dismiss() }) {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.title2)
-                        .foregroundColor(.gray)
-                }
             }
             .padding()
             
@@ -98,55 +103,78 @@ struct DutchGrammarRulesView: View {
                 // Rules List
                 ScrollView {
                     LazyVStack(spacing: 8) {
-                        ForEach(filteredRules, id: \.id) { rule in
+                        ForEach(filteredRules) { rule in
                             Button(action: {
                                 selectedRule = rule
                             }) {
-                                HStack(spacing: 12) {
-                                    // Icon
-                                    Image(systemName: iconFor(ruleType: rule.type))
-                                        .font(.system(size: 18))
-                                        .foregroundColor(.blue)
-                                        .frame(width: 24, height: 24)
-                                    
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text(rule.title)
-                                            .font(.system(size: 16, weight: .medium))
-                                            .foregroundColor(.primary)
-                                            .multilineTextAlignment(.leading)
-                                        
-                                        Text(rule.type.rawValue)
-                                            .font(.system(size: 14))
-                                            .foregroundColor(.secondary)
-                                    }
-                                    
-                                    Spacer()
-                                    
-                                    VStack(spacing: 4) {
-                                        if completedExercises.contains(rule.id) {
-                                            Image(systemName: "checkmark.circle.fill")
-                                                .foregroundColor(.green)
-                                                .font(.system(size: 16))
+                                VStack(alignment: .leading, spacing: 8) {
+                                    HStack {
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text(rule.title)
+                                                .font(.headline)
+                                                .foregroundColor(.primary)
+                                            
+                                            Text(rule.type.rawValue)
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
                                         }
                                         
-                                        Text("\(rule.exercises.count)")
-                                            .font(.system(size: 12, weight: .medium))
-                                            .foregroundColor(.white)
-                                            .frame(width: 20, height: 20)
-                                            .background(Color.blue)
-                                            .clipShape(Circle())
+                                        Spacer()
+                                        
+                                        // Completion and score indicators
+                                        VStack(alignment: .trailing, spacing: 4) {
+                                            if completedExercises.contains(rule.id) {
+                                                HStack(spacing: 4) {
+                                                    Image(systemName: "checkmark.circle.fill")
+                                                        .foregroundColor(.green)
+                                                    Text("Completed")
+                                                        .font(.caption)
+                                                        .foregroundColor(.green)
+                                                }
+                                            }
+                                            
+                                            if let score = exerciseScores[rule.id] {
+                                                HStack(spacing: 4) {
+                                                    Text("\(score)%")
+                                                        .font(.caption)
+                                                        .fontWeight(.semibold)
+                                                        .foregroundColor(scoreColor(for: score))
+                                                    Image(systemName: scoreIcon(for: score))
+                                                        .foregroundColor(scoreColor(for: score))
+                                                }
+                                            }
+                                        }
                                     }
                                     
-                                    Image(systemName: "chevron.right")
-                                        .font(.system(size: 12, weight: .medium))
-                                        .foregroundColor(.gray)
+                                    // Short description
+                                    Text(shortDescription(for: rule))
+                                        .font(.body)
+                                        .foregroundColor(.secondary)
+                                        .lineLimit(2)
+                                    
+                                    HStack {
+                                        Text("\(rule.exercises.count) exercises")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                        
+                                        Spacer()
+                                        
+                                        Image(systemName: "chevron.right")
+                                            .font(.caption)
+                                            .foregroundColor(.blue)
+                                    }
                                 }
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 12)
-                                .background(Color(.systemBackground))
-                                .cornerRadius(8)
-                                .shadow(color: .black.opacity(0.05), radius: 1, x: 0, y: 1)
+                                .padding()
+                                .background(Color(.systemGray6))
+                                .cornerRadius(12)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(Color.blue.opacity(0.3), lineWidth: 1)
+                                )
                             }
+                            .buttonStyle(PlainButtonStyle())
+                            .scaleEffect(1.0)
+                            .animation(.easeInOut(duration: 0.1), value: true)
                         }
                     }
                     .padding(.horizontal, 16)
@@ -157,8 +185,24 @@ struct DutchGrammarRulesView: View {
                 ruleDetailView
             }
         }
-        .sheet(isPresented: $showingExercises) {
+        .navigationDestination(isPresented: $showingExercises) {
             exerciseSheet
+        }
+        .navigationDestination(isPresented: $showingEndScreen) {
+            endScreenView
+        }
+        .onAppear {
+            loadCompletedExercises()
+            loadExerciseScores()
+        }
+        .alert("Leave Exercise?", isPresented: $showingLeaveConfirmation) {
+            Button("Leave", role: .destructive) {
+                showingExercises = false
+                selectedRule = nil
+            }
+            Button("Continue Exercise", role: .cancel) { }
+        } message: {
+            Text("Are you sure you want to leave? Your progress will be lost.")
         }
     }
     
@@ -185,6 +229,8 @@ struct DutchGrammarRulesView: View {
                         selectedAnswer = nil
                         showingAnswer = false
                         exerciseScore = 0
+                        questionAnswers.removeAll()
+                        questionScores.removeAll()
                     }
                     .foregroundColor(.white)
                     .padding(.horizontal, 16)
@@ -338,188 +384,390 @@ struct DutchGrammarRulesView: View {
     // MARK: - Exercise Sheet
     
     private var exerciseSheet: some View {
-        NavigationView {
-            VStack(spacing: 20) {
-                if let rule = selectedRule, !rule.exercises.isEmpty {
-                    let exercise = shuffledExercises.isEmpty ? rule.exercises[currentExerciseIndex] : shuffledExercises[currentExerciseIndex]
-                    let totalCount = shuffledExercises.isEmpty ? rule.exercises.count : shuffledExercises.count
+        VStack(spacing: 20) {
+            if let rule = selectedRule, !rule.exercises.isEmpty {
+                let exercise = shuffledExercises.isEmpty ? rule.exercises[currentExerciseIndex] : shuffledExercises[currentExerciseIndex]
+                let totalCount = shuffledExercises.isEmpty ? rule.exercises.count : shuffledExercises.count
+                
+                // Progress
+                HStack {
+                    Text("Question \(currentExerciseIndex + 1) of \(totalCount)")
+                        .font(.headline)
+                    Spacer()
+                    Text("Score: \(exerciseScore)/\(currentExerciseIndex + (showingAnswer ? 1 : 0))")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+                
+                // Question
+                VStack(alignment: .leading, spacing: 16) {
+                    Text(exercise.question)
+                        .font(.title2)
+                        .fontWeight(.semibold)
+                        .padding()
+                        .background(Color(.systemGray6))
+                        .cornerRadius(12)
                     
-                    // Progress
-                    HStack {
-                        Text("Question \(currentExerciseIndex + 1) of \(totalCount)")
-                            .font(.headline)
-                        Spacer()
-                        Text("Score: \(exerciseScore)/\(currentExerciseIndex + (showingAnswer ? 1 : 0))")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
+                    // Options
+                    ForEach(Array(exercise.options.enumerated()), id: \.offset) { index, option in
+                        Button(action: {
+                            if !showingAnswer {
+                                selectedAnswer = index
+                                showingAnswer = true
+                                
+                                // Store the answer for this question
+                                questionAnswers[currentExerciseIndex] = index
+                                
+                                // Check if this answer is correct
+                                let isCorrect = index == exercise.correctAnswer
+                                questionScores[currentExerciseIndex] = isCorrect
+                                
+                                // Recalculate total score based on all answered questions
+                                exerciseScore = questionScores.values.filter { $0 }.count
+                                
+                                // If this is the last question, automatically complete after a delay
+                                if currentExerciseIndex == totalCount - 1 {
+                                    let finalScore = (exerciseScore * 100) / totalCount
+                                    completedExercises.insert(rule.id)
+                                    exerciseScores[rule.id] = finalScore
+                                    saveCompletedExercises()
+                                    saveExerciseScores()
+                                    showingExercises = false
+                                    showingEndScreen = true
+                                    self.finalScore = finalScore
+                                    self.totalQuestions = totalCount
+                                }
+                            }
+                        }) {
+                            HStack {
+                                Text(option)
+                                    .font(.body)
+                                    .foregroundColor(.primary)
+                                Spacer()
+                                
+                                if showingAnswer {
+                                    if index == exercise.correctAnswer {
+                                        Image(systemName: "checkmark.circle.fill")
+                                            .foregroundColor(.green)
+                                    } else if index == selectedAnswer && index != exercise.correctAnswer {
+                                        Image(systemName: "xmark.circle.fill")
+                                            .foregroundColor(.red)
+                                    }
+                                }
+                            }
+                            .padding()
+                            .background(
+                                showingAnswer ?
+                                (index == exercise.correctAnswer ? Color.green.opacity(0.2) :
+                                 (index == selectedAnswer ? Color.red.opacity(0.2) : Color(.systemGray6))) :
+                                Color(.systemGray6)
+                            )
+                            .cornerRadius(8)
+                        }
+                        .disabled(showingAnswer)
                     }
                     
-                    // Question
-                    VStack(alignment: .leading, spacing: 16) {
-                        Text(exercise.question)
-                            .font(.title2)
-                            .fontWeight(.semibold)
-                            .padding()
-                            .background(Color(.systemGray6))
-                            .cornerRadius(12)
-                        
-                        // Options
-                        ForEach(Array(exercise.options.enumerated()), id: \.offset) { index, option in
-                            Button(action: {
-                                if !showingAnswer {
-                                    selectedAnswer = index
-                                    showingAnswer = true
-                                    if index == exercise.correctAnswer {
-                                        exerciseScore += 1
-                                    }
-                                }
-                            }) {
-                                HStack {
-                                    Text(option)
+                    // Explanation and Hint
+                    if showingAnswer {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Explanation:")
+                                .font(.headline)
+                                .foregroundColor(.primary)
+                            
+                            ScrollView {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text(exercise.explanation)
                                         .font(.body)
-                                        .foregroundColor(.primary)
-                                    Spacer()
+                                        .fixedSize(horizontal: false, vertical: true)
+                                        .lineLimit(nil)
                                     
-                                    if showingAnswer {
-                                        if index == exercise.correctAnswer {
-                                            Image(systemName: "checkmark.circle.fill")
-                                                .foregroundColor(.green)
-                                        } else if index == selectedAnswer && index != exercise.correctAnswer {
-                                            Image(systemName: "xmark.circle.fill")
-                                                .foregroundColor(.red)
-                                        }
-                                    }
-                                }
-                                .padding()
-                                .background(
-                                    showingAnswer ?
-                                    (index == exercise.correctAnswer ? Color.green.opacity(0.2) :
-                                     (index == selectedAnswer ? Color.red.opacity(0.2) : Color(.systemGray6))) :
-                                    Color(.systemGray6)
-                                )
-                                .cornerRadius(8)
-                            }
-                            .disabled(showingAnswer)
-                        }
-                        
-                        // Explanation and Hint
-                        if showingAnswer {
-                            VStack(alignment: .leading, spacing: 12) {
-                                Text("Explanation:")
-                                    .font(.headline)
-                                    .foregroundColor(.primary)
-                                
-                                ScrollView {
-                                    VStack(alignment: .leading, spacing: 8) {
-                                        Text(exercise.explanation)
-                                            .font(.body)
+                                    if let hint = exercise.hint {
+                                        Divider()
+                                            .padding(.vertical, 4)
+                                        
+                                        Text("Tip: \(hint)")
+                                            .font(.caption)
+                                            .foregroundColor(.blue)
                                             .fixedSize(horizontal: false, vertical: true)
                                             .lineLimit(nil)
-                                        
-                                        if let hint = exercise.hint {
-                                            Divider()
-                                                .padding(.vertical, 4)
-                                            
-                                            Text("Tip: \(hint)")
-                                                .font(.caption)
-                                                .foregroundColor(.blue)
-                                                .fixedSize(horizontal: false, vertical: true)
-                                                .lineLimit(nil)
-                                        }
                                     }
-                                    .padding(.horizontal, 12)
-                                    .padding(.vertical, 8)
                                 }
-                                .frame(minHeight: 80, maxHeight: 180)
-                                .background(Color.blue.opacity(0.1))
-                                .cornerRadius(8)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .stroke(Color.blue.opacity(0.3), lineWidth: 1)
-                                )
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 8)
                             }
+                            .frame(minHeight: 80, maxHeight: 180)
+                            .background(Color.blue.opacity(0.1))
+                            .cornerRadius(8)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color.blue.opacity(0.3), lineWidth: 1)
+                            )
                         }
+                    }
+                }
+                
+                Spacer()
+                
+                // Navigation Buttons
+                HStack(spacing: 20) {
+                    if currentExerciseIndex > 0 {
+                        Button("Previous") {
+                            currentExerciseIndex -= 1
+                            // Restore the previous answer and score state for this question
+                            selectedAnswer = questionAnswers[currentExerciseIndex]
+                            showingAnswer = selectedAnswer != nil
+                        }
+                        .foregroundColor(.blue)
                     }
                     
                     Spacer()
                     
-                    // Navigation Buttons
-                    HStack(spacing: 20) {
-                        if currentExerciseIndex > 0 {
-                            Button("Previous") {
-                                currentExerciseIndex -= 1
-                                selectedAnswer = nil
-                                showingAnswer = false
-                            }
-                            .foregroundColor(.blue)
+                    if showingAnswer && currentExerciseIndex < totalCount - 1 {
+                        Button("Next") {
+                            currentExerciseIndex += 1
+                            // Restore the answer and score state for the next question
+                            selectedAnswer = questionAnswers[currentExerciseIndex]
+                            showingAnswer = selectedAnswer != nil
                         }
-                        
-                        Spacer()
-                        
-                        if showingAnswer {
-                            if currentExerciseIndex < totalCount - 1 {
-                                Button("Next") {
-                                    currentExerciseIndex += 1
-                                    selectedAnswer = nil
-                                    showingAnswer = false
-                                }
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 20)
-                                .padding(.vertical, 10)
-                                .background(Color.blue)
-                                .cornerRadius(8)
-                            } else {
-                                Button("Complete") {
-                                    completedExercises.insert(rule.id)
-                                    showingExercises = false
-                                }
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 20)
-                                .padding(.vertical, 10)
-                                .background(Color.green)
-                                .cornerRadius(8)
-                            }
-                        }
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 10)
+                        .background(Color.blue)
+                        .cornerRadius(8)
                     }
                 }
             }
-            .padding()
-            .navigationTitle("Exercises")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Close") {
-                        showingExercises = false
-                    }
+        }
+        .padding()
+        .navigationTitle("Exercises")
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button("Back") {
+                    showingLeaveConfirmation = true
                 }
             }
         }
     }
     
+    // MARK: - End Screen View
+    
+    private var endScreenView: some View {
+        VStack(spacing: 30) {
+            // Header
+            VStack(spacing: 16) {
+                Image(systemName: finalScore >= 80 ? "star.circle.fill" : finalScore >= 60 ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
+                    .font(.system(size: 60))
+                    .foregroundColor(finalScore >= 80 ? .yellow : finalScore >= 60 ? .green : .orange)
+                
+                Text("Exercise Complete!")
+                    .font(.title)
+                    .fontWeight(.bold)
+                
+                Text("You completed \(selectedRule?.title ?? "the exercise")")
+                    .font(.headline)
+                    .foregroundColor(.secondary)
+            }
+            
+            // Score Display
+            VStack(spacing: 20) {
+                Text("Your Score")
+                    .font(.title2)
+                    .fontWeight(.semibold)
+                
+                HStack(spacing: 20) {
+                    VStack {
+                        Text("\(finalScore)%")
+                            .font(.system(size: 48, weight: .bold))
+                            .foregroundColor(scoreColor)
+                        Text("Score")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    VStack {
+                        Text("\(exerciseScore)/\(totalQuestions)")
+                            .font(.system(size: 32, weight: .semibold))
+                            .foregroundColor(.primary)
+                        Text("Correct")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                .padding()
+                .background(Color(.systemGray6))
+                .cornerRadius(16)
+            }
+            
+            // Performance Message
+            VStack(spacing: 12) {
+                Text(performanceMessage)
+                    .font(.headline)
+                    .foregroundColor(scoreColor)
+                    .multilineTextAlignment(.center)
+                
+                Text(performanceDescription)
+                    .font(.body)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal)
+            }
+            
+            Spacer()
+            
+            // Action Buttons
+            VStack(spacing: 16) {
+                Button("Continue Learning") {
+                    showingEndScreen = false
+                }
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color.blue)
+                .cornerRadius(12)
+                
+                Button("Review Rules") {
+                    showingEndScreen = false
+                    showingExercises = false
+                }
+                .foregroundColor(.blue)
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color.blue.opacity(0.1))
+                .cornerRadius(12)
+            }
+        }
+        .padding()
+        .navigationTitle("Results")
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button("Back") {
+                    showingEndScreen = false
+                }
+            }
+        }
+    }
+    
+    // MARK: - Helper Computed Properties
+    
+    private var scoreColor: Color {
+        if finalScore >= 80 {
+            return .green
+        } else if finalScore >= 60 {
+            return .orange
+        } else {
+            return .red
+        }
+    }
+    
+    private var performanceMessage: String {
+        if finalScore >= 90 {
+            return "Excellent! 🎉"
+        } else if finalScore >= 80 {
+            return "Great Job! 👍"
+        } else if finalScore >= 60 {
+            return "Good Effort! 💪"
+        } else {
+            return "Keep Practicing! 📚"
+        }
+    }
+    
+    private var performanceDescription: String {
+        if finalScore >= 90 {
+            return "You've mastered this grammar rule! Consider moving on to more advanced topics."
+        } else if finalScore >= 80 {
+            return "You have a solid understanding of this rule. A little more practice will make it perfect!"
+        } else if finalScore >= 60 {
+            return "You're on the right track! Review the explanations and try again to improve your score."
+        } else {
+            return "Don't worry! Grammar takes time to learn. Review the rule explanations and practice more."
+        }
+    }
+    
     // MARK: - Helper Functions
+    
+    private func shortDescription(for rule: DutchGrammarRule) -> String {
+        switch rule.type {
+        case .verbConjugation:
+            return "Master Dutch verb forms and conjugations."
+        case .sentenceStructure:
+            return "Learn Dutch sentence patterns and word order."
+        case .pluralization:
+            return "Rules for making Dutch nouns plural."
+        case .pronunciation:
+            return "Key Dutch pronunciation patterns and sounds."
+        case .spelling:
+            return "Dutch spelling rules and patterns."
+        case .tenses:
+            return "Using different verb tenses in Dutch."
+        case .wordOrder:
+            return "Complex word order rules in Dutch."
+        case .adjectives:
+            return "How Dutch adjectives change with nouns."
+        case .prepositions:
+            return "Dutch prepositions and verb combinations."
+        case .negation:
+            return "Making sentences negative with 'niet' and 'geen'."
+        }
+    }
     
     private func iconFor(ruleType: GrammarRuleType) -> String {
         switch ruleType {
-        case .verbConjugation:
-            return "arrow.triangle.2.circlepath"
-        case .wordOrder:
-            return "arrow.left.arrow.right"
-        case .sentenceStructure:
-            return "text.alignleft"
-        case .pluralization:
-            return "plus.circle"
-        case .pronunciation:
-            return "speaker.wave.3"
-        case .spelling:
-            return "textformat.abc"
-        case .tenses:
-            return "clock"
-        case .adjectives:
-            return "star.circle"
-        case .prepositions:
-            return "arrow.up.and.down.and.arrow.left.and.right"
-        case .negation:
-            return "minus.circle"
+        case .verbConjugation: return "textformat.abc"
+        case .sentenceStructure: return "text.alignleft"
+        case .pluralization: return "textformat.123"
+        case .pronunciation: return "speaker.wave.2"
+        case .spelling: return "pencil"
+        case .tenses: return "clock"
+        case .wordOrder: return "arrow.left.and.right"
+        case .adjectives: return "textformat.size"
+        case .prepositions: return "arrow.up.forward"
+        case .negation: return "minus.circle"
+        }
+    }
+    
+    private func scoreColor(for score: Int) -> Color {
+        if score >= 80 {
+            return .green
+        } else if score >= 60 {
+            return .orange
+        } else {
+            return .red
+        }
+    }
+    
+    private func scoreIcon(for score: Int) -> String {
+        if score >= 80 {
+            return "star.fill"
+        } else if score >= 60 {
+            return "checkmark.circle.fill"
+        } else {
+            return "exclamationmark.circle.fill"
+        }
+    }
+    
+    // MARK: - Persistence Methods
+    
+    private func saveCompletedExercises() {
+        UserDefaults.standard.set(Array(completedExercises), forKey: completedExercisesKey)
+    }
+    
+    private func saveExerciseScores() {
+        UserDefaults.standard.set(exerciseScores, forKey: exerciseScoresKey)
+    }
+    
+    private func loadCompletedExercises() {
+        if let savedCompletedExercises = UserDefaults.standard.array(forKey: completedExercisesKey) as? [String] {
+            completedExercises = Set(savedCompletedExercises)
+        }
+    }
+    
+    private func loadExerciseScores() {
+        if let savedExerciseScores = UserDefaults.standard.object(forKey: exerciseScoresKey) as? [String: Int] {
+            exerciseScores = savedExerciseScores
         }
     }
 }

@@ -152,7 +152,7 @@ struct CardsManagementView: View {
                 
                 // Dutch Vocabulary Import
                 Button(action: {
-                    navigationCoordinator.presentSheet(.dutchVocabulary)
+                    navigationCoordinator.push(NavigationDestination.dutchVocabulary)
                 }) {
                     HStack {
                         Image(systemName: "globe.europe.africa.fill")
@@ -187,7 +187,7 @@ struct CardsManagementView: View {
                 
                 // Dutch Grammar Rules
                 Button(action: {
-                    navigationCoordinator.presentSheet(.dutchGrammar)
+                    navigationCoordinator.push(NavigationDestination.dutchGrammar)
                 }) {
                     HStack {
                         Image(systemName: "book.pages.fill")

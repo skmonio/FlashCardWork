@@ -14,6 +14,7 @@ struct DutchVocabularyImportView: View {
     @State private var showingPackDetails: DutchVocabularyPack? = nil
     @State private var importProgress: Double = 0
     @State private var isImporting = false
+    @State private var showingLeaveConfirmation = false
     
     private let database = DutchVocabularyDatabase.shared
     
@@ -76,7 +77,13 @@ struct DutchVocabularyImportView: View {
                 
                 Spacer()
                 
-                Button(action: { dismiss() }) {
+                Button(action: { 
+                    if isImporting {
+                        showingLeaveConfirmation = true
+                    } else {
+                        dismiss()
+                    }
+                }) {
                     Image(systemName: "xmark.circle.fill")
                         .font(.title2)
                         .foregroundColor(.gray)
@@ -215,6 +222,14 @@ struct DutchVocabularyImportView: View {
         } message: {
             Text("Successfully imported \(importedWordCount) Dutch words organized into level-specific folders. Start studying now!")
         }
+        .alert("Cards Still Importing", isPresented: $showingLeaveConfirmation) {
+            Button("Leave Anyway", role: .destructive) {
+                dismiss()
+            }
+            Button("Wait for Import", role: .cancel) { }
+        } message: {
+            Text("Cards are still being imported. If you leave now, the import will be cancelled.")
+        }
         .sheet(item: $showingPackDetails) { pack in
             VocabularyPackDetailView(pack: pack, isSelected: currentSelectedPacks.wrappedValue.contains(pack.id)) { isSelected in
                 if isSelected {
@@ -337,17 +352,83 @@ struct DutchVocabularyImportView: View {
                         
                         // Add words to the deck
                         for word in pack.words {
-                            viewModel.addCard(
+                            // Check for duplicates before adding
+                            let duplicateResult = viewModel.checkForDuplicateCard(
                                 word: word.word,
                                 definition: word.definition,
                                 example: word.example,
-                                deckIds: Set([deck.id]),
                                 article: word.article,
                                 plural: word.plural,
                                 pastTense: word.pastTense,
                                 futureTense: word.futureTense,
                                 pastParticiple: word.pastParticiple
                             )
+                            
+                            switch duplicateResult {
+                            case .noDuplicate:
+                                // No duplicate found, add the card normally
+                                viewModel.addCard(
+                                    word: word.word,
+                                    definition: word.definition,
+                                    example: word.example,
+                                    deckIds: Set([deck.id]),
+                                    article: word.article,
+                                    plural: word.plural,
+                                    pastTense: word.pastTense,
+                                    futureTense: word.futureTense,
+                                    pastParticiple: word.pastParticiple
+                                )
+                                
+                            case .exactMatch(let existingCard):
+                                // Exact duplicate - just add to the deck if not already there
+                                if !existingCard.deckIds.contains(deck.id) {
+                                    viewModel.mergeCardData(
+                                        existingCard: existingCard,
+                                        newDefinition: word.definition,
+                                        newExample: word.example,
+                                        newDeckIds: Set([deck.id]),
+                                        newArticle: word.article,
+                                        newPlural: word.plural,
+                                        newPastTense: word.pastTense,
+                                        newFutureTense: word.futureTense,
+                                        newPastParticiple: word.pastParticiple,
+                                        mergeStrategy: .keepExisting
+                                    )
+                                }
+                                
+                            case .partialMatch(let existingCard, let differences):
+                                // Partial match - merge additional information
+                                if differences.hasMoreInformation {
+                                    viewModel.mergeCardData(
+                                        existingCard: existingCard,
+                                        newDefinition: word.definition,
+                                        newExample: word.example,
+                                        newDeckIds: Set([deck.id]),
+                                        newArticle: word.article,
+                                        newPlural: word.plural,
+                                        newPastTense: word.pastTense,
+                                        newFutureTense: word.futureTense,
+                                        newPastParticiple: word.pastParticiple,
+                                        mergeStrategy: .mergeAdditionalFields
+                                    )
+                                } else {
+                                    // No additional information, just add to deck if not already there
+                                    if !existingCard.deckIds.contains(deck.id) {
+                                        viewModel.mergeCardData(
+                                            existingCard: existingCard,
+                                            newDefinition: word.definition,
+                                            newExample: word.example,
+                                            newDeckIds: Set([deck.id]),
+                                            newArticle: word.article,
+                                            newPlural: word.plural,
+                                            newPastTense: word.pastTense,
+                                            newFutureTense: word.futureTense,
+                                            newPastParticiple: word.pastParticiple,
+                                            mergeStrategy: .keepExisting
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
                 }

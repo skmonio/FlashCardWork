@@ -10,6 +10,8 @@ struct SimplifiedDeckSelectionView: View {
     @State private var shouldStartGame = false
     @State private var shouldContinueGame = false
     @State private var showingSaveOverwriteWarning = false
+    @State private var showingQuickGame = false
+    @State private var selectedQuickGameCount: Int = 0
     
     var availableCards: [FlashCard] {
         if selectedDeckIds.isEmpty {
@@ -32,54 +34,55 @@ struct SimplifiedDeckSelectionView: View {
     var body: some View {
         VStack(spacing: 0) {
             List {
-                Section(header: Text("Select Decks")) {
-                    Button(action: {
-                        if !selectedDeckIds.isEmpty {
-                            selectedDeckIds.removeAll()
-                        } else {
-                            selectedDeckIds = Set(viewModel.getAllDecksHierarchical().map { $0.id })
-                        }
-                    }) {
-                        HStack {
-                            Text(selectedDeckIds.isEmpty ? "Select All Decks" : "Deselect All")
-                                .foregroundColor(.primary)
-                            Spacer()
-                            Text("\(availableCards.count) cards")
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                    
-                    ForEach(viewModel.getAllDecksHierarchical()) { deck in
-                        Button(action: {
-                            if selectedDeckIds.contains(deck.id) {
-                                selectedDeckIds.remove(deck.id)
-                            } else {
-                                selectedDeckIds.insert(deck.id)
+                // Quick Game Section
+                Section {
+                    VStack(spacing: 16) {
+                        // Card count selection dropdown
+                        Picker("Number of Cards", selection: $selectedQuickGameCount) {
+                            Text("Select...").tag(0)
+                            ForEach([5, 10, 15, 20, 25, 30], id: \.self) { count in
+                                Text("\(count) cards").tag(count)
                             }
+                        }
+                        .pickerStyle(MenuPickerStyle())
+                        .padding(.horizontal)
+                        
+                        // Start Quick Game button
+                        Button(action: {
+                            startQuickGame()
                         }) {
                             HStack {
-                                if deck.isSubDeck {
-                                    HStack(spacing: 4) {
-                                        Text("    ↳")
-                                            .foregroundColor(.secondary)
-                                        Text(deck.name)
-                                    }
-                                } else {
-                                    Text(deck.name)
-                                }
-                                Spacer()
-                                if selectedDeckIds.contains(deck.id) {
-                                    Image(systemName: "checkmark")
-                                        .foregroundColor(.blue)
-                                }
-                                Text("\(deck.cards.count)")
-                                    .foregroundColor(.secondary)
+                                Image(systemName: "play.fill")
+                                Text("Start Quick \(mode.title)")
                             }
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(selectedQuickGameCount > 0 ? Color.orange : Color.gray)
+                            .cornerRadius(10)
                         }
-                        .foregroundColor(.primary)
+                        .disabled(selectedQuickGameCount == 0)
                     }
+                } header: {
+                    Text("Quick Start")
+                } footer: {
+                    Text("Start a quick session with automatically selected cards from all your decks.")
                 }
                 
+                // Deck Selection Section
+                Section {
+                    DeckDropdownChecklist(
+                        viewModel: viewModel,
+                        selectedDeckIds: $selectedDeckIds
+                    )
+                } header: {
+                    Text("Custom Selection")
+                } footer: {
+                    Text("Choose specific decks for your \(mode.title.lowercased()) session.")
+                }
+                
+                // Game Buttons Section
                 if !selectedDeckIds.isEmpty && !availableCards.isEmpty {
                     Section {
                         // Start Game Button
@@ -150,6 +153,9 @@ struct SimplifiedDeckSelectionView: View {
                 }
             }
         }
+        .navigationDestination(isPresented: $showingQuickGame) {
+            destinationView
+        }
         .alert("Overwrite Saved Game?", isPresented: $showingSaveOverwriteWarning) {
             Button("Start New Game", role: .destructive) {
                 HapticManager.shared.lightImpact()
@@ -168,6 +174,12 @@ struct SimplifiedDeckSelectionView: View {
                 markAsVisited(for: mode)
             }
         }
+    }
+    
+    private func startQuickGame() {
+        print("startQuickGame() called with selectedQuickGameCount: \(selectedQuickGameCount)")
+        HapticManager.shared.lightImpact()
+        showingQuickGame = true
     }
     
     private func handleStartGame() {
@@ -198,6 +210,58 @@ struct SimplifiedDeckSelectionView: View {
         case .wordScramble:
             navigationCoordinator.push(NavigationDestination.wordScrambleView(availableCards, deckIdArray))
         }
+    }
+    
+    @ViewBuilder
+    private var destinationView: some View {
+        let selectedCards = generateQuickGameCards()
+        
+        switch mode {
+        case .study:
+            StudyView(viewModel: viewModel, cards: selectedCards, deckIds: [])
+        case .test:
+            TestView(viewModel: viewModel, cards: selectedCards, deckIds: [])
+        case .game:
+            GameView(viewModel: viewModel, cards: selectedCards, deckIds: [])
+        case .truefalse:
+            TrueFalseView(viewModel: viewModel, cards: selectedCards, deckIds: [])
+        case .writing:
+            WritingView(viewModel: viewModel, cards: selectedCards, deckIds: [])
+        case .wordScramble:
+            WordScrambleView(viewModel: viewModel, cards: selectedCards, deckIds: [])
+        }
+    }
+    
+    private func generateQuickGameCards() -> [FlashCard] {
+        let allCards = viewModel.flashCards.shuffled()
+        let newCards = allCards.filter { $0.timesShown == 0 }
+        let learningCards = allCards.filter { $0.timesShown > 0 && ($0.learningPercentage ?? 0) < 80 }
+        let knownCards = allCards.filter { ($0.learningPercentage ?? 0) >= 80 }
+
+        var selected: [FlashCard] = []
+
+        // Add new cards (never shown)
+        let newCount = min(newCards.count, selectedQuickGameCount / 3)
+        selected.append(contentsOf: newCards.prefix(newCount))
+
+        // Add learning cards (shown but not mastered)
+        let learningCount = min(learningCards.count, selectedQuickGameCount / 3)
+        selected.append(contentsOf: learningCards.prefix(learningCount))
+
+        // Add known cards (well learned) - fill remaining slots
+        let knownCount = min(knownCards.count, selectedQuickGameCount - selected.count)
+        selected.append(contentsOf: knownCards.prefix(knownCount))
+
+        // If still not enough, fill from any remaining cards not already selected
+        if selected.count < selectedQuickGameCount {
+            let alreadySelectedIds = Set(selected.map { $0.id })
+            let remainingCards = allCards.filter { !alreadySelectedIds.contains($0.id) }
+            let needed = selectedQuickGameCount - selected.count
+            selected.append(contentsOf: remainingCards.prefix(needed))
+        }
+
+        // Ensure we never return more than requested
+        return Array(selected.prefix(selectedQuickGameCount)).shuffled()
     }
     
     // Helper function to check if it's the first time visiting this mode

@@ -168,6 +168,10 @@ struct MainNavigationView: View {
                     viewModel: viewModel
                 )
             }
+        case .dutchGrammar:
+            NavigationView {
+                DutchGrammarRulesView()
+            }
         }
     }
     
@@ -201,16 +205,6 @@ struct MainNavigationView: View {
             gameInfoView(for: gameType)
         case .cardsInfo:
             CardsInfoView()
-        case .dutchVocabulary:
-            NavigationView {
-                DutchVocabularyImportView(
-                    viewModel: viewModel
-                )
-            }
-        case .dutchGrammar:
-            NavigationView {
-                DutchGrammarRulesView()
-            }
         }
     }
     

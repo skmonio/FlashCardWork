@@ -10,6 +10,11 @@ struct SettingsView: View {
     @State private var showingResetAlert = false
     @State private var showingCloudKitSettings = false
     
+    // State for duplicate detection
+    @State private var showingDuplicateAlert = false
+    @State private var duplicateResults: (success: Bool, message: String) = (false, "")
+    @State private var isCheckingDuplicates = false
+    
     // Control whether this is shown as a sheet or inline
     var isSheet: Bool = true
     
@@ -47,76 +52,43 @@ struct SettingsView: View {
         } message: {
             Text("This will reset all learning progress and percentages for all cards. This action cannot be undone.")
         }
+        .alert("Duplicate Detection", isPresented: $showingDuplicateAlert) {
+            Button("OK") { }
+        } message: {
+            Text(duplicateResults.message)
+        }
     }
     
     private var settingsContent: some View {
         List {
             // CloudKit Sync Section
             Section {
-                Button(action: {
-                    showingCloudKitSettings = true
-                }) {
-                    HStack {
-                        Image(systemName: "icloud.and.arrow.up")
-                            .foregroundColor(.blue)
-                            .frame(width: 24)
-                        
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("iCloud Sync")
-                                .foregroundColor(.primary)
-                            Text(viewModel.isCloudSyncEnabled ? "Enabled" : "Disabled")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                        
-                        Spacer()
-                        
-                        Image(systemName: "chevron.right")
-                            .foregroundColor(.secondary)
+                HStack {
+                    Image(systemName: "icloud.and.arrow.up")
+                        .foregroundColor(.blue)
+                        .frame(width: 24)
+                    
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("iCloud Sync")
+                            .foregroundColor(.primary)
+                        Text(viewModel.isCloudSyncEnabled ? "Enabled" : "Disabled")
                             .font(.caption)
+                            .foregroundColor(.secondary)
                     }
-                }
-                
-                // Add CloudKit test button for debugging
-                #if DEBUG
-                Button(action: {
-                    viewModel.testCloudKitQuota()
-                }) {
-                    HStack {
-                        Image(systemName: "ladybug")
-                            .foregroundColor(.orange)
-                            .frame(width: 24)
-                        
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Test CloudKit Quota")
-                                .foregroundColor(.primary)
-                            Text("Debug CloudKit sync issues")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                    
+                    Spacer()
+                    
+                    Toggle("", isOn: $viewModel.isCloudSyncEnabled)
+                        .onTapGesture(count: 10) {
+                            // Developer tools - 10x tap opens CloudKit settings
+                            showingCloudKitSettings = true
                         }
-                    }
                 }
-                
-                Button(action: {
-                    // Temporarily disable CloudKit to test if it's causing card advancement issues
-                    viewModel.isCloudSyncEnabled = false
-                    print("🔴 CloudKit temporarily disabled for testing")
-                }) {
-                    HStack {
-                        Image(systemName: "stop.circle")
-                            .foregroundColor(.red)
-                            .frame(width: 24)
-                        
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Disable CloudKit (Test)")
-                                .foregroundColor(.primary)
-                            Text("Test if CloudKit blocks card advancement")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                    }
+                .contentShape(Rectangle())
+                .onTapGesture(count: 10) {
+                    // Developer tools - 10x tap opens CloudKit settings
+                    showingCloudKitSettings = true
                 }
-                #endif
             } header: {
                 Text("Cloud Sync")
             } footer: {
@@ -239,6 +211,27 @@ struct SettingsView: View {
                 }
                 
                 Button(action: {
+                    checkAndRemoveDuplicates()
+                }) {
+                    HStack {
+                        Image(systemName: "magnifyingglass.circle")
+                            .foregroundColor(.purple)
+                            .frame(width: 24)
+                        
+                        Text("Check for Duplicates")
+                            .foregroundColor(.primary)
+                        
+                        Spacer()
+                        
+                        if isCheckingDuplicates {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                        }
+                    }
+                }
+                .disabled(isCheckingDuplicates)
+                
+                Button(action: {
                     showingResetAlert = true
                 }) {
                     HStack {
@@ -271,6 +264,31 @@ struct SettingsView: View {
             }
         }
         .listStyle(InsetGroupedListStyle())
+    }
+    
+    // MARK: - Duplicate Detection Methods
+    
+    private func checkAndRemoveDuplicates() {
+        isCheckingDuplicates = true
+        
+        Task {
+            let results = await viewModel.removeDuplicates()
+            
+            await MainActor.run {
+                isCheckingDuplicates = false
+                duplicateResults = results
+                showingDuplicateAlert = true
+                
+                if results.success {
+                    HapticManager.shared.successNotification()
+                    if settingsManager.isSoundEnabled {
+                        SoundManager.shared.playCorrectSound()
+                    }
+                } else {
+                    HapticManager.shared.errorNotification()
+                }
+            }
+        }
     }
 }
 

@@ -16,6 +16,10 @@ struct FlashCardApp: App {
         WindowGroup {
             ContentView()
                 .preferredColorScheme(settingsManager.getCurrentColorScheme())
+                .onAppear {
+                    // Lock orientation to portrait
+                    UIDevice.current.setValue(UIInterfaceOrientation.portrait.rawValue, forKey: "orientation")
+                }
         }
     }
 }

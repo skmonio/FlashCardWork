@@ -1,16 +1,25 @@
 import Foundation
 
 // MARK: - Dutch Vocabulary Pack System
-struct DutchVocabularyPack: Identifiable {
+struct DutchVocabularyPack: Identifiable, Hashable {
     let id = UUID()
     let name: String
     let level: LanguageLevel
     let category: VocabularyCategory
     let words: [DutchWord]
     let description: String
+    
+    // Hashable conformance
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+    
+    static func == (lhs: DutchVocabularyPack, rhs: DutchVocabularyPack) -> Bool {
+        return lhs.id == rhs.id
+    }
 }
 
-enum LanguageLevel: String, CaseIterable {
+enum LanguageLevel: String, CaseIterable, Hashable {
     case a1 = "A1"
     case a2 = "A2" 
     case b1 = "B1"
@@ -24,7 +33,7 @@ enum LanguageLevel: String, CaseIterable {
     }
 }
 
-enum VocabularyCategory: String, CaseIterable {
+enum VocabularyCategory: String, CaseIterable, Hashable {
     case family = "Familie"
     case food = "Eten en Drinken"
     case home = "Huis en Wonen"
@@ -81,7 +90,7 @@ enum VocabularyCategory: String, CaseIterable {
     case energy = "Energie"
 }
 
-struct DutchWord {
+struct DutchWord: Hashable {
     let word: String
     let article: String // de, het, or empty for non-nouns
     let definition: String
@@ -93,6 +102,16 @@ struct DutchWord {
     let wordType: WordType
     let level: LanguageLevel
     let category: VocabularyCategory
+    
+    // Hashable conformance
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(word)
+        hasher.combine(definition)
+    }
+    
+    static func == (lhs: DutchWord, rhs: DutchWord) -> Bool {
+        return lhs.word == rhs.word && lhs.definition == rhs.definition
+    }
     
     // Convert to FlashCard
     func toFlashCard() -> FlashCard {
@@ -109,7 +128,7 @@ struct DutchWord {
     }
 }
 
-enum WordType: String, CaseIterable {
+enum WordType: String, CaseIterable, Hashable {
     case noun = "Zelfstandig naamwoord"
     case verb = "Werkwoord"
     case adjective = "Bijvoeglijk naamwoord"

@@ -19,6 +19,7 @@ struct DeckView: View {
     @State private var selectedCards: Set<UUID> = []
     @State private var showingMoveSheet = false
     @State private var showingBulkDeleteAlert = false
+    @State private var isDeletingCards = false // Add loading state for bulk delete
     
     // Navigation state for full-screen forms
     @State private var showingAddCardView = false
