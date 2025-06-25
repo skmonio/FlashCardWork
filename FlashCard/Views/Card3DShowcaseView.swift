@@ -4,94 +4,92 @@ import RealityKit
 
 struct Card3DShowcaseView: View {
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: 40) {
-                    // SwiftUI Fake 3D Card
-                    VStack(spacing: 16) {
-                        Text("SwiftUI Fake 3D Card")
-                            .font(.title2)
-                            .fontWeight(.semibold)
-                        
-                        Fake3DCardView()
-                            .frame(height: 180)
-                        
-                        Text("Uses rotation, shadows, and gradients to simulate 3D")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                    }
-                    .padding()
-                    .background(Color(.systemGray6))
-                    .cornerRadius(12)
+        ScrollView {
+            VStack(spacing: 40) {
+                // SwiftUI Fake 3D Card
+                VStack(spacing: 16) {
+                    Text("SwiftUI Fake 3D Card")
+                        .font(.title2)
+                        .fontWeight(.semibold)
                     
-                    // SceneKit 3D Card
-                    VStack(spacing: 16) {
-                        Text("SceneKit 3D Card")
-                            .font(.title2)
-                            .fontWeight(.semibold)
-                        
-                        SceneKitCardView()
-                            .frame(height: 200)
-                        
-                        Text("Real 3D geometry with SceneKit")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                    }
-                    .padding()
-                    .background(Color(.systemGray6))
-                    .cornerRadius(12)
+                    Fake3DCardView()
+                        .frame(height: 180)
                     
-                    // RealityKit 3D Card
-                    VStack(spacing: 16) {
-                        Text("RealityKit 3D Card")
-                            .font(.title2)
-                            .fontWeight(.semibold)
-                        
-                        Group {
-                            #if targetEnvironment(simulator)
-                            // Use fallback on simulator
-                            FallbackRealityKitCardView()
-                            #else
-                            // Try RealityKit on device
-                            RealityKitCardView()
-                            #endif
-                        }
-                        .frame(height: 200)
-                        
-                        Text("Modern 3D rendering with RealityKit")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                    }
-                    .padding()
-                    .background(Color(.systemGray6))
-                    .cornerRadius(12)
-                    
-                    // Interactive Demo
-                    VStack(spacing: 16) {
-                        Text("Interactive 3D Card Demo")
-                            .font(.title2)
-                            .fontWeight(.semibold)
-                        
-                        Interactive3DCardView()
-                            .frame(height: 250)
-                        
-                        Text("Tap and drag to interact with the 3D card")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                    }
-                    .padding()
-                    .background(Color(.systemGray6))
-                    .cornerRadius(12)
+                    Text("Uses rotation, shadows, and gradients to simulate 3D")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
                 }
                 .padding()
+                .background(Color(.systemGray6))
+                .cornerRadius(12)
+                
+                // SceneKit 3D Card
+                VStack(spacing: 16) {
+                    Text("SceneKit 3D Card")
+                        .font(.title2)
+                        .fontWeight(.semibold)
+                    
+                    SceneKitCardView()
+                        .frame(height: 200)
+                    
+                    Text("Real 3D geometry with SceneKit")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                .padding()
+                .background(Color(.systemGray6))
+                .cornerRadius(12)
+                
+                // RealityKit 3D Card
+                VStack(spacing: 16) {
+                    Text("RealityKit 3D Card")
+                        .font(.title2)
+                        .fontWeight(.semibold)
+                    
+                    Group {
+                        #if targetEnvironment(simulator)
+                        // Use fallback on simulator
+                        FallbackRealityKitCardView()
+                        #else
+                        // Try RealityKit on device
+                        RealityKitCardView()
+                        #endif
+                    }
+                    .frame(height: 200)
+                    
+                    Text("Modern 3D rendering with RealityKit")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                .padding()
+                .background(Color(.systemGray6))
+                .cornerRadius(12)
+                
+                // Interactive Demo
+                VStack(spacing: 16) {
+                    Text("Interactive 3D Card Demo")
+                        .font(.title2)
+                        .fontWeight(.semibold)
+                    
+                    Interactive3DCardView()
+                        .frame(height: 250)
+                    
+                    Text("Tap and drag to interact with the 3D card")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                .padding()
+                .background(Color(.systemGray6))
+                .cornerRadius(12)
             }
-            .navigationTitle("3D Card Experiments")
-            .navigationBarTitleDisplayMode(.large)
+            .padding()
         }
+        .navigationTitle("3D Card Experiments")
+        .navigationBarTitleDisplayMode(.large)
     }
 }
 
