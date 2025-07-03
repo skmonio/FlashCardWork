@@ -37,6 +37,11 @@ struct TrueFalseView: View {
     private var deckIds: [UUID]
     private var shouldLoadSaveState: Bool
     
+    // Progressive study properties
+    private var studyMode: StudyMode?
+    private var onLevelComplete: ((LevelResult) -> Void)?
+    private var maxQuestions: Int?
+    
     // Session tracking for SRS
     @State private var currentSession: StudySession?
     @State private var sessionStartTime: Date = Date()
@@ -66,10 +71,20 @@ struct TrueFalseView: View {
     
     private let logger = Logger(subsystem: "com.flashcards", category: "TrueFalseView")
     
-    init(viewModel: FlashCardViewModel, cards: [FlashCard], deckIds: [UUID] = [], shouldLoadSaveState: Bool = false) {
+    init(viewModel: FlashCardViewModel, cards: [FlashCard], deckIds: [UUID] = [], shouldLoadSaveState: Bool = false, studyMode: StudyMode? = nil, maxQuestions: Int? = nil, onLevelComplete: ((LevelResult) -> Void)? = nil) {
         self.viewModel = viewModel
-        // Apply intelligent ordering: less-known cards first, well-known cards later
-        let sortedCards = viewModel.sortCardsForLearning(cards)
+        self.studyMode = studyMode
+        self.maxQuestions = maxQuestions
+        self.onLevelComplete = onLevelComplete
+        
+        // Apply intelligent ordering based on study mode
+        let sortedCards: [FlashCard]
+        if let studyMode = studyMode {
+            sortedCards = SmartStudyManager.shared.sortCardsForStudyMode(cards, mode: studyMode)
+        } else {
+            sortedCards = viewModel.sortCardsForLearning(cards)
+        }
+        
         self.cards = sortedCards
         _remainingCards = State(initialValue: sortedCards)
         self.deckIds = deckIds
@@ -85,29 +100,17 @@ struct TrueFalseView: View {
             } else {
                 gameView
             }
-            
-            // Bottom close button
-            HStack {
-                Spacer()
-                Button(action: {
-                    if hasSignificantProgress && !showingResults {
-                        showingCloseConfirmation = true
-                    } else {
-                        dismissToRoot()
-                    }
-                }) {
-                    Image(systemName: "xmark")
-                        .font(.title2)
-                        .foregroundColor(.secondary)
-                        .padding(12)
-                        .background(Circle().fill(Color(.systemGray5)))
-                }
-                Spacer()
-            }
-            .padding(.bottom, 20)
-            .background(Color(.systemBackground))
         }
-        .navigationBarHidden(true)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                UnifiedBackButton(style: .toolbar) {
+                    handleBackButton()
+                }
+            }
+        }
+        .navigationTitle("True or False")
+        .navigationBarTitleDisplayMode(.inline)
         .alert("Close Game?", isPresented: $showingCloseConfirmation) {
             Button("Save & Close", role: .destructive) {
                 saveProgressAndDismiss()
@@ -228,13 +231,14 @@ struct TrueFalseView: View {
                 // Use same header as TestView (no audio button)
                 GameHeaderView(
                     currentIndex: questionsAnswered + 1,
-                    totalCards: max(remainingCards.count + questionsAnswered, 1),
+                    totalCards: maxQuestions ?? cards.count,
                     score: userProfileManager.xp, // Use current XP instead of calculated score
                     combo: 0, // No combo system for True/False
                     knownCount: nil,
                     unknownCount: nil,
                     skippedCount: nil,
-                    sessionXP: sessionXP
+                    sessionXP: sessionXP,
+                    showProgressIndicator: false // Use Quick Study style
                 )
                 
                 Spacer()
@@ -249,47 +253,19 @@ struct TrueFalseView: View {
                         .padding(.horizontal)
                         .padding(.bottom, 30)
                     
-                    // Question text - "Does the word"
-                    Text("Does the word")
-                        .font(.headline)
-                        .foregroundColor(.primary)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal)
-                        .padding(.bottom, 10)
-                    
-                    // Question card (tappable for audio, double-tap for example)
-                    Button(action: {
-                        speakCurrentWord()
-                        HapticManager.shared.lightImpact()
-                    }) {
-                        VStack(spacing: 16) {
-                            // Word only (removed article display)
-                                Text(question.word)
-                                    .font(.system(size: 32, weight: .bold, design: .rounded))
-                                    .foregroundColor(.primary)
-                                    .multilineTextAlignment(.center)
-                            
-                            // Example (if showing) - plain text, centered
-                            if isShowingExample && !question.originalCard.example.isEmpty {
-                                Text(question.originalCard.example)
-                                    .font(.body)
-                                    .foregroundColor(.secondary)
-                                    .multilineTextAlignment(.center)
-                                    .lineLimit(4)
-                                    .transition(.opacity.combined(with: .scale))
-                            }
-                        }
-                        .padding(24)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 200)
-                        .background(
-                            RoundedRectangle(cornerRadius: 20)
-                                .fill(Color(.secondarySystemGroupedBackground))
-                                .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
-                        )
-                        .padding(.horizontal, 20)
+                    // Question text outside the card
+                    VStack(spacing: 8) {
+                        // Removed "Translates to:" from here
                     }
-                    .buttonStyle(PlainButtonStyle())
+                    .padding(.top, 20)
+                    
+                    // Use shared card component with vibrant borders - only show the word
+                    SharedGameCardView(
+                        card: question.originalCard,
+                        title: "",
+                        content: question.word,
+                        showArticle: false
+                    )
                     .onTapGesture(count: 2) {
                         // Double tap to show/hide example
                         HapticManager.shared.lightImpact()
@@ -302,59 +278,60 @@ struct TrueFalseView: View {
                         speakCurrentWord()
                         HapticManager.shared.lightImpact()
                     }
-                    
-                    Spacer()
-                    
-                    // "mean:" text above definition
-                    Text("mean")
-                        .font(.headline)
-                        .foregroundColor(.primary)
-                        .padding(.bottom, 10)
-                    
-                    // Definition display
-                    Text(question.definition)
-                        .font(.title3)
-                        .multilineTextAlignment(.center)
-                        .padding()
-                        .frame(maxWidth: .infinity)
-                        .background(Color.blue.opacity(0.1))
-                        .cornerRadius(10)
-                        .padding(.horizontal)
-                    
-                    Spacer()
-                    
-                    // Answer buttons (side by side, half width each)
-                    HStack(spacing: 12) {
-                        Button(action: { checkAnswer(true) }) {
-                            HStack {
-                                Image(systemName: "checkmark.circle.fill")
-                                Text("True")
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
-                            .padding(.horizontal, 16)
-                            .background(Color.green)
-                            .foregroundColor(.white)
-                            .cornerRadius(10)
-                        }
-                        
-                        Button(action: { checkAnswer(false) }) {
-                            HStack {
-                                Image(systemName: "x.circle.fill")
-                                Text("False")
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
-                            .padding(.horizontal, 16)
-                            .background(Color.red)
-                            .foregroundColor(.white)
-                            .cornerRadius(10)
-                        }
-                    }
-                    .padding(.horizontal)
-                    
-                    Spacer()
                 }
+                
+                Spacer()
+                
+                // "Translates to:" text above the definition
+                Text("Translates to:")
+                    .font(.title3)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.bottom, 8)
+                
+                // Definition display
+                Text(currentQuestion?.definition ?? "")
+                    .font(.title3)
+                    .multilineTextAlignment(.center)
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .background(Color.blue.opacity(0.1))
+                    .cornerRadius(10)
+                    .padding(.horizontal)
+                
+                Spacer()
+                
+                // Answer buttons (side by side, half width each)
+                HStack(spacing: 12) {
+                    Button(action: { checkAnswer(true) }) {
+                        HStack {
+                            Image(systemName: "checkmark.circle.fill")
+                            Text("True")
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .padding(.horizontal, 16)
+                        .background(Color.green)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                    }
+                    
+                    Button(action: { checkAnswer(false) }) {
+                        HStack {
+                            Image(systemName: "x.circle.fill")
+                            Text("False")
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .padding(.horizontal, 16)
+                        .background(Color.red)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                    }
+                }
+                .padding(.horizontal)
+                
+                Spacer()
             }
             
             // SpriteKit overlay for particle effects (non-interactive)
@@ -442,10 +419,24 @@ struct TrueFalseView: View {
     }
     
     private func setupNextQuestion() {
-        guard !remainingCards.isEmpty else {
+        // Check if we've reached the max questions limit
+        if let maxQuestions = maxQuestions, questionsAnswered >= maxQuestions {
             HapticManager.shared.gameComplete()
             StreakManager.shared.recordGameCompletion(); showingResults = true
             return
+        }
+        
+        // If we're out of cards but haven't reached maxQuestions, recycle cards
+        if remainingCards.isEmpty {
+            if let maxQuestions = maxQuestions, questionsAnswered < maxQuestions {
+                // Recycle all cards for progressive study mode
+                remainingCards = cards
+            } else {
+                // Normal mode - end game
+                HapticManager.shared.gameComplete()
+                StreakManager.shared.recordGameCompletion(); showingResults = true
+                return
+            }
         }
         
         // Reset example state for new question
@@ -541,7 +532,53 @@ struct TrueFalseView: View {
             saveCurrentProgress()
         }
         
-        // Clear feedback and show next question after delay
+        // Check if we've reached the max questions limit (for progressive study)
+        if let maxQuestions = maxQuestions, questionsAnswered >= maxQuestions {
+            // End session tracking immediately
+            if var session = currentSession {
+                session.knownCards = correctAnswers
+                session.unknownCards = incorrectAnswers
+                session.skippedCards = 0 // No skipped cards in True/False mode
+                session.endTime = Date()
+                session.duration = session.endTime!.timeIntervalSince(session.startTime)
+                statsManager.endSession(
+                    session,
+                    knownCards: correctAnswers,
+                    unknownCards: incorrectAnswers,
+                    skippedCards: 0
+                )
+                currentSession = session
+            }
+            
+            // Clear saved progress since game is complete
+            clearSavedProgress()
+            HapticManager.shared.gameComplete()
+            
+            // Call level completion callback immediately if this is a progressive study session
+            if let onLevelComplete = onLevelComplete {
+                let levelNumber: Int
+                switch studyMode {
+                case .maintenance: levelNumber = 1
+                case .cram: levelNumber = 2
+                case .adaptive: levelNumber = 3
+                default: levelNumber = 1
+                }
+                
+                let result = LevelResult(
+                    level: levelNumber,
+                    score: score,
+                    total: questionsAnswered
+                )
+                onLevelComplete(result)
+            } else {
+                withAnimation {
+                    StreakManager.shared.recordGameCompletion(); showingResults = true
+                }
+            }
+            return // Exit immediately, don't show next question
+        }
+        
+        // Clear feedback and show next question after delay (only for normal mode)
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
             if remainingCards.isEmpty {
                 // End session tracking
@@ -563,8 +600,27 @@ struct TrueFalseView: View {
                 // Clear saved progress since game is complete
                 clearSavedProgress()
                 HapticManager.shared.gameComplete()
-                withAnimation {
-                    StreakManager.shared.recordGameCompletion(); showingResults = true
+                
+                // Call level completion callback if this is a progressive study session
+                if let onLevelComplete = onLevelComplete {
+                    let levelNumber: Int
+                    switch studyMode {
+                    case .maintenance: levelNumber = 1
+                    case .cram: levelNumber = 2
+                    case .adaptive: levelNumber = 3
+                    default: levelNumber = 1
+                    }
+                    
+                    let result = LevelResult(
+                        level: levelNumber,
+                        score: score,
+                        total: questionsAnswered
+                    )
+                    onLevelComplete(result)
+                } else {
+                    withAnimation {
+                        StreakManager.shared.recordGameCompletion(); showingResults = true
+                    }
                 }
             } else {
                 setupNextQuestion()
@@ -588,6 +644,14 @@ struct TrueFalseView: View {
         
         // Clear any saved progress when resetting
         clearSavedProgress()
+    }
+    
+    private func handleBackButton() {
+        if hasSignificantProgress && !showingResults {
+            showingCloseConfirmation = true
+        } else {
+            dismiss()
+        }
     }
     
     private func dismissToRoot() {

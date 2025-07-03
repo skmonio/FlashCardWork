@@ -33,7 +33,7 @@ struct ContentView: View {
         Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { timer in
             // Consider ready when we have at least the basic system decks
             // (which should be created even if no user data exists)
-            let hasBasicDecks = viewModel.decks.count >= 4 // Uncategorized, Learnt, Learning, Review
+            let hasBasicDecks = viewModel.decks.count >= 2 // Uncategorized, Review
             
             if hasBasicDecks {
                 print("✅ ViewModel ready with \(viewModel.decks.count) decks")

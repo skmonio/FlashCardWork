@@ -14,12 +14,8 @@ struct GameFooterView: View {
         HStack {
             // Previous button (left side)
             if let onPrevious = onPrevious, canGoPrevious {
-                Button(action: onPrevious) {
-                    Image(systemName: "chevron.left")
-                        .font(.title2)
-                        .foregroundColor(.primary)
-                        .padding(12)
-                        .background(Circle().fill(Color(.systemGray5)))
+                UnifiedBackButton(style: .floating) {
+                    onPrevious()
                 }
             }
             
@@ -27,18 +23,18 @@ struct GameFooterView: View {
             
             // Close button (center) - only show when not on results screen
             if !showingResults {
-                Button(action: {
-                    if hasSignificantProgress && !showingResults {
-                        showingCloseConfirmation = true
-                    } else {
-                        onClose()
-                    }
-                }) {
-                    Image(systemName: "xmark")
-                        .font(.title2)
-                        .foregroundColor(.secondary)
-                        .padding(12)
-                        .background(Circle().fill(Color(.systemGray5)))
+            Button(action: {
+                if hasSignificantProgress && !showingResults {
+                    showingCloseConfirmation = true
+                } else {
+                    onClose()
+                }
+            }) {
+                Image(systemName: "xmark")
+                    .font(.title2)
+                    .foregroundColor(.secondary)
+                    .padding(12)
+                    .background(Circle().fill(Color(.systemGray5)))
                 }
             }
             

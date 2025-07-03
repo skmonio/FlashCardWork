@@ -39,10 +39,10 @@ struct StudySessionResultsView: View {
                     VStack(spacing: 12) {
                         // Centered XP Earned
                         VStack(spacing: 8) {
-                            HStack {
-                                Image(systemName: "star.fill")
-                                    .foregroundColor(.yellow)
-                                    .font(.title2)
+                        HStack {
+                            Image(systemName: "star.fill")
+                                .foregroundColor(.yellow)
+                                .font(.title2)
                                 Text("\(xpGained) XP")
                                     .font(.title2)
                                     .fontWeight(.bold)

@@ -20,6 +20,11 @@ struct WritingView: View {
     @FocusState private var isKeyboardFocused: Bool
     @Environment(\.dismiss) private var dismiss
     
+    // Progressive study properties
+    private var studyMode: StudyMode?
+    private var onLevelComplete: ((LevelResult) -> Void)?
+    private var maxQuestions: Int?
+    
     // Add speech service for pronunciation
     @StateObject private var speechService = DutchSpeechService.shared
     
@@ -54,12 +59,15 @@ struct WritingView: View {
         return speechService.isSpeaking && speechService.currentlySpeaking == textToSpeak
     }
     
-    init(viewModel: FlashCardViewModel, cards: [FlashCard], deckIds: [UUID] = [], shouldLoadSaveState: Bool = false) {
+    init(viewModel: FlashCardViewModel, cards: [FlashCard], deckIds: [UUID] = [], shouldLoadSaveState: Bool = false, studyMode: StudyMode? = nil, maxQuestions: Int? = nil, onLevelComplete: ((LevelResult) -> Void)? = nil) {
         self.viewModel = viewModel
         // Apply intelligent ordering: less-known cards first, well-known cards later
         _cards = State(initialValue: viewModel.sortCardsForLearning(cards))
         self.deckIds = deckIds
         self.shouldLoadSaveState = shouldLoadSaveState
+        self.studyMode = studyMode
+        self.maxQuestions = maxQuestions
+        self.onLevelComplete = onLevelComplete
     }
     
     var body: some View {
@@ -71,29 +79,17 @@ struct WritingView: View {
             } else {
                 gameView
             }
-            
-            // Bottom close button
-            HStack {
-                Spacer()
-                Button(action: {
-                    if hasSignificantProgress && !showingResults {
-                        showingCloseConfirmation = true
-                    } else {
-                        dismissToRoot()
-                    }
-                }) {
-                    Image(systemName: "xmark")
-                        .font(.title2)
-                        .foregroundColor(.secondary)
-                        .padding(12)
-                        .background(Circle().fill(Color(.systemGray5)))
-                }
-                Spacer()
-            }
-            .padding(.bottom, 20)
-            .background(Color(.systemBackground))
         }
-        .navigationBarHidden(true)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                UnifiedBackButton(style: .toolbar) {
+                    handleBackButton()
+                }
+            }
+        }
+        .navigationTitle("Write Your Cards")
+        .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             if shouldLoadSaveState {
                 loadSavedProgress()
@@ -145,31 +141,32 @@ struct WritingView: View {
             // Unified header with progress bar
             GameHeaderView(
                 currentIndex: currentIndex + 1,
-                totalCards: cards.count,
-                score: userProfileManager.xp, // Use current XP instead of calculated score
+                totalCards: maxQuestions ?? cards.count,
+                score: userProfileManager.xp,
                 combo: comboCount,
                 knownCount: nil,
                 unknownCount: nil,
                 skippedCount: nil,
-                sessionXP: sessionXP
+                sessionXP: sessionXP,
+                showProgressIndicator: false,
+                progressOverride: showingResults ? 1.0 : Double(max(currentIndex, 0)) / Double(maxQuestions ?? cards.count)
             )
             
             if let card = currentCard {
                 VStack(spacing: 20) {
-                    // Definition display with reduced spacing
-                    VStack(spacing: 15) {
-                        Text("Write the translation for the word:")
-                            .font(.title3)
-                            .foregroundColor(.secondary)
-                        
-                        Text(card.definition)
-                            .font(.title2)
-                            .bold()
-                            .multilineTextAlignment(.center)
-                            .padding()
-                            .background(Color(.systemGray6))
-                            .cornerRadius(12)
-                    }
+                    // Instruction text outside the card
+                    Text("Write the translation for:")
+                        .font(.title3)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                    
+                    // Use shared card component with vibrant borders - only show the word
+                    SharedGameCardView(
+                        card: card,
+                        title: "",
+                        content: card.word,
+                        showArticle: false
+                    )
                     
                     // Peek display (simplified - just shows the word)
                     if showingPeek && !hasAnswered {
@@ -529,6 +526,39 @@ struct WritingView: View {
         // Auto-save progress periodically (every 5 cards)
         if currentIndex % 5 == 0 && currentIndex > 0 {
             saveCurrentProgress()
+        }
+        
+        // Check if we've reached the max questions limit (for progressive study)
+        if let maxQuestions = maxQuestions, currentIndex >= maxQuestions - 1 {
+            print("✏️ Reached max questions limit for progressive study")
+            HapticManager.shared.gameComplete()
+            
+            // Clear saved progress since game is complete
+            clearSavedProgress()
+            
+            // Call level completion callback if this is a progressive study session
+            if let onLevelComplete = onLevelComplete {
+                let levelNumber: Int
+                switch studyMode {
+                case .maintenance: levelNumber = 1
+                case .cram: levelNumber = 2
+                case .adaptive: levelNumber = 3
+                default: levelNumber = 1
+                }
+                
+                let result = LevelResult(
+                    level: levelNumber,
+                    score: correctAnswers,
+                    total: maxQuestions
+                )
+                onLevelComplete(result)
+            } else {
+                // Post notification for regular writing mode
+                NotificationCenter.default.post(name: .writingSessionCompleted, object: nil)
+                
+                StreakManager.shared.recordGameCompletion(); showingResults = true
+            }
+            return
         }
         
         if currentIndex < cards.count - 1 {

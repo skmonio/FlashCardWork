@@ -184,7 +184,11 @@ struct UserProfileView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") { dismiss() }
+                    Button(action: { dismiss() }) {
+                        Image(systemName: "xmark")
+                            .font(.title2)
+                            .foregroundColor(.primary)
+                    }
                 }
             }
             .sheet(isPresented: $showingEditProfile) {

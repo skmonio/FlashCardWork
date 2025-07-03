@@ -126,7 +126,7 @@ xcodebuild test -scheme FlashCard -destination 'platform=iOS Simulator,name=iPho
 ### Basic Functionality
 - [ ] App launches without crashing
 - [ ] Example cards are loaded on first launch
-- [ ] System decks (Uncategorized, Learnt, Learning, Review) are created
+- [ ] System decks (Uncategorized, Review) are created
 - [ ] Can add new cards
 - [ ] Can create new decks
 - [ ] Can edit existing cards and decks

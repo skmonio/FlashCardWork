@@ -57,6 +57,17 @@ struct StudyModeSelectionView: View {
         .navigationTitle(gameMode.title)
         .navigationBarTitleDisplayMode(.large)
         .navigationBarBackButtonHidden(false)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button(action: {
+                    navigationCoordinator.presentSheet(.gameInfo(gameMode.gameInfoType))
+                }) {
+                    Image(systemName: "info.circle.fill")
+                        .font(.title2)
+                        .foregroundColor(.blue)
+                }
+            }
+        }
     }
 }
 

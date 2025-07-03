@@ -1363,7 +1363,7 @@ func exportCardsToCSV() -> String {
     func checkForDuplicateCard(word: String, definition: String, example: String, article: String, plural: String, pastTense: String, futureTense: String, pastParticiple: String) -> DuplicateCheckResult {
         let trimmedWord = word.trimmingCharacters(in: .whitespacesAndNewlines)
         
-        guard let existingCard = flashCards.first(where: { $0.word.lowercased() == trimmedWord.lowercased() }) else {
+        guard let existingCard = flashCards.first(where: { $0.word == trimmedWord }) else {
             return .noDuplicate
         }
         
@@ -2045,6 +2045,78 @@ func exportCardsToCSV() -> String {
         #else
         triggerCloudKitSync()
         #endif
+    }
+    
+    // MARK: - Duplicate Card Management
+    
+    
+    /// Check for duplicate cards in the flashCards array and log them
+    func checkForDuplicateCards() -> (hasDuplicates: Bool, duplicateCount: Int) {
+        var seenCardIds: Set<UUID> = []
+        var seenWords: Set<String> = []
+        var duplicateIds: [UUID] = []
+        var duplicateWords: [String] = []
+        
+        for card in flashCards {
+            // Check for duplicate IDs
+            if seenCardIds.contains(card.id) {
+                duplicateIds.append(card.id)
+                print("⚠️ Found duplicate card ID: \(card.id) for word: '\(card.word)'")
+            } else {
+                seenCardIds.insert(card.id)
+            }
+            
+            // Check for duplicate words (case-insensitive)
+            let lowercasedWord = card.word.lowercased()
+            if seenWords.contains(lowercasedWord) {
+                duplicateWords.append(card.word)
+                print("⚠️ Found duplicate word: '\(card.word)' with ID: \(card.id)")
+            } else {
+                seenWords.insert(lowercasedWord)
+            }
+        }
+        
+        let totalDuplicates = duplicateIds.count + duplicateWords.count
+        if totalDuplicates > 0 {
+            print("🔍 Found \(duplicateIds.count) duplicate IDs and \(duplicateWords.count) duplicate words")
+        }
+        
+        return (totalDuplicates > 0, totalDuplicates)
+    }
+    
+    /// Remove duplicate cards from the flashCards array
+    func removeDuplicateCards() -> (removedCount: Int, message: String) {
+        print("🧹 Removing duplicate cards from flashCards array")
+        let originalCount = flashCards.count
+        
+        // Remove duplicates by ID (keep first occurrence)
+        var uniqueCards: [FlashCard] = []
+        var seenCardIds: Set<UUID> = []
+        var removedCount = 0
+        
+        for card in flashCards {
+            if !seenCardIds.contains(card.id) {
+                uniqueCards.append(card)
+                seenCardIds.insert(card.id)
+            } else {
+                removedCount += 1
+                print("🗑️ Removed duplicate card: '\(card.word)' with ID: \(card.id)")
+            }
+        }
+        
+        // Update the flashCards array
+        flashCards = uniqueCards
+        
+        // Update deck associations to ensure consistency
+        updateCardDeckAssociations()
+        
+        // Save changes
+        saveCards()
+        
+        let message = "Removed \(removedCount) duplicate cards. Total cards: \(originalCount) → \(flashCards.count)"
+        print("✅ \(message)")
+        
+        return (removedCount, message)
     }
 }
 

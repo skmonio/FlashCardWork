@@ -42,7 +42,14 @@ struct ImageImportView: View {
     }
     
     var body: some View {
-        NavigationStack {
+        VStack(spacing: 0) {
+            UnifiedHeader(
+                title: "Import from Image",
+                showBackButton: true,
+                showProfileIcon: false,
+                onBack: { NavigationCoordinator.shared.pop() }
+            )
+            
             VStack(spacing: 20) {
                 if selectedImage == nil {
                     // Image selection interface
@@ -84,74 +91,64 @@ struct ImageImportView: View {
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     
-                } else {
+                } else if isProcessingImage {
                     // Image processing and word selection
-                    if isProcessingImage {
-                        VStack(spacing: 20) {
-                            ProgressView()
-                                .scaleEffect(1.5)
-                            
-                            Text("Analyzing image...")
-                                .font(.headline)
-                            
-                            Text("Extracting text using OCR")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                        }
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    VStack(spacing: 20) {
+                        ProgressView()
+                            .scaleEffect(1.5)
                         
-                    } else if showingWordSelection {
-                        WordSelectionView(
-                            image: selectedImage!,
-                            extractedWords: $extractedWords,
-                            selectedDeckIds: $selectedDeckIds,
-                            viewModel: viewModel
-                        ) {
-                            dismiss()
-                        }
+                        Text("Analyzing image...")
+                            .font(.headline)
                         
-                    } else {
-                        // Show image with overlay
-                        VStack(spacing: 16) {
-                            Text("Image Captured")
-                                .font(.headline)
-                            
-                            Image(uiImage: selectedImage!)
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .frame(maxHeight: 300)
-                                .cornerRadius(12)
-                                .shadow(radius: 5)
-                            
-                            VStack(spacing: 12) {
-                                Button("Extract Text") {
-                                    processImage()
-                                }
-                                .buttonStyle(.borderedProminent)
-                                .controlSize(.large)
-                                
-                                Button("Choose Different Image") {
-                                    selectedImage = nil
-                                    extractedWords = []
-                                    recognizedText = ""
-                                }
-                                .buttonStyle(.bordered)
+                        Text("Extracting text using OCR")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    
+                } else if showingWordSelection {
+                    WordSelectionView(
+                        image: selectedImage!,
+                        extractedWords: $extractedWords,
+                        selectedDeckIds: $selectedDeckIds,
+                        viewModel: viewModel
+                    ) {
+                        NavigationCoordinator.shared.pop()
+                    }
+                    
+                } else {
+                    // Show image with overlay
+                    VStack(spacing: 16) {
+                        Text("Image Captured")
+                            .font(.headline)
+                        
+                        Image(uiImage: selectedImage!)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(maxHeight: 300)
+                            .cornerRadius(12)
+                            .shadow(radius: 5)
+                        
+                        VStack(spacing: 12) {
+                            Button("Extract Text") {
+                                processImage()
                             }
+                            .buttonStyle(.borderedProminent)
+                            .controlSize(.large)
+                            
+                            Button("Choose Different Image") {
+                                selectedImage = nil
+                                extractedWords = []
+                                recognizedText = ""
+                            }
+                            .buttonStyle(.bordered)
                         }
-                        .padding()
                     }
-                }
-            }
-            .navigationTitle("Import from Image")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
+                    .padding()
                 }
             }
         }
+        .navigationBarHidden(true)
         .sheet(isPresented: $showingImagePicker) {
             ImagePicker(selectedImage: $selectedImage)
         }

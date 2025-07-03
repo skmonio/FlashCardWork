@@ -25,6 +25,12 @@ struct FlashCardApp: App {
                     // Initialize notification manager and schedule notifications
                     notificationManager.scheduleNotifications()
                 }
+                .onReceive(NotificationCenter.default.publisher(for: UIDevice.orientationDidChangeNotification)) { _ in
+                    // Force portrait orientation when device rotates
+                    if UIDevice.current.orientation != .portrait {
+                        UIDevice.current.setValue(UIInterfaceOrientation.portrait.rawValue, forKey: "orientation")
+                    }
+                }
         }
     }
 }

@@ -20,7 +20,6 @@ class NavigationCoordinator: ObservableObject {
     enum SheetType: Identifiable {
         case addCard(deck: Deck? = nil)
         case addDeck
-        case imageImport
         case editCard(FlashCard)
         case moveCards([UUID], Deck?)
         case settings
@@ -35,7 +34,6 @@ class NavigationCoordinator: ObservableObject {
             switch self {
             case .addCard: return "addCard"
             case .addDeck: return "addDeck"
-            case .imageImport: return "imageImport"
             case .editCard: return "editCard"
             case .moveCards: return "moveCards"
             case .settings: return "settings"
@@ -174,6 +172,8 @@ enum NavigationDestination: Hashable {
     case studyTypeSelection(GameMode, StudyMode)
     case quickStudy(GameMode, StudyMode, Int)
     case normalStudy(GameMode, StudyMode)
+    case progressiveStudy(GameMode)
+    case continueGame(GameMode)
     case deck(Deck)
     case allCards
     case manageDecks
@@ -185,6 +185,7 @@ enum NavigationDestination: Hashable {
     case wordScrambleView([FlashCard], [UUID])
     case dutchVocabulary
     case dutchGrammar
+    case imageImport
 }
 
 // MARK: - Simplified Navigation Extensions

@@ -181,15 +181,15 @@ struct AudioControlView: View {
         guard let audioManager = audioManager else { return }
         
         // Always try to start recording - AudioManager will handle permission request
-        // Update UI immediately
-        localIsRecording = true
-        localRecordingTime = 0
-        
-        // Start the recording timer
-        recordingTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
-            localRecordingTime += 0.1
-        }
-        
+            // Update UI immediately
+            localIsRecording = true
+            localRecordingTime = 0
+            
+            // Start the recording timer
+            recordingTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
+                localRecordingTime += 0.1
+            }
+            
         // Start actual recording (AudioManager will request permission if needed)
         audioManager.startRecording(for: cardId) { success in
             if !success {

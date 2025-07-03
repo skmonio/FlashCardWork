@@ -102,7 +102,7 @@ struct ModelTests {
     
     @Test func testDeckCoding() async throws {
         let parentId = UUID()
-        let originalDeck = Deck(name: "Test Deck")
+        var originalDeck = Deck(name: "Test Deck")
         originalDeck.parentId = parentId
         originalDeck.subDeckIds = [UUID(), UUID()]
         
@@ -121,7 +121,7 @@ struct ModelTests {
     
     @Test func testDeckCloudKitConversion() async throws {
         let parentId = UUID()
-        let originalDeck = Deck(name: "CloudKit Test")
+        var originalDeck = Deck(name: "CloudKit Test")
         originalDeck.parentId = parentId
         originalDeck.subDeckIds = [UUID()]
         
@@ -152,7 +152,7 @@ struct ModelTests {
     }
     
     @Test func testDeckEmptySubDeckIds() async throws {
-        let deck = Deck(name: "Test")
+        var deck = Deck(name: "Test")
         deck.subDeckIds = []
         
         let record = deck.toCKRecord()

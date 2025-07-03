@@ -5,7 +5,7 @@ struct AllCardsView: View {
     @ObservedObject var viewModel: FlashCardViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var searchText = ""
-    @State private var sortOption: SortOption = .alphabeticalByWord
+    @State private var sortOption: SortOption = .az(ascending: true)
     @State private var selectedCard: FlashCard?
     @State private var showingEditCardView = false
     @State private var cardToDelete: FlashCard?
@@ -20,36 +20,26 @@ struct AllCardsView: View {
     @State private var showingMoveSheet = false
     @State private var isDeletingCards = false // Add loading state for bulk delete
     
+    // Deck selection for removal
+    @State private var showingDeckSelectionSheet = false
+    
+    // Deck selection for multiple deck removal
+    @State private var selectedDecksForRemoval: Set<UUID> = []
+    
     private let logger = Logger(subsystem: "com.flashcards", category: "AllCardsView")
     
-    enum SortOption: CaseIterable {
-        case alphabeticalByWord
-        case reverseAlphabeticalByWord
-        case alphabeticalByDefinition
-        case reverseAlphabeticalByDefinition
-        case dateCreatedNewest
-        case dateCreatedOldest
-        case successCount
+    enum SortOption: Hashable {
+        case az(ascending: Bool)
         
         var label: String {
             switch self {
-            case .alphabeticalByWord: return "Word A-Z"
-            case .reverseAlphabeticalByWord: return "Word Z-A"
-            case .alphabeticalByDefinition: return "Definition A-Z"
-            case .reverseAlphabeticalByDefinition: return "Definition Z-A"
-            case .dateCreatedNewest: return "Newest First"
-            case .dateCreatedOldest: return "Oldest First"
-            case .successCount: return "Most Practiced"
+            case .az(let ascending): return ascending ? "A-Z" : "Z-A"
             }
         }
         
         var icon: String {
             switch self {
-            case .alphabeticalByWord, .alphabeticalByDefinition: return "textformat.abc"
-            case .reverseAlphabeticalByWord, .reverseAlphabeticalByDefinition: return "textformat.abc"
-            case .dateCreatedNewest: return "calendar.badge.plus"
-            case .dateCreatedOldest: return "calendar"
-            case .successCount: return "chart.bar.fill"
+            case .az(let ascending): return ascending ? "arrow.up" : "arrow.down"
             }
         }
     }
@@ -64,20 +54,9 @@ struct AllCardsView: View {
         
         return filtered.sorted { card1, card2 in
             switch sortOption {
-            case .alphabeticalByWord:
-                return card1.word.localizedCaseInsensitiveCompare(card2.word) == .orderedAscending
-            case .reverseAlphabeticalByWord:
-                return card1.word.localizedCaseInsensitiveCompare(card2.word) == .orderedDescending
-            case .alphabeticalByDefinition:
-                return card1.definition.localizedCaseInsensitiveCompare(card2.definition) == .orderedAscending
-            case .reverseAlphabeticalByDefinition:
-                return card1.definition.localizedCaseInsensitiveCompare(card2.definition) == .orderedDescending
-            case .dateCreatedNewest:
-                return card1.dateCreated > card2.dateCreated
-            case .dateCreatedOldest:
-                return card1.dateCreated < card2.dateCreated
-            case .successCount:
-                return card1.successCount > card2.successCount
+            case .az(let ascending):
+                let cmp = card1.word.localizedCaseInsensitiveCompare(card2.word)
+                return ascending ? (cmp == .orderedAscending) : (cmp == .orderedDescending)
             }
         }
     }
@@ -104,13 +83,38 @@ struct AllCardsView: View {
                 viewModel.deleteCard(at: IndexSet([index]))
             }
         } else {
-            // Only remove from the first deck it's found in (since this is "All Cards" view)
-            if let firstDeck = viewModel.decks.first(where: { $0.cards.contains(where: { $0.id == card.id }) }) {
-                viewModel.removeCardFromDeck(card: card, deck: firstDeck)
+            // Show deck selection sheet for single deck removal
+            showingDeckSelectionSheet = true
+            return
+        }
+        
+        cardToDelete = nil
+        refreshID = UUID()
+    }
+    
+    private func removeCardFromSelectedDecks() {
+        guard let card = cardToDelete else {
+            cardToDelete = nil
+            selectedDecksForRemoval.removeAll()
+            return
+        }
+        
+        // Get all decks that contain this card
+        let cardDecks = viewModel.getAllDecksHierarchical().filter { deck in
+            card.deckIds.contains(deck.id) &&
+            deck.name != "Review" &&
+            deck.name != "Uncategorized"
+        }
+        
+        // Remove card from selected decks
+        for deck in cardDecks {
+            if selectedDecksForRemoval.contains(deck.id) {
+                viewModel.removeCardFromDeck(card: card, deck: deck)
             }
         }
         
         cardToDelete = nil
+        selectedDecksForRemoval.removeAll()
         refreshID = UUID()
     }
     
@@ -136,103 +140,192 @@ struct AllCardsView: View {
     }
     
     var body: some View {
-            VStack(spacing: 0) {
-                // Search and Sort Controls
-                VStack(spacing: 12) {
-                    // Search Bar
-                    HStack {
-                        Image(systemName: "magnifyingglass")
-                            .foregroundColor(.secondary)
-                        
-                        TextField("Search cards...", text: $searchText)
-                            .textFieldStyle(RoundedBorderTextFieldStyle())
-                        
-                        if !searchText.isEmpty {
-                            Button(action: {
-                                searchText = ""
-                            }) {
-                                Image(systemName: "xmark.circle.fill")
-                                    .foregroundColor(.secondary)
-                            }
+        VStack(spacing: 0) {
+            UnifiedHeader(
+                title: "All Cards",
+                showBackButton: true,
+                showProfileIcon: false,
+                onBack: { NavigationCoordinator.shared.pop() },
+                trailing: {
+                    AnyView(
+                        Button(action: {
+                            NavigationCoordinator.shared.presentSheet(.addCard())
+                        }) {
+                            Image(systemName: "plus")
+                                .font(.title2)
+                                .foregroundColor(.blue)
+                        }
+                    )
+                }
+            )
+            VStack(spacing: 12) {
+                // Search Bar
+                HStack {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundColor(.secondary)
+                    TextField("Search cards...", text: $searchText)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                    if !searchText.isEmpty {
+                        Button(action: {
+                            searchText = ""
+                        }) {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(.secondary)
                         }
                     }
-                    .padding(.horizontal)
                 }
-                .padding(.vertical, 8)
-                .background(Color(.systemGroupedBackground))
-                
-                // Cards List
-                if filteredAndSortedCards.isEmpty {
-                    // Empty State
-                    VStack(spacing: 16) {
-                        Image(systemName: searchText.isEmpty ? "rectangle.stack" : "magnifyingglass")
-                            .font(.system(size: 50))
-                            .foregroundColor(.secondary)
-                        
-                        Text(searchText.isEmpty ? "No Cards Yet" : "No Matching Cards")
-                            .font(.title2)
-                            .bold()
-                        
-                        Text(searchText.isEmpty ? 
-                             "Start adding cards to see them here." : 
-                             "Try a different search term.")
-                            .font(.body)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
+                .padding(.horizontal)
+                // Sort Picker
+                HStack(spacing: 8) {
+                    ForEach([
+                        SortOption.az(ascending: true)
+                    ], id: \.self) { option in
+                        Button(action: {
+                            if sortOption.label == option.label { // Compare by label for toggle
+                                // Toggle direction for all
+                                switch sortOption {
+                                case .az(let ascending):
+                                    sortOption = .az(ascending: !ascending)
+                                }
+                            } else {
+                                // Select new sort option
+                                switch option {
+                                case .az:
+                                    sortOption = .az(ascending: true)
+                                }
+                            }
+                        }) {
+                            HStack(spacing: 4) {
+                                Image(systemName: {
+                                    switch option {
+                                    case .az:
+                                        if case .az(let ascending) = sortOption { return ascending ? "arrow.up" : "arrow.down" } else { return "arrow.up" }
+                                    }
+                                }())
+                                Text({
+                                    switch option {
+                                    case .az:
+                                        if case .az(let ascending) = sortOption { return ascending ? "A-Z" : "Z-A" } else { return "A-Z" }
+                                    }
+                                }())
+                            }
+                            .font(.subheadline)
+                            .foregroundColor({
+                                switch option {
+                                case .az:
+                                    if case .az = sortOption { return .blue } else { return .primary }
+                                }
+                            }())
+                            .padding(.vertical, 6)
+                            .padding(.horizontal, 12)
+                            .background({
+                                switch option {
+                                case .az:
+                                    if case .az = sortOption { return Color(.systemGray5).opacity(0.2) } else { return Color.clear }
+                                }
+                            }())
+                            .cornerRadius(8)
+                        }
                     }
-                    .padding()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else {
-                    // Cards List
-                    List {
-                        ForEach(filteredAndSortedCards) { card in
-                        HStack {
-                            if isSelectionMode {
-                                Button(action: {
+                    
+                    Spacer()
+                    
+                    // Select Button
+                    Button(action: {
+                        isSelectionMode.toggle()
+                        if !isSelectionMode {
+                            selectedCards.removeAll()
+                        }
+                    }) {
+                        HStack(spacing: 4) {
+                            Image(systemName: isSelectionMode ? "checkmark.circle.fill" : "checkmark.circle")
+                            Text(isSelectionMode ? "Cancel" : "Select")
+                        }
+                        .font(.subheadline)
+                        .foregroundColor(isSelectionMode ? .red : .blue)
+                        .padding(.vertical, 6)
+                        .padding(.horizontal, 12)
+                        .background(Color(.systemGray5).opacity(0.2))
+                        .cornerRadius(8)
+                    }
+                }
+                .padding(.horizontal)
+            }
+            .padding(.vertical, 8)
+            .background(Color(.systemBackground))
+            
+            // Cards List
+            if filteredAndSortedCards.isEmpty {
+                // Empty State
+                VStack(spacing: 16) {
+                    Image(systemName: searchText.isEmpty ? "rectangle.stack" : "magnifyingglass")
+                        .font(.system(size: 50))
+                        .foregroundColor(.secondary)
+                    
+                    Text(searchText.isEmpty ? "No Cards Yet" : "No Matching Cards")
+                        .font(.title2)
+                        .bold()
+                    
+                    Text(searchText.isEmpty ? 
+                         "Start adding cards to see them here." : 
+                         "Try a different search term.")
+                        .font(.body)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                .padding()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                // Cards List
+                List {
+                    ForEach(filteredAndSortedCards) { card in
+                    HStack {
+                        if isSelectionMode {
+                            Button(action: {
+                                if selectedCards.contains(card.id) {
+                                    selectedCards.remove(card.id)
+                                } else {
+                                    selectedCards.insert(card.id)
+                                }
+                            }) {
+                                Image(systemName: selectedCards.contains(card.id) ? "checkmark.circle.fill" : "circle")
+                                    .foregroundColor(selectedCards.contains(card.id) ? .blue : .gray)
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                        }
+                        
+                        CardRowView(
+                            card: card,
+                            viewModel: viewModel,
+                            onEdit: {
+                                if isSelectionMode {
                                     if selectedCards.contains(card.id) {
                                         selectedCards.remove(card.id)
                                     } else {
                                         selectedCards.insert(card.id)
                                     }
-                                }) {
-                                    Image(systemName: selectedCards.contains(card.id) ? "checkmark.circle.fill" : "circle")
-                                        .foregroundColor(selectedCards.contains(card.id) ? .blue : .gray)
+                                } else {
+                                selectedCard = card
+                                showingEditCardView = true
                                 }
-                                .buttonStyle(PlainButtonStyle())
+                            },
+                            onDelete: {
+                                cardToDelete = card
+                                if isCardInMultipleDecks(card) {
+                                    showingDeckSpecificDeleteAlert = true
+                                } else {
+                                showingDeleteAlert = true
                             }
-                            
-                            CardRowView(
-                                card: card,
-                                viewModel: viewModel,
-                                onEdit: {
-                                    if isSelectionMode {
-                                        if selectedCards.contains(card.id) {
-                                            selectedCards.remove(card.id)
-                                        } else {
-                                            selectedCards.insert(card.id)
-                                        }
-                                    } else {
-                                    selectedCard = card
-                                    showingEditCardView = true
-                                    }
-                                },
-                                onDelete: {
-                                    cardToDelete = card
-                                    if isCardInMultipleDecks(card) {
-                                        showingDeckSpecificDeleteAlert = true
-                                    } else {
-                                    showingDeleteAlert = true
-                                }
-                                },
-                                isCardInMultipleDecks: isCardInMultipleDecks(card)
-                            )
-                            .disabled(isSelectionMode)
-                        }
-                        }
+                            },
+                            isCardInMultipleDecks: isCardInMultipleDecks(card)
+                        )
+                        .disabled(isSelectionMode)
                     }
-                    .listStyle(PlainListStyle())
+                    }
                 }
-            
+                .listStyle(PlainListStyle())
+            }
+        
             // Bottom Navigation Bar (only show when in selection mode)
             if isSelectionMode {
                 HStack {
@@ -297,61 +390,9 @@ struct AllCardsView: View {
                     alignment: .top
                 )
             }
-            }
-            .navigationTitle("All Cards (\(filteredAndSortedCards.count))")
-            .navigationBarTitleDisplayMode(.large)
-        .navigationBarBackButtonHidden(true)
-        .toolbar(content: {
-            // Back button - TOP LEFT
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button(action: {
-                    if isSelectionMode {
-                        isSelectionMode = false
-                        selectedCards.removeAll()
-                    } else {
-                        dismiss()
-                    }
-                }) {
-                    Text(isSelectionMode ? "Cancel" : "Back")
-                }
-            }
-            
-            // Select button - MIDDLE
-            ToolbarItem(placement: .principal) {
-                if !isSelectionMode {
-                    Button("Select") {
-                        isSelectionMode = true
-                    }
-                } else {
-                    Text("Select Cards")
-                        .font(.headline)
-                        .bold()
-                }
-            }
-            
-            // Sort button - TOP RIGHT
-            ToolbarItem(placement: .navigationBarTrailing) {
-                if !isSelectionMode {
-                    Menu {
-                        ForEach(SortOption.allCases, id: \.self) { option in
-                            Button(action: {
-                                sortOption = option
-                            }) {
-                                HStack {
-                                    Image(systemName: option.icon)
-                                    Text(option.label)
-                                    if sortOption == option {
-                                        Image(systemName: "checkmark")
-                                    }
-                                }
-                            }
-                        }
-                    } label: {
-                        Image(systemName: "arrow.up.arrow.down")
         }
-                }
-            }
-        })
+        .background(Color(.systemBackground))
+        .navigationBarHidden(true)
         .alert("Delete Card", isPresented: $showingDeleteAlert) {
             Button("Delete", role: .destructive) {
                 if let card = cardToDelete {
@@ -371,7 +412,7 @@ struct AllCardsView: View {
             }
         }
         .alert("Delete Card", isPresented: $showingDeckSpecificDeleteAlert) {
-            Button("Remove from One Deck", role: .destructive) {
+            Button("Remove from Selected Decks", role: .destructive) {
                 deleteCard(fromAllDecks: false)
             }
             Button("Remove from All Decks", role: .destructive) {
@@ -382,7 +423,7 @@ struct AllCardsView: View {
             }
         } message: {
             if let card = cardToDelete {
-                Text("This card exists in multiple decks. Would you like to remove it from one deck or from all decks?")
+                Text("This card exists in multiple decks. Would you like to remove it from selected decks or from all decks?")
             }
         }
         .alert("Delete Selected Cards", isPresented: $showingBulkDeleteAlert) {
@@ -412,6 +453,16 @@ struct AllCardsView: View {
         .sheet(isPresented: $showingEditCardView) {
             if let card = selectedCard {
                 EditCardView(viewModel: viewModel, card: card)
+            }
+        }
+        .sheet(isPresented: $showingDeckSelectionSheet) {
+            if let card = cardToDelete {
+                DeckSelectionForRemovalSheet(
+                    viewModel: viewModel,
+                    card: card,
+                    selectedDeckIds: $selectedDecksForRemoval,
+                    onRemove: removeCardFromSelectedDecks
+                )
             }
         }
         .onChange(of: showingEditCardView) { newValue in
@@ -527,7 +578,7 @@ struct CardRowView: View {
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(12)
-        .shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1)
+        .shadow(color: cardOutlineColor.opacity(0.2), radius: 3, x: 0, y: 1)
         .contentShape(Rectangle())
         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
             Button(role: .destructive) {
@@ -545,6 +596,17 @@ struct CardRowView: View {
         }
         .onTapGesture {
             onEdit()
+        }
+    }
+    
+    private var cardOutlineColor: Color {
+        let percentage = card.learningPercentage ?? 0
+        if percentage >= 80 {
+            return .green
+        } else if percentage >= 40 {
+            return .orange
+        } else {
+            return .blue
         }
     }
 }
@@ -579,8 +641,6 @@ struct AllCardsMoveSheet: View {
     var availableDecks: [Deck] {
         return viewModel.getAllDecksHierarchical().filter { deck in
             deck.name != "Uncategorized" && 
-            deck.name != "Learning" && 
-            deck.name != "Learnt" && 
             deck.name != "Review"
         }
     }
@@ -700,5 +760,108 @@ struct AllCardsMoveSheet: View {
 struct AllCardsView_Previews: PreviewProvider {
     static var previews: some View {
         AllCardsView(viewModel: FlashCardViewModel())
+    }
+}
+
+struct DeckSelectionForRemovalSheet: View {
+    @ObservedObject var viewModel: FlashCardViewModel
+    let card: FlashCard
+    @Binding var selectedDeckIds: Set<UUID>
+    let onRemove: () -> Void
+    @Environment(\.dismiss) private var dismiss
+    
+    // Get decks that contain this card
+    private var cardDecks: [Deck] {
+        return viewModel.getAllDecksHierarchical().filter { deck in
+            card.deckIds.contains(deck.id) &&
+            deck.name != "Review" &&
+            deck.name != "Uncategorized"
+        }
+    }
+    
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 0) {
+                // Header
+                VStack(spacing: 12) {
+                    Text("Remove Card from Decks")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                    
+                    Text("Select which decks to remove '\(card.word)' from:")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                .padding()
+                .background(Color(.systemBackground))
+                
+                Divider()
+                
+                // Deck list
+                List {
+                    ForEach(cardDecks) { deck in
+                        Button(action: {
+                            if selectedDeckIds.contains(deck.id) {
+                                selectedDeckIds.remove(deck.id)
+                            } else {
+                                selectedDeckIds.insert(deck.id)
+                            }
+                        }) {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    HStack {
+                                        if deck.isSubDeck {
+                                            HStack(spacing: 4) {
+                                                Text("    ↳")
+                                                    .foregroundColor(.secondary)
+                                                Text(deck.name)
+                                            }
+                                        } else {
+                                            Text(deck.name)
+                                                .fontWeight(.medium)
+                                        }
+                                    }
+                                    Text("\(deck.cards.count) cards")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                                Spacer()
+                                if selectedDeckIds.contains(deck.id) {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundColor(.blue)
+                                } else {
+                                    Image(systemName: "circle")
+                                        .foregroundColor(.gray)
+                                }
+                            }
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                    }
+                }
+                .listStyle(PlainListStyle())
+            }
+            .navigationTitle("Select Decks")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Remove") {
+                        onRemove()
+                        dismiss()
+                    }
+                    .disabled(selectedDeckIds.isEmpty)
+                    .foregroundColor(.red)
+                }
+            }
+            .onAppear {
+                // Initialize with all decks that contain this card
+                selectedDeckIds = Set(cardDecks.map { $0.id })
+            }
+        }
     }
 } 

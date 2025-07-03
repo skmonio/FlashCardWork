@@ -151,8 +151,8 @@ class AudioManager: NSObject, ObservableObject {
             return false
         }
         
-        let url = getAudioURL(for: cardId)
-        return FileManager.default.fileExists(atPath: url.path)
+            let url = getAudioURL(for: cardId)
+            return FileManager.default.fileExists(atPath: url.path)
     }
     
     func deleteAudio(for cardId: UUID) {

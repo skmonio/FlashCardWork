@@ -69,36 +69,17 @@ struct DutchVocabularyImportView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // Top bar with X button
-            HStack {
-                Text("🇳🇱 Import Dutch Vocabulary")
-                    .font(.headline)
-                    .fontWeight(.semibold)
-                
-                Spacer()
-                
-                Button(action: { 
-                    if isImporting {
-                        showingLeaveConfirmation = true
-                    } else {
-                        dismiss()
-                    }
-                }) {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.title2)
-                        .foregroundColor(.gray)
-                }
-            }
-            .padding()
-            
+            UnifiedHeader(
+                title: "Import Dutch Vocabulary",
+                onBack: { NavigationCoordinator.shared.pop() },
+                onProfile: { NavigationCoordinator.shared.presentSheet(.userProfile) }
+            )
             // Search Bar
             HStack {
                 Image(systemName: "magnifyingglass")
                     .foregroundColor(.secondary)
-                
                 TextField("Search packs, categories, or words...", text: $searchText)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
-                
                 if !searchText.isEmpty {
                     Button("Clear") {
                         searchText = ""
@@ -222,14 +203,6 @@ struct DutchVocabularyImportView: View {
         } message: {
             Text("Successfully imported \(importedWordCount) Dutch words organized into level-specific folders. Start studying now!")
         }
-        .alert("Cards Still Importing", isPresented: $showingLeaveConfirmation) {
-            Button("Leave Anyway", role: .destructive) {
-                dismiss()
-            }
-            Button("Wait for Import", role: .cancel) { }
-        } message: {
-            Text("Cards are still being imported. If you leave now, the import will be cancelled.")
-        }
         .sheet(item: $showingPackDetails) { pack in
             VocabularyPackDetailView(pack: pack, isSelected: currentSelectedPacks.wrappedValue.contains(pack.id)) { isSelected in
                 if isSelected {
@@ -239,6 +212,7 @@ struct DutchVocabularyImportView: View {
                 }
             }
         }
+        .navigationBarHidden(true)
     }
     
     private func getSelectedCountForLevel(_ level: LanguageLevel) -> Int {

@@ -417,7 +417,7 @@ struct ChoiceButton: View {
         )
     ]
     
-    return DuplicateSummaryView(
+    DuplicateSummaryView(
         viewModel: viewModel,
         cardEntries: entries,
         duplicateResults: duplicateResults,

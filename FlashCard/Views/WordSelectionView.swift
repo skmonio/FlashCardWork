@@ -122,78 +122,29 @@ struct WordSelectionView: View {
                 }
                 .padding()
             }
-            
-            // Bottom action bar
-            VStack(spacing: 12) {
-                if selectedWordsCount > 0 {
-                    // Deck selection
-                    HStack {
-                        Text("Add to decks:")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                        
-                        Spacer()
-                        
-                        Button("Select Decks") {
-                            showingDeckSelection = true
-                        }
-                        .font(.subheadline)
-                        .foregroundColor(.blue)
-                    }
-                    
-                    if !selectedDeckIds.isEmpty {
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 8) {
-                                ForEach(selectedDeckIds.compactMap { deckId in
-                                    viewModel.decks.first { $0.id == deckId }
-                                }, id: \.id) { deck in
-                                    Text(deck.name)
-                                        .font(.caption)
-                                        .padding(.horizontal, 8)
-                                        .padding(.vertical, 4)
-                                        .background(Color.blue.opacity(0.1))
-                                        .foregroundColor(.blue)
-                                        .cornerRadius(12)
-                                }
-                            }
-                            .padding(.horizontal)
-                        }
-                    }
-                }
-                
-                // Action buttons
-                HStack(spacing: 12) {
-                    Button("Cancel") {
-                        onComplete()
-                    }
-                    .buttonStyle(.bordered)
-                    
-                    Spacer()
-                    
-                    if selectedWordsCount > 0 {
-                        Button("Review & Import (\(selectedWordsCount))") {
-                            showingBatchImport = true
-                        }
-                        .buttonStyle(.borderedProminent)
-                    } else {
-                        Text("Select words to import")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                }
-            }
-            .padding()
-            .background(Color(UIColor.systemBackground))
-            .overlay(
-                Rectangle()
-                    .frame(height: 1)
-                    .foregroundColor(.gray)
-                    .opacity(0.2),
-                alignment: .top
-            )
         }
         .navigationTitle("Select Words")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button("Cancel") {
+                    onComplete()
+                }
+            }
+            
+            ToolbarItem(placement: .navigationBarTrailing) {
+                if selectedWordsCount > 0 {
+                    Button("Import (\(selectedWordsCount))") {
+                        showingBatchImport = true
+                    }
+                    .foregroundColor(.blue)
+                } else {
+                    Text("Select words")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+        }
         .sheet(isPresented: $showingDeckSelection) {
             ImageImportDeckSelectionView(
                 selectedDeckIds: $selectedDeckIds,

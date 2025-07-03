@@ -6,6 +6,7 @@ struct QuickStudyView: View {
     let selectedStudyMode: StudyMode
     @EnvironmentObject var navigationCoordinator: NavigationCoordinator
     @State private var selectedCardCount: Int = 10
+    @State private var selectedDifficulty: MemoryGameDifficulty = .medium
     @State private var shouldStartGame = false
     @State private var shouldContinueGame = false
     @State private var showingSaveOverwriteWarning = false
@@ -78,6 +79,78 @@ struct QuickStudyView: View {
             .cornerRadius(12)
             .padding(.horizontal)
             
+            // Difficulty Selection (only for memory game)
+            if gameMode == .game {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Difficulty:")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                    
+                    HStack(spacing: 12) {
+                        ForEach(MemoryGameDifficulty.allCases, id: \.self) { difficulty in
+                            Button(action: {
+                                selectedDifficulty = difficulty
+                            }) {
+                                VStack(spacing: 4) {
+                                    Image(systemName: difficulty.icon)
+                                        .font(.title3)
+                                        .foregroundColor(selectedDifficulty == difficulty ? difficulty.color : .gray)
+                                    
+                                    Text(difficulty.displayName)
+                                        .font(.caption2)
+                                        .fontWeight(.medium)
+                                        .foregroundColor(selectedDifficulty == difficulty ? difficulty.color : .gray)
+                                        .multilineTextAlignment(.center)
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 8)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 6)
+                                        .fill(selectedDifficulty == difficulty ? difficulty.color.opacity(0.1) : Color(.systemGray6))
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 6)
+                                                .stroke(selectedDifficulty == difficulty ? difficulty.color : Color.clear, lineWidth: 1)
+                                        )
+                                )
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                        }
+                    }
+                    
+                    // Difficulty Summary
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Difficulty Summary:")
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .foregroundColor(.secondary)
+                        
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack {
+                                Image(systemName: selectedDifficulty.icon)
+                                    .font(.caption)
+                                    .foregroundColor(selectedDifficulty.color)
+                                Text(selectedDifficulty.displayName)
+                                    .font(.caption)
+                                    .fontWeight(.medium)
+                                Spacer()
+                                Text(selectedDifficulty.description)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            Text(getDifficultyDescription())
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                                .lineLimit(2)
+                        }
+                        .padding(8)
+                        .background(selectedDifficulty.color.opacity(0.05))
+                        .cornerRadius(6)
+                    }
+                }
+                .padding(.horizontal)
+            }
+            
             Spacer()
             
             // Start Button
@@ -98,8 +171,15 @@ struct QuickStudyView: View {
             .padding(.bottom, 40)
         }
         .navigationTitle("Quick Study")
-        .navigationBarTitleDisplayMode(.large)
-        .navigationBarBackButtonHidden(false)
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                UnifiedBackButton(style: .toolbar) {
+                    navigationCoordinator.pop()
+                }
+            }
+        }
         
         NavigationLink(
             destination: destinationView,
@@ -143,6 +223,7 @@ struct QuickStudyView: View {
             GameView(
                 viewModel: viewModel,
                 cards: availableCards,
+                difficulty: selectedDifficulty,
                 deckIds: [],
                 shouldLoadSaveState: shouldContinueGame
             )
@@ -180,6 +261,19 @@ struct QuickStudyView: View {
         } else {
             shouldContinueGame = false
             shouldStartGame = true
+        }
+    }
+    
+    // MARK: - Difficulty Helpers
+    
+    private func getDifficultyDescription() -> String {
+        switch selectedDifficulty {
+        case .easy:
+            return "Plenty of time to find matches"
+        case .medium:
+            return "Balanced challenge for most players"
+        case .hard:
+            return "Quick thinking required"
         }
     }
 } 

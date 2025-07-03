@@ -5,42 +5,7 @@ struct MemoryGameInfoView: View {
     @Environment(\.dismiss) private var dismiss
     
     var body: some View {
-        VStack(spacing: 0) {
-            // Header with gradient background
-            ZStack {
-                LinearGradient(
-                    colors: [Color.orange.opacity(0.8), Color.red],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                
-                HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Remember Your Cards")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                            .foregroundColor(.white)
-                        
-                        Text("Match words with definitions in memory game")
-                            .font(.subheadline)
-                            .foregroundColor(.white.opacity(0.9))
-                    }
-                    
-                    Spacer()
-                    
-                    Button(action: {
-                        dismiss()
-                    }) {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.title2)
-                            .foregroundColor(.white.opacity(0.8))
-                            .background(Circle().fill(.white.opacity(0.2)))
-                    }
-                }
-                .padding()
-            }
-            .frame(height: 80)
-            
+        ZStack(alignment: .topTrailing) {
             ScrollView {
                 VStack(spacing: 20) {
                     // Hero icon
@@ -188,6 +153,12 @@ struct MemoryGameInfoView: View {
                 .padding(.bottom, 20)
             }
             .background(Color(.systemGroupedBackground))
+            Button(action: { dismiss() }) {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.title)
+                    .foregroundColor(.secondary)
+                    .padding()
+            }
         }
     }
 }

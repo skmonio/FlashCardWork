@@ -338,4 +338,93 @@ struct GameCardView_Previews: PreviewProvider {
         )
         .previewLayout(.sizeThatFits)
     }
+}
+
+// MARK: - Shared Card Component for All Games
+struct SharedGameCardView: View {
+    let card: FlashCard
+    let title: String
+    let content: String
+    let showArticle: Bool
+    
+    // Vibrant colors inspired by the Taal Trek theme
+    private let vibrantColors: [Color] = [
+        Color(red: 1.0, green: 0.4, blue: 0.2),    // Coral/Orange-Red
+        Color(red: 1.0, green: 0.6, blue: 0.0),    // Bright Orange
+        Color(red: 1.0, green: 0.8, blue: 0.0),    // Golden Yellow
+        Color(red: 0.2, green: 0.8, blue: 0.6),    // Teal/Turquoise
+        Color(red: 0.0, green: 0.7, blue: 0.8),    // Cyan Blue
+        Color(red: 0.6, green: 0.4, blue: 1.0),    // Purple
+        Color(red: 1.0, green: 0.3, blue: 0.6),    // Pink
+        Color(red: 0.4, green: 0.9, blue: 0.3),    // Lime Green
+    ]
+    
+    // Generate consistent color based on card content
+    private var cardBorderColor: Color {
+        guard !card.word.isEmpty && !card.definition.isEmpty else {
+            return vibrantColors[0] // Default to first color if card has empty content
+        }
+        let hash = abs(card.word.hashValue &+ card.definition.hashValue)
+        let index = hash % vibrantColors.count
+        return vibrantColors[index]
+    }
+    
+    var body: some View {
+        VStack(spacing: 16) {
+            // Card container with vibrant border
+            VStack(spacing: 20) {
+                // Title (only show if not empty)
+                if !title.isEmpty {
+                    Text(title)
+                        .font(.title3)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                
+                // Content
+                VStack(spacing: 8) {
+                    if showArticle && !card.article.isEmpty {
+                        Text(card.article)
+                            .font(.caption)
+                            .foregroundColor(.blue)
+                            .bold()
+                    }
+                    
+                    Text(content)
+                        .font(.title2)
+                        .bold()
+                        .multilineTextAlignment(.center)
+                        .foregroundColor(.primary)
+                }
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(Color(.secondarySystemGroupedBackground))
+                .cornerRadius(12)
+            }
+            .padding()
+            .frame(maxWidth: .infinity)
+            .frame(height: 200)
+            .background(
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(Color(.secondarySystemGroupedBackground))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 20)
+                            .stroke(
+                                LinearGradient(
+                                    gradient: Gradient(colors: [
+                                        cardBorderColor,
+                                        cardBorderColor.opacity(0.7)
+                                    ]),
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                lineWidth: 5
+                            )
+                    )
+                    .shadow(color: cardBorderColor.opacity(0.3), radius: 12, x: 0, y: 6)
+                    .shadow(color: .black.opacity(0.15), radius: 20, x: 0, y: 10)
+            )
+            .padding(.horizontal, 20)
+        }
+    }
 } 

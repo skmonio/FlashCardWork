@@ -26,6 +26,11 @@ struct TestView: View {
     private var deckIds: [UUID]
     private var shouldLoadSaveState: Bool
     
+    // Progressive study properties
+    private var studyMode: StudyMode?
+    private var onLevelComplete: ((LevelResult) -> Void)?
+    private var maxQuestions: Int?
+    
     // Session tracking for SRS
     @State private var currentSession: StudySession?
     @State private var sessionStartTime: Date = Date()
@@ -50,12 +55,15 @@ struct TestView: View {
         return speechService.isSpeaking && speechService.currentlySpeaking == textToSpeak
     }
     
-    init(viewModel: FlashCardViewModel, cards: [FlashCard], deckIds: [UUID] = [], shouldLoadSaveState: Bool = false) {
+    init(viewModel: FlashCardViewModel, cards: [FlashCard], deckIds: [UUID] = [], shouldLoadSaveState: Bool = false, studyMode: StudyMode? = nil, maxQuestions: Int? = nil, onLevelComplete: ((LevelResult) -> Void)? = nil) {
         self.viewModel = viewModel
         // Apply intelligent ordering: less-known cards first, well-known cards later
         self.cards = viewModel.sortCardsForLearning(cards)
         self.deckIds = deckIds
         self.shouldLoadSaveState = shouldLoadSaveState
+        self.studyMode = studyMode
+        self.maxQuestions = maxQuestions
+        self.onLevelComplete = onLevelComplete
         // Track original number of cards for proper scoring
         self._originalCardCount = State(initialValue: cards.count)
     }
@@ -142,6 +150,66 @@ struct TestView: View {
     
     private func moveToNextQuestion() {
         HapticManager.shared.questionAdvance()
+        
+        // Check if we've reached the max questions limit (for progressive study)
+        if let maxQuestions = maxQuestions, currentIndex >= maxQuestions - 1 {
+            print("🧪 Reached max questions limit for progressive study")
+            HapticManager.shared.gameComplete()
+            
+            // End session tracking
+            if var session = currentSession {
+                session.knownCards = correctAnswers
+                session.unknownCards = maxQuestions - correctAnswers
+                session.skippedCards = 0 // No skipped cards in test mode
+                session.endTime = Date()
+                session.duration = session.endTime!.timeIntervalSince(session.startTime)
+                statsManager.endSession(
+                    session,
+                    knownCards: correctAnswers,
+                    unknownCards: maxQuestions - correctAnswers,
+                    skippedCards: 0
+                )
+                currentSession = session
+                
+                // Add XP for completing the test session
+                let baseXP = 50
+                let performanceBonus = correctAnswers * 10 // 10 XP per correct answer
+                let totalXP = baseXP + performanceBonus
+                userProfileManager.addXP(totalXP)
+                
+                print("🎮 Test session complete! Earned \(totalXP) XP (Base: \(baseXP), Performance: \(performanceBonus))")
+            }
+            
+            // Clear saved progress since test is complete
+            clearSavedProgress()
+            
+            // Call level completion callback if this is a progressive study session
+            if let onLevelComplete = onLevelComplete {
+                let levelNumber: Int
+                switch studyMode {
+                case .maintenance: levelNumber = 1
+                case .cram: levelNumber = 2
+                case .adaptive: levelNumber = 3
+                default: levelNumber = 1
+                }
+                
+                let result = LevelResult(
+                    level: levelNumber,
+                    score: correctAnswers,
+                    total: maxQuestions
+                )
+                onLevelComplete(result)
+            } else {
+                // Post notification for regular test mode
+                NotificationCenter.default.post(name: .testSessionCompleted, object: nil)
+                
+                withAnimation {
+                    StreakManager.shared.recordGameCompletion(); showingResults = true
+                }
+            }
+            return
+        }
+        
         if currentIndex < cards.count - 1 {
             currentIndex += 1
             selectedAnswer = nil
@@ -236,29 +304,17 @@ struct TestView: View {
             } else {
                 testView
             }
-            
-            // Bottom close button
-            HStack {
-                Spacer()
-                Button(action: {
-                    if hasSignificantProgress && !showingResults {
-                        showingCloseConfirmation = true
-                    } else {
-                        dismissToRoot()
-                    }
-                }) {
-                    Image(systemName: "xmark")
-                        .font(.title2)
-                        .foregroundColor(.secondary)
-                        .padding(12)
-                        .background(Circle().fill(Color(.systemGray5)))
-                }
-                Spacer()
-            }
-            .padding(.bottom, 20)
-            .background(Color(.systemBackground))
         }
-        .navigationBarHidden(true)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                UnifiedBackButton(style: .toolbar) {
+                    handleBackButton()
+                }
+            }
+        }
+        .navigationTitle("Test Your Cards")
+        .navigationBarTitleDisplayMode(.inline)
         .alert("Close Test?", isPresented: $showingCloseConfirmation) {
             Button("Save & Close") {
                 saveCurrentProgress()
@@ -297,108 +353,84 @@ struct TestView: View {
             // Use same header as StudyView
             GameHeaderView(
                 currentIndex: currentIndex + 1,
-                totalCards: cards.count,
-                score: userProfileManager.xp, // Use current XP instead of calculated score
-                combo: 0, // No combo for test mode
+                totalCards: maxQuestions ?? cards.count,
+                score: userProfileManager.xp,
+                combo: 0,
                 knownCount: nil,
                 unknownCount: nil,
                 skippedCount: nil,
-                sessionXP: sessionXP
+                sessionXP: sessionXP,
+                showProgressIndicator: false,
+                progressOverride: showingResults ? 1.0 : Double(max(currentIndex, 0)) / Double(maxQuestions ?? cards.count)
             )
             
             Spacer()
             
-            // Question text above card
-            Text("What is the correct translation for:")
-                .font(.headline)
-                .foregroundColor(.primary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal)
-                .padding(.bottom, 20)
-            
-            // Question card (tappable for audio, double-tap for example)
-            Button(action: {
-                speakCurrentWord()
-                HapticManager.shared.lightImpact()
-            }) {
-                VStack(spacing: 16) {
-                    // Word only (removed article display)
-                        Text(currentCard.word)
-                            .font(.system(size: 32, weight: .bold, design: .rounded))
-                            .foregroundColor(.primary)
-                            .multilineTextAlignment(.center)
-                    
-                    // Example (if showing) - plain text, centered
-                    if isShowingExample && !currentCard.example.isEmpty {
-                        Text(currentCard.example)
-                            .font(.body)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                            .lineLimit(4)
-                            .transition(.opacity.combined(with: .scale))
+            VStack(spacing: 20) {
+                // Title outside the card
+                Text("Choose the correct definition:")
+                    .font(.title3)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                
+                // Use shared card component with vibrant borders - only show the word
+                SharedGameCardView(
+                    card: currentCard,
+                    title: "",
+                    content: currentCard.word,
+                    showArticle: false
+                )
+                .onTapGesture(count: 2) {
+                    // Double tap to show/hide example
+                    HapticManager.shared.lightImpact()
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        isShowingExample.toggle()
                     }
                 }
-                .padding(24)
-                .frame(maxWidth: .infinity)
-                .frame(height: 200)
-                .background(
-                    RoundedRectangle(cornerRadius: 20)
-                        .fill(Color(.secondarySystemGroupedBackground))
-                        .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
-                )
-                .padding(.horizontal, 20)
-            }
-            .buttonStyle(PlainButtonStyle())
-            .onTapGesture(count: 2) {
-                // Double tap to show/hide example
-                HapticManager.shared.lightImpact()
-                withAnimation(.easeInOut(duration: 0.3)) {
-                    isShowingExample.toggle()
+                .onTapGesture(count: 1) {
+                    // Single tap for audio
+                    speakCurrentWord()
+                    HapticManager.shared.lightImpact()
                 }
-            }
-            .onTapGesture(count: 1) {
-                // Single tap for audio
-                speakCurrentWord()
-                HapticManager.shared.lightImpact()
-            }
-            
-            Spacer()
-            
-            // Answer options (thinner)
-            VStack(spacing: 8) {
-                ForEach(shuffledOptions, id: \.self) { option in
-                    Button(action: {
-                        handleAnswer(option)
-                    }) {
-                        Text(option)
-                            .font(.body)
-                            .multilineTextAlignment(.center)
-                            .padding(.vertical, 12)
-                            .padding(.horizontal, 16)
-                            .frame(maxWidth: .infinity)
-                            .background(
-                                Group {
-                                    if hasAnswered {
-                                        if option == currentCard.definition {
-                                            Color.green.opacity(0.2)
-                                        } else if option == selectedAnswer {
-                                            Color.red.opacity(0.2)
+                
+                Spacer()
+                
+                // Answer options (thinner)
+                VStack(spacing: 8) {
+                    ForEach(shuffledOptions, id: \.self) { option in
+                        Button(action: {
+                            handleAnswer(option)
+                        }) {
+                            Text(option)
+                                .font(.body)
+                                .multilineTextAlignment(.center)
+                                .padding(.vertical, 12)
+                                .padding(.horizontal, 16)
+                                .frame(maxWidth: .infinity)
+                                .background(
+                                    Group {
+                                        if hasAnswered {
+                                            if option == currentCard.definition {
+                                                Color.green.opacity(0.2)
+                                            } else if option == selectedAnswer {
+                                                Color.red.opacity(0.2)
+                                            } else {
+                                                Color(.systemGray6)
+                                            }
                                         } else {
                                             Color(.systemGray6)
                                         }
-                                    } else {
-                                        Color(.systemGray6)
                                     }
-                                }
-                            )
-                            .cornerRadius(10)
+                                )
+                                .cornerRadius(10)
+                        }
+                        .disabled(hasAnswered)
                     }
-                    .disabled(hasAnswered)
                 }
+                .padding(.horizontal)
+                
+                Spacer()
             }
-            .padding(.horizontal)
-            
-            Spacer()
         }
     }
     

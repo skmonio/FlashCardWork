@@ -231,22 +231,10 @@ struct CardView: View {
     }
     
     private var backButton: some View {
-        Button(action: {
+        UnifiedBackButton(style: .card) {
             onGoBack?()
             HapticManager.shared.lightImpact()
-        }) {
-            ZStack {
-                Circle()
-                    .fill(Color.white.opacity(0.9))
-                    .frame(width: 44, height: 44)
-                    .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
-                
-                Image(systemName: "chevron.left")
-                    .font(.title2)
-                    .foregroundColor(.blue)
-            }
         }
-        .buttonStyle(.plain)
     }
     
     private var pronunciationButton: some View {

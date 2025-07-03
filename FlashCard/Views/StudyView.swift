@@ -41,6 +41,11 @@ struct StudyView: View {
     @StateObject private var smartStudyManager = SmartStudyManager.shared
     @StateObject private var userProfileManager = UserProfileManager.shared
     
+    // Progressive study properties
+    private var studyMode: StudyMode?
+    private var onLevelComplete: ((LevelResult) -> Void)?
+    private var maxQuestions: Int?
+    
     enum SwipeDirection {
         case none, left, right, up, down
         
@@ -113,11 +118,14 @@ struct StudyView: View {
         return knownCards.count >= 3 ? knownCards.count : 0
     }
     
-    init(viewModel: FlashCardViewModel, cards: [FlashCard], deckIds: [UUID] = [], shouldLoadSaveState: Bool = false) {
+    init(viewModel: FlashCardViewModel, cards: [FlashCard], deckIds: [UUID] = [], shouldLoadSaveState: Bool = false, studyMode: StudyMode? = nil, maxQuestions: Int? = nil, onLevelComplete: ((LevelResult) -> Void)? = nil) {
         self.viewModel = viewModel
         _cards = State(initialValue: SmartStudyManager.shared.sortCardsForStudyMode(cards, mode: SmartStudyManager.shared.currentStudyMode))
         self.deckIds = deckIds
         self.shouldLoadSaveState = shouldLoadSaveState
+        self.studyMode = studyMode
+        self.maxQuestions = maxQuestions
+        self.onLevelComplete = onLevelComplete
     }
     
     var body: some View {
@@ -129,18 +137,17 @@ struct StudyView: View {
             } else {
                 studyView
             }
-            
-            // Unified footer
-            GameFooterView(
-                hasSignificantProgress: hasSignificantProgress,
-                showingResults: showingResults,
-                onClose: dismissToRoot,
-                onSaveAndClose: saveProgressAndDismiss,
-                onPrevious: nil,
-                canGoPrevious: false
-            )
         }
-        .navigationBarHidden(true)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                UnifiedBackButton(style: .toolbar) {
+                    handleBackButton()
+                }
+            }
+        }
+        .navigationTitle("Study Your Cards")
+        .navigationBarTitleDisplayMode(.inline)
         .sheet(item: $selectedCardForEdit) { card in
             EditCardView(viewModel: viewModel, card: card)
                 .onAppear {
@@ -200,6 +207,19 @@ struct StudyView: View {
             if hasSignificantProgress && !showingResults {
                 saveCurrentProgress()
             }
+        }
+        .alert("Close Study Session?", isPresented: $showingCloseConfirmation) {
+            Button("Save & Close", role: .destructive) {
+                saveProgressAndDismiss()
+            }
+            Button("Close Without Saving") {
+                dismissToRoot()
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text(hasSignificantProgress ? 
+                "Would you like to save your progress?" : 
+                "Are you sure you want to close?")
         }
     }
     
@@ -270,7 +290,7 @@ struct StudyView: View {
                 // Unified header with progress bar
                 GameHeaderView(
                     currentIndex: currentIndex + 1,
-                    totalCards: cards.count,
+                    totalCards: maxQuestions ?? cards.count,
                     score: userProfileManager.xp,
                     combo: combo,
                     knownCount: nil,
@@ -279,7 +299,9 @@ struct StudyView: View {
                     studyMode: smartStudyManager.currentStudyMode,
                     currentRound: smartStudyManager.currentRound,
                     totalRounds: smartStudyManager.totalRounds,
-                    sessionXP: sessionXP
+                    sessionXP: sessionXP,
+                    showProgressIndicator: false,
+                    progressOverride: showingResults ? 1.0 : Double(max(currentIndex, 0)) / Double(maxQuestions ?? cards.count)
                 )
                 
                 Spacer()
@@ -441,6 +463,68 @@ struct StudyView: View {
     
     private func moveToNextCard() {
         print("🃏 moveToNextCard called - currentIndex: \(currentIndex), cards.count: \(cards.count)")
+        
+        // Check if we've reached the max questions limit (for progressive study)
+        if let maxQuestions = maxQuestions, currentIndex >= maxQuestions - 1 {
+            print("🃏 Reached max questions limit for progressive study")
+            HapticManager.shared.gameComplete()
+            
+            // End session tracking
+            if var session = currentSession {
+                session.knownCards = knownCards.count
+                session.unknownCards = unknownCards.count
+                session.skippedCards = skippedCards.count
+                session.endTime = Date()
+                session.duration = session.endTime!.timeIntervalSince(session.startTime)
+                statsManager.endSession(
+                    session,
+                    knownCards: knownCards.count,
+                    unknownCards: unknownCards.count,
+                    skippedCards: skippedCards.count
+                )
+                currentSession = session
+                
+                // Add XP for completing the study session
+                let baseXP = 50
+                let performanceBonus = knownCards.count * 5 // 5 XP per known card
+                let totalXP = baseXP + performanceBonus
+                userProfileManager.addXP(totalXP)
+                
+                print("🎮 Study session complete! Earned \(totalXP) XP (Base: \(baseXP), Performance: \(performanceBonus))")
+            }
+            
+            // Clear saved progress since session is complete
+            clearSavedProgress()
+            
+            // Resume CloudKit sync when session completes
+            viewModel.resumeCloudKitSync()
+            
+            // Call level completion callback if this is a progressive study session
+            if let onLevelComplete = onLevelComplete {
+                let levelNumber: Int
+                switch studyMode {
+                case .maintenance: levelNumber = 1
+                case .cram: levelNumber = 2
+                case .adaptive: levelNumber = 3
+                default: levelNumber = 1
+                }
+                
+                let result = LevelResult(
+                    level: levelNumber,
+                    score: knownCards.count,
+                    total: maxQuestions
+                )
+                onLevelComplete(result)
+            } else {
+                // Post notification for regular study mode
+                NotificationCenter.default.post(name: .studySessionCompleted, object: nil)
+                
+                withAnimation {
+                    StreakManager.shared.recordGameCompletion(); showingResults = true
+                }
+            }
+            return
+        }
         
         if currentIndex < cards.count - 1 {
             print("🃏 Moving to next card: \(currentIndex) -> \(currentIndex + 1)")
@@ -660,6 +744,15 @@ struct StudyView: View {
         }
         
         dismissToRoot()
+    }
+    
+    private func handleBackButton() {
+        if hasSignificantProgress && !showingResults {
+            // Show confirmation dialog with save options
+            showingCloseConfirmation = true
+        } else {
+            dismiss()
+        }
     }
     
     // New method to handle directional locking

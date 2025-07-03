@@ -1,5 +1,52 @@
 import SwiftUI
 
+// MARK: - Memory Game Difficulty Enum
+enum MemoryGameDifficulty: String, CaseIterable {
+    case easy = "easy"
+    case medium = "medium"
+    case hard = "hard"
+    
+    var displayName: String {
+        switch self {
+        case .easy: return "Easy"
+        case .medium: return "Medium"
+        case .hard: return "Hard"
+        }
+    }
+    
+    var description: String {
+        switch self {
+        case .easy: return "6 seconds per set"
+        case .medium: return "4 seconds per set"
+        case .hard: return "2 seconds per set"
+        }
+    }
+    
+    var icon: String {
+        switch self {
+        case .easy: return "tortoise.fill"
+        case .medium: return "hare.fill"
+        case .hard: return "bolt.fill"
+        }
+    }
+    
+    var color: Color {
+        switch self {
+        case .easy: return .green
+        case .medium: return .orange
+        case .hard: return .red
+        }
+    }
+    
+    var timePerCardSet: Int {
+        switch self {
+        case .easy: return 3
+        case .medium: return 2
+        case .hard: return 1
+        }
+    }
+}
+
 struct DeckSelectionView: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject var viewModel: FlashCardViewModel
@@ -9,6 +56,7 @@ struct DeckSelectionView: View {
     @State private var shouldContinueGame = false
     @State private var showingSaveOverwriteWarning = false
     @State private var selectedStudyMode: StudyMode = .adaptive
+    @State private var selectedDifficulty: MemoryGameDifficulty = .medium
     @State private var showingDeckPicker = false
     
     // Info popup states
@@ -201,38 +249,78 @@ struct DeckSelectionView: View {
                     
                     // Game Mode Section
                     VStack(alignment: .leading, spacing: 16) {
-                        Text("Game Mode")
+                        Text(mode == .game ? "Difficulty" : "Game Mode")
                             .font(.title2)
                             .fontWeight(.bold)
                         
-                        HStack(spacing: 12) {
-                            ForEach(StudyMode.allCases, id: \.self) { studyMode in
-                                Button(action: {
-                                    selectedStudyMode = studyMode
-                                }) {
-                                    VStack(spacing: 8) {
-                                        Image(systemName: studyMode.icon)
-                                            .font(.title2)
-                                            .foregroundColor(selectedStudyMode == studyMode ? studyMode.color : .gray)
-                                        
-                                        Text(studyMode.displayName)
-                                            .font(.caption)
-                                            .fontWeight(.medium)
-                                            .foregroundColor(selectedStudyMode == studyMode ? studyMode.color : .gray)
-                                            .multilineTextAlignment(.center)
+                        if mode == .game {
+                            // Memory Game Difficulty Options
+                            HStack(spacing: 12) {
+                                ForEach(MemoryGameDifficulty.allCases, id: \.self) { difficulty in
+                                    Button(action: {
+                                        selectedDifficulty = difficulty
+                                    }) {
+                                        VStack(spacing: 8) {
+                                            Image(systemName: difficulty.icon)
+                                                .font(.title2)
+                                                .foregroundColor(selectedDifficulty == difficulty ? difficulty.color : .gray)
+                                            
+                                            Text(difficulty.displayName)
+                                                .font(.caption)
+                                                .fontWeight(.medium)
+                                                .foregroundColor(selectedDifficulty == difficulty ? difficulty.color : .gray)
+                                                .multilineTextAlignment(.center)
+                                            
+                                            Text(difficulty.description)
+                                                .font(.caption2)
+                                                .foregroundColor(selectedDifficulty == difficulty ? difficulty.color : .gray)
+                                                .multilineTextAlignment(.center)
+                                        }
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 12)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 8)
+                                                .fill(selectedDifficulty == difficulty ? difficulty.color.opacity(0.1) : Color(.systemGray6))
+                                                .overlay(
+                                                    RoundedRectangle(cornerRadius: 8)
+                                                        .stroke(selectedDifficulty == difficulty ? difficulty.color : Color.clear, lineWidth: 2)
+                                                )
+                                        )
                                     }
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 12)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .fill(selectedStudyMode == studyMode ? studyMode.color.opacity(0.1) : Color(.systemGray6))
-                                            .overlay(
-                                                RoundedRectangle(cornerRadius: 8)
-                                                    .stroke(selectedStudyMode == studyMode ? studyMode.color : Color.clear, lineWidth: 2)
-                                            )
-                                    )
+                                    .buttonStyle(PlainButtonStyle())
                                 }
-                                .buttonStyle(PlainButtonStyle())
+                            }
+                        } else {
+                            // Study Mode Options (for other game types)
+                            HStack(spacing: 12) {
+                                ForEach(StudyMode.allCases, id: \.self) { studyMode in
+                                    Button(action: {
+                                        selectedStudyMode = studyMode
+                                    }) {
+                                        VStack(spacing: 8) {
+                                            Image(systemName: studyMode.icon)
+                                                .font(.title2)
+                                                .foregroundColor(selectedStudyMode == studyMode ? studyMode.color : .gray)
+                                            
+                                            Text(studyMode.displayName)
+                                                .font(.caption)
+                                                .fontWeight(.medium)
+                                                .foregroundColor(selectedStudyMode == studyMode ? studyMode.color : .gray)
+                                                .multilineTextAlignment(.center)
+                                        }
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 12)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 8)
+                                                .fill(selectedStudyMode == studyMode ? studyMode.color.opacity(0.1) : Color(.systemGray6))
+                                                .overlay(
+                                                    RoundedRectangle(cornerRadius: 8)
+                                                        .stroke(selectedStudyMode == studyMode ? studyMode.color : Color.clear, lineWidth: 2)
+                                                )
+                                        )
+                                    }
+                                    .buttonStyle(PlainButtonStyle())
+                                }
                             }
                         }
                     }
@@ -259,7 +347,7 @@ struct DeckSelectionView: View {
             .navigationBarBackButtonHidden(true)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Back") {
+                    UnifiedBackButton(style: .toolbar) {
                         dismiss()
                     }
                 }
@@ -360,7 +448,8 @@ struct DeckSelectionView: View {
                 viewModel: viewModel, 
                 cards: availableCards,
                 deckIds: deckIdArray,
-                shouldContinue: shouldContinueGame
+                shouldContinue: shouldContinueGame,
+                difficulty: selectedDifficulty
             )
         case .truefalse:
             TrueFalseViewWithSaveState(
@@ -440,7 +529,7 @@ struct DeckPickerView: View {
                 Section {
                     Button(action: {
                         // Select all decks
-                        selectedDeckIds = Set(viewModel.getAllDecksHierarchical().map { $0.id })
+                            selectedDeckIds = Set(viewModel.getAllDecksHierarchical().map { $0.id })
                     }) {
                         HStack {
                             Image(systemName: "checkmark.circle.fill")
@@ -467,8 +556,8 @@ struct DeckPickerView: View {
                         }
                     }
                     .buttonStyle(PlainButtonStyle())
-                }
-                
+                    }
+                    
                 // Deck List Section
                 Section(header: Text("Select Decks")) {
                     ForEach(viewModel.getAllDecksHierarchical()) { deck in
@@ -570,14 +659,28 @@ struct GameViewWithSaveState: View {
     let cards: [FlashCard]
     let deckIds: [UUID]
     let shouldContinue: Bool
+    let difficulty: MemoryGameDifficulty
     
     var body: some View {
-        GameView(
-            viewModel: viewModel, 
-            cards: cards,
-            deckIds: deckIds,
-            shouldLoadSaveState: shouldContinue
-        )
+        Group {
+            if shouldContinue {
+                GameView(
+                    viewModel: viewModel, 
+                    cards: cards,
+                    difficulty: difficulty,
+                    deckIds: deckIds,
+                    shouldLoadSaveState: true
+                )
+            } else {
+                GameView(
+                    viewModel: viewModel,
+                    cards: cards,
+                    difficulty: difficulty,
+                    deckIds: deckIds,
+                    shouldLoadSaveState: false
+                )
+            }
+        }
     }
 }
 

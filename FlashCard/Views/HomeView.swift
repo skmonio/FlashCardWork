@@ -74,9 +74,6 @@ struct HomeView: View {
         .sheet(isPresented: $showingAddDeckView) {
             AddDeckView(viewModel: viewModel)
         }
-        .sheet(isPresented: $showingImageImportView) {
-            ImageImportView(viewModel: viewModel)
-        }
         .sheet(isPresented: $showingCardsInfoView) {
             CardsInfoView()
         }
@@ -366,8 +363,6 @@ struct CardsInfoView: View {
                             .foregroundColor(.secondary)
                         
                         VStack(spacing: 8) {
-                            SystemDeckRow(name: "Learning", icon: "brain", color: .blue, description: "Cards you're currently practicing")
-                            SystemDeckRow(name: "Learnt", icon: "checkmark.circle", color: .green, description: "Cards you've mastered")
                             SystemDeckRow(name: "Review", icon: "arrow.clockwise", color: .orange, description: "Cards marked for review")
                             SystemDeckRow(name: "Uncategorized", icon: "tray", color: .gray, description: "Cards not assigned to any deck")
                         }

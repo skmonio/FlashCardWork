@@ -14,10 +14,12 @@ struct GameHeaderView: View {
     let currentRound: Int?
     let totalRounds: Int?
     let sessionXP: Int // XP gained during current session
+    let showProgressIndicator: Bool // Show prominent progress indicator for progressive study
+    let progressOverride: Double? // Optional override for progress bar fill
     
     @StateObject private var userProfile = UserProfileManager.shared
     
-    init(currentIndex: Int, totalCards: Int, score: Int, combo: Int, knownCount: Int? = nil, unknownCount: Int? = nil, skippedCount: Int? = nil, onAudioTapped: (() -> Void)? = nil, isAudioPlaying: Bool = false, studyMode: StudyMode? = nil, currentRound: Int? = nil, totalRounds: Int? = nil, sessionXP: Int) {
+    init(currentIndex: Int, totalCards: Int, score: Int, combo: Int, knownCount: Int? = nil, unknownCount: Int? = nil, skippedCount: Int? = nil, onAudioTapped: (() -> Void)? = nil, isAudioPlaying: Bool = false, studyMode: StudyMode? = nil, currentRound: Int? = nil, totalRounds: Int? = nil, sessionXP: Int, showProgressIndicator: Bool = false, progressOverride: Double? = nil) {
         self.currentIndex = currentIndex
         self.totalCards = totalCards
         self.score = score
@@ -31,17 +33,33 @@ struct GameHeaderView: View {
         self.currentRound = currentRound
         self.totalRounds = totalRounds
         self.sessionXP = sessionXP
+        self.showProgressIndicator = showProgressIndicator
+        self.progressOverride = progressOverride
     }
     
     // Computed properties
     private var progress: Double {
         guard totalCards > 0 else { return 0 }
+        if showProgressIndicator {
+            if let override = progressOverride {
+                return min(override, 1.0)
+            } else {
+                // Only fill bar after answering last question
+                let capped = Double(max(currentIndex-1, 0)) / Double(totalCards)
+                return min(capped, 1.0)
+            }
+        }
         let calculatedProgress = Double(currentIndex) / Double(totalCards)
-        return min(calculatedProgress, 1.0) // Cap at 100%
+        return min(calculatedProgress, 1.0)
     }
     
     private var progressText: String {
-        let displayCurrentIndex = min(currentIndex, totalCards) // Don't show beyond total
+        if showProgressIndicator {
+            // For progressive study, show currentIndex/totalCards, but cap at totalCards
+            let displayIndex = min(max(currentIndex, 1), totalCards)
+            return "\(displayIndex)/\(totalCards)"
+        }
+        let displayCurrentIndex = min(currentIndex, totalCards)
         return "\(displayCurrentIndex)/\(totalCards)"
     }
     
@@ -51,9 +69,19 @@ struct GameHeaderView: View {
             VStack(spacing: 8) {
                 HStack {
                     Text(progressText)
-                        .font(.subheadline)
-                        .fontWeight(.medium)
+                        .font(showProgressIndicator ? .title2 : .subheadline)
+                        .fontWeight(showProgressIndicator ? .bold : .medium)
                         .foregroundColor(.primary)
+                        .padding(showProgressIndicator ? 8 : 0)
+                        .background(
+                            showProgressIndicator ? 
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(Color.blue.opacity(0.1))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .stroke(Color.blue.opacity(0.3), lineWidth: 1)
+                                    ) : nil
+                        )
                     
                     Spacer()
                     
@@ -157,7 +185,7 @@ struct GameHeaderView: View {
             }
         }
         .padding(.horizontal, 20)
-        .padding(.top, 50) // Account for status bar
+        .padding(.top, 20) // Reduced from 50 to move header higher
         .background(Color(.systemBackground))
     }
 }

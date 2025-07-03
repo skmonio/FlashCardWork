@@ -13,46 +13,6 @@ struct MainNavigationView: View {
                 mainContent
                     .navigationTitle(navigationTitle)
                     .navigationBarTitleDisplayMode(.large)
-                    .toolbar {
-                        // User icon in top left
-                        ToolbarItem(placement: .navigationBarLeading) {
-                            if navigationCoordinator.currentTab == .home {
-                                Button(action: {
-                                    navigationCoordinator.presentSheet(.userProfile)
-                                }) {
-                                    Image(systemName: "person.crop.circle")
-                                        .font(.title2)
-                                        .foregroundColor(.blue)
-                                }
-                            }
-                        }
-                        // Custom title for home screen
-                        ToolbarItem(placement: .principal) {
-                            if navigationCoordinator.currentTab == .home {
-                                VStack(spacing: 0) {
-                                    Text("Taal")
-                                        .font(.title2)
-                                        .fontWeight(.bold)
-                                        .foregroundColor(.primary)
-                                    Text("Trek")
-                                        .font(.title2)
-                                        .fontWeight(.bold)
-                                        .foregroundColor(.primary)
-                                }
-                            }
-                        }
-                        
-                        // What is Taal Trek button in top right
-                        ToolbarItem(placement: .navigationBarTrailing) {
-                            if navigationCoordinator.currentTab == .cards {
-                                Button("How to Add Cards") {
-                                    navigationCoordinator.presentSheet(.cardsInfo)
-                                }
-                                .font(.caption)
-                                .foregroundColor(.blue)
-                            }
-                        }
-                    }
                     .background(backgroundColor)
                 
                 // Bottom Navigation - always show
@@ -116,18 +76,47 @@ struct MainNavigationView: View {
     private var mainContent: some View {
         switch navigationCoordinator.currentTab {
         case .home:
-            ScrollView {
-                HomeContentView(viewModel: viewModel)
-            }
-        case .cards:
-            ScrollView {
-                CardsManagementView(
-                    viewModel: viewModel,
-                    showingAddCardView: .constant(false),
-                    showingAddDeckView: .constant(false),
-                    showingImageImportView: .constant(false)
+            VStack(spacing: 0) {
+                UnifiedHeader(
+                    title: "Taal Trek",
+                    showBackButton: false,
+                    showProfileIcon: true,
+                    onProfile: { navigationCoordinator.presentSheet(.userProfile) }
                 )
+                ScrollView {
+                    HomeContentView(viewModel: viewModel)
+                }
             }
+            .navigationBarHidden(true)
+        case .cards:
+            VStack(spacing: 0) {
+                UnifiedHeader(
+                    title: "Cards",
+                    showBackButton: false,
+                    onProfile: { navigationCoordinator.presentSheet(.userProfile) },
+                    leading: {
+                        AnyView(
+                            Button(action: {
+                                navigationCoordinator.presentSheet(.cardsInfo)
+                            }) {
+                                Image(systemName: "info.circle.fill")
+                                    .font(.title2)
+                                    .foregroundColor(.blue)
+                            }
+                        )
+                    }
+                )
+                ScrollView {
+                    CardsManagementView(
+                        viewModel: viewModel,
+                        showingAddCardView: .constant(false),
+                        showingAddDeckView: .constant(false),
+                        showingImageImportView: .constant(false)
+                    )
+                }
+                .background(Color(.systemBackground))
+            }
+            .navigationBarHidden(true)
         case .settings:
             SettingsView(viewModel: viewModel, isSheet: false)
         }
@@ -147,18 +136,24 @@ struct MainNavigationView: View {
             QuickStudyView(viewModel: viewModel, gameMode: gameMode, selectedStudyMode: studyMode)
         case .normalStudy(let gameMode, let studyMode):
             SimplifiedDeckSelectionView(viewModel: viewModel, mode: gameMode)
+        case .progressiveStudy(let gameMode):
+            ProgressiveStudyView(viewModel: viewModel, gameMode: gameMode)
+        case .continueGame(let gameMode):
+            continueGameView(for: gameMode)
         case .deck(let deck):
             DeckView(viewModel: viewModel, deck: deck)
         case .allCards:
             AllCardsView(viewModel: viewModel)
         case .manageDecks:
             ManageDecksView(viewModel: viewModel)
+        case .imageImport:
+            ImageImportView(viewModel: viewModel)
         case .studyView(let cards, let deckIds):
             StudyView(viewModel: viewModel, cards: cards, deckIds: deckIds, shouldLoadSaveState: false)
         case .testView(let cards, let deckIds):
             TestView(viewModel: viewModel, cards: cards, deckIds: deckIds, shouldLoadSaveState: false)
         case .gameView(let cards, let deckIds):
-            GameView(viewModel: viewModel, cards: cards, deckIds: deckIds, shouldLoadSaveState: false)
+            GameView(viewModel: viewModel, cards: cards, difficulty: .medium, deckIds: deckIds, shouldLoadSaveState: false)
         case .trueFalseView(let cards, let deckIds):
             TrueFalseView(viewModel: viewModel, cards: cards, deckIds: deckIds, shouldLoadSaveState: false)
         case .writingView(let cards, let deckIds):
@@ -166,14 +161,62 @@ struct MainNavigationView: View {
         case .wordScrambleView(let cards, let deckIds):
             WordScrambleView(viewModel: viewModel, cards: cards, deckIds: deckIds, shouldLoadSaveState: false)
         case .dutchVocabulary:
-            NavigationView {
-                DutchVocabularyImportView(
-                    viewModel: viewModel
-                )
-            }
+            DutchVocabularyImportView(viewModel: viewModel)
         case .dutchGrammar:
-            NavigationView {
-                DutchGrammarRulesView()
+            DutchGrammarRulesView()
+        }
+    }
+    
+    // MARK: - Continue Game View
+    @ViewBuilder
+    private func continueGameView(for gameMode: GameMode) -> some View {
+        switch gameMode {
+        case .study:
+            if let savedState = SaveStateManager.shared.loadGameState(gameType: .study, as: StudyGameState.self) {
+                StudyView(viewModel: viewModel, cards: savedState.cards, deckIds: [], shouldLoadSaveState: true)
+            } else {
+                // Fallback if no save state found
+                StudyView(viewModel: viewModel, cards: [], deckIds: [], shouldLoadSaveState: false)
+            }
+        case .test:
+            if let savedState = SaveStateManager.shared.loadGameState(gameType: .test, as: TestGameState.self) {
+                TestView(viewModel: viewModel, cards: savedState.cards, deckIds: [], shouldLoadSaveState: true)
+            } else {
+                // Fallback if no save state found
+                TestView(viewModel: viewModel, cards: [], deckIds: [], shouldLoadSaveState: false)
+            }
+        case .game:
+            if let savedState = SaveStateManager.shared.loadGameState(gameType: .memoryGame, as: MemoryGameState.self) {
+                // For memory game, we need to reconstruct the cards from the saved state
+                let allCards = savedState.gameCards.compactMap { savedCard in
+                    // Find the original card in the viewModel
+                    viewModel.flashCards.first { $0.id == savedCard.originalCardId }
+                }
+                GameView(viewModel: viewModel, cards: allCards, difficulty: .medium, deckIds: [], shouldLoadSaveState: true)
+            } else {
+                // Fallback if no save state found
+                GameView(viewModel: viewModel, cards: [], difficulty: .medium, deckIds: [], shouldLoadSaveState: false)
+            }
+        case .truefalse:
+            if let savedState = SaveStateManager.shared.loadGameState(gameType: .trueFalse, as: TrueFalseGameState.self) {
+                TrueFalseView(viewModel: viewModel, cards: savedState.cards, deckIds: [], shouldLoadSaveState: true)
+            } else {
+                // Fallback if no save state found
+                TrueFalseView(viewModel: viewModel, cards: [], deckIds: [], shouldLoadSaveState: false)
+            }
+        case .writing:
+            if let savedState = SaveStateManager.shared.loadGameState(gameType: .writing, as: WritingGameState.self) {
+                WritingView(viewModel: viewModel, cards: savedState.cards, deckIds: [], shouldLoadSaveState: true)
+            } else {
+                // Fallback if no save state found
+                WritingView(viewModel: viewModel, cards: [], deckIds: [], shouldLoadSaveState: false)
+            }
+        case .wordScramble:
+            if let savedState = SaveStateManager.shared.loadGameState(gameType: .wordScramble, as: WordScrambleGameState.self) {
+                WordScrambleView(viewModel: viewModel, cards: savedState.cards, deckIds: [], shouldLoadSaveState: true)
+            } else {
+                // Fallback if no save state found
+                WordScrambleView(viewModel: viewModel, cards: [], deckIds: [], shouldLoadSaveState: false)
             }
         }
     }
@@ -186,8 +229,6 @@ struct MainNavigationView: View {
             AddCardView(viewModel: viewModel, defaultDeck: deck)
         case .addDeck:
             AddDeckView(viewModel: viewModel)
-        case .imageImport:
-            ImageImportView(viewModel: viewModel)
         case .editCard(let card):
             EditCardView(viewModel: viewModel, card: card)
         case .moveCards(let cardIds, let deck):
@@ -296,6 +337,10 @@ struct HomeContentView: View {
         VStack(spacing: 24) {
             // Study Modes Section
             VStack(alignment: .leading, spacing: 16) {
+                Text("Flash Card Studies")
+                    .font(.headline)
+                    .foregroundColor(.secondary)
+                    .padding(.horizontal)
                 VStack(spacing: 12) {
                     NavigationButton(
                         title: "Study Your Cards",

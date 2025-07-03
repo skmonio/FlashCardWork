@@ -61,29 +61,17 @@ struct MultipleChoiceView: View {
             } else {
                 gameView
             }
-            
-            // Bottom close button
-            HStack {
-                Spacer()
-                Button(action: {
-                    if hasSignificantProgress && !showingResults {
-                        showingCloseConfirmation = true
-                    } else {
-                        dismissToRoot()
-                    }
-                }) {
-                    Image(systemName: "xmark")
-                        .font(.title2)
-                        .foregroundColor(.secondary)
-                        .padding(12)
-                        .background(Circle().fill(Color(.systemGray5)))
-                }
-                Spacer()
-            }
-            .padding(.bottom, 20)
-            .background(Color(.systemBackground))
         }
-        .navigationBarHidden(true)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                UnifiedBackButton(style: .toolbar) {
+                    handleBackButton()
+                }
+            }
+        }
+        .navigationTitle("Multiple Choice")
+        .navigationBarTitleDisplayMode(.inline)
         .alert("Close Game?", isPresented: $showingCloseConfirmation) {
             Button("Save & Close", role: .destructive) {
                 saveProgressAndDismiss()
@@ -445,6 +433,15 @@ struct MultipleChoiceView: View {
     
     private func speakText(_ text: String) {
         // No speech functionality in multiple choice
+    }
+    
+    private func handleBackButton() {
+        // Implement the logic to handle the back button
+        if hasSignificantProgress && !showingResults {
+            showingCloseConfirmation = true
+        } else {
+            dismissToRoot()
+        }
     }
 }
 

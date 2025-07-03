@@ -15,6 +15,11 @@ struct WordScrambleView: View {
     @State private var comboCount = 0
     @Environment(\.dismiss) private var dismiss
     
+    // Progressive study properties
+    private var studyMode: StudyMode?
+    private var onLevelComplete: ((LevelResult) -> Void)?
+    private var maxQuestions: Int?
+    
     // Add speech service for pronunciation
     @ObservedObject private var speechService = DutchSpeechService.shared
     
@@ -49,12 +54,15 @@ struct WordScrambleView: View {
         return speechService.isSpeaking && speechService.currentlySpeaking == textToSpeak
     }
     
-    init(viewModel: FlashCardViewModel, cards: [FlashCard], deckIds: [UUID] = [], shouldLoadSaveState: Bool = false) {
+    init(viewModel: FlashCardViewModel, cards: [FlashCard], deckIds: [UUID] = [], shouldLoadSaveState: Bool = false, studyMode: StudyMode? = nil, maxQuestions: Int? = nil, onLevelComplete: ((LevelResult) -> Void)? = nil) {
         self.viewModel = viewModel
         // Apply intelligent ordering: less-known cards first, well-known cards later
         _cards = State(initialValue: viewModel.sortCardsForLearning(cards))
         self.deckIds = deckIds
         self.shouldLoadSaveState = shouldLoadSaveState
+        self.studyMode = studyMode
+        self.maxQuestions = maxQuestions
+        self.onLevelComplete = onLevelComplete
     }
     
     var body: some View {
@@ -66,29 +74,17 @@ struct WordScrambleView: View {
             } else {
                 gameView
             }
-            
-            // Bottom close button
-            HStack {
-                Spacer()
-                Button(action: {
-                    if hasSignificantProgress && !showingResults {
-                        showingCloseConfirmation = true
-                    } else {
-                        dismissToRoot()
-                    }
-                }) {
-                    Image(systemName: "xmark")
-                        .font(.title2)
-                        .foregroundColor(.secondary)
-                        .padding(12)
-                        .background(Circle().fill(Color(.systemGray5)))
-                }
-                Spacer()
-            }
-            .padding(.bottom, 20)
-            .background(Color(.systemBackground))
         }
-        .navigationBarHidden(true)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                UnifiedBackButton(style: .toolbar) {
+                    handleBackButton()
+                }
+            }
+        }
+        .navigationTitle("Jumble Your Cards")
+        .navigationBarTitleDisplayMode(.inline)
         .alert("Close Game?", isPresented: $showingCloseConfirmation) {
             Button("Save & Close", role: .destructive) {
                 saveProgressAndDismiss()
@@ -139,31 +135,32 @@ struct WordScrambleView: View {
             // Unified header with progress bar
             GameHeaderView(
                 currentIndex: currentIndex + 1,
-                totalCards: cards.count,
-                score: userProfileManager.xp, // Use current XP instead of calculated score
+                totalCards: maxQuestions ?? cards.count,
+                score: userProfileManager.xp,
                 combo: comboCount,
                 knownCount: nil,
                 unknownCount: nil,
                 skippedCount: nil,
-                sessionXP: sessionXP
+                sessionXP: sessionXP,
+                showProgressIndicator: false,
+                progressOverride: showingResults ? 1.0 : Double(max(currentIndex, 0)) / Double(maxQuestions ?? cards.count)
             )
             
             if let card = currentCard {
                 VStack(spacing: 20) {
-                    // Title and definition display (matching WritingView layout)
-                    VStack(spacing: 15) {
-                        Text("Arrange the letters to translate:")
-                            .font(.title3)
-                            .foregroundColor(.secondary)
-                        
-                        Text(card.definition)
-                            .font(.title2)
-                            .bold()
-                            .multilineTextAlignment(.center)
-                            .padding()
-                            .background(Color(.systemGray6))
-                            .cornerRadius(12)
-                    }
+                    // Instruction text outside the card
+                    Text("Arrange the letters to translate:")
+                        .font(.title3)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                    
+                    // Use shared card component with vibrant borders - only show the word
+                    SharedGameCardView(
+                        card: card,
+                        title: "",
+                        content: card.word,
+                        showArticle: false
+                    )
                     
                     // Button row: Clear and Submit (matching WritingView style)
                     if !hasAnswered {
@@ -209,7 +206,7 @@ struct WordScrambleView: View {
                         
                         HStack(spacing: 8) {
                             ForEach(selectedChunks) { chunk in
-                                ChunkView(chunk: chunk, isSelected: true) {
+                                ChunkView(chunk: chunk, isSelected: true, disabled: hasAnswered) {
                                     removeChunk(chunk)
                                 }
                             }
@@ -243,7 +240,7 @@ struct WordScrambleView: View {
                             GridItem(.flexible())
                         ], spacing: 12) {
                             ForEach(wordChunks.filter { !selectedChunks.contains($0) }) { chunk in
-                                ChunkView(chunk: chunk, isSelected: false) {
+                                ChunkView(chunk: chunk, isSelected: false, disabled: hasAnswered) {
                                     addChunk(chunk)
                                 }
                             }
@@ -380,7 +377,10 @@ struct WordScrambleView: View {
     }
     
     private func addChunk(_ chunk: WordChunk) {
+        // Prevent interaction after answer has been submitted
+        guard !hasAnswered else { return }
         guard !selectedChunks.contains(chunk) else { return }
+        
         selectedChunks.append(chunk)
         HapticManager.shared.lightImpact()
         
@@ -394,11 +394,17 @@ struct WordScrambleView: View {
     }
     
     private func removeChunk(_ chunk: WordChunk) {
+        // Prevent interaction after answer has been submitted
+        guard !hasAnswered else { return }
+        
         selectedChunks.removeAll { $0.id == chunk.id }
         HapticManager.shared.lightImpact()
     }
     
     private func clearSelection() {
+        // Prevent interaction after answer has been submitted
+        guard !hasAnswered else { return }
+        
         selectedChunks.removeAll()
         HapticManager.shared.lightImpact()
     }
@@ -443,6 +449,39 @@ struct WordScrambleView: View {
         // Auto-save progress periodically (every 5 cards)
         if currentIndex % 5 == 0 && currentIndex > 0 {
             saveCurrentProgress()
+        }
+        
+        // Check if we've reached the max questions limit (for progressive study)
+        if let maxQuestions = maxQuestions, currentIndex >= maxQuestions - 1 {
+            print("🔤 Reached max questions limit for progressive study")
+            HapticManager.shared.gameComplete()
+            
+            // Clear saved progress since game is complete
+            clearSavedProgress()
+            
+            // Call level completion callback if this is a progressive study session
+            if let onLevelComplete = onLevelComplete {
+                let levelNumber: Int
+                switch studyMode {
+                case .maintenance: levelNumber = 1
+                case .cram: levelNumber = 2
+                case .adaptive: levelNumber = 3
+                default: levelNumber = 1
+                }
+                
+                let result = LevelResult(
+                    level: levelNumber,
+                    score: correctAnswers,
+                    total: maxQuestions
+                )
+                onLevelComplete(result)
+            } else {
+                // Post notification for regular word scramble mode
+                NotificationCenter.default.post(name: .wordScrambleSessionCompleted, object: nil)
+                
+                StreakManager.shared.recordGameCompletion(); showingResults = true
+            }
+            return
         }
         
         if currentIndex < cards.count - 1 {
@@ -618,6 +657,14 @@ struct WordScrambleView: View {
             }
         }
     }
+    
+    private func handleBackButton() {
+        if hasSignificantProgress && !showingResults {
+            showingCloseConfirmation = true
+        } else {
+            dismissToRoot()
+        }
+    }
 }
 
 // MARK: - Supporting Types
@@ -635,6 +682,7 @@ struct WordChunk: Identifiable, Equatable {
 struct ChunkView: View {
     let chunk: WordChunk
     let isSelected: Bool
+    let disabled: Bool
     let action: () -> Void
     
     var body: some View {
@@ -655,6 +703,8 @@ struct ChunkView: View {
                 )
         }
         .buttonStyle(PlainButtonStyle())
+        .disabled(disabled)
+        .opacity(disabled ? 0.6 : 1.0)
     }
 }
 

@@ -38,7 +38,16 @@ struct SettingsView: View {
                         }
                 }
             } else {
-                settingsContent
+                VStack(spacing: 0) {
+                    UnifiedHeader(
+                        title: "Settings",
+                        showBackButton: false,
+                        onProfile: { NavigationCoordinator.shared.presentSheet(.userProfile) }
+                    )
+                    settingsContent
+                }
+                .navigationBarHidden(true)
+                .background(Color(.systemBackground))
             }
         }
         .sheet(isPresented: $showingExportImport) {
@@ -314,6 +323,21 @@ struct SettingsView: View {
                 .disabled(isCheckingDuplicates)
                 
                 Button(action: {
+                    removeDuplicateCards()
+                }) {
+                    HStack {
+                        Image(systemName: "trash.circle")
+                            .foregroundColor(.red)
+                            .frame(width: 24)
+                        
+                        Text("Remove Duplicate Cards")
+                            .foregroundColor(.red)
+                        
+                        Spacer()
+                    }
+                }
+                
+                Button(action: {
                     showingResetAlert = true
                 }) {
                     HStack {
@@ -361,7 +385,8 @@ struct SettingsView: View {
                 }
             }
         }
-        .listStyle(InsetGroupedListStyle())
+        .listStyle(PlainListStyle())
+        .listRowBackground(Color(.systemBackground))
         .sheet(isPresented: $showingWelcome) {
             WelcomeView(isPresented: $showingWelcome)
         }
@@ -389,6 +414,23 @@ struct SettingsView: View {
                     HapticManager.shared.errorNotification()
                 }
             }
+        }
+    }
+    
+    private func removeDuplicateCards() {
+        let result = viewModel.removeDuplicateCards()
+        
+        // Show alert with results
+        duplicateResults = (true, result.message)
+        showingDuplicateAlert = true
+        
+        if result.removedCount > 0 {
+            HapticManager.shared.successNotification()
+            if settingsManager.isSoundEnabled {
+                SoundManager.shared.playCorrectSound()
+            }
+        } else {
+            HapticManager.shared.lightImpact()
         }
     }
 }

@@ -70,29 +70,17 @@ struct LookCoverCheckView: View {
             } else {
                 gameView
             }
-            
-            // Bottom close button
-            HStack {
-                Spacer()
-                Button(action: {
-                    if hasSignificantProgress && !showingResults {
-                        showingCloseConfirmation = true
-                    } else {
-                        dismissToRoot()
-                    }
-                }) {
-                    Image(systemName: "xmark")
-                        .font(.title2)
-                        .foregroundColor(.secondary)
-                        .padding(12)
-                        .background(Circle().fill(Color(.systemGray5)))
-                }
-                Spacer()
-            }
-            .padding(.bottom, 20)
-            .background(Color(.systemBackground))
         }
-        .navigationBarHidden(true)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                UnifiedBackButton(style: .toolbar) {
+                    handleBackButton()
+                }
+            }
+        }
+        .navigationTitle("Look Cover Check")
+        .navigationBarTitleDisplayMode(.inline)
         .alert("Close Session?", isPresented: $showingCloseConfirmation) {
             Button("Save & Close", role: .destructive) {
                 saveProgressAndDismiss()
@@ -603,5 +591,13 @@ struct LookCoverCheckView: View {
         
         // Use slower speech rate for learning
         speechService.speakDutch(text, rate: 0.4)
+    }
+    
+    private func handleBackButton() {
+        if hasSignificantProgress && !showingResults {
+            showingCloseConfirmation = true
+        } else {
+            dismiss()
+        }
     }
 } 

@@ -446,7 +446,7 @@ extension FlashCardViewModel {
         // Handle system deck merging instead of just removing duplicates
         var uniqueDecks: [Deck] = []
         var seenDeckIds: Set<UUID> = []
-        var systemDeckNames = ["Uncategorized", "Learnt", "Learning", "Review"]
+        var systemDeckNames = ["Uncategorized", "Review"]
         var systemDeckMerges = 0
         
         for deck in decks {
@@ -536,7 +536,7 @@ extension FlashCardViewModel {
         // Handle system deck merging instead of just removing duplicates
         var uniqueDecks: [Deck] = []
         var seenDeckIds: Set<UUID> = []
-        var systemDeckNames = ["Uncategorized", "Learnt", "Learning", "Review"]
+        var systemDeckNames = ["Uncategorized", "Review"]
         var systemDeckMerges = 0
         
         for deck in decks {

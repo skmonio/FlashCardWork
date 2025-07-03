@@ -5,8 +5,27 @@ struct StudyTypeSelectionView: View {
     let gameMode: GameMode
     @EnvironmentObject var navigationCoordinator: NavigationCoordinator
     @State private var selectedCardCount: Int = 10
+    @StateObject private var saveStateManager = SaveStateManager.shared
     
     var body: some View {
+        VStack(spacing: 0) {
+            UnifiedHeader(
+                title: "Study Type",
+                onBack: { navigationCoordinator.pop() },
+                onProfile: { navigationCoordinator.presentSheet(.userProfile) },
+                trailing: {
+                    AnyView(
+                        Button(action: {
+                            navigationCoordinator.presentSheet(.gameInfo(gameMode.gameInfoType))
+                        }) {
+                            Image(systemName: "info.circle.fill")
+                                .font(.title2)
+                                .foregroundColor(.blue)
+                        }
+                    )
+                }
+            )
+            
         VStack(spacing: 32) {
             // Header
             VStack(spacing: 16) {
@@ -36,6 +55,20 @@ struct StudyTypeSelectionView: View {
                     }
                 )
                 
+                // Progressive Study Option (hide for memory game)
+                if gameMode != .game {
+                    StudyTypeCard(
+                        title: "Progressive Study",
+                        subtitle: "3 levels of increasing difficulty",
+                        description: "Start easy, build up to challenging content",
+                        icon: "chart.line.uptrend.xyaxis",
+                        color: .purple,
+                        onTap: {
+                            navigationCoordinator.push(NavigationDestination.progressiveStudy(gameMode))
+                        }
+                    )
+                }
+                
                 // Normal Study Option
                 StudyTypeCard(
                     title: "Normal Study",
@@ -51,10 +84,114 @@ struct StudyTypeSelectionView: View {
             .padding(.horizontal)
             
             Spacer()
+                
+                // Continue Option (always shown, but greyed out if no save state)
+                VStack(spacing: 20) {
+                    // Divider
+                    HStack {
+                        Rectangle()
+                            .fill(Color(.systemGray4))
+                            .frame(height: 1)
+                        Text("or")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .padding(.horizontal, 8)
+                        Rectangle()
+                            .fill(Color(.systemGray4))
+                            .frame(height: 1)
+                    }
+                    .padding(.horizontal)
+                    
+                    ContinueGameCard(
+                        gameMode: gameMode,
+                        savedAt: saveStateManager.getSaveStateInfo(gameType: gameMode.saveStateType),
+                        isEnabled: saveStateManager.hasSaveState(gameType: gameMode.saveStateType),
+                        onTap: {
+                            if saveStateManager.hasSaveState(gameType: gameMode.saveStateType) {
+                                navigationCoordinator.push(NavigationDestination.continueGame(gameMode))
+                            }
+                        }
+                    )
+                }
+            }
         }
-        .navigationTitle("Study Type")
-        .navigationBarTitleDisplayMode(.large)
-        .navigationBarBackButtonHidden(false)
+        .navigationBarHidden(true)
+    }
+}
+
+struct ContinueGameCard: View {
+    let gameMode: GameMode
+    let savedAt: Date?
+    let isEnabled: Bool
+    let onTap: () -> Void
+    
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: 16) {
+                Image(systemName: "arrow.clockwise.circle.fill")
+                    .font(.title)
+                    .foregroundColor(isEnabled ? .green : .gray)
+                    .frame(width: 40)
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Continue")
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(isEnabled ? .primary : .secondary)
+                    
+                    Text(gameMode.title)
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundColor(isEnabled ? .green : .gray)
+                    
+                    if isEnabled, let savedAt = savedAt {
+                        Text("Saved \(timeAgoString(from: savedAt))")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    } else {
+                        Text("No saved progress")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                
+                Spacer()
+                
+                Image(systemName: isEnabled ? "play.circle.fill" : "play.circle")
+                    .font(.title2)
+                    .foregroundColor(isEnabled ? .green : .gray)
+            }
+            .padding()
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(isEnabled ? Color.green.opacity(0.1) : Color(.systemGray5))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(isEnabled ? Color.green.opacity(0.3) : Color(.systemGray4), lineWidth: isEnabled ? 2 : 1)
+                    )
+            )
+        }
+        .buttonStyle(PlainButtonStyle())
+        .padding(.horizontal)
+        .disabled(!isEnabled)
+    }
+    
+    private func timeAgoString(from date: Date) -> String {
+        let now = Date()
+        let timeInterval = now.timeIntervalSince(date)
+        
+        if timeInterval < 60 {
+            return "just now"
+        } else if timeInterval < 3600 {
+            let minutes = Int(timeInterval / 60)
+            return "\(minutes) minute\(minutes == 1 ? "" : "s") ago"
+        } else if timeInterval < 86400 {
+            let hours = Int(timeInterval / 3600)
+            return "\(hours) hour\(hours == 1 ? "" : "s") ago"
+        } else {
+            let days = Int(timeInterval / 86400)
+            return "\(days) day\(days == 1 ? "" : "s") ago"
+        }
     }
 }
 
