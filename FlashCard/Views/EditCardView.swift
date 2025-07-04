@@ -31,6 +31,12 @@ struct EditCardView: View {
     @State private var compatibilityFeature: UnavailableFeature?
     @State private var showingCompatibilityAlert = false
     
+    // Translation state (only used on iOS 18.0+)
+    @State private var translationConfiguration: Any?
+    @State private var lastTranslatedWord: String = ""
+    @State private var showingTranslationError = false
+    @State private var translationErrorMessage = ""
+    
     private let logger = Logger(subsystem: "com.flashcards", category: "EditCardView")
     
     init(viewModel: FlashCardViewModel, card: FlashCard) {
@@ -188,7 +194,7 @@ struct EditCardView: View {
                                         .foregroundColor(.secondary)
                                 }
                                 
-                                Text("Using local dictionary only. For full translation features, update to iOS 17.4+")
+                                Text("Using local dictionary only. For full translation features, update to iOS 18.0+")
                                     .padding(.horizontal, 12)
                                     .padding(.vertical, 8)
                                     .background(Color.orange.opacity(0.1))
@@ -370,6 +376,26 @@ struct EditCardView: View {
             isPresented: $showingCompatibilityAlert,
             feature: compatibilityFeature ?? .translation
         )
+        .modifier(TranslationTaskModifier(
+            translationConfiguration: translationConfiguration,
+            lastTranslatedWord: lastTranslatedWord,
+            onTranslationComplete: { translation in
+                self.definition = translation
+                self.validationMessage = "✅ Apple Translation found: '\(translation)'"
+                self.showingValidationAlert = true
+                self.logger.debug("✅ Apple Translation found: '\(translation)'")
+            },
+            onTranslationError: { error in
+                self.translationErrorMessage = error
+                self.showingTranslationError = true
+                self.logger.debug("❌ Apple Translation failed: \(error)")
+            }
+        ))
+        .alert("Translation Error", isPresented: $showingTranslationError) {
+            Button("OK") { }
+        } message: {
+            Text(translationErrorMessage)
+        }
         .onAppear {
             loadCardData()
         }
@@ -385,6 +411,19 @@ struct EditCardView: View {
         guard trimmedWord.count >= 3 else { return }
         
         logger.debug("🔄 Manual translation request for: '\(trimmedWord)'")
+        
+        // Try Apple's Translation framework first (iOS 18.0+)
+        if #available(iOS 18.0, *), CompatibilityHelper.isTranslationFrameworkAvailable {
+            #if canImport(Translation)
+            // Set up translation configuration and trigger translation
+            translationConfiguration = TranslationSession.Configuration(
+                source: Locale.Language(identifier: "nl"),
+                target: Locale.Language(identifier: "en")
+            )
+            lastTranslatedWord = trimmedWord
+            return
+            #endif
+        }
         
         // Use comprehensive translation service to get rich vocabulary data
         Task { @MainActor in
@@ -435,18 +474,18 @@ struct EditCardView: View {
                     
                     logger.debug("✅ Comprehensive translation found with 95% confidence")
                 } else {
-                    // Fallback to basic translation
-                let translation = await TranslationService.shared.getTranslationWithFallback(for: trimmedWord)
-                
-                if !translation.isEmpty {
-                    self.definition = translation
+                    // Fallback to basic translation from local dictionary
+                    let translation = await TranslationService.shared.getTranslationWithFallback(for: trimmedWord)
+                    
+                    if !translation.isEmpty {
+                        self.definition = translation
                         self.validationMessage = "✅ Basic translation found\nConsider adding more details manually"
                         self.showingValidationAlert = true
                         logger.debug("✅ Basic translation found: '\(translation)'")
-                } else {
+                    } else {
                         self.validationMessage = "❌ No translation found for: '\(trimmedWord)'\n\nTip: Check spelling or try a different form of the word"
-                    self.showingValidationAlert = true
-                    logger.debug("❌ No translation found for: '\(trimmedWord)'")
+                        self.showingValidationAlert = true
+                        logger.debug("❌ No translation found for: '\(trimmedWord)'")
                     }
                 }
             } catch {
