@@ -344,25 +344,6 @@ struct ProgressiveStudyView: View {
                                 .fill(.blue)
                         )
                     }
-                    
-                    Button(action: {
-                        navigationCoordinator.pop()
-                    }) {
-                        HStack {
-                            Image(systemName: "checkmark.circle.fill")
-                                .font(.title2)
-                            Text("Done")
-                                .font(.headline)
-                                .fontWeight(.semibold)
-                        }
-                        .foregroundColor(.blue)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(.blue, lineWidth: 2)
-                        )
-                    }
                 }
                 .padding(.horizontal)
                 .padding(.bottom, 20)

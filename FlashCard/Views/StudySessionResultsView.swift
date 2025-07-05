@@ -380,19 +380,6 @@ struct ActionButtonsView: View {
                     .cornerRadius(12)
                 }
             }
-            
-            Button(action: onDone) {
-                HStack {
-                    Image(systemName: "checkmark")
-                    Text("Done")
-                }
-                .font(.headline)
-                .foregroundColor(.blue)
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color.blue.opacity(0.1))
-                .cornerRadius(12)
-            }
         }
     }
 }

@@ -11,12 +11,8 @@ struct WritingView: View {
     @State private var userInput = ""
     @State private var hasAnswered = false
     @State private var isCorrect: Bool? = nil
-    @State private var showingOverride = false
     @State private var showingCloseConfirmation = false
     @State private var comboCount = 0
-    @State private var showingPeek = false
-    @State private var showLetterMode = false // New state for showing letter hints
-    @State private var lettersRevealed = 0 // Track how many letters have been revealed
     @FocusState private var isKeyboardFocused: Bool
     @Environment(\.dismiss) private var dismiss
     
@@ -38,6 +34,12 @@ struct WritingView: View {
     private var deckIds: [UUID]
     private var shouldLoadSaveState: Bool
     
+    // Hangman-style game state
+    @State private var revealedLetters: Set<Character> = []
+    @State private var guessedLetters: Set<Character> = []
+    @State private var wrongGuesses = 0
+    @State private var maxWrongGuesses = 5
+    
     // Computed property to check if there's significant progress to save
     private var hasSignificantProgress: Bool {
         return currentIndex > 0 || totalAnswers > 0
@@ -57,6 +59,35 @@ struct WritingView: View {
     // Check if current word is being spoken
     private var isCurrentWordSpeaking: Bool {
         return speechService.isSpeaking && speechService.currentlySpeaking == textToSpeak
+    }
+    
+    // Computed property for displaying the word with placeholders
+    private var displayWord: String {
+        guard let card = currentCard else { return "" }
+        return card.word.map { char in
+            if char.isWhitespace {
+                return String(char) // Show spaces as spaces
+            } else {
+                let lowerChar = char.lowercased()
+                if revealedLetters.contains(lowerChar) || guessedLetters.contains(lowerChar) {
+                    return String(char)
+                } else {
+                    return "_"
+                }
+            }
+        }.joined(separator: "")
+    }
+    
+    // Check if word is complete
+    private var isWordComplete: Bool {
+        guard let card = currentCard else { return false }
+        let wordLetters = Set(card.word.lowercased().filter { $0.isLetter }.map { $0 })
+        return wordLetters.isSubset(of: revealedLetters.union(guessedLetters))
+    }
+    
+    // Check if game is over (too many wrong guesses)
+    private var isGameOver: Bool {
+        return wrongGuesses >= maxWrongGuesses
     }
     
     init(viewModel: FlashCardViewModel, cards: [FlashCard], deckIds: [UUID] = [], shouldLoadSaveState: Bool = false, studyMode: StudyMode? = nil, maxQuestions: Int? = nil, onLevelComplete: ((LevelResult) -> Void)? = nil) {
@@ -149,7 +180,7 @@ struct WritingView: View {
                 skippedCount: nil,
                 sessionXP: sessionXP,
                 showProgressIndicator: false,
-                progressOverride: showingResults ? 1.0 : Double(max(currentIndex, 0)) / Double(maxQuestions ?? cards.count)
+                isComplete: showingResults
             )
             
             if let card = currentCard {
@@ -160,113 +191,45 @@ struct WritingView: View {
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
                     
-                    // Use shared card component with vibrant borders - only show the word
+                    // Use shared card component with vibrant borders - show the translation instead of the word
                     SharedGameCardView(
                         card: card,
                         title: "",
-                        content: card.word,
+                        content: card.definition,
                         showArticle: false
                     )
                     
-                    // Peek display (simplified - just shows the word)
-                    if showingPeek && !hasAnswered {
-                        VStack(spacing: 8) {
-                            Text("The answer is:")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                            
-                            VStack(spacing: 4) {
-                                if !card.article.isEmpty {
-                                    Text(card.article)
-                                        .font(.caption)
-                                        .foregroundColor(.blue)
-                                        .bold()
-                                }
-                                Text(card.word)
-                                    .font(.title2)
-                                    .bold()
-                                    .foregroundColor(.blue)
-                            }
-                            .padding()
-                            .background(Color.blue.opacity(0.1))
-                            .cornerRadius(8)
-                        }
-                        .transition(.opacity)
-                    }
-                    
-                    // Button row: Peek, Letters, Submit
-                    HStack(spacing: 12) {
-                        // Peek button
-                        if !hasAnswered {
-                            Button(action: {
-                                withAnimation(.easeInOut(duration: 0.3)) {
-                                    showingPeek.toggle()
-                                }
-                            }) {
-                                Text(showingPeek ? "Hide" : "Peek")
-                                    .font(.subheadline)
-                                    .foregroundColor(.orange)
-                                    .padding(.horizontal, 16)
-                                    .padding(.vertical, 8)
-                                    .background(Color.orange.opacity(0.1))
-                                    .cornerRadius(8)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .stroke(Color.orange, lineWidth: 1)
-                                    )
-                            }
-                        }
-                        
-                        // Toggle letters hint button
-                        if !hasAnswered {
-                            Button(action: {
-                                revealNextLetter()
-                                HapticManager.shared.lightImpact()
-                            }) {
-                                Text("Letters")
-                                    .font(.subheadline)
-                                    .foregroundColor(.blue)
-                                    .padding(.horizontal, 16)
-                                    .padding(.vertical, 8)
-                                    .background(Color.blue.opacity(0.1))
-                                    .cornerRadius(8)
-                            }
-                            .disabled(isWordComplete)
-                        }
-                        
-                        // Submit button
-                        if !hasAnswered {
-                            Button(action: checkAnswer) {
-                                Text("Submit")
-                                    .font(.subheadline)
-                                    .foregroundColor(.white)
-                                    .padding(.horizontal, 16)
-                                    .padding(.vertical, 8)
-                                    .background(isAnswerReady ? Color.green : Color.gray)
-                                    .cornerRadius(8)
-                            }
-                            .disabled(!isAnswerReady)
-                        }
-                    }
-                    
-                    // Text input (always shown when not answered)
+                    // Word display with placeholders
                     if !hasAnswered {
-                        TextField("Type your answer here", text: $userInput)
-                            .textFieldStyle(RoundedBorderTextFieldStyle())
-                            .font(.title3)
+                        VStack(spacing: 16) {
+                            // Display the word with placeholders
+                            Text(displayWord)
+                                .font(.system(size: 32, weight: .bold, design: .monospaced))
+                                .foregroundColor(.primary)
+                                .multilineTextAlignment(.center)
+                                .padding()
+                                .frame(maxWidth: .infinity)
+                                .background(Color(.systemGray6))
+                                .cornerRadius(12)
+                                .onTapGesture {
+                                    isKeyboardFocused = true
+                    }
+                    
+                            // Hidden text field for keyboard input
+                            TextField("", text: $userInput)
                             .focused($isKeyboardFocused)
-                            .autocapitalization(.none)
-                            .disableAutocorrection(false)
-                            .keyboardType(.default)
-                            .textContentType(.none)
-                            .onSubmit {
-                                if !userInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                                    checkAnswer()
+                                .opacity(0)
+                                .onChange(of: userInput) { newValue in
+                                    // Process each character typed
+                                    if let lastChar = newValue.last {
+                                        let letter = Character(lastChar.lowercased())
+                                        if letter.isLetter && !guessedLetters.contains(letter) && !revealedLetters.contains(letter) {
+                                            guessLetter(letter)
+                                        }
+                                    }
+                                    // Clear input after processing
+                                    userInput = ""
                                 }
-                            }
-                            .onChange(of: userInput) { newValue in
-                                // Reset letter count if user manually edits the text
-                                lettersRevealed = min(newValue.count, currentCard?.word.count ?? 0)
                             }
                     }
                     
@@ -304,30 +267,14 @@ struct WritingView: View {
                     if !isCorrect {
                         VStack(alignment: .leading, spacing: 8) {
                             HStack {
-                                Text("Your answer:")
-                                    .foregroundColor(.secondary)
-                                Spacer()
-                                Text(userInput)
-                                    .foregroundColor(.red)
-                            }
-                            
-                            HStack {
                                 Text("Correct answer:")
                                     .foregroundColor(.secondary)
                                 Spacer()
                                 
                                 HStack(spacing: 8) {
-                                    VStack(spacing: 2) {
-                                        if !card.article.isEmpty {
-                                            Text(card.article)
-                                                .font(.caption2)
-                                                .foregroundColor(.blue)
-                                                .bold()
-                                        }
                                         Text(card.word)
                                             .foregroundColor(.green)
                                             .bold()
-                                    }
                                     
                                     // Pronunciation button for correct answer
                                     Button(action: {
@@ -354,24 +301,6 @@ struct WritingView: View {
             
             // Action buttons
             HStack(spacing: 12) {
-                if isCorrect == false {
-                    Button(action: {
-                        showingOverride = true
-                    }) {
-                        Text("I Was Right")
-                            .font(.subheadline)
-                            .foregroundColor(.orange)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 8)
-                            .background(Color.orange.opacity(0.1))
-                            .cornerRadius(8)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color.orange, lineWidth: 1)
-                            )
-                    }
-                }
-                
                 Button(action: nextCard) {
                     Text(currentIndex < cards.count - 1 ? "Next Card" : "Finish")
                         .font(.headline)
@@ -382,14 +311,6 @@ struct WritingView: View {
                         .cornerRadius(10)
                 }
             }
-        }
-        .alert("Override Answer", isPresented: $showingOverride) {
-            Button("Cancel", role: .cancel) { }
-            Button("Mark as Correct") {
-                overrideAnswer()
-            }
-        } message: {
-            Text("Are you sure your answer was correct? This will count as a correct answer.")
         }
     }
     
@@ -439,14 +360,6 @@ struct WritingView: View {
                         .background(Color.blue)
                         .cornerRadius(10)
                 }
-                
-                Button(action: {
-                    dismissToRoot()
-                }) {
-                    Text("Done")
-                        .font(.headline)
-                        .foregroundColor(.blue)
-                }
             }
         }
         .padding()
@@ -455,8 +368,8 @@ struct WritingView: View {
     // MARK: - Game Logic
     
     private var isAnswerReady: Bool {
-        // Always check if there's text input since we only use typing mode now
-        return !userInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        // Check if word is complete or game is over
+        return isWordComplete || isGameOver
     }
     
     private func checkAnswer() {
@@ -464,12 +377,8 @@ struct WritingView: View {
         
         HapticManager.shared.buttonTap()
         
-        let correctAnswer = card.word.lowercased()
-        let userAnswer = userInput.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        
-        // Check for exact match or close match
-        let answersMatch = userAnswer == correctAnswer || 
-                          userAnswer.replacingOccurrences(of: " ", with: "") == correctAnswer.replacingOccurrences(of: " ", with: "")
+        // Check if word is complete
+        let answersMatch = isWordComplete
         
         isCorrect = answersMatch
         hasAnswered = true
@@ -500,26 +409,6 @@ struct WritingView: View {
         
         // Record learning statistics
         viewModel.recordCardShown(card.id, isCorrect: answersMatch)
-        
-        isKeyboardFocused = false
-    }
-    
-    private func overrideAnswer() {
-        guard let card = currentCard else { return }
-        
-        // Change incorrect to correct
-        if isCorrect == false {
-            correctAnswers += 1
-            comboCount += 1
-            isCorrect = true
-            // Use custom sound for games (not study mode)
-            HapticManager.shared.successNotification() // Haptic only
-            SoundManager.shared.playTestCorrectSound() // Custom Correct.wav
-            viewModel.setCardStatus(cardId: card.id, status: .known)
-            
-            // Record corrected answer as correct
-            viewModel.recordCardShown(card.id, isCorrect: true)
-        }
     }
     
     private func nextCard() {
@@ -577,10 +466,9 @@ struct WritingView: View {
         userInput = ""
         hasAnswered = false
         isCorrect = nil
-        showingOverride = false
-        showingPeek = false
-        showLetterMode = false // Reset letter hint
-        lettersRevealed = 0
+        revealedLetters = []
+        guessedLetters = []
+        wrongGuesses = 0
         isKeyboardFocused = true
     }
     
@@ -694,21 +582,29 @@ struct WritingView: View {
         speechService.speakDutch(text, rate: 0.4)
     }
     
-    private func revealNextLetter() {
+    // MARK: - Hangman Game Logic
+
+    private func guessLetter(_ letter: Character) {
         guard let card = currentCard else { return }
-        let correctWord = card.word
         
-        if lettersRevealed < correctWord.count {
-            let index = correctWord.index(correctWord.startIndex, offsetBy: lettersRevealed)
-            let nextLetter = correctWord[index]
-            userInput += String(nextLetter)
-            lettersRevealed += 1
+        let lowerLetter = letter.lowercased().first ?? letter
+        guessedLetters.insert(lowerLetter)
+        
+        // Check if letter is in the word
+        let wordLetters = Set(card.word.lowercased().filter { $0.isLetter }.map { $0 })
+        if wordLetters.contains(lowerLetter) {
+            // Correct guess - reveal all instances of this letter
+            HapticManager.shared.lightImpact()
+        } else {
+            // Wrong guess
+            wrongGuesses += 1
+            HapticManager.shared.errorNotification()
         }
-    }
-    
-    private var isWordComplete: Bool {
-        guard let card = currentCard else { return false }
-        return lettersRevealed >= card.word.count
+        
+        // Check if word is complete or game is over
+        if isWordComplete || isGameOver {
+            checkAnswer()
+        }
     }
 }
 

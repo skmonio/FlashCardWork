@@ -3245,8 +3245,16 @@ class DutchGrammarRulesDatabase {
         
         **Common Contractions:**
         
-        **Articles:**
-        • het → 't (the neuter article)
+        **Articles and Pronouns:**
+        • het → 't (the neuter article / it)
+        • ik → 'k (I)
+        • hem → 'm (him / it)
+        • een → 'n (a / an)
+        • haar → 'r (her)
+        • eens → 'ns (once / a sec)
+        • daar/er/haar → d'r (there / her / it)
+        • zijn → z'n (his)
+        • mijn → m'n (my)
         
         **Verb + Subject Combinations:**
         • heb ik → hebk (have I)
@@ -3279,6 +3287,8 @@ class DutchGrammarRulesDatabase {
         keyPoints: [
             "Contractions make speech more natural and fluent",
             "'t is the most common contraction (het → 't)",
+            "Personal pronouns often contract: ik→'k, hem→'m, haar→'r",
+            "Possessives contract: mijn→m'n, zijn→z'n",
             "Verb + subject combinations are very common",
             "Use in informal situations, not formal writing",
             "Essential for understanding spoken Dutch",
@@ -3290,6 +3300,54 @@ class DutchGrammarRulesDatabase {
                 english: "It's nice weather",
                 breakdown: "het (neuter article) → 't (contraction)",
                 audioHint: "ət ɪs moi vɛːr → t ɪs moi vɛːr"
+            ),
+            GrammarExample(
+                dutch: "Ik weet het niet → 'k weet het niet",
+                english: "I don't know",
+                breakdown: "ik → 'k (personal pronoun contraction)",
+                audioHint: "ɪk vet ət nit → k vet ət nit"
+            ),
+            GrammarExample(
+                dutch: "Geef hem maar aan mij → Geef 'm maar aan mij",
+                english: "Just give it to me",
+                breakdown: "hem → 'm (object pronoun contraction)",
+                audioHint: "ɣeːf hɛm maːr aːn mɛi → ɣeːf m maːr aːn mɛi"
+            ),
+            GrammarExample(
+                dutch: "Een beetje → 'n beetje",
+                english: "A little bit",
+                breakdown: "een → 'n (indefinite article contraction)",
+                audioHint: "ən beːtjə → n beːtjə"
+            ),
+            GrammarExample(
+                dutch: "Ik bel haar straks → Ik bel 'r straks",
+                english: "I'll call her later",
+                breakdown: "haar → 'r (object pronoun contraction)",
+                audioHint: "ɪk bɛl haːr straks → ɪk bɛl r straks"
+            ),
+            GrammarExample(
+                dutch: "Kom eens hier → Kom 'ns hier",
+                english: "Come here for a sec",
+                breakdown: "eens → 'ns (adverb contraction)",
+                audioHint: "kɔm əns hiːr → kɔm ns hiːr"
+            ),
+            GrammarExample(
+                dutch: "Ik was er niet bij → Ik was d'r niet bij",
+                english: "I wasn't there",
+                breakdown: "er → d'r (adverb contraction)",
+                audioHint: "ɪk vɑs ɛr nit bɛi → ɪk vɑs dr nit bɛi"
+            ),
+            GrammarExample(
+                dutch: "Dat is zijn fiets → Dat is z'n fiets",
+                english: "That's his bike",
+                breakdown: "zijn → z'n (possessive contraction)",
+                audioHint: "dɑt ɪs zɛin fits → dɑt ɪs zn fits"
+            ),
+            GrammarExample(
+                dutch: "Waar is mijn telefoon? → Waar is m'n telefoon?",
+                english: "Where's my phone?",
+                breakdown: "mijn → m'n (possessive contraction)",
+                audioHint: "vaːr ɪs mɛin teːləfoːn → vaːr ɪs mn teːləfoːn"
             ),
             GrammarExample(
                 dutch: "Heb ik dat gedaan? → Hebk dat gedaan?",
@@ -3367,6 +3425,55 @@ class DutchGrammarRulesDatabase {
                 hint: "Think of the neuter article 'het'"
             ),
             GrammarExercise(
+                question: "What is the contraction for 'ik'?",
+                options: ["'k", "'i", "ik", "ik'"],
+                correctAnswer: 0,
+                explanation: "'k is the contraction for 'ik' (I)",
+                hint: "The 'i' is dropped from 'ik'"
+            ),
+            GrammarExercise(
+                question: "What is the contraction for 'hem'?",
+                options: ["'m", "'h", "hem", "he'"],
+                correctAnswer: 0,
+                explanation: "'m is the contraction for 'hem' (him/it)",
+                hint: "The 'he' is dropped from 'hem'"
+            ),
+            GrammarExercise(
+                question: "What is the contraction for 'een'?",
+                options: ["'n", "'e", "een", "ee'"],
+                correctAnswer: 0,
+                explanation: "'n is the contraction for 'een' (a/an)",
+                hint: "The 'ee' is dropped from 'een'"
+            ),
+            GrammarExercise(
+                question: "What is the contraction for 'haar'?",
+                options: ["'r", "'h", "haar", "ha'"],
+                correctAnswer: 0,
+                explanation: "'r is the contraction for 'haar' (her)",
+                hint: "The 'haa' is dropped from 'haar'"
+            ),
+            GrammarExercise(
+                question: "What is the contraction for 'eens'?",
+                options: ["'ns", "'e", "eens", "ee'"],
+                correctAnswer: 0,
+                explanation: "'ns is the contraction for 'eens' (once/a sec)",
+                hint: "The 'ee' is dropped from 'eens'"
+            ),
+            GrammarExercise(
+                question: "What is the contraction for 'zijn' (his)?",
+                options: ["z'n", "'z", "zijn", "zi'"],
+                correctAnswer: 0,
+                explanation: "z'n is the contraction for 'zijn' (his)",
+                hint: "The 'ij' is dropped from 'zijn'"
+            ),
+            GrammarExercise(
+                question: "What is the contraction for 'mijn'?",
+                options: ["m'n", "'m", "mijn", "mi'"],
+                correctAnswer: 0,
+                explanation: "m'n is the contraction for 'mijn' (my)",
+                hint: "The 'ij' is dropped from 'mijn'"
+            ),
+            GrammarExercise(
                 question: "Complete the contraction: 'heb ik' → ___",
                 options: ["hebik", "hebk", "heb'k", "heb ik"],
                 correctAnswer: 1,
@@ -3442,6 +3549,41 @@ class DutchGrammarRulesDatabase {
                 correctAnswer: 0,
                 explanation: "'t is (het is) is the most common contraction in Dutch",
                 hint: "Think of the neuter article 'het'"
+            ),
+            GrammarExercise(
+                question: "Complete: 'Geef ___ maar aan mij' (Just give it to me) - informal",
+                options: ["het", "'t", "hem", "'m"],
+                correctAnswer: 3,
+                explanation: "'hem' becomes ''m' in informal speech",
+                hint: "This is an object pronoun contraction"
+            ),
+            GrammarExercise(
+                question: "Complete: '___ beetje' (a little bit) - informal",
+                options: ["Een", "'n", "Een", "Een"],
+                correctAnswer: 1,
+                explanation: "'een' becomes ''n' in informal speech",
+                hint: "This is an indefinite article contraction"
+            ),
+            GrammarExercise(
+                question: "Complete: 'Kom ___ hier' (Come here for a sec) - informal",
+                options: ["eens", "'ns", "eens", "eens"],
+                correctAnswer: 1,
+                explanation: "'eens' becomes ''ns' in informal speech",
+                hint: "This means 'for a moment' or 'once'"
+            ),
+            GrammarExercise(
+                question: "Complete: 'Dat is ___ fiets' (That's his bike) - informal",
+                options: ["zijn", "z'n", "zijn", "zijn"],
+                correctAnswer: 1,
+                explanation: "'zijn' becomes 'z'n' in informal speech",
+                hint: "This is a possessive contraction"
+            ),
+            GrammarExercise(
+                question: "Complete: 'Waar is ___ telefoon?' (Where's my phone?) - informal",
+                options: ["mijn", "m'n", "mij", "me"],
+                correctAnswer: 1,
+                explanation: "'mijn' becomes 'm'n' in informal speech",
+                hint: "This is a possessive contraction"
             )
         ],
         commonMistakes: [
@@ -3469,6 +3611,16 @@ class DutchGrammarRulesDatabase {
                 incorrect: "D'r is niemand thuis",
                 correct: "Er is niemand thuis",
                 explanation: "Use full form in formal writing: 'Er is niemand thuis'"
+            ),
+            CommonMistake(
+                incorrect: "Confusing 'm (hem) with 'n (een)",
+                correct: "'m = hem (him/it), 'n = een (a/an)",
+                explanation: "These are different contractions with different meanings"
+            ),
+            CommonMistake(
+                incorrect: "Not recognizing d'r can mean multiple things",
+                correct: "d'r can be daar, er, or haar depending on context",
+                explanation: "Context determines which word d'r represents"
             )
         ],
         tips: [
@@ -3476,9 +3628,11 @@ class DutchGrammarRulesDatabase {
             "Listen to native speakers to hear natural contractions",
             "Use contractions in informal conversations with friends",
             "Avoid contractions in formal writing and business communication",
-            "Start with the most common ones: 't is, hebk, da's",
+            "Start with the most common ones: 't is, 'k, 'm, 'n",
             "Remember: contractions make speech more natural and fluent",
-            "Don't overuse contractions - they're for informal situations"
+            "Don't overuse contractions - they're for informal situations",
+            "Learn the full forms first, then understand the contractions",
+            "Pay attention to context to understand d'r meaning"
         ],
         relatedRules: ["verb_present_a1", "question_word_order_a2", "pronunciation_a1"]
     )
@@ -3927,6 +4081,232 @@ class DutchGrammarRulesDatabase {
         relatedRules: ["verb_present_a1", "basic_word_order_a1", "dutch_articles_a1", "adjectives_a2"]
     )
     
+    // MARK: - A2 Level - Dutch Informal Contractions
+    
+    lazy var dutchInformalContractionsA2 = DutchGrammarRule(
+        id: "dutch_informal_contractions_a2",
+        title: "Dutch Informal Contractions",
+        type: .pronunciation,
+        level: .a2,
+        explanation: """
+        Dutch speakers often use informal contractions in everyday speech and casual writing. These contractions make speech more natural and faster, but they're typically not used in formal writing.
+        
+        Contractions are formed by:
+        • Dropping letters from the beginning or end of words
+        • Combining words together
+        • Using apostrophes to show missing letters
+        
+        These contractions are very common in spoken Dutch and informal text messages, but should be avoided in formal writing, academic papers, or business communication.
+        """,
+        keyPoints: [
+            "Contractions make speech more natural and faster",
+            "Most common: 't (het), 'k (ik), 'm (hem), 'n (een)",
+            "Used in informal speech and casual writing",
+            "Avoid in formal writing and business communication",
+            "Help understand native Dutch speakers better",
+            "Common in text messages and social media"
+        ],
+        examples: [
+            GrammarExample(
+                dutch: "'t regent",
+                english: "it's raining",
+                breakdown: "'t = het (it/the)",
+                audioHint: "t rəɣənt"
+            ),
+            GrammarExample(
+                dutch: "'k weet het niet",
+                english: "I don't know",
+                breakdown: "'k = ik (I)",
+                audioHint: "k veːt ət nit"
+            ),
+            GrammarExample(
+                dutch: "Geef 'm maar aan mij",
+                english: "Just give it to me",
+                breakdown: "'m = hem (him/it)",
+                audioHint: "ɣeːf m maːr aːn mɛi"
+            ),
+            GrammarExample(
+                dutch: "'n beetje",
+                english: "a little bit",
+                breakdown: "'n = een (a/an)",
+                audioHint: "n beːtjə"
+            ),
+            GrammarExample(
+                dutch: "Ik bel 'r straks",
+                english: "I'll call her later",
+                breakdown: "'r = haar (her)",
+                audioHint: "ik bɛl r straks"
+            ),
+            GrammarExample(
+                dutch: "Kom 'ns hier",
+                english: "Come here for a sec",
+                breakdown: "'ns = eens (once/a sec)",
+                audioHint: "kɔm ns hiːr"
+            ),
+            GrammarExample(
+                dutch: "Ik was d'r niet bij",
+                english: "I wasn't there",
+                breakdown: "d'r = daar/er (there)",
+                audioHint: "ik vɑs dr nit bɛi"
+            ),
+            GrammarExample(
+                dutch: "Dat is z'n fiets",
+                english: "That's his bike",
+                breakdown: "z'n = zijn (his)",
+                audioHint: "dɑt ɪs zn fits"
+            ),
+            GrammarExample(
+                dutch: "Waar is m'n telefoon?",
+                english: "Where's my phone?",
+                breakdown: "m'n = mijn (my)",
+                audioHint: "vaːr ɪs mn teːləfoːn"
+            )
+        ],
+        exercises: [
+            GrammarExercise(
+                question: "What does 't mean in Dutch?",
+                options: ["het", "dat", "dit", "wat"],
+                correctAnswer: 0,
+                explanation: "'t is the contraction of 'het' (the/it). It's the most common contraction in Dutch.",
+                hint: "Think of the neuter article"
+            ),
+            GrammarExercise(
+                question: "Complete: '___ weet het niet' (I don't know)",
+                options: ["Ik", "'k", "Ik", "Ik"],
+                correctAnswer: 1,
+                explanation: "'k is the contraction of 'ik' (I). 'k weet het niet = ik weet het niet",
+                hint: "This is the informal way to say 'I'"
+            ),
+            GrammarExercise(
+                question: "What does 'm mean in 'Geef 'm maar'?",
+                options: ["mij", "hem", "haar", "het"],
+                correctAnswer: 1,
+                explanation: "'m is the contraction of 'hem' (him/it). 'Geef 'm maar' = 'Geef hem maar'",
+                hint: "Think of the object pronoun for 'him'"
+            ),
+            GrammarExercise(
+                question: "Complete: '___ beetje' (a little bit)",
+                options: ["Een", "'n", "Een", "Een"],
+                correctAnswer: 1,
+                explanation: "'n is the contraction of 'een' (a/an). 'n beetje = een beetje",
+                hint: "This is the informal indefinite article"
+            ),
+            GrammarExercise(
+                question: "What does 'r mean in 'Ik bel 'r'?",
+                options: ["hem", "haar", "het", "hij"],
+                correctAnswer: 1,
+                explanation: "'r is the contraction of 'haar' (her). 'Ik bel 'r' = 'Ik bel haar'",
+                hint: "Think of the object pronoun for 'her'"
+            ),
+            GrammarExercise(
+                question: "Complete: 'Kom ___ hier' (Come here for a sec)",
+                options: ["eens", "'ns", "eens", "eens"],
+                correctAnswer: 1,
+                explanation: "'ns is the contraction of 'eens' (once/a sec). 'Kom 'ns hier' = 'Kom eens hier'",
+                hint: "This means 'for a moment' or 'once'"
+            ),
+            GrammarExercise(
+                question: "What does d'r mean in 'Ik was d'r niet bij'?",
+                options: ["daar", "er", "haar", "All of the above"],
+                correctAnswer: 3,
+                explanation: "d'r can be a contraction of 'daar' (there), 'er' (there), or 'haar' (her), depending on context.",
+                hint: "This contraction has multiple meanings"
+            ),
+            GrammarExercise(
+                question: "Complete: 'Dat is ___ fiets' (That's his bike)",
+                options: ["zijn", "z'n", "zijn", "zijn"],
+                correctAnswer: 1,
+                explanation: "z'n is the contraction of 'zijn' (his). 'Dat is z'n fiets' = 'Dat is zijn fiets'",
+                hint: "This is the informal possessive for 'his'"
+            ),
+            GrammarExercise(
+                question: "What does m'n mean in 'Waar is m'n telefoon?'?",
+                options: ["mijn", "mij", "me", "mij"],
+                correctAnswer: 0,
+                explanation: "m'n is the contraction of 'mijn' (my). 'Waar is m'n telefoon?' = 'Waar is mijn telefoon?'",
+                hint: "This is the informal possessive for 'my'"
+            ),
+            GrammarExercise(
+                question: "How do you say 'It's raining' informally in Dutch?",
+                options: ["Het regent", "'t regent", "Het regent", "Het regent"],
+                correctAnswer: 1,
+                explanation: "'t regent is the informal way to say 'it's raining'. 't = het",
+                hint: "Use the contraction for 'het'",
+                exerciseType: .translation
+            ),
+            GrammarExercise(
+                question: "How do you say 'I don't know' informally in Dutch?",
+                options: ["Ik weet het niet", "'k weet het niet", "Ik weet het niet", "Ik weet het niet"],
+                correctAnswer: 1,
+                explanation: "'k weet het niet is the informal way to say 'I don't know'. 'k = ik",
+                hint: "Use the contraction for 'ik'",
+                exerciseType: .translation
+            ),
+            GrammarExercise(
+                question: "Complete: 'Geef ___ maar aan mij' (Just give it to me)",
+                options: ["het", "'t", "hem", "'m"],
+                correctAnswer: 3,
+                explanation: "'m is the contraction of 'hem' (him/it). 'Geef 'm maar aan mij'",
+                hint: "Use the informal object pronoun",
+                exerciseType: .fillInTheBlank
+            ),
+            GrammarExercise(
+                question: "True or False: 't is the most common contraction in Dutch",
+                options: ["True", "False"],
+                correctAnswer: 0,
+                explanation: "True! 't (het) is the most common contraction in Dutch, used very frequently in informal speech.",
+                hint: "Think about how often you hear 'het' in Dutch",
+                exerciseType: .trueFalse
+            ),
+            GrammarExercise(
+                question: "True or False: You should use contractions in formal business emails",
+                options: ["True", "False"],
+                correctAnswer: 1,
+                explanation: "False! Contractions are informal and should be avoided in formal writing, business communication, and academic papers.",
+                hint: "Contractions are for informal use only",
+                exerciseType: .trueFalse
+            )
+        ],
+        commonMistakes: [
+            CommonMistake(
+                incorrect: "Using contractions in formal writing",
+                correct: "Only use contractions in informal speech and casual writing",
+                explanation: "Contractions make text too casual for business or academic contexts"
+            ),
+            CommonMistake(
+                incorrect: "Confusing 'm (hem) with 'n (een)",
+                correct: "'m = hem (him/it), 'n = een (a/an)",
+                explanation: "These are different contractions with different meanings"
+            ),
+            CommonMistake(
+                incorrect: "Not recognizing d'r can mean multiple things",
+                correct: "d'r can be daar, er, or haar depending on context",
+                explanation: "Context determines which word d'r represents"
+            ),
+            CommonMistake(
+                incorrect: "Using contractions when learning Dutch",
+                correct: "Learn the full forms first, then understand contractions",
+                explanation: "Start with proper forms, then learn informal variations"
+            ),
+            CommonMistake(
+                incorrect: "Thinking all contractions are the same",
+                correct: "Each contraction has specific rules and contexts",
+                explanation: "Different contractions have different uses and meanings"
+            )
+        ],
+        tips: [
+            "Learn the full forms first, then understand the contractions",
+            "Listen to native speakers to hear contractions in context",
+            "Practice with informal text messages and social media",
+            "Remember that contractions are for informal use only",
+            "Pay attention to context to understand d'r meaning",
+            "Start with the most common contractions: 't, 'k, 'm, 'n",
+            "Don't worry about using contractions yourself initially",
+            "Focus on understanding them when listening to Dutch"
+        ],
+        relatedRules: ["basic_word_order_a1", "dutch_articles_a1", "pronouns_a1", "informal_speech_a2"]
+    )
+    
     // MARK: - All Grammar Rules Array
     
     lazy var allGrammarRules: [DutchGrammarRule] = [
@@ -3940,6 +4320,7 @@ class DutchGrammarRulesDatabase {
         negationA2,
         possessivesA2,
         demonstrativesA2,
+        dutchInformalContractionsA2,
         
         // B1 Level
         verbsWithFixedPrepositionsB1,

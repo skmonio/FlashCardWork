@@ -48,10 +48,15 @@ struct AddCardView: View {
         !definition.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
     
-    init(viewModel: FlashCardViewModel, defaultDeck: Deck? = nil, initialDeckIds: [UUID]? = nil) {
+    init(viewModel: FlashCardViewModel, defaultDeck: Deck? = nil, initialDeckIds: [UUID]? = nil, initialWord: String? = nil) {
         self.viewModel = viewModel
         self.defaultDeck = defaultDeck
         self.initialDeckIds = initialDeckIds
+        
+        // Pre-fill word if provided
+        if let initialWord = initialWord {
+            _word = State(initialValue: initialWord)
+        }
     }
     
     var body: some View {
@@ -527,17 +532,17 @@ struct AddCardView: View {
                     logger.debug("✅ Comprehensive translation found with 95% confidence")
                 } else {
                     // Fallback to basic translation from local dictionary
-                    let translation = await TranslationService.shared.getTranslationWithFallback(for: trimmedWord)
-                    
-                    if !translation.isEmpty {
-                        self.definition = translation
+                let translation = await TranslationService.shared.getTranslationWithFallback(for: trimmedWord)
+                
+                if !translation.isEmpty {
+                    self.definition = translation
                         self.validationMessage = "✅ Basic translation found\nConsider adding more details manually"
                         self.showingValidationAlert = true
                         logger.debug("✅ Basic translation found: '\(translation)'")
-                    } else {
+                } else {
                         self.validationMessage = "❌ No translation found for: '\(trimmedWord)'\n\nTip: Check spelling or try a different form of the word"
-                        self.showingValidationAlert = true
-                        logger.debug("❌ No translation found for: '\(trimmedWord)'")
+                    self.showingValidationAlert = true
+                    logger.debug("❌ No translation found for: '\(trimmedWord)'")
                     }
                 }
             } catch {

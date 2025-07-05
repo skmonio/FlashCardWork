@@ -46,6 +46,14 @@ struct StudyView: View {
     private var onLevelComplete: ((LevelResult) -> Void)?
     private var maxQuestions: Int?
     
+    // Navigation state variables for back/next functionality
+    @State private var maxProgressIndex: Int = 1
+    @State private var hasGoneBack: Bool = false
+    @State private var cardHistory: [Int: FlashCard] = [:]
+    @State private var knownHistory: [Int: Bool] = [:]
+    @State private var unknownHistory: [Int: Bool] = [:]
+    @State private var skippedHistory: [Int: Bool] = [:]
+    
     enum SwipeDirection {
         case none, left, right, up, down
         
@@ -161,6 +169,14 @@ struct StudyView: View {
             // Just print when edit is done - don't try to update game state
             if newValue == nil {
                 print("📝 Edit completed - card saved in viewModel")
+                // Update the local cards array with the latest version of the edited card
+                if let currentId = currentCard?.id,
+                   let updated = viewModel.flashCards.first(where: { $0.id == currentId }),
+                   let idx = cards.firstIndex(where: { $0.id == currentId }) {
+                    cards[idx] = updated
+                }
+                // Force refresh of the card view to reflect edits
+                forceRefreshID = UUID()
             }
         }
         .onChange(of: cards) { newCards in
@@ -196,6 +212,15 @@ struct StudyView: View {
                 unknownCards.removeAll()
                 skippedCards.removeAll()
                 cards = viewModel.sortCardsForLearning(cards) // Use intelligent ordering for new session
+                
+                // Clear navigation state
+                maxProgressIndex = 1
+                hasGoneBack = false
+                cardHistory.removeAll()
+                knownHistory.removeAll()
+                unknownHistory.removeAll()
+                skippedHistory.removeAll()
+                
                 // Don't clear saved progress here - only when explicitly resetting
             }
         }
@@ -226,7 +251,8 @@ struct StudyView: View {
     // Computed property for current card to make SwiftUI detect changes better
     private var currentCard: FlashCard? {
         guard currentIndex < cards.count else { return nil }
-        return cards[currentIndex]
+        let id = cards[currentIndex].id
+        return viewModel.flashCards.first(where: { $0.id == id })
     }
     
     private var studyView: some View {
@@ -301,7 +327,7 @@ struct StudyView: View {
                     totalRounds: smartStudyManager.totalRounds,
                     sessionXP: sessionXP,
                     showProgressIndicator: false,
-                    progressOverride: showingResults ? 1.0 : Double(max(currentIndex, 0)) / Double(maxQuestions ?? cards.count)
+                    isComplete: showingResults
                 )
                 
                 Spacer()
@@ -319,10 +345,10 @@ struct StudyView: View {
                             handleSwipeRight()
                         },
                         onSwipeUp: {
-                            handleSwipeUp() // Review
+                            handleSwipeUp()
                         },
                         onSwipeDown: {
-                            handleSwipeDown() // Skip
+                            handleSwipeDown()
                         },
                         onDragChanged: { offset in
                             updateSwipeDirection(horizontal: offset, vertical: 0)
@@ -341,6 +367,59 @@ struct StudyView: View {
                         insertion: .move(edge: .trailing).combined(with: .opacity),
                         removal: .move(edge: .leading).combined(with: .opacity)
                     ))
+
+                    // Navigation buttons below the card
+                    HStack(spacing: 12) {
+                        Button(action: {
+                            goToPreviousQuestion()
+                        }) {
+                            HStack {
+                                Image(systemName: "arrow.left.circle")
+                                Text("Back")
+                            }
+                            .font(.subheadline)
+                            .foregroundColor(currentIndex == 0 ? .gray : .blue)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 10)
+                            .background(Color.blue.opacity(currentIndex == 0 ? 0.04 : 0.08))
+                            .cornerRadius(10)
+                        }
+                        .disabled(currentIndex == 0)
+
+                        Button(action: {
+                            selectedCardForEdit = card
+                        }) {
+                            HStack {
+                                Image(systemName: "pencil")
+                                Text("Edit")
+                            }
+                            .font(.subheadline)
+                            .foregroundColor(.blue)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 10)
+                            .background(Color.blue.opacity(0.08))
+                            .cornerRadius(10)
+                        }
+
+                        // Show Next button only if user has gone back and is not on the latest question
+                        if hasGoneBack && currentIndex < maxProgressIndex {
+                            Button(action: {
+                                goToNextQuestion()
+                            }) {
+                                HStack {
+                                    Text("Next")
+                                    Image(systemName: "arrow.right.circle")
+                                }
+                                .font(.subheadline)
+                                .foregroundColor(.blue)
+                                .padding(.horizontal, 20)
+                                .padding(.vertical, 10)
+                                .background(Color.blue.opacity(0.08))
+                                .cornerRadius(10)
+                            }
+                        }
+                    }
+                    .padding(.top, 8)
                 }
                 
                 Spacer()
@@ -368,6 +447,19 @@ struct StudyView: View {
         knownCards.insert(cardId)
         unknownCards.remove(cardId)
         viewModel.setCardStatus(cardId: cardId, status: .known)
+        
+        // Track card history for navigation
+        cardHistory[currentIndex] = cards[currentIndex]
+        knownHistory[currentIndex] = true
+        unknownHistory[currentIndex] = false
+        skippedHistory[currentIndex] = false
+        
+        // Update maxProgressIndex if answering the latest question
+        if currentIndex >= maxProgressIndex {
+            maxProgressIndex = currentIndex + 1
+            print("🔍 Updated maxProgressIndex to \(maxProgressIndex) after answering question \(currentIndex)")
+        }
+        
         // SRS logic: process as 'know'
         let updatedCard = SRSManager.shared.processSimpleReviewWithStudyMode(
             for: cards[currentIndex], 
@@ -397,6 +489,19 @@ struct StudyView: View {
         unknownCards.insert(cardId)
         knownCards.remove(cardId)
         viewModel.setCardStatus(cardId: cardId, status: .unknown)
+        
+        // Track card history for navigation
+        cardHistory[currentIndex] = cards[currentIndex]
+        knownHistory[currentIndex] = false
+        unknownHistory[currentIndex] = true
+        skippedHistory[currentIndex] = false
+        
+        // Update maxProgressIndex if answering the latest question
+        if currentIndex >= maxProgressIndex {
+            maxProgressIndex = currentIndex + 1
+            print("🔍 Updated maxProgressIndex to \(maxProgressIndex) after answering question \(currentIndex)")
+        }
+        
         // SRS logic: process as 'don't know'
         let updatedCard = SRSManager.shared.processSimpleReviewWithStudyMode(
             for: cards[currentIndex], 
@@ -428,6 +533,18 @@ struct StudyView: View {
         knownCards.remove(cardId)
         unknownCards.remove(cardId)
         
+        // Track card history for navigation
+        cardHistory[currentIndex] = cards[currentIndex]
+        knownHistory[currentIndex] = false
+        unknownHistory[currentIndex] = false
+        skippedHistory[currentIndex] = true
+        
+        // Update maxProgressIndex if answering the latest question
+        if currentIndex >= maxProgressIndex {
+            maxProgressIndex = currentIndex + 1
+            print("🔍 Updated maxProgressIndex to \(maxProgressIndex) after answering question \(currentIndex)")
+        }
+        
         print("👆 About to add card to review...")
         // Add card to review deck
         viewModel.addCardToReview(cardId)
@@ -451,6 +568,18 @@ struct StudyView: View {
         skippedCards.insert(cardId)
         knownCards.remove(cardId)
         unknownCards.remove(cardId)
+        
+        // Track card history for navigation
+        cardHistory[currentIndex] = cards[currentIndex]
+        knownHistory[currentIndex] = false
+        unknownHistory[currentIndex] = false
+        skippedHistory[currentIndex] = true
+        
+        // Update maxProgressIndex if answering the latest question
+        if currentIndex >= maxProgressIndex {
+            maxProgressIndex = currentIndex + 1
+            print("🔍 Updated maxProgressIndex to \(maxProgressIndex) after answering question \(currentIndex)")
+        }
         
         // Just skip without adding to review deck
         print("⏭️ Card '\(cards[currentIndex].word)' skipped")
@@ -700,6 +829,14 @@ struct StudyView: View {
         unknownCards.removeAll()
         skippedCards.removeAll()
         
+        // Clear navigation state
+        maxProgressIndex = 1
+        hasGoneBack = false
+        cardHistory.removeAll()
+        knownHistory.removeAll()
+        unknownHistory.removeAll()
+        skippedHistory.removeAll()
+        
         // Start new session tracking
         sessionStartTime = Date()
         currentSession = statsManager.startSession(deckIds: deckIds, cardCount: cards.count)
@@ -720,6 +857,14 @@ struct StudyView: View {
         unknownCards.removeAll()
         skippedCards.removeAll()
         cards = viewModel.sortCardsForLearning(cards) // Use intelligent ordering for new session
+        
+        // Clear navigation state
+        maxProgressIndex = 1
+        hasGoneBack = false
+        cardHistory.removeAll()
+        knownHistory.removeAll()
+        unknownHistory.removeAll()
+        skippedHistory.removeAll()
         
         // Start session tracking
         sessionStartTime = Date()
@@ -864,6 +1009,76 @@ struct StudyView: View {
             ))
         } else {
             AnyView(EmptyView())
+        }
+    }
+    
+    // MARK: - Navigation Functions
+    
+    private func goToPreviousQuestion() {
+        if currentIndex > 0 {
+            hasGoneBack = true
+            withAnimation(.none) {
+                currentIndex -= 1
+            }
+            // Restore previous card state
+            if let card = cardHistory[currentIndex] {
+                let cardId = card.id
+                // Restore known/unknown/skipped state
+                if knownHistory[currentIndex] == true {
+                    knownCards.insert(cardId)
+                    unknownCards.remove(cardId)
+                    skippedCards.remove(cardId)
+                } else if unknownHistory[currentIndex] == true {
+                    unknownCards.insert(cardId)
+                    knownCards.remove(cardId)
+                    skippedCards.remove(cardId)
+                } else if skippedHistory[currentIndex] == true {
+                    skippedCards.insert(cardId)
+                    knownCards.remove(cardId)
+                    unknownCards.remove(cardId)
+                } else {
+                    // Card was not answered yet
+                    knownCards.remove(cardId)
+                    unknownCards.remove(cardId)
+                    skippedCards.remove(cardId)
+                }
+            }
+            isShowingFront = true
+            isShowingExample = false
+            forceRefreshID = UUID()
+            print("🔍 Went to previous question: currentIndex=\(currentIndex), maxProgressIndex=\(maxProgressIndex)")
+        }
+    }
+    
+    private func goToNextQuestion() {
+        if currentIndex < maxProgressIndex {
+            currentIndex += 1
+            // Restore card state for this index
+            if let card = cardHistory[currentIndex] {
+                let cardId = card.id
+                // Restore known/unknown/skipped state
+                if knownHistory[currentIndex] == true {
+                    knownCards.insert(cardId)
+                    unknownCards.remove(cardId)
+                    skippedCards.remove(cardId)
+                } else if unknownHistory[currentIndex] == true {
+                    unknownCards.insert(cardId)
+                    knownCards.remove(cardId)
+                    skippedCards.remove(cardId)
+                } else if skippedHistory[currentIndex] == true {
+                    skippedCards.insert(cardId)
+                    knownCards.remove(cardId)
+                    unknownCards.remove(cardId)
+                } else {
+                    // Card was not answered yet
+                    knownCards.remove(cardId)
+                    unknownCards.remove(cardId)
+                    skippedCards.remove(cardId)
+                }
+            }
+            isShowingFront = true
+            isShowingExample = false
+            forceRefreshID = UUID()
         }
     }
 } 

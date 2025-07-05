@@ -100,14 +100,20 @@ class TranslationService: ObservableObject {
     
     /// Search through our comprehensive Dutch vocabulary database
     private func searchVocabularyDatabase(for word: String) -> DutchWord? {
-        let searchWord = word.lowercased()
-        var allMatches: [DutchWord] = []
+        let searchWord = word.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !searchWord.isEmpty else { return nil }
+        
+        var exactMatches: [DutchWord] = []
+        var partialMatches: [DutchWord] = []
         
         // Search main vocabulary database
         let allMainWords = dutchDatabase.getAllWords()
         for dutchWord in allMainWords {
-            if dutchWord.word.lowercased() == searchWord {
-                allMatches.append(dutchWord)
+            let wordLower = dutchWord.word.lowercased()
+            if wordLower == searchWord {
+                exactMatches.append(dutchWord)
+            } else if shouldConsiderPartialMatch(searchWord: searchWord, databaseWord: wordLower) {
+                partialMatches.append(dutchWord)
             }
         }
         
@@ -115,38 +121,55 @@ class TranslationService: ObservableObject {
         let allExpandedPacks = DutchVocabularyDatabase.expandedPacks
         for pack in allExpandedPacks {
             for dutchWord in pack.words {
-                if dutchWord.word.lowercased() == searchWord {
-                    allMatches.append(dutchWord)
+                let wordLower = dutchWord.word.lowercased()
+                if wordLower == searchWord {
+                    exactMatches.append(dutchWord)
+                } else if shouldConsiderPartialMatch(searchWord: searchWord, databaseWord: wordLower) {
+                    partialMatches.append(dutchWord)
                 }
             }
         }
         
-        // If we found exact matches, return the highest level one
-        if !allMatches.isEmpty {
-            return selectBestMatch(from: allMatches)
+        // If we found exact matches, return the best one
+        if !exactMatches.isEmpty {
+            return selectBestMatch(from: exactMatches)
         }
         
-        // Try partial matches for compound words or variations
-        for dutchWord in allMainWords {
-            if dutchWord.word.lowercased().contains(searchWord) || searchWord.contains(dutchWord.word.lowercased()) {
-                allMatches.append(dutchWord)
+        // Only consider partial matches if they are meaningful
+        if !partialMatches.isEmpty {
+            // Filter partial matches to only include meaningful ones
+            let meaningfulPartialMatches = partialMatches.filter { dutchWord in
+                let wordLower = dutchWord.word.lowercased()
+                // Only consider partial matches where the search word is at least 3 characters
+                // and the database word is not significantly shorter
+                return searchWord.count >= 3 && 
+                       wordLower.count >= Int(Double(searchWord.count) * 0.7) && // Database word should be at least 70% of search word length
+                       (wordLower.hasPrefix(searchWord) || searchWord.hasPrefix(wordLower))
             }
-        }
-        
-        for pack in allExpandedPacks {
-            for dutchWord in pack.words {
-                if dutchWord.word.lowercased().contains(searchWord) || searchWord.contains(dutchWord.word.lowercased()) {
-                    allMatches.append(dutchWord)
-                }
+            
+            if !meaningfulPartialMatches.isEmpty {
+                return selectBestMatch(from: meaningfulPartialMatches)
             }
-        }
-        
-        // Return best partial match if found
-        if !allMatches.isEmpty {
-            return selectBestMatch(from: allMatches)
         }
         
         return nil
+    }
+    
+    /// Determine if a partial match should be considered
+    private func shouldConsiderPartialMatch(searchWord: String, databaseWord: String) -> Bool {
+        // Don't consider partial matches for very short words (less than 3 characters)
+        if searchWord.count < 3 || databaseWord.count < 3 {
+            return false
+        }
+        
+        // Don't consider partial matches where one word is much shorter than the other
+        let lengthRatio = Double(min(searchWord.count, databaseWord.count)) / Double(max(searchWord.count, databaseWord.count))
+        if lengthRatio < 0.7 {
+            return false
+        }
+        
+        // Only consider meaningful partial matches
+        return databaseWord.hasPrefix(searchWord) || searchWord.hasPrefix(databaseWord)
     }
     
     /// Select the best match from multiple options - prioritizes higher levels and more complete information
@@ -1045,7 +1068,10 @@ class TranslationService: ObservableObject {
             "hoe": "how",
             "welke": "which",
             "hoeveel": "how much/many",
-            "hoeveelste": "which number"
+            "hoeveelste": "which number",
+            "eigen": "own",
+            "eigenaar": "owner",
+            "eigenlijk": "actually/really"
         ]
         
         return localDictionary[word.lowercased()]

@@ -113,7 +113,18 @@ struct DeckSelectionView: View {
         
         switch selectedStudyMode {
         case .adaptive:
-            // For adaptive mode, filter to focus on struggling cards (lower learning percentage)
+            // Check if this is a new deck (most cards have 0% learning)
+            let unstudiedCards = total.filter { card in
+                let percentage = card.learningPercentage ?? 0
+                return percentage == 0 && card.timesShown == 0
+            }
+            
+            // If more than 70% of cards are unstudied, show all cards to establish baseline
+            if Double(unstudiedCards.count) / Double(total.count) > 0.7 {
+                return total
+            }
+            
+            // For established decks, use adaptive filtering
             let strugglingCards = total.filter { card in
                 let percentage = card.learningPercentage ?? 0
                 return percentage < 70 || card.consecutiveIncorrect > 0

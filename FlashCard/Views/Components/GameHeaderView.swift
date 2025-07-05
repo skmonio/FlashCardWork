@@ -16,10 +16,11 @@ struct GameHeaderView: View {
     let sessionXP: Int // XP gained during current session
     let showProgressIndicator: Bool // Show prominent progress indicator for progressive study
     let progressOverride: Double? // Optional override for progress bar fill
+    let isComplete: Bool // Whether the game is complete (show 100% progress)
     
     @StateObject private var userProfile = UserProfileManager.shared
     
-    init(currentIndex: Int, totalCards: Int, score: Int, combo: Int, knownCount: Int? = nil, unknownCount: Int? = nil, skippedCount: Int? = nil, onAudioTapped: (() -> Void)? = nil, isAudioPlaying: Bool = false, studyMode: StudyMode? = nil, currentRound: Int? = nil, totalRounds: Int? = nil, sessionXP: Int, showProgressIndicator: Bool = false, progressOverride: Double? = nil) {
+    init(currentIndex: Int, totalCards: Int, score: Int, combo: Int, knownCount: Int? = nil, unknownCount: Int? = nil, skippedCount: Int? = nil, onAudioTapped: (() -> Void)? = nil, isAudioPlaying: Bool = false, studyMode: StudyMode? = nil, currentRound: Int? = nil, totalRounds: Int? = nil, sessionXP: Int, showProgressIndicator: Bool = false, progressOverride: Double? = nil, isComplete: Bool = false) {
         self.currentIndex = currentIndex
         self.totalCards = totalCards
         self.score = score
@@ -35,11 +36,18 @@ struct GameHeaderView: View {
         self.sessionXP = sessionXP
         self.showProgressIndicator = showProgressIndicator
         self.progressOverride = progressOverride
+        self.isComplete = isComplete
     }
     
     // Computed properties
     private var progress: Double {
         guard totalCards > 0 else { return 0 }
+        
+        // If game is complete, show 100% progress
+        if isComplete {
+            return 1.0
+        }
+        
         if showProgressIndicator {
             if let override = progressOverride {
                 return min(override, 1.0)
@@ -49,7 +57,9 @@ struct GameHeaderView: View {
                 return min(capped, 1.0)
             }
         }
-        let calculatedProgress = Double(currentIndex) / Double(totalCards)
+        // For all games, only fill bar after answering last question
+        // Use currentIndex-1 to show progress based on completed questions
+        let calculatedProgress = Double(max(currentIndex-1, 0)) / Double(totalCards)
         return min(calculatedProgress, 1.0)
     }
     
@@ -225,7 +235,8 @@ struct GameHeaderView_Previews: PreviewProvider {
                 studyMode: nil,
                 currentRound: nil,
                 totalRounds: nil,
-                sessionXP: 0
+                sessionXP: 0,
+                isComplete: false
             )
             
             Spacer()

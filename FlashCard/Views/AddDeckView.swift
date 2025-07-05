@@ -7,7 +7,9 @@ struct AddDeckView: View {
     @State private var selectedParentId: UUID? = nil
     
     var availableParentDecks: [Deck] {
-        return viewModel.getTopLevelDecks().filter { $0.name != "Uncategorized" }
+        return viewModel.getTopLevelDecks()
+            .filter { $0.name != "Uncategorized" }
+            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
     }
     
     var body: some View {

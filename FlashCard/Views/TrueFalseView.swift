@@ -2,11 +2,26 @@ import SwiftUI
 import SpriteKit
 import os
 
-struct TrueFalseQuestion {
+struct TrueFalseQuestion: Hashable {
     let word: String
     let definition: String
     let isCorrect: Bool
     let originalCard: FlashCard
+    
+    // Implement Hashable manually since FlashCard might not be Hashable
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(word)
+        hasher.combine(definition)
+        hasher.combine(isCorrect)
+        hasher.combine(originalCard.id)
+    }
+    
+    static func == (lhs: TrueFalseQuestion, rhs: TrueFalseQuestion) -> Bool {
+        return lhs.word == rhs.word &&
+               lhs.definition == rhs.definition &&
+               lhs.isCorrect == rhs.isCorrect &&
+               lhs.originalCard.id == rhs.originalCard.id
+    }
 }
 
 struct TrueFalseView: View {
@@ -29,6 +44,8 @@ struct TrueFalseView: View {
     // SpriteKit for confetti celebration (unused, remove if not needed elsewhere)
     @State private var hasAnswered = false
     @State private var selectedAnswer: Bool? = nil
+    @State private var showingFeedback = false
+    @State private var userAnswer: Bool? = nil
     
     // SpriteKit scene for effects
     @State private var gameScene = GameScene()
@@ -41,6 +58,13 @@ struct TrueFalseView: View {
     private var studyMode: StudyMode?
     private var onLevelComplete: ((LevelResult) -> Void)?
     private var maxQuestions: Int?
+    
+    // Navigation state variables for back/next functionality
+    @State private var maxProgressIndex: Int = 1
+    @State private var hasGoneBack: Bool = false
+    @State private var answerHistory: [Int: Bool] = [:]
+    @State private var hasAnsweredHistory: [Int: Bool] = [:]
+    @State private var questionHistory: [Int: TrueFalseQuestion] = [:]
     
     // Session tracking for SRS
     @State private var currentSession: StudySession?
@@ -71,6 +95,9 @@ struct TrueFalseView: View {
     
     private let logger = Logger(subsystem: "com.flashcards", category: "TrueFalseView")
     
+    @State private var selectedCardForEdit: FlashCard? = nil
+    @State private var forceRefreshID = UUID()
+    
     init(viewModel: FlashCardViewModel, cards: [FlashCard], deckIds: [UUID] = [], shouldLoadSaveState: Bool = false, studyMode: StudyMode? = nil, maxQuestions: Int? = nil, onLevelComplete: ((LevelResult) -> Void)? = nil) {
         self.viewModel = viewModel
         self.studyMode = studyMode
@@ -92,6 +119,7 @@ struct TrueFalseView: View {
     }
     
     var body: some View {
+        ZStack {
         VStack(spacing: 0) {
             if cards.isEmpty {
                 emptyStateView
@@ -145,6 +173,21 @@ struct TrueFalseView: View {
                 saveCurrentProgress()
             }
         }
+            .onChange(of: selectedCardForEdit) { newValue in
+                if newValue == nil, let question = currentQuestion {
+                    // Try to get the latest version of the card
+                    if let updated = viewModel.flashCards.first(where: { $0.id == question.originalCard.id }) {
+                        // Rebuild the current question with updated card data
+                        currentQuestion = TrueFalseQuestion(
+                            word: updated.word,
+                            definition: question.definition, // Keep the same definition for this round
+                            isCorrect: question.isCorrect,
+                            originalCard: updated
+                        )
+                        forceRefreshID = UUID()
+                    }
+                }
+            }
 
         if showingGameOver {
             // Semi-transparent background
@@ -210,6 +253,10 @@ struct TrueFalseView: View {
             .cornerRadius(20)
             .shadow(radius: 10)
             .padding(.horizontal)
+            }
+        }
+        .sheet(item: $selectedCardForEdit) { card in
+            EditCardView(viewModel: viewModel, card: card)
         }
     }
     
@@ -230,7 +277,7 @@ struct TrueFalseView: View {
             VStack(spacing: 0) {
                 // Use same header as TestView (no audio button)
                 GameHeaderView(
-                    currentIndex: questionsAnswered + 1,
+                    currentIndex: currentIndex + 1,
                     totalCards: maxQuestions ?? cards.count,
                     score: userProfileManager.xp, // Use current XP instead of calculated score
                     combo: 0, // No combo system for True/False
@@ -238,34 +285,28 @@ struct TrueFalseView: View {
                     unknownCount: nil,
                     skippedCount: nil,
                     sessionXP: sessionXP,
-                    showProgressIndicator: false // Use Quick Study style
+                    showProgressIndicator: false, // Use Quick Study style
+                    isComplete: showingResults
                 )
                 
                 Spacer()
                 
-                if let question = currentQuestion {
-                    // Title at top - "True OR False" in bold
-                    Text("True OR False")
-                        .font(.title)
-                        .fontWeight(.bold)
-                        .foregroundColor(.primary)
+                VStack(spacing: 20) {
+                    // Title outside the card - instruction text
+                    Text("Does this word translate to:")
+                        .font(.title3)
+                        .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
-                        .padding(.horizontal)
-                        .padding(.bottom, 30)
-                    
-                    // Question text outside the card
-                    VStack(spacing: 8) {
-                        // Removed "Translates to:" from here
-                    }
-                    .padding(.top, 20)
                     
                     // Use shared card component with vibrant borders - only show the word
+                    if let question = currentQuestion {
                     SharedGameCardView(
                         card: question.originalCard,
                         title: "",
                         content: question.word,
                         showArticle: false
                     )
+                        .id("\(question.originalCard.id)-\(forceRefreshID)")
                     .onTapGesture(count: 2) {
                         // Double tap to show/hide example
                         HapticManager.shared.lightImpact()
@@ -278,18 +319,67 @@ struct TrueFalseView: View {
                         speakCurrentWord()
                         HapticManager.shared.lightImpact()
                     }
-                }
-                
-                Spacer()
-                
-                // "Translates to:" text above the definition
+                        // Navigation buttons below the card
+                        HStack(spacing: 12) {
+                            Button(action: {
+                                goToPreviousQuestion()
+                            }) {
+                                HStack {
+                                    Image(systemName: "arrow.left.circle")
+                                    Text("Back")
+                                }
+                                .font(.subheadline)
+                                .foregroundColor(currentIndex == 0 ? .gray : .blue)
+                                .padding(.horizontal, 20)
+                                .padding(.vertical, 10)
+                                .background(Color.blue.opacity(currentIndex == 0 ? 0.04 : 0.08))
+                                .cornerRadius(10)
+                            }
+                            .disabled(currentIndex == 0)
+
+                            Button(action: {
+                                selectedCardForEdit = question.originalCard
+                            }) {
+                                HStack {
+                                    Image(systemName: "pencil")
+                                    Text("Edit")
+                                }
+                                .font(.subheadline)
+                                .foregroundColor(.blue)
+                                .padding(.horizontal, 20)
+                                .padding(.vertical, 10)
+                                .background(Color.blue.opacity(0.08))
+                                .cornerRadius(10)
+                            }
+
+                            // Show Next button only if user has gone back and is not on the latest question
+                            if hasGoneBack && currentIndex < maxProgressIndex {
+                                Button(action: {
+                                    goToNextQuestion()
+                                }) {
+                                    HStack {
+                                        Text("Next")
+                                        Image(systemName: "arrow.right.circle")
+                                    }
+                                    .font(.subheadline)
+                                    .foregroundColor(.blue)
+                                    .padding(.horizontal, 20)
+                                    .padding(.vertical, 10)
+                                    .background(Color.blue.opacity(0.08))
+                                    .cornerRadius(10)
+                                }
+                            }
+                        }
+                        .padding(.top, 8)
+                    }
+                    
+                    // Definition display
+                    VStack(spacing: 8) {
                 Text("Translates to:")
                     .font(.title3)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
-                    .padding(.bottom, 8)
                 
-                // Definition display
                 Text(currentQuestion?.definition ?? "")
                     .font(.title3)
                     .multilineTextAlignment(.center)
@@ -297,11 +387,41 @@ struct TrueFalseView: View {
                     .frame(maxWidth: .infinity)
                     .background(Color.blue.opacity(0.1))
                     .cornerRadius(10)
-                    .padding(.horizontal)
+                    }
+                    
+                    // Reserved space for feedback (fixed height to prevent layout shifts)
+                    VStack(spacing: 8) {
+                        // Show feedback when answer is incorrect
+                        if showingFeedback, let question = currentQuestion, let userAnswer = userAnswer, userAnswer != question.isCorrect {
+                            VStack(spacing: 8) {
+                                Text("Incorrect!")
+                                    .font(.headline)
+                                    .foregroundColor(.red)
+                                
+                                Text("The answer is: \(question.originalCard.definition)")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                                    .multilineTextAlignment(.center)
+                            }
+                            .transition(.opacity.combined(with: .scale))
+                        }
+                        
+                        // Show success message when answer is correct
+                        if showingFeedback, let question = currentQuestion, let userAnswer = userAnswer, userAnswer == question.isCorrect {
+                            VStack(spacing: 8) {
+                                Text("Correct!")
+                                    .font(.headline)
+                                    .foregroundColor(.green)
+                            }
+                            .transition(.opacity.combined(with: .scale))
+                        }
+                    }
+                    .frame(minHeight: 80) // Reserved space to prevent layout shifts
+                    .animation(.easeInOut(duration: 0.3), value: showingFeedback)
                 
                 Spacer()
                 
-                // Answer buttons (side by side, half width each)
+                    // Answer buttons (side by side, half width each) - fixed position
                 HStack(spacing: 12) {
                     Button(action: { checkAnswer(true) }) {
                         HStack {
@@ -311,10 +431,11 @@ struct TrueFalseView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
                         .padding(.horizontal, 16)
-                        .background(Color.green)
+                            .background(hasAnswered ? (userAnswer == true ? (currentQuestion?.isCorrect == true ? Color.green : Color.red) : Color.gray) : Color.green)
                         .foregroundColor(.white)
                         .cornerRadius(10)
                     }
+                        .disabled(hasAnswered)
                     
                     Button(action: { checkAnswer(false) }) {
                         HStack {
@@ -324,14 +445,17 @@ struct TrueFalseView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
                         .padding(.horizontal, 16)
-                        .background(Color.red)
+                            .background(hasAnswered ? (userAnswer == false ? (currentQuestion?.isCorrect == false ? Color.green : Color.red) : Color.gray) : Color.red)
                         .foregroundColor(.white)
                         .cornerRadius(10)
                     }
+                        .disabled(hasAnswered)
                 }
                 .padding(.horizontal)
                 
                 Spacer()
+                }
+                .padding(.horizontal)
             }
             
             // SpriteKit overlay for particle effects (non-interactive)
@@ -403,14 +527,6 @@ struct TrueFalseView: View {
                                 .background(Color.blue)
                                 .cornerRadius(10)
                         }
-                        
-                        Button(action: {
-                            dismissToRoot()
-                        }) {
-                            Text("Done")
-                                .font(.headline)
-                                .foregroundColor(.blue)
-                        }
                     }
                 }
                 .padding()
@@ -418,7 +534,7 @@ struct TrueFalseView: View {
         }
     }
     
-    private func setupNextQuestion() {
+    private func setupNextQuestion(incrementIndex: Bool = true) {
         // Check if we've reached the max questions limit
         if let maxQuestions = maxQuestions, questionsAnswered >= maxQuestions {
             HapticManager.shared.gameComplete()
@@ -439,35 +555,50 @@ struct TrueFalseView: View {
             }
         }
         
+        // Increment currentIndex for navigation (only if requested)
+        if incrementIndex {
+            currentIndex += 1
+        }
+        
         // Reset example state for new question
         isShowingExample = false
         
+        // Reset feedback state for new question
+        hasAnswered = false
+        showingFeedback = false
+        userAnswer = nil
+        
         // Select a random card for the word
         let wordCard = remainingCards.randomElement()!
+        // Always use the latest version of the card from viewModel.flashCards
+        let latestWordCard = viewModel.flashCards.first(where: { $0.id == wordCard.id }) ?? wordCard
         
         // Decide if this will be a true or false question (50/50 chance)
         let isCorrect = Bool.random()
         
         let definition: String
         if isCorrect {
-            // Use the correct definition
-            definition = wordCard.definition
+            // Use the correct definition (from latest card)
+            definition = latestWordCard.definition
         } else {
-            // Use a definition from another random card
+            // Use a definition from another random card (also fetch latest)
             let otherCards = cards.filter { $0.id != wordCard.id }
-            if let randomCard = otherCards.randomElement() {
+            let latestOtherCards = otherCards.compactMap { card in
+                viewModel.flashCards.first(where: { $0.id == card.id }) ?? card
+            }
+            if let randomCard = latestOtherCards.randomElement() {
                 definition = randomCard.definition
             } else {
                 // If no other cards available, use the correct definition
-                definition = wordCard.definition
+                definition = latestWordCard.definition
             }
         }
         
         currentQuestion = TrueFalseQuestion(
-            word: wordCard.word,
+            word: latestWordCard.word,
             definition: definition,
             isCorrect: isCorrect,
-            originalCard: wordCard
+            originalCard: latestWordCard
         )
         
         // Remove the used card from remaining cards
@@ -476,6 +607,22 @@ struct TrueFalseView: View {
     
     private func checkAnswer(_ answer: Bool) {
         guard let question = currentQuestion else { return }
+        
+        // Set feedback state
+        hasAnswered = true
+        userAnswer = answer
+        showingFeedback = true
+        
+        // Track answer history for navigation
+        answerHistory[currentIndex] = answer
+        hasAnsweredHistory[currentIndex] = true
+        questionHistory[currentIndex] = question
+        
+        // Update maxProgressIndex if answering the latest question
+        if currentIndex >= maxProgressIndex {
+            maxProgressIndex = currentIndex + 1
+            print("🔍 Updated maxProgressIndex to \(maxProgressIndex) after answering question \(currentIndex)")
+        }
         
         questionsAnswered += 1
         let isCorrect = answer == question.isCorrect
@@ -579,7 +726,12 @@ struct TrueFalseView: View {
         }
         
         // Clear feedback and show next question after delay (only for normal mode)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+            // Reset feedback state
+            hasAnswered = false
+            showingFeedback = false
+            userAnswer = nil
+            
             if remainingCards.isEmpty {
                 // End session tracking
                 if var session = currentSession {
@@ -636,7 +788,18 @@ struct TrueFalseView: View {
         incorrectAnswers = 0
         showingResults = false
         isShowingExample = false
-        setupNextQuestion()
+        hasAnswered = false
+        showingFeedback = false
+        userAnswer = nil
+        currentIndex = 0
+        setupNextQuestion(incrementIndex: false)
+        
+        // Clear navigation state
+        maxProgressIndex = 1
+        hasGoneBack = false
+        answerHistory.removeAll()
+        hasAnsweredHistory.removeAll()
+        questionHistory.removeAll()
         
         // Start new session tracking
         sessionStartTime = Date()
@@ -719,7 +882,7 @@ struct TrueFalseView: View {
             
             // Set up next question if there are remaining cards
             if !remainingCards.isEmpty {
-                setupNextQuestion()
+                setupNextQuestion(incrementIndex: false)
             } else {
                 HapticManager.shared.gameComplete()
                 StreakManager.shared.recordGameCompletion(); showingResults = true
@@ -752,7 +915,15 @@ struct TrueFalseView: View {
         correctAnswers = 0
         incorrectAnswers = 0
         showingResults = false
-        setupNextQuestion()
+        currentIndex = 0
+        setupNextQuestion(incrementIndex: false)
+        
+        // Clear navigation state
+        maxProgressIndex = 1
+        hasGoneBack = false
+        answerHistory.removeAll()
+        hasAnsweredHistory.removeAll()
+        questionHistory.removeAll()
         
         // Clear any saved progress when resetting
         clearSavedProgress()
@@ -772,6 +943,44 @@ struct TrueFalseView: View {
         gameScene.size = sceneSize
         gameScene.scaleMode = .resizeFill
         print("🎮 TrueFalseView SpriteKit scene setup with size: \(sceneSize)")
+    }
+    
+    // MARK: - Navigation Functions
+    
+    private func goToPreviousQuestion() {
+        if currentIndex > 0 {
+            hasGoneBack = true
+            withAnimation(.none) {
+                currentIndex -= 1
+            }
+            // Restore previous question and answer state
+            if let question = questionHistory[currentIndex] {
+                currentQuestion = question
+            }
+            selectedAnswer = answerHistory[currentIndex]
+            hasAnswered = hasAnsweredHistory[currentIndex] ?? false
+            showingFeedback = hasAnswered
+            userAnswer = selectedAnswer
+            isShowingExample = false
+            forceRefreshID = UUID()
+            print("🔍 Went to previous question: currentIndex=\(currentIndex), maxProgressIndex=\(maxProgressIndex)")
+        }
+    }
+    
+    private func goToNextQuestion() {
+        if currentIndex < maxProgressIndex {
+            currentIndex += 1
+            // Restore question and answer state for this index
+            if let question = questionHistory[currentIndex] {
+                currentQuestion = question
+            }
+            selectedAnswer = answerHistory[currentIndex]
+            hasAnswered = hasAnsweredHistory[currentIndex] ?? false
+            showingFeedback = hasAnswered
+            userAnswer = selectedAnswer
+            isShowingExample = false
+            forceRefreshID = UUID()
+        }
     }
 }
 

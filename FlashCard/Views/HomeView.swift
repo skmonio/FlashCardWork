@@ -122,46 +122,50 @@ struct HomeView: View {
     
     private var homeContent: some View {
         VStack(spacing: 24) {
+            // Lessons Section
+            VStack(alignment: .leading, spacing: 16) {
+                Text("Lessons")
+                    .font(.headline)
+                    .foregroundColor(.secondary)
+                    .padding(.horizontal)
+                VStack(spacing: 12) {
+                    NavigationLink(destination: LessonsListView(viewModel: viewModel)) {
+                        MenuButton(title: "Dutch Lessons", icon: "book.closed.fill", color: .blue)
+                    }
+                }
+            }
             // Study Modes Section
             VStack(alignment: .leading, spacing: 16) {
                 Text("Study Modes")
                     .font(.headline)
                     .foregroundColor(.secondary)
                     .padding(.horizontal)
-                
                 VStack(spacing: 12) {
-                    // Main study modes
                     NavigationLink(destination: SimplifiedDeckSelectionView(viewModel: viewModel, mode: .study)) {
                         MenuButton(title: "Study Your Cards", icon: "book.fill", color: .teal)
                     }
-                    
                     NavigationLink(destination: SimplifiedDeckSelectionView(viewModel: viewModel, mode: .test)) {
                         MenuButton(title: "Test Your Cards", icon: "checkmark.circle.fill", color: .orange)
                     }
-                    
                     NavigationLink(destination: SimplifiedDeckSelectionView(viewModel: viewModel, mode: .truefalse)) {
                         MenuButton(title: "True or False", icon: "questionmark.circle.fill", color: Color(red: 1.0, green: 0.4, blue: 0.3))
                     }
-                    
                     NavigationLink(destination: SimplifiedDeckSelectionView(viewModel: viewModel, mode: .writing)) {
                         MenuButton(title: "Write Your Card", icon: "pencil.and.scribble", color: Color(red: 1.0, green: 0.6, blue: 0.0))
                     }
                 }
             }
             .padding(.top)
-            
             // Games Section
             VStack(alignment: .leading, spacing: 16) {
                 Text("Games")
                     .font(.headline)
                     .foregroundColor(.secondary)
                     .padding(.horizontal)
-                
                 VStack(spacing: 12) {
                     NavigationLink(destination: SimplifiedDeckSelectionView(viewModel: viewModel, mode: .game)) {
                         MenuButton(title: "Remember Your Cards", icon: "brain.fill", color: .orange)
                     }
-                    
                     NavigationLink(destination: SimplifiedDeckSelectionView(viewModel: viewModel, mode: .wordScramble)) {
                         MenuButton(title: "Jumble Your Cards", icon: "textformat.abc", color: Color(red: 1.0, green: 0.4, blue: 0.3))
                     }

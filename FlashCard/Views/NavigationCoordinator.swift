@@ -18,7 +18,7 @@ class NavigationCoordinator: ObservableObject {
     
     // MARK: - Sheet Types
     enum SheetType: Identifiable {
-        case addCard(deck: Deck? = nil)
+        case addCard(deck: Deck? = nil, initialWord: String? = nil)
         case addDeck
         case editCard(FlashCard)
         case moveCards([UUID], Deck?)
@@ -186,6 +186,7 @@ enum NavigationDestination: Hashable {
     case dutchVocabulary
     case dutchGrammar
     case imageImport
+    case custom(String) // For custom navigation like Lessons
 }
 
 // MARK: - Simplified Navigation Extensions

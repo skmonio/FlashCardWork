@@ -22,8 +22,10 @@ struct FlashCardApp: App {
                     // Lock orientation to portrait
                     UIDevice.current.setValue(UIInterfaceOrientation.portrait.rawValue, forKey: "orientation")
                     
-                    // Initialize notification manager and schedule notifications
+                    // Only schedule notifications if they are enabled
+                    if settingsManager.isNotificationsEnabled {
                     notificationManager.scheduleNotifications()
+                    }
                 }
                 .onReceive(NotificationCenter.default.publisher(for: UIDevice.orientationDidChangeNotification)) { _ in
                     // Force portrait orientation when device rotates

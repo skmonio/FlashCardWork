@@ -143,7 +143,7 @@ struct WordScrambleView: View {
                 skippedCount: nil,
                 sessionXP: sessionXP,
                 showProgressIndicator: false,
-                progressOverride: showingResults ? 1.0 : Double(max(currentIndex, 0)) / Double(maxQuestions ?? cards.count)
+                isComplete: showingResults
             )
             
             if let card = currentCard {
@@ -154,11 +154,11 @@ struct WordScrambleView: View {
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
                     
-                    // Use shared card component with vibrant borders - only show the word
+                    // Use shared card component with vibrant borders - show the translation instead of the word
                     SharedGameCardView(
                         card: card,
                         title: "",
-                        content: card.word,
+                        content: card.definition,
                         showArticle: false
                     )
                     

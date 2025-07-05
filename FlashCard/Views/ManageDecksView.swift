@@ -638,11 +638,13 @@ struct MoveDeckSheet: View {
     
     private var availableParentDecks: [Deck] {
         // Get top-level decks, excluding the deck being moved and all system decks
-        return viewModel.getTopLevelDecks().filter { 
+        return viewModel.getTopLevelDecks()
+            .filter { 
             $0.name != "Uncategorized" && 
             $0.name != "Review" && 
             $0.id != deck.id 
         }
+            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
     }
     
     var body: some View {
@@ -773,9 +775,11 @@ struct BulkMoveDeckSheet: View {
     
     private var availableParentDecks: [Deck] {
         // Get top-level decks, excluding the decks being moved and all system decks
-        return viewModel.getTopLevelDecks().filter {
+        return viewModel.getTopLevelDecks()
+            .filter {
             $0.name != "Uncategorized" && $0.name != "Review" && !deckIds.contains($0.id)
         }
+            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
     }
     
     var body: some View {

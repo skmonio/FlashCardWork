@@ -7,6 +7,7 @@ struct WordSelectionView: View {
     @Binding var selectedDeckIds: Set<UUID>
     @ObservedObject var viewModel: FlashCardViewModel
     let onComplete: () -> Void
+    let showToolbar: Bool
     
     @State private var showingDeckSelection = false
     @State private var editingWordIndex: Int?
@@ -15,6 +16,7 @@ struct WordSelectionView: View {
     @State private var filterOption: FilterOption = .all
     @State private var showingImportSuccess = false
     @State private var importedCardsCount = 0
+    @State private var selectedCount: Int = 0
     
     private let logger = Logger(subsystem: "com.flashcards", category: "WordSelectionView")
     
@@ -36,11 +38,27 @@ struct WordSelectionView: View {
     }
     
     private var selectedWordsCount: Int {
-        extractedWords.filter { $0.isSelected }.count
+        selectedCount
     }
     
     private var unknownWordsCount: Int {
         extractedWords.filter { !$0.isKnownWord }.count
+    }
+    
+    init(
+        image: UIImage,
+        extractedWords: Binding<[ImageImportView.ExtractedWord]>,
+        selectedDeckIds: Binding<Set<UUID>>,
+        viewModel: FlashCardViewModel,
+        onComplete: @escaping () -> Void,
+        showToolbar: Bool = true
+    ) {
+        self.image = image
+        self._extractedWords = extractedWords
+        self._selectedDeckIds = selectedDeckIds
+        self.viewModel = viewModel
+        self.onComplete = onComplete
+        self.showToolbar = showToolbar
     }
     
     var body: some View {
@@ -126,6 +144,7 @@ struct WordSelectionView: View {
         .navigationTitle("Select Words")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+            if showToolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button("Cancel") {
                     onComplete()
@@ -133,15 +152,11 @@ struct WordSelectionView: View {
             }
             
             ToolbarItem(placement: .navigationBarTrailing) {
-                if selectedWordsCount > 0 {
-                    Button("Import (\(selectedWordsCount))") {
+                    Button("Import") {
                         showingBatchImport = true
                     }
-                    .foregroundColor(.blue)
-                } else {
-                    Text("Select words")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                    .foregroundColor(selectedWordsCount > 0 ? .blue : .gray)
+                    .disabled(selectedWordsCount == 0)
                 }
             }
         }
@@ -150,6 +165,14 @@ struct WordSelectionView: View {
                 selectedDeckIds: $selectedDeckIds,
                 viewModel: viewModel
             )
+            .onDisappear {
+                // If no decks were selected, find the Uncategorized deck
+                if selectedDeckIds.isEmpty {
+                    if let uncategorizedDeck = viewModel.decks.first(where: { $0.name == "Uncategorized" }) {
+                        selectedDeckIds = [uncategorizedDeck.id]
+                    }
+                }
+            }
         }
         .sheet(isPresented: $showingBatchImport) {
             BatchImportView(
@@ -191,8 +214,15 @@ struct WordSelectionView: View {
                 }
             }
             
+            // Update selected count
+            updateSelectedCount()
+            
             logger.debug("WordSelectionView appeared with \(extractedWords.count) words")
         }
+    }
+    
+    private func updateSelectedCount() {
+        selectedCount = extractedWords.filter { $0.isSelected }.count
     }
     
     private func binding(for word: ImageImportView.ExtractedWord) -> Binding<ImageImportView.ExtractedWord> {
@@ -202,7 +232,10 @@ struct WordSelectionView: View {
         
         return Binding(
             get: { extractedWords[index] },
-            set: { extractedWords[index] = $0 }
+            set: { 
+                extractedWords[index] = $0
+                updateSelectedCount() // Update count when word selection changes
+            }
         )
     }
     
@@ -212,6 +245,7 @@ struct WordSelectionView: View {
                 extractedWords[index].isSelected = true
             }
         }
+        updateSelectedCount()
         HapticManager.shared.lightImpact()
     }
     
@@ -219,6 +253,7 @@ struct WordSelectionView: View {
         for index in extractedWords.indices {
             extractedWords[index].isSelected = true
         }
+        updateSelectedCount()
         HapticManager.shared.lightImpact()
     }
     
@@ -226,6 +261,7 @@ struct WordSelectionView: View {
         for index in extractedWords.indices {
             extractedWords[index].isSelected = false
         }
+        updateSelectedCount()
         HapticManager.shared.lightImpact()
     }
 }
@@ -633,8 +669,8 @@ struct ImportPreviewRow: View {
         image: UIImage(),
         extractedWords: .constant(mockWords),
         selectedDeckIds: .constant([]),
-        viewModel: FlashCardViewModel()
-    ) {
-        print("Complete")
-    }
+        viewModel: FlashCardViewModel(),
+        onComplete: { print("Complete") },
+        showToolbar: true
+    )
 } 

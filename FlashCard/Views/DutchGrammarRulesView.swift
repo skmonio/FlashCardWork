@@ -22,6 +22,7 @@ struct DutchGrammarRulesView: View {
     @State private var showingLeaveConfirmation = false
     @State private var shuffledOptions: [[String]] = [] // Store shuffled options for each exercise
     @State private var correctAnswerMapping: [Int: Int] = [:] // Map original correct answer to shuffled position
+    @State private var allQuestionsAnswered = false // Track if all questions have been answered
     
     private let grammarDB = DutchGrammarRulesDatabase.shared
     
@@ -212,17 +213,9 @@ struct DutchGrammarRulesView: View {
                                 // Recalculate total score based on all answered questions
                                 exerciseScore = questionScores.values.filter { $0 }.count
                                 
-                                // If this is the last question, automatically complete after a delay
+                                // Check if this is the last question and all questions are now answered
                                 if currentExerciseIndex == totalCount - 1 {
-                                    let finalScore = (exerciseScore * 100) / totalCount
-                                    completedExercises.insert(rule.id)
-                                    exerciseScores[rule.id] = finalScore
-                                    saveCompletedExercises()
-                                    saveExerciseScores()
-                                    showingExercises = false
-                                    showingEndScreen = true
-                                    self.finalScore = finalScore
-                                    self.totalQuestions = totalCount
+                                    allQuestionsAnswered = true
                                 }
                             }
                         }) {
@@ -309,7 +302,8 @@ struct DutchGrammarRulesView: View {
                     
                     Spacer()
                     
-                    if showingAnswer && currentExerciseIndex < totalCount - 1 {
+                    if showingAnswer {
+                        if currentExerciseIndex < totalCount - 1 {
                         Button("Next") {
                             currentExerciseIndex += 1
                             // Restore the answer and score state for the next question
@@ -321,6 +315,26 @@ struct DutchGrammarRulesView: View {
                         .padding(.vertical, 10)
                         .background(Color.blue)
                         .cornerRadius(8)
+                        } else if allQuestionsAnswered {
+                            // Show Finish button when all questions are answered and we're on the last question
+                            Button("Finish") {
+                                let totalCount = shuffledExercises.isEmpty ? rule.exercises.count : shuffledExercises.count
+                                let finalScore = (exerciseScore * 100) / totalCount
+                                completedExercises.insert(rule.id)
+                                exerciseScores[rule.id] = finalScore
+                                saveCompletedExercises()
+                                saveExerciseScores()
+                                showingExercises = false
+                                showingEndScreen = true
+                                self.finalScore = finalScore
+                                self.totalQuestions = totalCount
+                            }
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 10)
+                            .background(Color.green)
+                            .cornerRadius(8)
+                        }
                     }
                 }
             }
@@ -331,6 +345,7 @@ struct DutchGrammarRulesView: View {
     // MARK: - End Screen Content
     
     private var endScreenContent: some View {
+        ScrollView {
         VStack(spacing: 30) {
             // Header
             VStack(spacing: 16) {
@@ -341,10 +356,13 @@ struct DutchGrammarRulesView: View {
                 Text("Exercise Complete!")
                     .font(.title)
                     .fontWeight(.bold)
+                        .multilineTextAlignment(.center)
                 
                 Text("You completed \(selectedRule?.title ?? "the exercise")")
                     .font(.headline)
                     .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(nil)
             }
             
             // Score Display
@@ -383,15 +401,17 @@ struct DutchGrammarRulesView: View {
                     .font(.headline)
                     .foregroundColor(scoreColor)
                     .multilineTextAlignment(.center)
+                        .lineLimit(nil)
                 
                 Text(performanceDescription)
                     .font(.body)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
+                        .lineLimit(nil)
                     .padding(.horizontal)
             }
             
-            Spacer()
+                Spacer(minLength: 20)
             
             // Action Buttons
             VStack(spacing: 16) {
@@ -416,6 +436,7 @@ struct DutchGrammarRulesView: View {
             }
         }
         .padding()
+        }
     }
     
     // MARK: - Rule Detail View
@@ -423,33 +444,6 @@ struct DutchGrammarRulesView: View {
     private var ruleDetailView: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                // Back Button and Title
-                HStack {
-                    Spacer()
-                    
-                    Button("Exercises") {
-                        if let rule = selectedRule {
-                            // Shuffle both the exercises and their options
-                            let (shuffledEx, shuffledOpts, answerMapping) = shuffleExerciseOptions(rule.exercises.shuffled())
-                            shuffledExercises = shuffledEx
-                            shuffledOptions = shuffledOpts
-                            correctAnswerMapping = answerMapping
-                        }
-                        showingExercises = true
-                        currentExerciseIndex = 0
-                        selectedAnswer = nil
-                        showingAnswer = false
-                        exerciseScore = 0
-                        questionAnswers.removeAll()
-                        questionScores.removeAll()
-                    }
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
-                    .background(Color.green)
-                    .cornerRadius(8)
-                }
-                
                 if let rule = selectedRule {
                     // Rule Title and Level
                     VStack(alignment: .leading, spacing: 8) {
@@ -472,6 +466,29 @@ struct DutchGrammarRulesView: View {
                                 .foregroundColor(.secondary)
                         }
                     }
+                    
+                    // Exercises Button - now positioned under the title
+                    Button("Exercises") {
+                        // Shuffle both the exercises and their options
+                        let (shuffledEx, shuffledOpts, answerMapping) = shuffleExerciseOptions(rule.exercises.shuffled())
+                        shuffledExercises = shuffledEx
+                        shuffledOptions = shuffledOpts
+                        correctAnswerMapping = answerMapping
+                        showingExercises = true
+                        currentExerciseIndex = 0
+                        selectedAnswer = nil
+                        showingAnswer = false
+                        exerciseScore = 0
+                        questionAnswers.removeAll()
+                        questionScores.removeAll()
+                        allQuestionsAnswered = false
+                    }
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                    .background(Color.green)
+                    .cornerRadius(8)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     
                     // Explanation
                     VStack(alignment: .leading, spacing: 12) {
@@ -773,16 +790,30 @@ struct RuleCard: View {
                 }
             }
             .padding()
-            .background(Color(.systemGray6))
+            .background(Color(.secondarySystemGroupedBackground))
             .cornerRadius(12)
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.blue.opacity(0.3), lineWidth: 1)
-            )
+            .shadow(color: cardOutlineColor.opacity(0.2), radius: 3, x: 0, y: 1)
         }
         .buttonStyle(PlainButtonStyle())
         .scaleEffect(1.0)
         .animation(.easeInOut(duration: 0.1), value: true)
+    }
+    
+    private var cardOutlineColor: Color {
+        if completedExercises.contains(rule.id) {
+            if let score = exerciseScores[rule.id] {
+                if score >= 80 {
+                    return .green
+                } else if score >= 60 {
+                    return .orange
+                } else {
+                    return .red
+                }
+            }
+            return .green // Completed but no score
+        } else {
+            return .blue // Not completed
+        }
     }
     
     private func scoreColor(for score: Int) -> Color {

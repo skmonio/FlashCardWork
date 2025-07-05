@@ -159,7 +159,8 @@ struct LookCoverCheckView: View {
                 knownCount: nil,
                 unknownCount: nil,
                 skippedCount: nil,
-                sessionXP: sessionXP
+                sessionXP: sessionXP,
+                isComplete: showingResults
             )
             
             if let card = currentCard {

@@ -18,6 +18,7 @@ struct ImageImportView: View {
     @State private var extractedWords: [ExtractedWord] = []
     @State private var showingWordSelection = false
     @State private var selectedDeckIds: Set<UUID> = []
+    @State private var showingDeckSelection = false
     
     // Translation state (only used on iOS 17.4+)
     @State private var translationConfiguration: Any?
@@ -47,7 +48,18 @@ struct ImageImportView: View {
                 title: "Import from Image",
                 showBackButton: true,
                 showProfileIcon: false,
-                onBack: { NavigationCoordinator.shared.pop() }
+                onBack: { NavigationCoordinator.shared.pop() },
+                trailing: showingWordSelection ? 
+                    {
+                        AnyView(
+                            Button("Import") {
+                                // Trigger import action
+                                importSelectedWords()
+                            }
+                            .foregroundColor(extractedWords.filter { $0.isSelected }.count > 0 ? .blue : .gray)
+                            .disabled(extractedWords.filter { $0.isSelected }.count == 0)
+                        )
+                    } : nil
             )
             
             VStack(spacing: 20) {
@@ -111,7 +123,8 @@ struct ImageImportView: View {
                         image: selectedImage!,
                         extractedWords: $extractedWords,
                         selectedDeckIds: $selectedDeckIds,
-                        viewModel: viewModel
+                        viewModel: viewModel,
+                        showToolbar: false
                     ) {
                         NavigationCoordinator.shared.pop()
                     }
@@ -154,6 +167,27 @@ struct ImageImportView: View {
         }
         .sheet(isPresented: $showingCamera) {
             CameraView(selectedImage: $selectedImage)
+        }
+        .sheet(isPresented: $showingDeckSelection) {
+            ImageImportDeckSelectionView(
+                selectedDeckIds: $selectedDeckIds,
+                viewModel: viewModel
+            )
+            .onDisappear {
+                // Always proceed with import - if no decks selected, use Uncategorized
+                let selectedWords = extractedWords.filter { $0.isSelected }
+                if selectedWords.isEmpty { return }
+                
+                // If no decks were selected, find the Uncategorized deck
+                if selectedDeckIds.isEmpty {
+                    if let uncategorizedDeck = viewModel.decks.first(where: { $0.name == "Uncategorized" }) {
+                        selectedDeckIds = [uncategorizedDeck.id]
+                    }
+                }
+                
+                // Import the words
+                importWordsDirectly(selectedWords)
+            }
         }
         .modifier(ImageTranslationTaskModifier(
             translationConfiguration: translationConfiguration,
@@ -355,6 +389,34 @@ struct ImageImportView: View {
             let translation = await TranslationService.shared.getTranslationWithFallback(for: word)
             completion(translation)
         }
+    }
+    
+    private func importSelectedWords() {
+        let selectedWords = extractedWords.filter { $0.isSelected }
+        guard !selectedWords.isEmpty else { return }
+        
+        // Show deck selection first
+        showingDeckSelection = true
+    }
+    
+    private func importWordsDirectly(_ selectedWords: [ExtractedWord]) {
+        var importedCount = 0
+        for word in selectedWords {
+            if !word.suggestedTranslation.isEmpty {
+                let _ = viewModel.addCard(
+                    word: word.text,
+                    definition: word.suggestedTranslation,
+                    example: "",
+                    deckIds: selectedDeckIds
+                )
+                importedCount += 1
+            }
+        }
+        
+        logger.debug("Imported \(importedCount) words directly")
+        
+        // Go back to main view after import
+        NavigationCoordinator.shared.pop()
     }
 }
 

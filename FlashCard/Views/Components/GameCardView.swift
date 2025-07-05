@@ -154,6 +154,7 @@ struct GameCardView: View {
                 .foregroundColor(.primary)
                 .multilineTextAlignment(.center)
                 .lineLimit(3)
+                .textSelection(.enabled)
             
             // Example (if showing) - plain text, centered
             if isShowingExample && !card.example.isEmpty {
@@ -164,6 +165,7 @@ struct GameCardView: View {
                     .lineLimit(4)
                     .padding(.top, 12)
                     .transition(.opacity.combined(with: .scale))
+                    .textSelection(.enabled)
             }
             
             Spacer()
@@ -181,6 +183,7 @@ struct GameCardView: View {
                 .foregroundColor(.primary)
                 .multilineTextAlignment(.center)
                 .lineLimit(6) // Increased from 5
+                .textSelection(.enabled)
             
             Spacer()
         }

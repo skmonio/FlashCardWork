@@ -164,6 +164,10 @@ struct MainNavigationView: View {
             DutchVocabularyImportView(viewModel: viewModel)
         case .dutchGrammar:
             DutchGrammarRulesView()
+        case .custom(let key):
+            if key == "lessons" {
+                LessonsListView(viewModel: viewModel)
+            }
         }
     }
     
@@ -225,8 +229,8 @@ struct MainNavigationView: View {
     @ViewBuilder
     private func sheetView(for sheet: NavigationCoordinator.SheetType) -> some View {
         switch sheet {
-        case .addCard(let deck):
-            AddCardView(viewModel: viewModel, defaultDeck: deck)
+        case .addCard(let deck, let initialWord):
+            AddCardView(viewModel: viewModel, defaultDeck: deck, initialWord: initialWord)
         case .addDeck:
             AddDeckView(viewModel: viewModel)
         case .editCard(let card):
@@ -411,14 +415,30 @@ struct HomeContentView: View {
                     .font(.headline)
                     .foregroundColor(.secondary)
                     .padding(.horizontal)
-                
                 VStack(spacing: 12) {
-                    // Dutch Grammar Rules with info icon
-                    HStack(spacing: 12) {
-                        // Main button
-                        Button(action: {
-                            navigationCoordinator.push(NavigationDestination.dutchGrammar)
-                        }) {
+                    NavigationLink(destination: LessonsListView(viewModel: viewModel)) {
+                        HStack {
+                            Image(systemName: "book.closed.fill")
+                                .font(.title2)
+                                .foregroundColor(.blue)
+                                .frame(width: 30)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Dutch Lessons")
+                                    .font(.body)
+                                    .foregroundColor(.primary)
+                                Text("Practice with real exercises")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            Spacer()
+                        }
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(Color(.secondarySystemGroupedBackground))
+                        .cornerRadius(12)
+                        .shadow(color: .blue.opacity(0.2), radius: 3, x: 0, y: 1)
+                    }
+                    NavigationLink(destination: DutchGrammarRulesView()) {
                             HStack {
                                 Image(systemName: "book.pages.fill")
                                     .font(.title2)
@@ -430,7 +450,6 @@ struct HomeContentView: View {
                                         )
                                     )
                                     .frame(width: 30)
-                                
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text("Dutch Grammar")
                                         .font(.body)
@@ -439,7 +458,6 @@ struct HomeContentView: View {
                                         .font(.caption)
                                         .foregroundColor(.secondary)
                                 }
-                                
                                 Spacer()
                             }
                             .padding()
@@ -447,21 +465,6 @@ struct HomeContentView: View {
                             .background(Color(.secondarySystemGroupedBackground))
                             .cornerRadius(12)
                             .shadow(color: .blue.opacity(0.2), radius: 3, x: 0, y: 1)
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                        
-                        // Info button
-                        Button(action: {
-                            navigationCoordinator.presentSheet(.dutchGrammarInfo)
-                        }) {
-                            Image(systemName: "info.circle.fill")
-                                .font(.title2)
-                                .foregroundColor(.blue)
-                                .frame(width: 50, height: 50)
-                                .background(Color(.systemBackground))
-                                .clipShape(Circle())
-                                .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
-                        }
                     }
                 }
             }

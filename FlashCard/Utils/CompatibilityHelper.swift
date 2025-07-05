@@ -6,9 +6,9 @@ struct CompatibilityHelper {
     
     // MARK: - iOS Version Checks
     
-    /// Check if Translation framework is available (iOS 17.4+)
+    /// Check if Translation framework is available (iOS 18.0+)
     static var isTranslationFrameworkAvailable: Bool {
-        if #available(iOS 17.4, *) {
+        if #available(iOS 18.0, *) {
             return true
         } else {
             return false
@@ -48,7 +48,7 @@ struct CompatibilityHelper {
     static func getUnavailableFeatureMessage(for feature: UnavailableFeature) -> String {
         switch feature {
         case .translation:
-            return "Translation suggestions require iOS 17.4 or later. You can still add translations manually."
+            return "Translation suggestions require iOS 18.0 or later. You can still add translations manually."
         case .liveText:
             return "Live text scanning requires iOS 16 or later. You can still import images and extract text manually."
         case .advancedOCR:
@@ -113,8 +113,8 @@ struct TranslationCompatibility {
     
     /// Get translation using available methods
     static func getTranslation(for word: String) async -> String {
-        if #available(iOS 17.4, *), CompatibilityHelper.isTranslationFrameworkAvailable {
-            // Use Apple's Translation framework on iOS 17.4+
+        if #available(iOS 18.0, *), CompatibilityHelper.isTranslationFrameworkAvailable {
+            // Use Apple's Translation framework on iOS 18.0+
             return await getAppleTranslation(for: word)
         } else {
             // Fallback to local dictionary
@@ -122,7 +122,7 @@ struct TranslationCompatibility {
         }
     }
     
-    @available(iOS 17.4, *)
+    @available(iOS 18.0, *)
     private static func getAppleTranslation(for word: String) async -> String {
         // This would use Apple's Translation framework
         // For now, fallback to local dictionary

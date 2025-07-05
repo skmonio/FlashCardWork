@@ -696,14 +696,6 @@ struct GameView: View {
                         .background(Color.blue)
                         .cornerRadius(10)
                 }
-                
-                Button(action: {
-                    dismissToRoot()
-                }) {
-                    Text("Done")
-                        .font(.headline)
-                        .foregroundColor(.blue)
-                }
             }
             .padding(.top)
         }

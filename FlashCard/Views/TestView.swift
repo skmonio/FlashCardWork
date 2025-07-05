@@ -15,6 +15,8 @@ struct TestView: View {
     @State private var incorrectCards: Set<UUID> = []
     @State private var isShowingExample = false
     @State private var showingExample = false
+    @State private var selectedCardForEdit: FlashCard? = nil
+    @State private var forceRefreshID = UUID()
     
     // Track original number of cards for proper percentage calculation
     @State private var originalCardCount = 0
@@ -38,6 +40,16 @@ struct TestView: View {
     @StateObject private var statsManager = StatisticsManager.shared
     @StateObject private var srsManager = SRSManager.shared
     @StateObject private var userProfileManager = UserProfileManager.shared
+    
+    // Track answers for each card
+    @State private var answerHistory: [Int: String] = [:]
+    @State private var hasAnsweredHistory: [Int: Bool] = [:]
+    
+    // Track the furthest question the user has reached
+    @State private var maxProgressIndex: Int = 1
+    
+    // Track if user has gone back to review previous questions
+    @State private var hasGoneBack: Bool = false
     
     // Computed property to check if there's significant progress to save
     private var hasSignificantProgress: Bool {
@@ -69,7 +81,8 @@ struct TestView: View {
     }
     
     private var currentCard: FlashCard {
-        cards[currentIndex]
+        let id = cards[currentIndex].id
+        return viewModel.flashCards.first(where: { $0.id == id }) ?? cards[currentIndex]
     }
     
     private func generateOptions() -> [String] {
@@ -110,7 +123,16 @@ struct TestView: View {
         if !hasAnswered {
             selectedAnswer = option
             hasAnswered = true
+            // Save answer state
+            answerHistory[currentIndex] = option
+            hasAnsweredHistory[currentIndex] = true
             let isCorrect = option == currentCard.definition
+            
+            // Update maxProgressIndex if answering the latest question
+            if currentIndex >= maxProgressIndex {
+                maxProgressIndex = currentIndex + 1
+                print("🔍 Updated maxProgressIndex to \(maxProgressIndex) after answering question \(currentIndex)")
+            }
             
             if isCorrect {
                 correctAnswers += 1
@@ -212,10 +234,15 @@ struct TestView: View {
         
         if currentIndex < cards.count - 1 {
             currentIndex += 1
-            selectedAnswer = nil
-            hasAnswered = false
+            selectedAnswer = answerHistory[currentIndex]
+            hasAnswered = hasAnsweredHistory[currentIndex] ?? false
             isShowingExample = false // Reset example state
             shuffledOptions = generateOptions()
+            
+            // Update maxProgressIndex if moving forward
+            if currentIndex > maxProgressIndex {
+                maxProgressIndex = currentIndex
+            }
             
             // Auto-save progress periodically (every 5 questions)
             if currentIndex % 5 == 0 {
@@ -270,11 +297,13 @@ struct TestView: View {
         isShowingExample = false // Reset example state
         incorrectCards.removeAll()
         shuffledOptions = generateOptions()
-        
+        answerHistory = [:]
+        hasAnsweredHistory = [:]
+        maxProgressIndex = 1
+        hasGoneBack = false
         // Start new session tracking
         sessionStartTime = Date()
         currentSession = statsManager.startSession(deckIds: deckIds, cardCount: cards.count)
-        
         // Clear any saved progress when resetting
         clearSavedProgress()
     }
@@ -331,20 +360,31 @@ struct TestView: View {
             // Start session tracking
             sessionStartTime = Date()
             currentSession = statsManager.startSession(deckIds: deckIds, cardCount: cards.count)
-            
+            maxProgressIndex = 1
             if shouldLoadSaveState {
                 loadSavedProgress()
             } else {
                 shuffledOptions = generateOptions()
             }
-            
             // Removed automatic audio playback - only manual card taps trigger audio
+            print("🔍 View appeared: currentIndex=\(currentIndex), maxProgressIndex=\(maxProgressIndex)")
         }
         .onDisappear {
             // Auto-save when view disappears
             if hasSignificantProgress && !showingResults {
                 saveCurrentProgress()
             }
+        }
+        .onChange(of: selectedCardForEdit) { newValue in
+            if newValue == nil {
+                forceRefreshID = UUID()
+            }
+        }
+        .onChange(of: currentIndex) { newValue in
+            print("🔍 currentIndex changed to \(newValue), maxProgressIndex=\(maxProgressIndex)")
+        }
+        .sheet(item: $selectedCardForEdit) { card in
+            EditCardView(viewModel: viewModel, card: card)
         }
     }
     
@@ -361,7 +401,7 @@ struct TestView: View {
                 skippedCount: nil,
                 sessionXP: sessionXP,
                 showProgressIndicator: false,
-                progressOverride: showingResults ? 1.0 : Double(max(currentIndex, 0)) / Double(maxQuestions ?? cards.count)
+                isComplete: showingResults
             )
             
             Spacer()
@@ -380,6 +420,7 @@ struct TestView: View {
                     content: currentCard.word,
                     showArticle: false
                 )
+                .id("\(currentCard.id)-\(forceRefreshID)")
                 .onTapGesture(count: 2) {
                     // Double tap to show/hide example
                     HapticManager.shared.lightImpact()
@@ -392,6 +433,58 @@ struct TestView: View {
                     speakCurrentWord()
                     HapticManager.shared.lightImpact()
                 }
+                // Previous and Edit Card buttons below the card
+                HStack(spacing: 12) {
+                    Button(action: {
+                        goToPreviousQuestion()
+                    }) {
+                        HStack {
+                            Image(systemName: "arrow.left.circle")
+                            Text("Back")
+                        }
+                        .font(.subheadline)
+                        .foregroundColor(currentIndex == 0 ? .gray : .blue)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 10)
+                        .background(Color.blue.opacity(currentIndex == 0 ? 0.04 : 0.08))
+                        .cornerRadius(10)
+                    }
+                    .disabled(currentIndex == 0)
+
+                    Button(action: {
+                        selectedCardForEdit = currentCard
+                    }) {
+                        HStack {
+                            Image(systemName: "pencil")
+                            Text("Edit")
+                        }
+                        .font(.subheadline)
+                        .foregroundColor(.blue)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 10)
+                        .background(Color.blue.opacity(0.08))
+                        .cornerRadius(10)
+                    }
+
+                    // Show Next button only if user has gone back and is not on the latest question
+                    if hasGoneBack && currentIndex < maxProgressIndex {
+                        Button(action: {
+                            goToNextQuestion()
+                        }) {
+                            HStack {
+                                Text("Next")
+                                Image(systemName: "arrow.right.circle")
+                            }
+                            .font(.subheadline)
+                            .foregroundColor(.blue)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 10)
+                            .background(Color.blue.opacity(0.08))
+                            .cornerRadius(10)
+                        }
+                    }
+                }
+                .padding(.top, 8)
                 
                 Spacer()
                 
@@ -479,14 +572,6 @@ struct TestView: View {
                                 .padding()
                                 .background(Color.blue)
                                 .cornerRadius(10)
-                        }
-                        
-                        Button(action: {
-                            dismissToRoot()
-                        }) {
-                            Text("Done")
-                                .font(.headline)
-                                .foregroundColor(.blue)
                         }
                     }
                 }
@@ -585,5 +670,34 @@ struct TestView: View {
         
         // Use slower speech rate for learning
         speechService.speakDutch(text, rate: 0.4)
+    }
+    
+    // Add a function to go to the previous question
+    private func goToPreviousQuestion() {
+        if currentIndex > 0 {
+            hasGoneBack = true
+            withAnimation(.none) {
+                currentIndex -= 1
+            }
+            // Restore previous answer state
+            selectedAnswer = answerHistory[currentIndex]
+            hasAnswered = hasAnsweredHistory[currentIndex] ?? false
+            isShowingExample = false
+            shuffledOptions = generateOptions()
+            forceRefreshID = UUID()
+            print("🔍 Went to previous question: currentIndex=\(currentIndex), maxProgressIndex=\(maxProgressIndex)")
+        }
+    }
+    
+    // Go to next question in review/history mode
+    private func goToNextQuestion() {
+        if currentIndex < maxProgressIndex {
+            currentIndex += 1
+            selectedAnswer = answerHistory[currentIndex]
+            hasAnswered = hasAnsweredHistory[currentIndex] ?? false
+            isShowingExample = false
+            shuffledOptions = generateOptions()
+            forceRefreshID = UUID()
+        }
     }
 } 
