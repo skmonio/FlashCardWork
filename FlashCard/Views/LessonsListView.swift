@@ -211,192 +211,196 @@ struct LessonDetailView: View {
                 showProfileIcon: false,
                 onBack: { presentationMode.wrappedValue.dismiss() }
             )
-            VStack(alignment: .leading, spacing: 24) {
-                if !started {
-                    // Lesson intro
-                    Text(lesson.title)
-                        .font(.largeTitle)
-                        .padding(.top)
-                    Text(lesson.description)
-                    if !lesson.vocabulary.isEmpty {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Vocabulary:")
-                                .font(.headline)
-                            // Clickable words
-                            WrapHStack(words: lesson.vocabulary, userWords: userWords, onTap: { word in
-                                // Navigate to AddCardView with pre-filled word
-                                navigationCoordinator.presentSheet(.addCard(initialWord: word))
-                            })
+            
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
+                    if !started {
+                        // Lesson intro
+                        Text(lesson.description)
+                        if !lesson.vocabulary.isEmpty {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Vocabulary:")
+                                    .font(.headline)
+                                // Clickable words
+                                WrapHStack(words: lesson.vocabulary, userWords: userWords, onTap: { word in
+                                    // Navigate to AddCardView with pre-filled word
+                                    navigationCoordinator.presentSheet(.addCard(initialWord: word))
+                                })
+                            }
                         }
-                    }
-                    Spacer()
-                    Button(action: {
-                        started = true
-                        currentExerciseIndex = 0
-                        correctCount = 0
-                        finished = false
-                        userAnswers = [:]
-                        // Start analytics tracking
-                        lessonStartTime = analyticsManager.startLessonTracking(lessonId: lesson.id, lessonTitle: lesson.title)
-                        exerciseStartTime = Date()
-                        exerciseAttempts = []
-                    }) {
-                        Text("Start Lesson")
-                            .font(.title2)
-                            .bold()
-                            .frame(maxWidth: .infinity)
+                        Spacer()
+                        Button(action: {
+                            started = true
+                            currentExerciseIndex = 0
+                            correctCount = 0
+                            finished = false
+                            userAnswers = [:]
+                            // Start analytics tracking
+                            lessonStartTime = analyticsManager.startLessonTracking(lessonId: lesson.id, lessonTitle: lesson.title)
+                            exerciseStartTime = Date()
+                            exerciseAttempts = []
+                        }) {
+                            Text("Start Lesson")
+                                .font(.title2)
+                                .bold()
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color.blue)
+                                .foregroundColor(.white)
+                                .cornerRadius(12)
+                        }
+                        .padding(.bottom)
+                    } else if finished {
+                        // End screen with review option
+                        VStack(spacing: 16) {
+                            Text("Lesson Complete!")
+                                .font(.title)
+                                .bold()
+                            Text("You answered \(correctCount) out of \(filteredExercises.count) correctly.")
+                                .font(.headline)
+                            Button("Back to Lessons") {
+                                presentationMode.wrappedValue.dismiss()
+                            }
+                            .padding()
+                            .background(Color.gray.opacity(0.2))
+                            .foregroundColor(.blue)
+                            .cornerRadius(12)
+                            Button("Review Lesson") {
+                                // Just go back to the last question and let them navigate normally
+                                finished = false
+                                currentExerciseIndex = filteredExercises.count - 1
+                                selectedAnswer = userAnswers[currentExerciseIndex]
+                                showFeedback = true // Show feedback immediately in review
+                            }
                             .padding()
                             .background(Color.blue)
                             .foregroundColor(.white)
                             .cornerRadius(12)
-                    }
-                    .padding(.bottom)
-                } else if finished {
-                    // End screen with review option
-                    VStack(spacing: 16) {
-                        Text("Lesson Complete!")
-                            .font(.title)
-                            .bold()
-                        Text("You answered \(correctCount) out of \(filteredExercises.count) correctly.")
-                            .font(.headline)
-                        Button("Back to Lessons") {
-                            presentationMode.wrappedValue.dismiss()
                         }
-                        .padding()
-                        .background(Color.gray.opacity(0.2))
-                        .foregroundColor(.blue)
-                        .cornerRadius(12)
-                        Button("Review Lesson") {
-                            // Just go back to the last question and let them navigate normally
-                            finished = false
-                            currentExerciseIndex = filteredExercises.count - 1
-                            selectedAnswer = userAnswers[currentExerciseIndex]
-                            showFeedback = true // Show feedback immediately in review
-                        }
-                        .padding()
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(12)
-                    }
-                    Spacer()
-                } else if reviewMode {
-                    // Remove this entire section - no longer needed
-                    EmptyView()
-                } else {
-                    // Game-style progress bar
-                    LessonProgressBar(completedQuestions: completedQuestions, total: filteredExercises.count)
-                        .padding(.bottom, 8)
-                    // Exercise flow
-                    let exercise = filteredExercises[currentExerciseIndex]
-                    VStack(alignment: .leading, spacing: 16) {
-                        // Custom UI per exercise type
-                        switch exercise.type {
-                        case .fillInBlank, .missingWord, .useInSentence:
-                            Text(exercise.prompt)
-                                .font(.title2)
-                                .bold()
-                            ForEach(exercise.options, id: \.self) { option in
-                                Button(action: {
-                                    if !showFeedback {
-                                        selectedAnswer = option
-                                        showFeedback = true
-                                        userAnswers[currentExerciseIndex] = option
-                                        if option == exercise.correctAnswer {
-                                            correctCount += 1
-                                        }
-                                        // Record exercise attempt
-                                        recordExerciseAttempt(exercise: exercise, userAnswer: option)
-                                    }
-                                }) {
-                                    HStack {
-                                        Text(option)
-                                            .font(.body)
-                                            .foregroundColor(.primary)
-                                        Spacer()
-                                        if showFeedback {
+                        Spacer()
+                    } else if reviewMode {
+                        // Remove this entire section - no longer needed
+                        EmptyView()
+                    } else {
+                        // Game-style progress bar
+                        LessonProgressBar(completedQuestions: completedQuestions, total: filteredExercises.count)
+                            .padding(.bottom, 8)
+                        // Exercise flow
+                        let exercise = filteredExercises[currentExerciseIndex]
+                        VStack(alignment: .leading, spacing: 16) {
+                            // Custom UI per exercise type
+                            switch exercise.type {
+                            case .fillInBlank, .missingWord, .useInSentence:
+                                Text(exercise.prompt)
+                                    .font(.title2)
+                                    .bold()
+                                ForEach(exercise.options, id: \.self) { option in
+                                    Button(action: {
+                                        if !showFeedback {
+                                            selectedAnswer = option
+                                            showFeedback = true
+                                            userAnswers[currentExerciseIndex] = option
                                             if option == exercise.correctAnswer {
-                                                Image(systemName: "checkmark.circle.fill").foregroundColor(.green)
-                                            } else if option == selectedAnswer && option != exercise.correctAnswer {
-                                                Image(systemName: "xmark.circle.fill").foregroundColor(.red)
+                                                correctCount += 1
+                                            }
+                                            // Record exercise attempt
+                                            recordExerciseAttempt(exercise: exercise, userAnswer: option)
+                                        }
+                                    }) {
+                                        HStack {
+                                            Text(option)
+                                                .font(.body)
+                                                .foregroundColor(.primary)
+                                            Spacer()
+                                            if showFeedback {
+                                                if option == exercise.correctAnswer {
+                                                    Image(systemName: "checkmark.circle.fill").foregroundColor(.green)
+                                                } else if option == selectedAnswer && option != exercise.correctAnswer {
+                                                    Image(systemName: "xmark.circle.fill").foregroundColor(.red)
+                                                }
                                             }
                                         }
+                                        .padding()
+                                        .background(
+                                            showFeedback ?
+                                                (option == exercise.correctAnswer ? Color.green.opacity(0.15) :
+                                                    (option == selectedAnswer ? Color.red.opacity(0.15) : Color(.systemGray6))) :
+                                                Color(.systemGray6)
+                                        )
+                                        .cornerRadius(8)
                                     }
-                                    .padding()
-                                    .background(
-                                        showFeedback ?
-                                            (option == exercise.correctAnswer ? Color.green.opacity(0.15) :
-                                                (option == selectedAnswer ? Color.red.opacity(0.15) : Color(.systemGray6))) :
-                                            Color(.systemGray6)
-                                    )
-                                    .cornerRadius(8)
+                                    .disabled(showFeedback)
                                 }
-                                .disabled(showFeedback)
+                            default:
+                                EmptyView()
                             }
-                        default:
-                            EmptyView()
-                        }
-                        if showFeedback {
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text(exercise.explanation)
-                                    .font(.body)
-                                    .foregroundColor(.secondary)
-                                
-                                // Navigation buttons (Previous and Next/Finish)
-                                HStack(spacing: 12) {
-                                    Button("Previous") {
-                                        if currentExerciseIndex > 0 {
-                                            currentExerciseIndex -= 1
-                                            selectedAnswer = userAnswers[currentExerciseIndex]
-                                            showFeedback = userAnswers[currentExerciseIndex] != nil
-                                        }
-                                    }
-                                    .disabled(currentExerciseIndex == 0)
-                                    .padding()
-                                    .frame(maxWidth: .infinity)
-                                    .background(currentExerciseIndex == 0 ? Color.gray.opacity(0.3) : Color.gray.opacity(0.2))
-                                    .foregroundColor(currentExerciseIndex == 0 ? .gray : .blue)
-                                    .cornerRadius(8)
+                            if showFeedback {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text(exercise.explanation)
+                                        .font(.body)
+                                        .foregroundColor(.secondary)
                                     
-                                    Button(currentExerciseIndex < filteredExercises.count - 1 ? "Next" : "Finish Lesson") {
-                                        if currentExerciseIndex < filteredExercises.count - 1 {
-                                            currentExerciseIndex += 1
-                                            selectedAnswer = userAnswers[currentExerciseIndex]
-                                            showFeedback = userAnswers[currentExerciseIndex] != nil
-                                        } else {
-                                            finished = true
-                                            // Save progress
-                                            let percent = Int((Double(correctCount) / Double(filteredExercises.count)) * 100)
-                                            let prev = completedLessons[lesson.id] ?? 0
-                                            if percent > prev { completedLessons[lesson.id] = percent }
-                                            
-                                            // Record lesson completion analytics
-                                            if let startTime = lessonStartTime {
-                                                analyticsManager.recordLessonCompletion(
-                                                    lessonId: lesson.id,
-                                                    lessonTitle: lesson.title,
-                                                    startTime: startTime,
-                                                    totalExercises: filteredExercises.count,
-                                                    correctAnswers: correctCount,
-                                                    exerciseAttempts: exerciseAttempts
-                                                )
+                                    // Navigation buttons (Previous and Next/Finish)
+                                    HStack(spacing: 12) {
+                                        Button("Previous") {
+                                            if currentExerciseIndex > 0 {
+                                                currentExerciseIndex -= 1
+                                                selectedAnswer = userAnswers[currentExerciseIndex]
+                                                showFeedback = userAnswers[currentExerciseIndex] != nil
                                             }
                                         }
+                                        .disabled(currentExerciseIndex == 0)
+                                        .padding()
+                                        .frame(maxWidth: .infinity)
+                                        .background(currentExerciseIndex == 0 ? Color.gray.opacity(0.3) : Color.gray.opacity(0.2))
+                                        .foregroundColor(currentExerciseIndex == 0 ? .gray : .blue)
+                                        .cornerRadius(8)
+                                        
+                                        Button(currentExerciseIndex < filteredExercises.count - 1 ? "Next" : "Finish Lesson") {
+                                            if currentExerciseIndex < filteredExercises.count - 1 {
+                                                currentExerciseIndex += 1
+                                                selectedAnswer = userAnswers[currentExerciseIndex]
+                                                showFeedback = userAnswers[currentExerciseIndex] != nil
+                                            } else {
+                                                finished = true
+                                                // Save progress
+                                                let percent = Int((Double(correctCount) / Double(filteredExercises.count)) * 100)
+                                                let prev = completedLessons[lesson.id] ?? 0
+                                                if percent > prev { completedLessons[lesson.id] = percent }
+                                                
+                                                // Record lesson completion analytics
+                                                if let startTime = lessonStartTime {
+                                                    analyticsManager.recordLessonCompletion(
+                                                        lessonId: lesson.id,
+                                                        lessonTitle: lesson.title,
+                                                        startTime: startTime,
+                                                        totalExercises: filteredExercises.count,
+                                                        correctAnswers: correctCount,
+                                                        exerciseAttempts: exerciseAttempts
+                                                    )
+                                                }
+                                            }
+                                        }
+                                        .padding()
+                                        .frame(maxWidth: .infinity)
+                                        .background(Color.blue)
+                                        .foregroundColor(.white)
+                                        .cornerRadius(8)
                                     }
-                                    .padding()
-                                    .frame(maxWidth: .infinity)
-                                    .background(Color.blue)
-                                    .foregroundColor(.white)
-                                    .cornerRadius(8)
                                 }
+                                .padding(.top)
                             }
-                            .padding(.top)
                         }
+                        Spacer()
                     }
-                    Spacer()
                 }
+                .padding(.horizontal)
+                .padding(.top, 16)
             }
-            .padding()
         }
+        .navigationBarHidden(true)
+        .navigationBarBackButtonHidden(true)
+        .background(Color(.systemGroupedBackground))
     }
     
     // MARK: - Helper Functions
