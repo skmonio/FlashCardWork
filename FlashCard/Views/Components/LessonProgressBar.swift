@@ -30,7 +30,6 @@ struct LessonProgressBar: View {
                             endPoint: .trailing
                         ))
                         .frame(width: geometry.size.width * progress, height: 12)
-                        .animation(.easeInOut(duration: 0.3), value: progress)
                 }
             }
             .frame(height: 12)

@@ -170,32 +170,29 @@ struct LessonDetailView: View {
     let lesson: Lesson
     @Binding var completedLessons: [UUID: Int]
     let viewModel: FlashCardViewModel
+    @Environment(\.presentationMode) var presentationMode
+    @EnvironmentObject var navigationCoordinator: NavigationCoordinator
+    @ObservedObject var analyticsManager = LessonAnalyticsManager.shared
+    
     @State private var started = false
-    @State private var currentExerciseIndex = 0
-    @State private var selectedAnswer: String? = nil
-    @State private var showFeedback = false
-    @State private var correctCount = 0
     @State private var finished = false
     @State private var reviewMode = false
+    @State private var currentExerciseIndex = 0
+    @State private var selectedAnswer: String?
+    @State private var showFeedback = false
+    @State private var correctCount = 0
     @State private var userAnswers: [Int: String] = [:]
-    
-    // Analytics tracking
+    @State private var userWords: Set<String> = []
     @State private var lessonStartTime: Date?
     @State private var exerciseStartTime: Date?
     @State private var exerciseAttempts: [ExerciseAttempt] = []
-    @ObservedObject var analyticsManager = LessonAnalyticsManager.shared
-    
-    @Environment(\.presentationMode) var presentationMode
-    @EnvironmentObject var navigationCoordinator: NavigationCoordinator
-    
-    // Check which words user already has
-    var userWords: Set<String> { 
-        Set(viewModel.flashCards.map { $0.word.lowercased() })
-    }
-    
-    // Filter out .matchMeaning exercises
+    @State private var showingExitConfirmation = false
+
+    // New: Shuffled exercises and options
+    @State private var shuffledExercises: [(exercise: Exercise, shuffledOptions: [String], correctIndex: Int)] = []
+
     var filteredExercises: [Exercise] {
-        lesson.exercises.filter { $0.type != .matchMeaning }
+        lesson.exercises
     }
     
     // Count of completed questions (questions that have been answered)
@@ -206,10 +203,16 @@ struct LessonDetailView: View {
     var body: some View {
         VStack(spacing: 0) {
             UnifiedHeader(
-                title: lesson.title,
+                title: "Chapter 3.5",
                 showBackButton: true,
                 showProfileIcon: false,
-                onBack: { presentationMode.wrappedValue.dismiss() }
+                onBack: { 
+                    if started && !finished {
+                        showingExitConfirmation = true
+                    } else {
+                        presentationMode.wrappedValue.dismiss()
+                    }
+                }
             )
             
             ScrollView {
@@ -239,6 +242,12 @@ struct LessonDetailView: View {
                             lessonStartTime = analyticsManager.startLessonTracking(lessonId: lesson.id, lessonTitle: lesson.title)
                             exerciseStartTime = Date()
                             exerciseAttempts = []
+                            // Shuffle exercises and options
+                            shuffledExercises = lesson.exercises.shuffled().map { ex in
+                                let shuffled = ex.options.shuffled()
+                                let correctIdx = shuffled.firstIndex(of: ex.correctAnswer) ?? 0
+                                return (exercise: ex, shuffledOptions: shuffled, correctIndex: correctIdx)
+                            }
                         }) {
                             Text("Start Lesson")
                                 .font(.title2)
@@ -256,7 +265,7 @@ struct LessonDetailView: View {
                             Text("Lesson Complete!")
                                 .font(.title)
                                 .bold()
-                            Text("You answered \(correctCount) out of \(filteredExercises.count) correctly.")
+                            Text("You answered \(correctCount) out of \(shuffledExercises.count) correctly.")
                                 .font(.headline)
                             Button("Back to Lessons") {
                                 presentationMode.wrappedValue.dismiss()
@@ -268,7 +277,7 @@ struct LessonDetailView: View {
                             Button("Review Lesson") {
                                 // Just go back to the last question and let them navigate normally
                                 finished = false
-                                currentExerciseIndex = filteredExercises.count - 1
+                                currentExerciseIndex = shuffledExercises.count - 1
                                 selectedAnswer = userAnswers[currentExerciseIndex]
                                 showFeedback = true // Show feedback immediately in review
                             }
@@ -281,65 +290,62 @@ struct LessonDetailView: View {
                     } else if reviewMode {
                         // Remove this entire section - no longer needed
                         EmptyView()
-                    } else {
+                    } else if !shuffledExercises.isEmpty {
                         // Game-style progress bar
-                        LessonProgressBar(completedQuestions: completedQuestions, total: filteredExercises.count)
+                        LessonProgressBar(completedQuestions: currentExerciseIndex + 1, total: shuffledExercises.count)
                             .padding(.bottom, 8)
                         // Exercise flow
-                        let exercise = filteredExercises[currentExerciseIndex]
+                        let tuple = shuffledExercises[currentExerciseIndex]
+                        let exercise = tuple.exercise
+                        let options = tuple.shuffledOptions
+                        let correctIdx = tuple.correctIndex
                         VStack(alignment: .leading, spacing: 16) {
                             // Custom UI per exercise type
-                            switch exercise.type {
-                            case .fillInBlank, .missingWord, .useInSentence:
-                                Text(exercise.prompt)
-                                    .font(.title2)
-                                    .bold()
-                                ForEach(exercise.options, id: \.self) { option in
-                                    Button(action: {
-                                        if !showFeedback {
-                                            selectedAnswer = option
-                                            showFeedback = true
-                                            userAnswers[currentExerciseIndex] = option
-                                            if option == exercise.correctAnswer {
-                                                correctCount += 1
-                                            }
-                                            // Record exercise attempt
-                                            recordExerciseAttempt(exercise: exercise, userAnswer: option)
+                            Text(exercise.prompt)
+                                .font(.title2)
+                                .bold()
+                            ForEach(options, id: \.self) { option in
+                                Button(action: {
+                                    if !showFeedback {
+                                        selectedAnswer = option
+                                        showFeedback = true
+                                        userAnswers[currentExerciseIndex] = option
+                                        if let idx = options.firstIndex(of: option), idx == correctIdx {
+                                            correctCount += 1
                                         }
-                                    }) {
-                                        HStack {
-                                            Text(option)
-                                                .font(.body)
-                                                .foregroundColor(.primary)
-                                            Spacer()
-                                            if showFeedback {
-                                                if option == exercise.correctAnswer {
-                                                    Image(systemName: "checkmark.circle.fill").foregroundColor(.green)
-                                                } else if option == selectedAnswer && option != exercise.correctAnswer {
-                                                    Image(systemName: "xmark.circle.fill").foregroundColor(.red)
-                                                }
-                                            }
-                                        }
-                                        .padding()
-                                        .background(
-                                            showFeedback ?
-                                                (option == exercise.correctAnswer ? Color.green.opacity(0.15) :
-                                                    (option == selectedAnswer ? Color.red.opacity(0.15) : Color(.systemGray6))) :
-                                                Color(.systemGray6)
-                                        )
-                                        .cornerRadius(8)
+                                        // Record exercise attempt
+                                        recordExerciseAttempt(exercise: exercise, userAnswer: option)
                                     }
-                                    .disabled(showFeedback)
+                                }) {
+                                    HStack {
+                                        Text(option)
+                                            .font(.body)
+                                            .foregroundColor(.primary)
+                                        Spacer()
+                                        if showFeedback {
+                                            if let idx = options.firstIndex(of: option), idx == correctIdx {
+                                                Image(systemName: "checkmark.circle.fill").foregroundColor(.green)
+                                            } else if option == selectedAnswer && options.firstIndex(of: option) != correctIdx {
+                                                Image(systemName: "xmark.circle.fill").foregroundColor(.red)
+                                            }
+                                        }
+                                    }
+                                    .padding()
+                                    .background(
+                                        showFeedback ?
+                                            ((options.firstIndex(of: option) == correctIdx) ? Color.green.opacity(0.15) :
+                                                (option == selectedAnswer ? Color.red.opacity(0.15) : Color(.systemGray6))) :
+                                            Color(.systemGray6)
+                                    )
+                                    .cornerRadius(8)
                                 }
-                            default:
-                                EmptyView()
+                                .disabled(showFeedback)
                             }
                             if showFeedback {
                                 VStack(alignment: .leading, spacing: 8) {
                                     Text(exercise.explanation)
                                         .font(.body)
                                         .foregroundColor(.secondary)
-                                    
                                     // Navigation buttons (Previous and Next/Finish)
                                     HStack(spacing: 12) {
                                         Button("Previous") {
@@ -355,26 +361,24 @@ struct LessonDetailView: View {
                                         .background(currentExerciseIndex == 0 ? Color.gray.opacity(0.3) : Color.gray.opacity(0.2))
                                         .foregroundColor(currentExerciseIndex == 0 ? .gray : .blue)
                                         .cornerRadius(8)
-                                        
-                                        Button(currentExerciseIndex < filteredExercises.count - 1 ? "Next" : "Finish Lesson") {
-                                            if currentExerciseIndex < filteredExercises.count - 1 {
+                                        Button(currentExerciseIndex < shuffledExercises.count - 1 ? "Next" : "Finish Lesson") {
+                                            if currentExerciseIndex < shuffledExercises.count - 1 {
                                                 currentExerciseIndex += 1
                                                 selectedAnswer = userAnswers[currentExerciseIndex]
                                                 showFeedback = userAnswers[currentExerciseIndex] != nil
                                             } else {
                                                 finished = true
                                                 // Save progress
-                                                let percent = Int((Double(correctCount) / Double(filteredExercises.count)) * 100)
+                                                let percent = Int((Double(correctCount) / Double(shuffledExercises.count)) * 100)
                                                 let prev = completedLessons[lesson.id] ?? 0
                                                 if percent > prev { completedLessons[lesson.id] = percent }
-                                                
                                                 // Record lesson completion analytics
                                                 if let startTime = lessonStartTime {
                                                     analyticsManager.recordLessonCompletion(
                                                         lessonId: lesson.id,
                                                         lessonTitle: lesson.title,
                                                         startTime: startTime,
-                                                        totalExercises: filteredExercises.count,
+                                                        totalExercises: shuffledExercises.count,
                                                         correctAnswers: correctCount,
                                                         exerciseAttempts: exerciseAttempts
                                                     )
@@ -400,7 +404,14 @@ struct LessonDetailView: View {
         }
         .navigationBarHidden(true)
         .navigationBarBackButtonHidden(true)
-        .background(Color(.systemGroupedBackground))
+        .alert("Exit Lesson?", isPresented: $showingExitConfirmation) {
+            Button("Exit", role: .destructive) {
+                presentationMode.wrappedValue.dismiss()
+            }
+            Button("Continue Lesson", role: .cancel) { }
+        } message: {
+            Text("Do you want to exit the lesson? Your progress will be lost.")
+        }
     }
     
     // MARK: - Helper Functions
