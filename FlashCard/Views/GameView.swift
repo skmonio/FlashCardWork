@@ -360,18 +360,25 @@ struct GameView: View {
                 VStack {
                     Spacer()
                     
-                    LazyVGrid(columns: columns, spacing: 16) {
-                        ForEach(0..<10, id: \.self) { index in
-                            if index < displayedCards.count {
-                                MemoryGameCardView(card: displayedCards[index]) {
-                                    cardTapped(displayedCards[index])
+                    // Use explicit grid layout instead of LazyVGrid to avoid frame issues
+                    VStack(spacing: 16) {
+                        ForEach(0..<5, id: \.self) { row in
+                            HStack(spacing: 16) {
+                                ForEach(0..<2, id: \.self) { col in
+                                    let index = row * 2 + col
+                                    if index < displayedCards.count {
+                                        MemoryGameCardView(card: displayedCards[index]) {
+                                            cardTapped(displayedCards[index])
+                                        }
+                                        .opacity(displayedCards[index].isMatched ? 0 : 1)
+                                        .animation(.easeInOut(duration: 0.3), value: displayedCards[index].isMatched)
+                                    } else {
+                                        // Empty space to maintain grid layout
+                                        Rectangle()
+                                            .fill(Color.clear)
+                                            .frame(height: 70)
+                                    }
                                 }
-                                .opacity(displayedCards[index].isMatched ? 0 : 1)
-                                .animation(.easeInOut(duration: 0.3), value: displayedCards[index].isMatched)
-                            } else {
-                                // Empty space to maintain grid layout
-                                Color.clear
-                                    .frame(height: 70)
                             }
                         }
                     }
@@ -414,16 +421,25 @@ struct GameView: View {
         // Shuffle the cards
         gameCards.shuffle()
 
-        // Always show exactly 10 cards (5 pairs) initially for grid stability
-        // This ensures the grid layout never changes and prevents frame dimension errors
+        // For 10-game, we need to ensure we show complete pairs
+        // Take the first 5 complete pairs (10 cards) to ensure matches are possible
         let initialDisplayCount = min(10, gameCards.count)
         
         // Ensure we have an even number of cards (complete pairs)
         let adjustedDisplayCount = initialDisplayCount - (initialDisplayCount % 2)
         
+        // Take the first N cards where N is even (complete pairs)
         displayedCards = Array(gameCards.prefix(adjustedDisplayCount))
         remainingCards = Array(gameCards.dropFirst(adjustedDisplayCount))
+        
+        // Verify that we have complete pairs in displayed cards
+        let displayedCardIds = Set(displayedCards.map { $0.originalCard.id })
+        let hasCompletePairs = displayedCards.count % 2 == 0 && 
+                              displayedCards.count == displayedCardIds.count * 2
+        
         print("🧠 Showing first \(displayedCards.count / 2) pairs (\(displayedCards.count) cards), \(remainingCards.count) remaining")
+        print("🧠 Has complete pairs: \(hasCompletePairs)")
+        print("🧠 Displayed card IDs: \(displayedCardIds)")
 
         // Reset game state
         score = 0
