@@ -454,57 +454,6 @@ struct GameView: View {
         timer = nil
     }
     
-    private func replaceMatchedCards() {
-        // Find indices of matched cards
-        let matchedIndices = displayedCards.enumerated().compactMap { index, card in
-            card.isMatched ? index : nil
-        }
-        
-        // Remove matched cards and add new ones from remaining cards
-        for index in matchedIndices.sorted(by: >) {
-            if !remainingCards.isEmpty {
-                // Replace matched card with new card from remaining cards
-                let newCard = remainingCards.removeFirst()
-                displayedCards[index] = newCard
-                print("🧠 Replaced matched card at index \(index) with new card: \(newCard.content)")
-            } else {
-                // No more cards to add, remove the matched card
-                displayedCards.remove(at: index)
-                print("🧠 Removed matched card at index \(index) - no more cards remaining")
-            }
-        }
-        
-        // Check if game is complete (no more cards to play)
-        if remainingCards.isEmpty && displayedCards.allSatisfy({ $0.isMatched }) {
-            // Stop the timer
-            stopTimer()
-            
-            // Clear saved progress since game is complete
-            clearSavedProgress()
-            
-            // Call level completion callback if this is a progressive study session
-            if let onLevelComplete = onLevelComplete {
-                let levelNumber: Int
-                switch studyMode {
-                case .maintenance: levelNumber = 1
-                case .cram: levelNumber = 2
-                case .adaptive: levelNumber = 3
-                default: levelNumber = 1
-                }
-                
-                let result = LevelResult(
-                    level: levelNumber,
-                    score: score,
-                    total: maxQuestions ?? cards.count
-                )
-                onLevelComplete(result)
-            } else {
-                StreakManager.shared.recordGameCompletion()
-                showingResults = true
-            }
-        }
-    }
-    
     private func cardTapped(_ tappedCard: Card) {
         guard let index = displayedCards.firstIndex(where: { $0.id == tappedCard.id }) else { return }
         
@@ -554,20 +503,65 @@ struct GameView: View {
                 
                 displayedCards[index].isSelected = true
                 
-                // After a brief delay, mark them as matched
+                // After a brief delay, replace the matched cards with new ones
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                    // Clear selection and set matched state
+                    // Clear selection
                     displayedCards[selectedIndex].isSelected = false
                     displayedCards[index].isSelected = false
-                    displayedCards[selectedIndex].isMatched = true
-                    displayedCards[index].isMatched = true
                     
                     // Record successful match as correct answer
                     viewModel.recordCardShown(tappedCard.originalCard.id, isCorrect: true)
                     
-                    // Replace matched cards after fade out
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                        replaceMatchedCards()
+                    // Immediately replace the matched cards with new ones
+                    if !remainingCards.isEmpty {
+                        // Replace first matched card
+                        let newCard1 = remainingCards.removeFirst()
+                        displayedCards[selectedIndex] = newCard1
+                        
+                        // Replace second matched card
+                        let newCard2 = remainingCards.removeFirst()
+                        displayedCards[index] = newCard2
+                        
+                        print("🧠 Replaced matched pair with new cards: \(newCard1.content) and \(newCard2.content)")
+                    } else {
+                        // No more cards to add, mark as matched and remove
+                        displayedCards[selectedIndex].isMatched = true
+                        displayedCards[index].isMatched = true
+                        
+                        // Remove matched cards after fade out
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            displayedCards.removeAll { $0.isMatched }
+                            
+                            // Check if game is complete
+                            if displayedCards.isEmpty {
+                                // Stop the timer
+                                stopTimer()
+                                
+                                // Clear saved progress since game is complete
+                                clearSavedProgress()
+                                
+                                // Call level completion callback if this is a progressive study session
+                                if let onLevelComplete = onLevelComplete {
+                                    let levelNumber: Int
+                                    switch studyMode {
+                                    case .maintenance: levelNumber = 1
+                                    case .cram: levelNumber = 2
+                                    case .adaptive: levelNumber = 3
+                                    default: levelNumber = 1
+                                    }
+                                    
+                                    let result = LevelResult(
+                                        level: levelNumber,
+                                        score: score,
+                                        total: maxQuestions ?? cards.count
+                                    )
+                                    onLevelComplete(result)
+                                } else {
+                                    StreakManager.shared.recordGameCompletion()
+                                    showingResults = true
+                                }
+                            }
+                        }
                     }
                 }
             } else {
