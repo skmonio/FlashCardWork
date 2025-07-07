@@ -361,7 +361,7 @@ struct GameView: View {
                     Spacer()
                     
                     LazyVGrid(columns: columns, spacing: 16) {
-                        ForEach(0..<max(10, displayedCards.count), id: \.self) { index in
+                        ForEach(0..<10, id: \.self) { index in
                             if index < displayedCards.count {
                                 MemoryGameCardView(card: displayedCards[index]) {
                                     cardTapped(displayedCards[index])
@@ -414,16 +414,9 @@ struct GameView: View {
         // Shuffle the cards
         gameCards.shuffle()
 
-        // Ensure we always show complete pairs so users can make matches
-        let initialDisplayCount: Int
-        if maxQuestions != nil {
-            // For progressive study (10-set), show 10 cards (5 complete pairs) initially
-            // This ensures we always have complete pairs to match
-            initialDisplayCount = min(10, gameCards.count)
-        } else {
-            // For regular games, show first 10 cards (5 pairs) initially
-            initialDisplayCount = min(10, gameCards.count)
-        }
+        // Always show exactly 10 cards (5 pairs) initially for grid stability
+        // This ensures the grid layout never changes and prevents frame dimension errors
+        let initialDisplayCount = min(10, gameCards.count)
         
         // Ensure we have an even number of cards (complete pairs)
         let adjustedDisplayCount = initialDisplayCount - (initialDisplayCount % 2)
