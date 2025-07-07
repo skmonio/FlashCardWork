@@ -410,27 +410,27 @@ struct GameView: View {
         }
 
         // Create pairs (word + definition) for each selected card
-        gameCards = cardsToUse.flatMap { card in
+        let allPairs = cardsToUse.map { card in
             [
                 Card(content: card.word, type: .word, originalCard: card),
                 Card(content: card.definition, type: .definition, originalCard: card)
             ]
         }
+        
+        // Shuffle the pairs (not individual cards)
+        let shuffledPairs = allPairs.shuffled()
+        
+        // Flatten the pairs into a single array
+        gameCards = shuffledPairs.flatMap { $0 }
+        
         print("🧠 Created \(gameCards.count) game cards (\(gameCards.count / 2) pairs)")
 
-        // Shuffle the cards
-        gameCards.shuffle()
-
-        // For 10-game, we need to ensure we show complete pairs
-        // Take the first 5 complete pairs (10 cards) to ensure matches are possible
-        let initialDisplayCount = min(10, gameCards.count)
+        // Take the first 5 complete pairs (10 cards) for initial display
+        let initialPairsCount = 5
+        let initialCardsCount = initialPairsCount * 2
         
-        // Ensure we have an even number of cards (complete pairs)
-        let adjustedDisplayCount = initialDisplayCount - (initialDisplayCount % 2)
-        
-        // Take the first N cards where N is even (complete pairs)
-        displayedCards = Array(gameCards.prefix(adjustedDisplayCount))
-        remainingCards = Array(gameCards.dropFirst(adjustedDisplayCount))
+        displayedCards = Array(gameCards.prefix(initialCardsCount))
+        remainingCards = Array(gameCards.dropFirst(initialCardsCount))
         
         // Verify that we have complete pairs in displayed cards
         let displayedCardIds = Set(displayedCards.map { $0.originalCard.id })
@@ -538,16 +538,22 @@ struct GameView: View {
                     
                     // After fade out animation, replace with new cards
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                        if !remainingCards.isEmpty {
-                            // Replace first matched card with new card
+                        if remainingCards.count >= 2 {
+                            // Replace with a complete pair (2 cards)
                             let newCard1 = remainingCards.removeFirst()
-                            displayedCards[selectedIndex] = newCard1
-                            
-                            // Replace second matched card with new card
                             let newCard2 = remainingCards.removeFirst()
-                            displayedCards[index] = newCard2
                             
-                            print("🧠 Replaced matched pair with new cards: \(newCard1.content) and \(newCard2.content)")
+                            // Ensure we're replacing with a complete pair
+                            if newCard1.originalCard.id == newCard2.originalCard.id {
+                                displayedCards[selectedIndex] = newCard1
+                                displayedCards[index] = newCard2
+                                print("🧠 Replaced matched pair with new pair: \(newCard1.content) and \(newCard2.content)")
+                            } else {
+                                // If we don't have a complete pair, put the cards back and try again
+                                remainingCards.insert(newCard2, at: 0)
+                                remainingCards.insert(newCard1, at: 0)
+                                print("🧠 Warning: Could not find complete pair for replacement")
+                            }
                         } else {
                             // No more cards to add, keep matched cards in place but invisible
                             // Don't remove them to maintain grid layout
