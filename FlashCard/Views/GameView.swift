@@ -360,7 +360,7 @@ struct GameView: View {
                 VStack {
                     Spacer()
                     
-                    // Use explicit grid layout instead of LazyVGrid to avoid frame issues
+                    // Use explicit grid layout with proper frame handling
                     VStack(spacing: 16) {
                         ForEach(0..<5, id: \.self) { row in
                             HStack(spacing: 16) {
@@ -373,9 +373,8 @@ struct GameView: View {
                                         .opacity(displayedCards[index].isMatched ? 0 : 1)
                                         .animation(.easeInOut(duration: 0.3), value: displayedCards[index].isMatched)
                                     } else {
-                                        // Empty space to maintain grid layout
-                                        Rectangle()
-                                            .fill(Color.clear)
+                                        // Empty space with proper frame to maintain grid layout
+                                        Spacer()
                                             .frame(height: 70)
                                     }
                                 }
@@ -824,16 +823,16 @@ struct MemoryGameCardView: View {
                         .lineLimit(3)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 8)
-                        .opacity(card.isMatched ? 0 : 1)
                 }
             }
         }
         .frame(height: 70)
         .scaleEffect(card.isSelected ? 1.05 : 1.0)
         .offset(y: floatingOffset)
-        .animation(.easeInOut(duration: 0.2), value: card.isSelected)
-        .animation(.easeInOut(duration: 0.2), value: card.showWrongAnimation)
+        .opacity(card.isMatched ? 0 : 1)
+        .animation(.easeInOut(duration: 0.3), value: card.isSelected)
         .animation(.easeInOut(duration: 0.3), value: card.isMatched)
+        .animation(.easeInOut(duration: 0.3), value: card.showWrongAnimation)
         .onAppear {
             // Start subtle floating animation
             withAnimation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true)) {
