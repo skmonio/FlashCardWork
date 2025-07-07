@@ -49,8 +49,36 @@ extension Lesson {
     static let chapter35: Lesson = Lesson(
         id: UUID(),
         title: "Chapter 3.5 – Dutch Vocabulary in Context",
-        description: "Practice using new Dutch words in context. Learn their meanings and test your understanding with fill-in-the-blank and word selection exercises.",
+        description: """
+Practice using new Dutch words in context. Learn their meanings and test your understanding with fill-in-the-blank and word selection exercises.
+
+---
+
+**Voorbeeldzinnen / Example Sentences:**
+1. Kun je morgen om 11.00? Nee, dat komt niet uit. (Can you [meet] tomorrow at 11? No, that doesn't work out.)
+2. Wil je mijn tas vasthouden? Pas op, hij is nogal zwaar. (Can you hold my bag? Careful, it's quite heavy.)
+3. Elke dag vul ik het wc-papier in de toiletten aan. (Every day I refill the toilet paper in the toilets.)
+4. Trouwens, Thomas wil je nog iets vertellen. (By the way, Thomas wants to tell you something.)
+5. Ik wandel twee uur per dag. Zo blijf ik fit. (I walk two hours a day. That's how I stay fit.)
+6. Je mag je telefoon weer aandoen als de film is afgelopen. (You may turn your phone back on when the movie is over.)
+7. Marisol gaat dit weekend bij haar ouders logeren. (Marisol is going to stay with her parents this weekend.)
+8. Ik hoor het alarm, dus er is brand. (I hear the alarm, so there is a fire.)
+""",
         vocabulary: [
+            VocabularyItem(dutchWord: "de verwarming aan doen", translation: "to turn on the heating"),
+            VocabularyItem(dutchWord: "in de loop van", translation: "during, in the course of"),
+            VocabularyItem(dutchWord: "druk om te werken", translation: "busy working"),
+            VocabularyItem(dutchWord: "druk om het examen", translation: "stressed about the exam"),
+            VocabularyItem(dutchWord: "alarm", translation: "alarm"),
+            VocabularyItem(dutchWord: "herrie", translation: "noise, racket"),
+            VocabularyItem(dutchWord: "veilig", translation: "safe"),
+            VocabularyItem(dutchWord: "nogal", translation: "rather, quite"),
+            VocabularyItem(dutchWord: "logeren", translation: "to stay overnight"),
+            VocabularyItem(dutchWord: "aanvullen", translation: "to refill, to supplement"),
+            VocabularyItem(dutchWord: "aandoen", translation: "to turn on (e.g., lights, devices)"),
+            VocabularyItem(dutchWord: "dat komt niet uit", translation: "that doesn't work out (schedule)"),
+            VocabularyItem(dutchWord: "trouwens", translation: "by the way"),
+            VocabularyItem(dutchWord: "fit", translation: "fit, in shape"),
             VocabularyItem(dutchWord: "nauwelijks", translation: "hardly"),
             VocabularyItem(dutchWord: "bereid", translation: "willing/prepared"),
             VocabularyItem(dutchWord: "ontzettend", translation: "extremely"),
