@@ -246,7 +246,6 @@ struct LessonDetailView: View {
     @State private var showFeedback = false
     @State private var correctCount = 0
     @State private var userAnswers: [Int: String] = [:]
-    @State private var userWords: Set<String> = []
     @State private var lessonStartTime: Date?
     @State private var exerciseStartTime: Date?
     @State private var exerciseAttempts: [ExerciseAttempt] = []
@@ -261,6 +260,11 @@ struct LessonDetailView: View {
     // Computed property to check if there's significant progress to save
     private var hasSignificantProgress: Bool {
         return started && !finished && (currentExerciseIndex > 0 || !userAnswers.isEmpty)
+    }
+    
+    // Computed property to get user's existing words
+    private var userWords: Set<String> {
+        Set(viewModel.flashCards.map { $0.word.lowercased() })
     }
 
     var filteredExercises: [Exercise] {
@@ -303,15 +307,16 @@ struct LessonDetailView: View {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text("Vocabulary:")
                                     .font(.headline)
-                                // Clickable words
-                                WrapHStack(words: lesson.vocabulary, userWords: userWords, onTap: { word in
-                                    // Navigate to AddCardView with pre-filled word
-                                    navigationCoordinator.presentSheet(.addCard(initialWord: word))
+                                // Clickable words with translations
+                                WrapHStack(vocabularyItems: lesson.vocabulary, userWords: userWords, onTap: { vocabularyItem in
+                                    // Navigate to AddCardView with pre-filled word and translation
+                                    navigationCoordinator.presentSheet(.addCard(initialWord: vocabularyItem.dutchWord, initialDefinition: vocabularyItem.translation))
                                 })
                             }
                         }
                         Spacer()
                         Button(action: {
+                            HapticManager.shared.buttonTap()
                             started = true
                             currentExerciseIndex = 0
                             correctCount = 0
@@ -347,6 +352,7 @@ struct LessonDetailView: View {
                             Text("You answered \(correctCount) out of \(shuffledExercises.count) correctly.")
                                 .font(.headline)
                             Button("Back to Lessons") {
+                                HapticManager.shared.buttonTap()
                                 presentationMode.wrappedValue.dismiss()
                             }
                             .padding()
@@ -354,6 +360,7 @@ struct LessonDetailView: View {
                             .foregroundColor(.blue)
                             .cornerRadius(12)
                             Button("Review Lesson") {
+                                HapticManager.shared.buttonTap()
                                 // Just go back to the last question and let them navigate normally
                                 finished = false
                                 currentExerciseIndex = shuffledExercises.count - 1
@@ -386,14 +393,27 @@ struct LessonDetailView: View {
                             ForEach(options, id: \.self) { option in
                                     Button(action: {
                                         if !showFeedback {
+                                            // Immediate haptic feedback for responsiveness
+                                            HapticManager.shared.buttonTap()
+                                            
                                             selectedAnswer = option
                                             showFeedback = true
                                             userAnswers[currentExerciseIndex] = option
-                                        if let idx = options.firstIndex(of: option), idx == correctIdx {
+                                            
+                                            // Check if answer is correct
+                                            if let idx = options.firstIndex(of: option), idx == correctIdx {
                                                 correctCount += 1
+                                                // Success feedback for correct answer
+                                                HapticManager.shared.successNotification()
+                                            } else {
+                                                // Error feedback for incorrect answer
+                                                HapticManager.shared.errorNotification()
                                             }
-                                            // Record exercise attempt
-                                            recordExerciseAttempt(exercise: exercise, userAnswer: option)
+                                            
+                                            // Record exercise attempt (async to avoid blocking UI)
+                                            DispatchQueue.main.async {
+                                                recordExerciseAttempt(exercise: exercise, userAnswer: option)
+                                            }
                                         }
                                     }) {
                                         HStack {
@@ -428,6 +448,7 @@ struct LessonDetailView: View {
                                     // Navigation buttons (Previous and Next/Finish)
                                     HStack(spacing: 12) {
                                         Button("Previous") {
+                                            HapticManager.shared.buttonTap()
                                             if currentExerciseIndex > 0 {
                                                 currentExerciseIndex -= 1
                                                 selectedAnswer = userAnswers[currentExerciseIndex]
@@ -441,6 +462,7 @@ struct LessonDetailView: View {
                                         .foregroundColor(currentExerciseIndex == 0 ? .gray : .blue)
                                         .cornerRadius(8)
                                         Button(currentExerciseIndex < shuffledExercises.count - 1 ? "Next" : "Finish Lesson") {
+                                            HapticManager.shared.buttonTap()
                                             if currentExerciseIndex < shuffledExercises.count - 1 {
                                                 currentExerciseIndex += 1
                                                 selectedAnswer = userAnswers[currentExerciseIndex]
@@ -633,57 +655,46 @@ struct LessonDetailView: View {
 
 // Helper for wrapping vocab words
 struct WrapHStack: View {
-    let words: [String]
+    let vocabularyItems: [VocabularyItem]
     let userWords: Set<String>
-    let onTap: (String) -> Void
-    
-    private var lines: [[String]] {
-        var result: [[String]] = [[]]
-        var currentLineWidth: CGFloat = 0
-        let maxWidth: CGFloat = UIScreen.main.bounds.width - 60
-        
-        for word in words {
-            let wordWidth = word.widthOfString(usingFont: .systemFont(ofSize: 16)) + 32
-            if currentLineWidth + wordWidth > maxWidth {
-                result.append([word])
-                currentLineWidth = wordWidth
-            } else {
-                result[result.count - 1].append(word)
-                currentLineWidth += wordWidth
-            }
-        }
-        return result
-    }
+    let onTap: (VocabularyItem) -> Void
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
-                HStack(spacing: 8) {
-                    ForEach(line, id: \.self) { word in
-                        if userWords.contains(word.lowercased()) {
-                            HStack {
-                                Text(word)
-                                Image(systemName: "checkmark.circle.fill")
-                                    .foregroundColor(.green)
-                                    .font(.caption)
-                            }
-                            .padding(6)
-                            .background(Color.green.opacity(0.1))
-                            .cornerRadius(8)
-                        } else {
-                            Button(action: { onTap(word) }) {
-                                HStack {
-                                    Text(word)
-                                    Image(systemName: "plus.circle")
-                                        .foregroundColor(.blue)
-                                        .font(.caption)
-                                }
+            ForEach(vocabularyItems, id: \.id) { item in
+                if userWords.contains(item.dutchWord.lowercased()) {
+                    HStack(spacing: 4) {
+                        Text(item.dutchWord)
+                            .foregroundColor(.blue)
+                            .fontWeight(.semibold)
+                        Text("-")
+                            .foregroundColor(.secondary)
+                        Text(item.translation)
+                            .foregroundColor(.primary)
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                            .font(.caption)
+                    }
+                    .padding(6)
+                    .background(Color.green.opacity(0.1))
+                    .cornerRadius(8)
+                } else {
+                    Button(action: { onTap(item) }) {
+                        HStack(spacing: 4) {
+                            Text(item.dutchWord)
                                 .foregroundColor(.blue)
-                                .padding(6)
-                                .background(Color.blue.opacity(0.1))
-                                .cornerRadius(8)
-                            }
+                                .fontWeight(.semibold)
+                            Text("-")
+                                .foregroundColor(.secondary)
+                            Text(item.translation)
+                                .foregroundColor(.primary)
+                            Image(systemName: "plus.circle")
+                                .foregroundColor(.blue)
+                                .font(.caption)
                         }
+                        .padding(6)
+                        .background(Color.blue.opacity(0.1))
+                        .cornerRadius(8)
                     }
                 }
             }

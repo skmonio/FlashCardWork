@@ -48,7 +48,7 @@ struct AddCardView: View {
         !definition.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
     
-    init(viewModel: FlashCardViewModel, defaultDeck: Deck? = nil, initialDeckIds: [UUID]? = nil, initialWord: String? = nil) {
+    init(viewModel: FlashCardViewModel, defaultDeck: Deck? = nil, initialDeckIds: [UUID]? = nil, initialWord: String? = nil, initialDefinition: String? = nil) {
         self.viewModel = viewModel
         self.defaultDeck = defaultDeck
         self.initialDeckIds = initialDeckIds
@@ -56,6 +56,11 @@ struct AddCardView: View {
         // Pre-fill word if provided
         if let initialWord = initialWord {
             _word = State(initialValue: initialWord)
+        }
+        
+        // Pre-fill definition if provided
+        if let initialDefinition = initialDefinition {
+            _definition = State(initialValue: initialDefinition)
         }
     }
     

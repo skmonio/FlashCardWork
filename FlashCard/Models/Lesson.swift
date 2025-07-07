@@ -1,10 +1,21 @@
 import Foundation
 
+struct VocabularyItem: Identifiable, Codable, Hashable {
+    let id = UUID()
+    let dutchWord: String
+    let translation: String
+    
+    init(dutchWord: String, translation: String) {
+        self.dutchWord = dutchWord
+        self.translation = translation
+    }
+}
+
 struct Lesson: Identifiable, Codable, Hashable {
     let id: UUID
     let title: String
     let description: String
-    let vocabulary: [String] // Dutch words, linked to user's flashcards
+    let vocabulary: [VocabularyItem] // Dutch words with translations, linked to user's flashcards
     let exercises: [Exercise]
 }
 
@@ -40,7 +51,24 @@ extension Lesson {
         title: "Chapter 3.5 – Dutch Vocabulary in Context",
         description: "Practice using new Dutch words in context. Learn their meanings and test your understanding with fill-in-the-blank and word selection exercises.",
         vocabulary: [
-            "nauwelijks", "bereid", "ontzettend", "ziek", "het tijdstip", "de zekerheid", "waarderen", "aandoen", "aanvullen", "het alarm", "het best doen", "zich druk maken", "het komt niet uit", "logeren", "net zoals", "nogal", "een praatje maken", "trouwens"
+            VocabularyItem(dutchWord: "nauwelijks", translation: "hardly"),
+            VocabularyItem(dutchWord: "bereid", translation: "willing/prepared"),
+            VocabularyItem(dutchWord: "ontzettend", translation: "extremely"),
+            VocabularyItem(dutchWord: "ziek", translation: "sick"),
+            VocabularyItem(dutchWord: "het tijdstip", translation: "moment/time"),
+            VocabularyItem(dutchWord: "de zekerheid", translation: "just to be sure"),
+            VocabularyItem(dutchWord: "waarderen", translation: "to appreciate"),
+            VocabularyItem(dutchWord: "aandoen", translation: "to turn on"),
+            VocabularyItem(dutchWord: "aanvullen", translation: "to supplement"),
+            VocabularyItem(dutchWord: "het alarm", translation: "the alarm"),
+            VocabularyItem(dutchWord: "het best doen", translation: "to do one's best"),
+            VocabularyItem(dutchWord: "zich druk maken", translation: "to worry"),
+            VocabularyItem(dutchWord: "het komt niet uit", translation: "it doesn't come out"),
+            VocabularyItem(dutchWord: "logeren", translation: "to stay overnight"),
+            VocabularyItem(dutchWord: "net zoals", translation: "just like"),
+            VocabularyItem(dutchWord: "nogal", translation: "quite"),
+            VocabularyItem(dutchWord: "een praatje maken", translation: "to have a chat"),
+            VocabularyItem(dutchWord: "trouwens", translation: "by the way")
         ],
         exercises: [
             // --- New exercise types at the top ---

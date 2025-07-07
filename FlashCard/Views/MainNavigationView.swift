@@ -229,8 +229,8 @@ struct MainNavigationView: View {
     @ViewBuilder
     private func sheetView(for sheet: NavigationCoordinator.SheetType) -> some View {
         switch sheet {
-        case .addCard(let deck, let initialWord):
-            AddCardView(viewModel: viewModel, defaultDeck: deck, initialWord: initialWord)
+        case .addCard(let deck, let initialWord, let initialDefinition):
+            AddCardView(viewModel: viewModel, defaultDeck: deck, initialWord: initialWord, initialDefinition: initialDefinition)
         case .addDeck:
             AddDeckView(viewModel: viewModel)
         case .editCard(let card):

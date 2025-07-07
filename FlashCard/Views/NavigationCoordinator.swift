@@ -18,7 +18,7 @@ class NavigationCoordinator: ObservableObject {
     
     // MARK: - Sheet Types
     enum SheetType: Identifiable {
-        case addCard(deck: Deck? = nil, initialWord: String? = nil)
+        case addCard(deck: Deck? = nil, initialWord: String? = nil, initialDefinition: String? = nil)
         case addDeck
         case editCard(FlashCard)
         case moveCards([UUID], Deck?)
