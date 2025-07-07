@@ -16,7 +16,18 @@ struct LearningPathView: View {
                 title: "Learning Path",
                 showBackButton: true,
                 showProfileIcon: false,
-                onBack: { dismiss() }
+                onBack: { dismiss() },
+                trailing: {
+                    AnyView(
+                        Button(action: {
+                            NavigationCoordinator.shared.dismissToRoot()
+                        }) {
+                            Image(systemName: "house.fill")
+                                .font(.title2)
+                                .foregroundColor(.blue)
+                        }
+                    )
+                }
             )
             
             ZStack {
