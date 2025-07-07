@@ -432,6 +432,9 @@ struct GameView: View {
         displayedCards = Array(gameCards.prefix(initialCardsCount))
         remainingCards = Array(gameCards.dropFirst(initialCardsCount))
         
+        // Shuffle the displayed cards to mix up words and definitions
+        displayedCards.shuffle()
+        
         // Verify that we have complete pairs in displayed cards
         let displayedCardIds = Set(displayedCards.map { $0.originalCard.id })
         let hasCompletePairs = displayedCards.count % 2 == 0 && 
