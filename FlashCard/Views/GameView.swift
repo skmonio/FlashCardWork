@@ -503,33 +503,31 @@ struct GameView: View {
                 
                 displayedCards[index].isSelected = true
                 
-                // After a brief delay, replace the matched cards with new ones
+                // After a brief delay, mark cards as matched to fade them out
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                    // Clear selection
+                    // Clear selection and mark as matched to fade out
                     displayedCards[selectedIndex].isSelected = false
                     displayedCards[index].isSelected = false
+                    displayedCards[selectedIndex].isMatched = true
+                    displayedCards[index].isMatched = true
                     
                     // Record successful match as correct answer
                     viewModel.recordCardShown(tappedCard.originalCard.id, isCorrect: true)
                     
-                    // Immediately replace the matched cards with new ones
-                    if !remainingCards.isEmpty {
-                        // Replace first matched card
-                        let newCard1 = remainingCards.removeFirst()
-                        displayedCards[selectedIndex] = newCard1
-                        
-                        // Replace second matched card
-                        let newCard2 = remainingCards.removeFirst()
-                        displayedCards[index] = newCard2
-                        
-                        print("🧠 Replaced matched pair with new cards: \(newCard1.content) and \(newCard2.content)")
-                    } else {
-                        // No more cards to add, mark as matched and remove
-                        displayedCards[selectedIndex].isMatched = true
-                        displayedCards[index].isMatched = true
-                        
-                        // Remove matched cards after fade out
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    // After fade out animation, replace with new cards
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        if !remainingCards.isEmpty {
+                            // Replace first matched card with new card
+                            let newCard1 = remainingCards.removeFirst()
+                            displayedCards[selectedIndex] = newCard1
+                            
+                            // Replace second matched card with new card
+                            let newCard2 = remainingCards.removeFirst()
+                            displayedCards[index] = newCard2
+                            
+                            print("🧠 Replaced matched pair with new cards: \(newCard1.content) and \(newCard2.content)")
+                        } else {
+                            // No more cards to add, remove the matched cards
                             displayedCards.removeAll { $0.isMatched }
                             
                             // Check if game is complete
