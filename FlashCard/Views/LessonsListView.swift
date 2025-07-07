@@ -301,45 +301,45 @@ struct LessonDetailView: View {
                         let correctIdx = tuple.correctIndex
                         VStack(alignment: .leading, spacing: 16) {
                             // Custom UI per exercise type
-                            Text(exercise.prompt)
-                                .font(.title2)
-                                .bold()
+                                Text(exercise.prompt)
+                                    .font(.title2)
+                                    .bold()
                             ForEach(options, id: \.self) { option in
-                                Button(action: {
-                                    if !showFeedback {
-                                        selectedAnswer = option
-                                        showFeedback = true
-                                        userAnswers[currentExerciseIndex] = option
+                                    Button(action: {
+                                        if !showFeedback {
+                                            selectedAnswer = option
+                                            showFeedback = true
+                                            userAnswers[currentExerciseIndex] = option
                                         if let idx = options.firstIndex(of: option), idx == correctIdx {
-                                            correctCount += 1
+                                                correctCount += 1
+                                            }
+                                            // Record exercise attempt
+                                            recordExerciseAttempt(exercise: exercise, userAnswer: option)
                                         }
-                                        // Record exercise attempt
-                                        recordExerciseAttempt(exercise: exercise, userAnswer: option)
-                                    }
-                                }) {
-                                    HStack {
-                                        Text(option)
-                                            .font(.body)
-                                            .foregroundColor(.primary)
-                                        Spacer()
-                                        if showFeedback {
+                                    }) {
+                                        HStack {
+                                            Text(option)
+                                                .font(.body)
+                                                .foregroundColor(.primary)
+                                            Spacer()
+                                            if showFeedback {
                                             if let idx = options.firstIndex(of: option), idx == correctIdx {
-                                                Image(systemName: "checkmark.circle.fill").foregroundColor(.green)
+                                                    Image(systemName: "checkmark.circle.fill").foregroundColor(.green)
                                             } else if option == selectedAnswer && options.firstIndex(of: option) != correctIdx {
-                                                Image(systemName: "xmark.circle.fill").foregroundColor(.red)
+                                                    Image(systemName: "xmark.circle.fill").foregroundColor(.red)
+                                                }
                                             }
                                         }
-                                    }
-                                    .padding()
-                                    .background(
-                                        showFeedback ?
+                                        .padding()
+                                        .background(
+                                            showFeedback ?
                                             ((options.firstIndex(of: option) == correctIdx) ? Color.green.opacity(0.15) :
-                                                (option == selectedAnswer ? Color.red.opacity(0.15) : Color(.systemGray6))) :
-                                            Color(.systemGray6)
-                                    )
-                                    .cornerRadius(8)
-                                }
-                                .disabled(showFeedback)
+                                                    (option == selectedAnswer ? Color.red.opacity(0.15) : Color(.systemGray6))) :
+                                                Color(.systemGray6)
+                                        )
+                                        .cornerRadius(8)
+                                    }
+                                    .disabled(showFeedback)
                             }
                             if showFeedback {
                                 VStack(alignment: .leading, spacing: 8) {

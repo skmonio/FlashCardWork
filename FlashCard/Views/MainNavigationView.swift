@@ -441,32 +441,32 @@ struct HomeContentView: View {
                     Button(action: {
                         navigationCoordinator.push(NavigationDestination.dutchGrammar)
                     }) {
-                        HStack {
-                            Image(systemName: "book.pages.fill")
-                                .font(.title2)
-                                .foregroundStyle(
-                                    LinearGradient(
-                                        colors: [.blue, .purple],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
+                            HStack {
+                                Image(systemName: "book.pages.fill")
+                                    .font(.title2)
+                                    .foregroundStyle(
+                                        LinearGradient(
+                                            colors: [.blue, .purple],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
                                     )
-                                )
-                                .frame(width: 30)
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Dutch Grammar")
-                                    .font(.body)
-                                    .foregroundColor(.primary)
-                                Text("A1-B1 Grammar Rules")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
+                                    .frame(width: 30)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Dutch Grammar")
+                                        .font(.body)
+                                        .foregroundColor(.primary)
+                                    Text("A1-B1 Grammar Rules")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                                Spacer()
                             }
-                            Spacer()
-                        }
-                        .padding()
-                        .frame(maxWidth: .infinity)
-                        .background(Color(.secondarySystemGroupedBackground))
-                        .cornerRadius(12)
-                        .shadow(color: .blue.opacity(0.2), radius: 3, x: 0, y: 1)
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .background(Color(.secondarySystemGroupedBackground))
+                            .cornerRadius(12)
+                            .shadow(color: .blue.opacity(0.2), radius: 3, x: 0, y: 1)
                     }
                 }
             }

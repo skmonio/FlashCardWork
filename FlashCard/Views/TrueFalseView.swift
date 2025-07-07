@@ -26,7 +26,7 @@ struct TrueFalseQuestion: Hashable {
 
 struct TrueFalseView: View {
     @ObservedObject var viewModel: FlashCardViewModel
-    let cards: [FlashCard]
+    @State private var cards: [FlashCard]
     @Environment(\.dismiss) private var dismiss
     
     @State private var currentQuestion: TrueFalseQuestion?
@@ -38,6 +38,7 @@ struct TrueFalseView: View {
     @State private var currentIndex = 0
     @State private var correctAnswers = 0
     @State private var incorrectAnswers = 0
+    @State private var incorrectCards: Set<UUID> = [] // Track which cards were answered incorrectly
     @State private var showingCloseConfirmation = false
     @State private var isShowingExample = false
     
@@ -112,7 +113,7 @@ struct TrueFalseView: View {
             sortedCards = viewModel.sortCardsForLearning(cards)
         }
         
-        self.cards = sortedCards
+        self._cards = State(initialValue: sortedCards)
         _remainingCards = State(initialValue: sortedCards)
         self.deckIds = deckIds
         self.shouldLoadSaveState = shouldLoadSaveState
@@ -352,10 +353,10 @@ struct TrueFalseView: View {
                                 .cornerRadius(10)
                             }
 
-                            // Show Next button only if user has gone back and is not on the latest question
-                            if hasGoneBack && currentIndex < maxProgressIndex {
+                            // Show Next button after answering a question
+                            if hasAnswered {
                                 Button(action: {
-                                    goToNextQuestion()
+                                    setupNextQuestion()
                                 }) {
                                     HStack {
                                         Text("Next")
@@ -412,6 +413,14 @@ struct TrueFalseView: View {
                                 Text("Correct!")
                                     .font(.headline)
                                     .foregroundColor(.green)
+                                
+                                // Show additional context when user correctly answers "False"
+                                if !question.isCorrect {
+                                    Text("That's because the correct word is: \(question.originalCard.definition)")
+                                        .font(.subheadline)
+                                        .foregroundColor(.secondary)
+                                        .multilineTextAlignment(.center)
+                                }
                             }
                             .transition(.opacity.combined(with: .scale))
                         }
@@ -479,7 +488,8 @@ struct TrueFalseView: View {
                         resetGame()
                     },
                     onReviewUnknown: {
-                        // For True/False mode, just play again (don't retest only incorrect ones)
+                        // Filter cards to only incorrect ones and restart
+                        cards = cards.filter { incorrectCards.contains($0.id) }
                         resetGame()
                     },
                     onDone: {
@@ -650,6 +660,8 @@ struct TrueFalseView: View {
             viewModel.updateCardWithSRSData(updatedCard)
         } else {
             incorrectAnswers += 1
+            // Track which card was answered incorrectly
+            incorrectCards.insert(question.originalCard.id)
             
             // Show SpriteKit error effect instead of text
             let centerPoint = CGPoint(x: gameScene.size.width / 2, y: gameScene.size.height / 2)
@@ -725,59 +737,7 @@ struct TrueFalseView: View {
             return // Exit immediately, don't show next question
         }
         
-        // Clear feedback and show next question after delay (only for normal mode)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
-            // Reset feedback state
-            hasAnswered = false
-            showingFeedback = false
-            userAnswer = nil
-            
-            if remainingCards.isEmpty {
-                // End session tracking
-                if var session = currentSession {
-                    session.knownCards = correctAnswers
-                    session.unknownCards = incorrectAnswers
-                    session.skippedCards = 0 // No skipped cards in True/False mode
-                    session.endTime = Date()
-                    session.duration = session.endTime!.timeIntervalSince(session.startTime)
-                    statsManager.endSession(
-                        session,
-                        knownCards: correctAnswers,
-                        unknownCards: incorrectAnswers,
-                        skippedCards: 0
-                    )
-                    currentSession = session
-                }
-                
-                // Clear saved progress since game is complete
-                clearSavedProgress()
-                HapticManager.shared.gameComplete()
-                
-                // Call level completion callback if this is a progressive study session
-                if let onLevelComplete = onLevelComplete {
-                    let levelNumber: Int
-                    switch studyMode {
-                    case .maintenance: levelNumber = 1
-                    case .cram: levelNumber = 2
-                    case .adaptive: levelNumber = 3
-                    default: levelNumber = 1
-                    }
-                    
-                    let result = LevelResult(
-                        level: levelNumber,
-                        score: score,
-                        total: questionsAnswered
-                    )
-                    onLevelComplete(result)
-                } else {
-                    withAnimation {
-                        StreakManager.shared.recordGameCompletion(); showingResults = true
-                    }
-                }
-            } else {
-                setupNextQuestion()
-            }
-        }
+        // Don't automatically move to next question - let user review and click Next
     }
     
     private func resetGame() {
@@ -786,6 +746,7 @@ struct TrueFalseView: View {
         questionsAnswered = 0
         correctAnswers = 0
         incorrectAnswers = 0
+        incorrectCards.removeAll() // Reset incorrect cards tracking
         showingResults = false
         isShowingExample = false
         hasAnswered = false
@@ -914,6 +875,7 @@ struct TrueFalseView: View {
         questionsAnswered = 0
         correctAnswers = 0
         incorrectAnswers = 0
+        incorrectCards.removeAll() // Reset incorrect cards tracking
         showingResults = false
         currentIndex = 0
         setupNextQuestion(incrementIndex: false)

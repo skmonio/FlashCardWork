@@ -19,6 +19,9 @@ struct ProgressiveStudyView: View {
     @State private var showingFinalResults = false
     @State private var showingLevelCompletion = false
     
+    // Track used cards to prevent repetition between levels
+    @State private var usedCardIds: Set<UUID> = []
+    
     private let totalLevels = 3
     private let questionsPerLevel = 10
     
@@ -132,6 +135,10 @@ struct ProgressiveStudyView: View {
                 studyMode: studyModeForLevel(),
                 maxQuestions: questionsPerLevel,
                 onLevelComplete: { result in
+                    // Mark the cards used in this level
+                    let levelCards = getCardsForLevel()
+                    markLevelCardsAsUsed(levelCards)
+                    
                     levelResults.append(result)
                     
                     if currentLevel < totalLevels {
@@ -152,6 +159,10 @@ struct ProgressiveStudyView: View {
                 studyMode: studyModeForLevel(),
                 maxQuestions: questionsPerLevel,
                 onLevelComplete: { result in
+                    // Mark the cards used in this level
+                    let levelCards = getCardsForLevel()
+                    markLevelCardsAsUsed(levelCards)
+                    
                     levelResults.append(result)
                     
                     if currentLevel < totalLevels {
@@ -172,6 +183,10 @@ struct ProgressiveStudyView: View {
                 studyMode: studyModeForLevel(),
                 maxQuestions: questionsPerLevel,
                 onLevelComplete: { result in
+                    // Mark the cards used in this level
+                    let levelCards = getCardsForLevel()
+                    markLevelCardsAsUsed(levelCards)
+                    
                     levelResults.append(result)
                     
                     if currentLevel < totalLevels {
@@ -192,6 +207,10 @@ struct ProgressiveStudyView: View {
                 studyMode: studyModeForLevel(),
                 maxQuestions: questionsPerLevel,
                 onLevelComplete: { result in
+                    // Mark the cards used in this level
+                    let levelCards = getCardsForLevel()
+                    markLevelCardsAsUsed(levelCards)
+                    
                     levelResults.append(result)
                     
                     if currentLevel < totalLevels {
@@ -212,6 +231,10 @@ struct ProgressiveStudyView: View {
                 studyMode: studyModeForLevel(),
                 maxQuestions: questionsPerLevel,
                 onLevelComplete: { result in
+                    // Mark the cards used in this level
+                    let levelCards = getCardsForLevel()
+                    markLevelCardsAsUsed(levelCards)
+                    
                     levelResults.append(result)
                     
                     if currentLevel < totalLevels {
@@ -327,6 +350,7 @@ struct ProgressiveStudyView: View {
                         currentLevel = 1
                         levelResults = []
                         showingFinalResults = false
+                        resetUsedCards() // Reset used cards for new session
                         isStartingLevel = true
                     }) {
                         HStack {
@@ -429,6 +453,14 @@ struct ProgressiveStudyView: View {
     }
     
     // MARK: - Helper Methods
+    private func markLevelCardsAsUsed(_ cards: [FlashCard]) {
+        usedCardIds.formUnion(cards.map { $0.id })
+    }
+    
+    private func resetUsedCards() {
+        usedCardIds.removeAll()
+    }
+    
     private func levelColor(for level: Int) -> Color {
         switch level {
         case 1: return .green
@@ -448,9 +480,35 @@ struct ProgressiveStudyView: View {
     }
     
     private func getCardsForLevel() -> [FlashCard] {
-        // For now, return all cards. In a full implementation,
-        // this would filter based on the study mode and user's learning history
-        return viewModel.flashCards
+        // Filter out cards that have already been used in previous levels
+        let availableCards = viewModel.flashCards.filter { !usedCardIds.contains($0.id) }
+        
+        // Apply study mode filtering based on current level
+        let filteredCards: [FlashCard]
+        switch currentLevel {
+        case 1: // Maintenance mode - cards with 70-90% learning percentage
+            filteredCards = availableCards.filter { card in
+                let percentage = card.learningPercentage ?? 0
+                return percentage >= 70 && percentage <= 90
+            }
+        case 2: // Cram mode - all available cards
+            filteredCards = availableCards
+        case 3: // Adaptive mode - struggling cards (< 70% or consecutive incorrect)
+            filteredCards = availableCards.filter { card in
+                let percentage = card.learningPercentage ?? 0
+                return percentage < 70 || card.consecutiveIncorrect > 0
+            }
+        default:
+            filteredCards = availableCards
+        }
+        
+        // If we don't have enough cards for the specific mode, fall back to all available cards
+        if filteredCards.count < questionsPerLevel {
+            return Array(availableCards.prefix(questionsPerLevel))
+        }
+        
+        // Return the first 10 cards for this level
+        return Array(filteredCards.prefix(questionsPerLevel))
     }
     
     private func difficultyForLevel(_ level: Int) -> MemoryGameDifficulty {

@@ -163,10 +163,7 @@ struct TestView: View {
             // Record learning statistics - card was shown and answered correctly/incorrectly
             viewModel.recordCardShown(currentCard.id, isCorrect: isCorrect)
             
-            // Automatically move to next question after a short delay
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                moveToNextQuestion()
-            }
+            // Don't automatically move to next question - let user review and click Next
         }
     }
     
@@ -466,10 +463,10 @@ struct TestView: View {
                         .cornerRadius(10)
                     }
 
-                    // Show Next button only if user has gone back and is not on the latest question
-                    if hasGoneBack && currentIndex < maxProgressIndex {
+                    // Show Next button after answering a question
+                    if hasAnswered {
                         Button(action: {
-                            goToNextQuestion()
+                            moveToNextQuestion()
                         }) {
                             HStack {
                                 Text("Next")
@@ -537,7 +534,8 @@ struct TestView: View {
                         resetTest()
                     },
                     onReviewUnknown: {
-                        // For test mode, just retest all cards (don't retest only incorrect ones)
+                        // Filter cards to only incorrect ones and restart
+                        cards = cards.filter { incorrectCards.contains($0.id) }
                         resetTest()
                     },
                     onDone: {

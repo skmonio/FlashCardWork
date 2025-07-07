@@ -33,6 +33,12 @@ struct WordScrambleView: View {
     private var deckIds: [UUID]
     private var shouldLoadSaveState: Bool
     
+    // Track answer history for navigation
+    @State private var answerHistory: [Int: [UUID]] = [:] // Save selected chunk IDs
+    @State private var hasAnsweredHistory: [Int: Bool] = [:]
+    @State private var isCorrectHistory: [Int: Bool] = [:]
+    @State private var wordChunksHistory: [Int: [WordChunk]] = [:]
+    
     // Computed property to check if there's significant progress to save
     private var hasSignificantProgress: Bool {
         return currentIndex > 0 || totalAnswers > 0
@@ -161,49 +167,61 @@ struct WordScrambleView: View {
                         content: card.definition,
                         showArticle: false
                     )
-                    
-                    // Button row: Clear and Submit (matching WritingView style)
-                    if !hasAnswered {
-                        HStack(spacing: 12) {
-                            // Clear button
-                            Button(action: {
-                                clearSelection()
-                                HapticManager.shared.lightImpact()
-                            }) {
-                                Text("Clear")
-                                    .font(.subheadline)
-                                    .foregroundColor(.orange)
-                                    .padding(.horizontal, 16)
-                                    .padding(.vertical, 8)
-                                    .background(Color.orange.opacity(0.1))
-                                    .cornerRadius(8)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .stroke(Color.orange, lineWidth: 1)
-                                    )
-                            }
-                            .disabled(selectedChunks.isEmpty)
-                            
-                            // Submit button
-                            Button(action: checkAnswer) {
-                                Text("Submit")
-                                    .font(.subheadline)
-                                    .foregroundColor(.white)
-                                    .padding(.horizontal, 16)
-                                    .padding(.vertical, 8)
-                                    .background(selectedChunks.isEmpty ? Color.gray : Color.green)
-                                    .cornerRadius(8)
-                            }
-                            .disabled(selectedChunks.isEmpty)
+                    .onTapGesture(count: 2) {
+                        // Double tap to show/hide example
+                        HapticManager.shared.lightImpact()
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            // Example functionality could be added here
                         }
                     }
+                    .onTapGesture(count: 1) {
+                        // Single tap for audio
+                        speakCurrentWord()
+                        HapticManager.shared.lightImpact()
+                    }
+                    
+                    // Navigation buttons below the card
+                    HStack(spacing: 12) {
+                        // Show Back button only after first card
+                        if currentIndex > 0 {
+                            Button(action: {
+                                goToPreviousQuestion()
+                            }) {
+                                HStack {
+                                    Image(systemName: "arrow.left.circle")
+                                    Text("Back")
+                                }
+                                .font(.subheadline)
+                                .foregroundColor(.blue)
+                                .padding(.horizontal, 20)
+                                .padding(.vertical, 10)
+                                .background(Color.blue.opacity(0.08))
+                                .cornerRadius(10)
+                            }
+                        }
+
+                        // Show Next button after answering
+                        if hasAnswered {
+                            Button(action: {
+                                nextCard()
+                            }) {
+                                HStack {
+                                    Text("Next")
+                                    Image(systemName: "arrow.right.circle")
+                                }
+                                .font(.subheadline)
+                                .foregroundColor(.blue)
+                                .padding(.horizontal, 20)
+                                .padding(.vertical, 10)
+                                .background(Color.blue.opacity(0.08))
+                                .cornerRadius(10)
+                            }
+                        }
+                    }
+                    .padding(.top, 8)
                     
                     // Answer area (selected chunks display)
                     VStack(spacing: 15) {
-                        Text("Answer")
-                            .font(.headline)
-                            .foregroundColor(.secondary)
-                        
                         HStack(spacing: 8) {
                             ForEach(selectedChunks) { chunk in
                                 ChunkView(chunk: chunk, isSelected: true, disabled: hasAnswered) {
@@ -230,10 +248,6 @@ struct WordScrambleView: View {
                     
                     // Available chunks section
                     VStack(spacing: 15) {
-                        Text("Tap pieces below")
-                            .font(.headline)
-                            .foregroundColor(.secondary)
-                        
                         LazyVGrid(columns: [
                             GridItem(.flexible()),
                             GridItem(.flexible()),
@@ -314,16 +328,24 @@ struct WordScrambleView: View {
         setupCurrentWord()
     }
     
-    private func setupCurrentWord() {
+    private func setupCurrentWord(resetState: Bool = true) {
         guard let card = currentCard else { return }
         
-        // Reset state
-        selectedChunks.removeAll()
-        hasAnswered = false
-        isCorrect = nil
+        // Only reset state if requested (for new questions, not when going back)
+        if resetState {
+            selectedChunks.removeAll()
+            hasAnswered = false
+            isCorrect = nil
+        }
         
         // Break word into chunks of 2-4 characters
         wordChunks = createWordChunks(from: card.word)
+        
+        // Save word chunks to history for navigation (only if not already saved)
+        if wordChunksHistory[currentIndex] == nil {
+            wordChunksHistory[currentIndex] = wordChunks
+            print("🔤 Saved word chunks for index \(currentIndex): \(wordChunks.map { $0.text })")
+        }
     }
     
     private func createWordChunks(from word: String) -> [WordChunk] {
@@ -401,14 +423,6 @@ struct WordScrambleView: View {
         HapticManager.shared.lightImpact()
     }
     
-    private func clearSelection() {
-        // Prevent interaction after answer has been submitted
-        guard !hasAnswered else { return }
-        
-        selectedChunks.removeAll()
-        HapticManager.shared.lightImpact()
-    }
-    
     private func checkAnswer() {
         guard let card = currentCard else { return }
         
@@ -419,6 +433,12 @@ struct WordScrambleView: View {
         isCorrect = correct
         hasAnswered = true
         totalAnswers += 1
+        
+        // Save answer state for navigation
+        answerHistory[currentIndex] = selectedChunks.map { $0.id }
+        hasAnsweredHistory[currentIndex] = true
+        isCorrectHistory[currentIndex] = correct
+        print("🔤 Saved answer history for index \(currentIndex): \(selectedChunks.map { $0.text })")
         
         if correct {
             correctAnswers += 1
@@ -486,7 +506,38 @@ struct WordScrambleView: View {
         
         if currentIndex < cards.count - 1 {
             currentIndex += 1
-            setupCurrentWord()
+            print("🔤 Moving forward to question \(currentIndex)")
+            
+            // Check if we have history for this question (i.e., we've been here before)
+            if let previousAnswer = answerHistory[currentIndex] {
+                print("🔤 Found existing history for index \(currentIndex), restoring state")
+                
+                // Restore the exact word chunks from history
+                if let previousChunks = wordChunksHistory[currentIndex] {
+                    print("🔤 Restoring word chunks for index \(currentIndex): \(previousChunks.map { $0.text })")
+                    wordChunks = previousChunks
+                    
+                    // Reconstruct selected chunks using the restored chunks and saved IDs
+                    selectedChunks = previousAnswer.compactMap { savedID in
+                        wordChunks.first { $0.id == savedID }
+                    }
+                    print("🔤 Reconstructed selected chunks: \(selectedChunks.map { $0.text })")
+                } else {
+                    // Fallback if chunks not in history
+                    setupCurrentWord(resetState: false)
+                    selectedChunks = []
+                }
+                
+                hasAnswered = hasAnsweredHistory[currentIndex] ?? false
+                isCorrect = isCorrectHistory[currentIndex]
+            } else {
+                print("🔤 No history for index \(currentIndex), creating fresh state")
+                // This is a new question, reset state completely
+                selectedChunks.removeAll()
+                hasAnswered = false
+                isCorrect = nil
+                setupCurrentWord()
+            }
         } else {
             // Clear saved progress since game is complete
             clearSavedProgress()
@@ -498,6 +549,12 @@ struct WordScrambleView: View {
     private func resetGame() {
         cards = viewModel.sortCardsForLearning(cards)
         setupGame()
+        
+        // Clear answer history
+        answerHistory.removeAll()
+        hasAnsweredHistory.removeAll()
+        isCorrectHistory.removeAll()
+        wordChunksHistory.removeAll()
         
         // Clear any saved progress when resetting
         clearSavedProgress()
@@ -624,18 +681,9 @@ struct WordScrambleView: View {
                                 Text("Correct answer:")
                                     .foregroundColor(.secondary)
                                 Spacer()
-                                
-                                VStack(spacing: 2) {
-                                    if !card.article.isEmpty {
-                                        Text(card.article)
-                                            .font(.caption2)
-                                            .foregroundColor(.blue)
-                                            .bold()
-                                    }
-                                    Text(card.word)
-                                        .foregroundColor(.green)
-                                        .bold()
-                                }
+                                Text(card.word)
+                                    .foregroundColor(.green)
+                                    .bold()
                             }
                         }
                         .padding()
@@ -643,17 +691,6 @@ struct WordScrambleView: View {
                         .cornerRadius(8)
                     }
                 }
-            }
-            
-            // Next button
-            Button(action: nextCard) {
-                Text(currentIndex < cards.count - 1 ? "Next Word" : "Finish")
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.blue)
-                    .cornerRadius(10)
             }
         }
     }
@@ -663,6 +700,45 @@ struct WordScrambleView: View {
             showingCloseConfirmation = true
         } else {
             dismissToRoot()
+        }
+    }
+    
+    private func goToPreviousQuestion() {
+        if currentIndex > 0 {
+            currentIndex -= 1
+            print("🔤 Going back to question \(currentIndex)")
+            
+            // Restore answer state from history
+            if let previousAnswer = answerHistory[currentIndex] {
+                print("🔤 Found answer history for index \(currentIndex): \(previousAnswer)")
+                
+                // Restore the exact word chunks from history
+                if let previousChunks = wordChunksHistory[currentIndex] {
+                    print("🔤 Restoring word chunks for index \(currentIndex): \(previousChunks.map { $0.text })")
+                    wordChunks = previousChunks
+                    
+                    // Now reconstruct selected chunks using the restored chunks and saved IDs
+                    selectedChunks = previousAnswer.compactMap { savedID in
+                        wordChunks.first { $0.id == savedID }
+                    }
+                    print("🔤 Reconstructed selected chunks: \(selectedChunks.map { $0.text })")
+                } else {
+                    print("🔤 No word chunks history for index \(currentIndex), creating new ones")
+                    // Fallback: recreate chunks if not in history
+                    setupCurrentWord(resetState: false)
+                    selectedChunks = []
+                }
+                
+                hasAnswered = hasAnsweredHistory[currentIndex] ?? false
+                isCorrect = isCorrectHistory[currentIndex]
+            } else {
+                print("🔤 No answer history for index \(currentIndex), resetting state")
+                // No history for this question, reset state and create new chunks
+                selectedChunks = []
+                hasAnswered = false
+                isCorrect = nil
+                setupCurrentWord(resetState: false)
+            }
         }
     }
 }
