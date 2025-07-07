@@ -361,12 +361,18 @@ struct GameView: View {
                     Spacer()
                     
                     LazyVGrid(columns: columns, spacing: 16) {
-                        ForEach(0..<displayedCards.count, id: \.self) { index in
-                            MemoryGameCardView(card: displayedCards[index]) {
-                                cardTapped(displayedCards[index])
+                        ForEach(0..<10, id: \.self) { index in
+                            if index < displayedCards.count {
+                                MemoryGameCardView(card: displayedCards[index]) {
+                                    cardTapped(displayedCards[index])
+                                }
+                                .opacity(displayedCards[index].isMatched ? 0 : 1)
+                                .animation(.easeInOut(duration: 0.3), value: displayedCards[index].isMatched)
+                            } else {
+                                // Empty space to maintain grid layout
+                                Color.clear
+                                    .frame(height: 70)
                             }
-                            .opacity(displayedCards[index].isMatched ? 0 : 1)
-                            .animation(.easeInOut(duration: 0.3), value: displayedCards[index].isMatched)
                         }
                     }
                     .padding(.horizontal, 32)
@@ -408,10 +414,10 @@ struct GameView: View {
         // Shuffle the cards
         gameCards.shuffle()
 
-        // Show all available cards (dynamic based on user selection)
-        displayedCards = gameCards
-        remainingCards = [] // No more fade-in logic
-        print("🧠 Showing all \(displayedCards.count / 2) pairs (\(displayedCards.count) cards)")
+        // Show first 10 cards (5 pairs) initially
+        displayedCards = Array(gameCards.prefix(10))
+        remainingCards = Array(gameCards.dropFirst(10))
+        print("🧠 Showing first 5 pairs (\(displayedCards.count) cards), \(remainingCards.count) remaining")
 
         // Reset game state
         score = 0
@@ -423,7 +429,7 @@ struct GameView: View {
 
         // Set up timer based on difficulty and number of cards
         let timePerCardSet = difficulty.timePerCardSet
-        timeRemaining = displayedCards.count * timePerCardSet
+        timeRemaining = gameCards.count * timePerCardSet
 
         // Start timer
         startTimer()
@@ -449,7 +455,54 @@ struct GameView: View {
     }
     
     private func replaceMatchedCards() {
-        // No-op: all cards are shown at once in progressive mode
+        // Find indices of matched cards
+        let matchedIndices = displayedCards.enumerated().compactMap { index, card in
+            card.isMatched ? index : nil
+        }
+        
+        // Remove matched cards and add new ones from remaining cards
+        for index in matchedIndices.sorted(by: >) {
+            if !remainingCards.isEmpty {
+                // Replace matched card with new card from remaining cards
+                let newCard = remainingCards.removeFirst()
+                displayedCards[index] = newCard
+                print("🧠 Replaced matched card at index \(index) with new card: \(newCard.content)")
+            } else {
+                // No more cards to add, remove the matched card
+                displayedCards.remove(at: index)
+                print("🧠 Removed matched card at index \(index) - no more cards remaining")
+            }
+        }
+        
+        // Check if game is complete (no more cards to play)
+        if remainingCards.isEmpty && displayedCards.allSatisfy({ $0.isMatched }) {
+            // Stop the timer
+            stopTimer()
+            
+            // Clear saved progress since game is complete
+            clearSavedProgress()
+            
+            // Call level completion callback if this is a progressive study session
+            if let onLevelComplete = onLevelComplete {
+                let levelNumber: Int
+                switch studyMode {
+                case .maintenance: levelNumber = 1
+                case .cram: levelNumber = 2
+                case .adaptive: levelNumber = 3
+                default: levelNumber = 1
+                }
+                
+                let result = LevelResult(
+                    level: levelNumber,
+                    score: score,
+                    total: maxQuestions ?? cards.count
+                )
+                onLevelComplete(result)
+            } else {
+                StreakManager.shared.recordGameCompletion()
+                showingResults = true
+            }
+        }
     }
     
     private func cardTapped(_ tappedCard: Card) {
@@ -515,36 +568,6 @@ struct GameView: View {
                     // Replace matched cards after fade out
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                         replaceMatchedCards()
-                        
-                        // Check if this was the last pair
-                        let unmatchedCards = displayedCards.filter { !$0.isMatched }
-                        if unmatchedCards.isEmpty && remainingCards.isEmpty {
-                            // Stop the timer
-                            stopTimer()
-                            
-                            // Clear saved progress since game is complete
-                            clearSavedProgress()
-                            
-                            // Call level completion callback if this is a progressive study session
-                            if let onLevelComplete = onLevelComplete {
-                                let levelNumber: Int
-                                switch studyMode {
-                                case .maintenance: levelNumber = 1
-                                case .cram: levelNumber = 2
-                                case .adaptive: levelNumber = 3
-                                default: levelNumber = 1
-                                }
-                                
-                                let result = LevelResult(
-                                    level: levelNumber,
-                                    score: score,
-                                    total: maxQuestions ?? cards.count
-                                )
-                                onLevelComplete(result)
-                            } else {
-                                StreakManager.shared.recordGameCompletion(); showingResults = true
-                            }
-                        }
                     }
                 }
             } else {
