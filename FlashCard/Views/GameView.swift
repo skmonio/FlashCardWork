@@ -527,11 +527,13 @@ struct GameView: View {
                             
                             print("🧠 Replaced matched pair with new cards: \(newCard1.content) and \(newCard2.content)")
                         } else {
-                            // No more cards to add, remove the matched cards
-                            displayedCards.removeAll { $0.isMatched }
+                            // No more cards to add, keep matched cards in place but invisible
+                            // Don't remove them to maintain grid layout
+                            print("🧠 No more cards remaining, keeping matched cards in place")
                             
-                            // Check if game is complete
-                            if displayedCards.isEmpty {
+                            // Check if game is complete (all cards are matched)
+                            let allCardsMatched = displayedCards.allSatisfy { $0.isMatched }
+                            if allCardsMatched {
                                 // Stop the timer
                                 stopTimer()
                                 
