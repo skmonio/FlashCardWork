@@ -361,18 +361,12 @@ struct GameView: View {
                     Spacer()
                     
                     LazyVGrid(columns: columns, spacing: 16) {
-                        ForEach(0..<10) { index in
-                            if index < displayedCards.count {
-                                MemoryGameCardView(card: displayedCards[index]) {
-                                    cardTapped(displayedCards[index])
-                                }
-                                .opacity(displayedCards[index].isMatched ? 0 : 1)
-                                .animation(.easeInOut(duration: 0.3), value: displayedCards[index].isMatched)
-                            } else {
-                                // Empty space to maintain grid
-                                Color.clear
-                                    .frame(height: 70)
+                        ForEach(0..<displayedCards.count, id: \.self) { index in
+                            MemoryGameCardView(card: displayedCards[index]) {
+                                cardTapped(displayedCards[index])
                             }
+                            .opacity(displayedCards[index].isMatched ? 0 : 1)
+                            .animation(.easeInOut(duration: 0.3), value: displayedCards[index].isMatched)
                         }
                     }
                     .padding(.horizontal, 32)
@@ -414,10 +408,10 @@ struct GameView: View {
         // Shuffle the cards
         gameCards.shuffle()
 
-        // Show all 20 cards (10 pairs) at once
-        displayedCards = Array(gameCards.prefix(20))
+        // Show all available cards (dynamic based on user selection)
+        displayedCards = gameCards
         remainingCards = [] // No more fade-in logic
-        print("🧠 Showing all 10 pairs (\(displayedCards.count) cards)")
+        print("🧠 Showing all \(displayedCards.count / 2) pairs (\(displayedCards.count) cards)")
 
         // Reset game state
         score = 0
