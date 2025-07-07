@@ -19,22 +19,16 @@ struct LessonsListView: View {
                 title: "Dutch Lessons",
                 showBackButton: true,
                 showProfileIcon: false,
-                onBack: { dismiss() },
-                trailing: {
-                    AnyView(
-                        Button(action: {
-                            NavigationCoordinator.shared.dismissToRoot()
-                        }) {
-                            Image(systemName: "house.fill")
-                                .font(.title2)
-                                .foregroundColor(.blue)
-                        }
-                    )
-                }
+                onBack: { dismiss() }
             )
             
             ScrollView {
                 VStack(spacing: 24) {
+                    // Continue Lesson Section (if there's a saved state)
+                    if SaveStateManager.shared.hasSaveState(gameType: .lesson) {
+                        continueLessonSection
+                    }
+                    
                     // Learning Path Section
                     learningPathSection
                     
@@ -136,7 +130,7 @@ struct LessonsListView: View {
             
             LazyVStack(spacing: 12) {
                 ForEach(lessonManager.lessons.filter { $0.title != "Chapter 3.5 – Dutch Vocabulary in Context" }) { lesson in
-                    NavigationLink(destination: LessonDetailView(lesson: lesson, completedLessons: $completedLessons, viewModel: viewModel)) {
+                    NavigationLink(destination: LessonDetailView(lesson: lesson, completedLessons: $completedLessons, viewModel: viewModel, shouldLoadSaveState: SaveStateManager.shared.hasSaveState(gameType: .lesson))) {
                         HStack {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(lesson.title)
@@ -175,6 +169,65 @@ struct LessonsListView: View {
             }
         }
     }
+    
+    private var continueLessonSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Continue Lesson")
+                .font(.title2)
+                .fontWeight(.bold)
+            
+            if let savedState = SaveStateManager.shared.loadGameState(gameType: .lesson, as: LessonGameState.self),
+               let lesson = lessonManager.lesson(withId: savedState.lessonId) {
+                NavigationLink(destination: LessonDetailView(lesson: lesson, completedLessons: $completedLessons, viewModel: viewModel, shouldLoadSaveState: true)) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Image(systemName: "graduationcap.fill")
+                                    .foregroundColor(.blue)
+                                Text(savedState.lessonTitle)
+                                    .font(.headline)
+                                    .foregroundColor(.primary)
+                            }
+                            
+                            HStack {
+                                Text("Progress: \(savedState.currentExerciseIndex + 1)/\(savedState.shuffledExercises.count)")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                                
+                                Spacer()
+                                
+                                Text("Score: \(savedState.correctCount)/\(savedState.shuffledExercises.count)")
+                                    .font(.subheadline)
+                                    .foregroundColor(.green)
+                            }
+                            
+                            if let savedAt = SaveStateManager.shared.getSaveStateInfo(gameType: .lesson) {
+                                Text("Saved \(timeAgoString(from: savedAt))")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        
+                        Spacer()
+                        
+                        Image(systemName: "play.circle.fill")
+                            .font(.title2)
+                            .foregroundColor(.blue)
+                    }
+                    .padding()
+                    .background(Color(.secondarySystemGroupedBackground))
+                    .cornerRadius(12)
+                }
+                .buttonStyle(PlainButtonStyle())
+            }
+        }
+    }
+    
+    private func timeAgoString(from date: Date) -> String {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .abbreviated
+        return formatter.localizedString(for: date, relativeTo: Date())
+    }
 }
 
 struct LessonDetailView: View {
@@ -201,6 +254,14 @@ struct LessonDetailView: View {
 
     // New: Shuffled exercises and options
     @State private var shuffledExercises: [(exercise: Exercise, shuffledOptions: [String], correctIndex: Int)] = []
+    
+    // Save state properties
+    private var shouldLoadSaveState: Bool = false
+    
+    // Computed property to check if there's significant progress to save
+    private var hasSignificantProgress: Bool {
+        return started && !finished && (currentExerciseIndex > 0 || !userAnswers.isEmpty)
+    }
 
     var filteredExercises: [Exercise] {
         lesson.exercises
@@ -209,6 +270,13 @@ struct LessonDetailView: View {
     // Count of completed questions (questions that have been answered)
     var completedQuestions: Int {
         userAnswers.count
+    }
+    
+    init(lesson: Lesson, completedLessons: Binding<[UUID: Int]>, viewModel: FlashCardViewModel, shouldLoadSaveState: Bool = false) {
+        self.lesson = lesson
+        self._completedLessons = completedLessons
+        self.viewModel = viewModel
+        self.shouldLoadSaveState = shouldLoadSaveState
     }
     
     var body: some View {
@@ -223,17 +291,6 @@ struct LessonDetailView: View {
                     } else {
                         presentationMode.wrappedValue.dismiss()
                     }
-                },
-                trailing: {
-                    AnyView(
-                        Button(action: {
-                            navigationCoordinator.dismissToRoot()
-                        }) {
-                            Image(systemName: "house.fill")
-                                .font(.title2)
-                                .foregroundColor(.blue)
-                        }
-                    )
                 }
             )
             
@@ -390,6 +447,8 @@ struct LessonDetailView: View {
                                                 showFeedback = userAnswers[currentExerciseIndex] != nil
                                             } else {
                                                 finished = true
+                                                // Clear saved progress since lesson is complete
+                                                clearSavedProgress()
                                                 // Save progress
                                                 let percent = Int((Double(correctCount) / Double(shuffledExercises.count)) * 100)
                                                 let prev = completedLessons[lesson.id] ?? 0
@@ -427,12 +486,29 @@ struct LessonDetailView: View {
         .navigationBarHidden(true)
         .navigationBarBackButtonHidden(true)
         .alert("Exit Lesson?", isPresented: $showingExitConfirmation) {
-            Button("Exit", role: .destructive) {
+            Button("Save & Exit", role: .destructive) {
+                saveProgressAndDismiss()
+            }
+            Button("Exit Without Saving") {
+                clearSavedProgress()
                 presentationMode.wrappedValue.dismiss()
             }
             Button("Continue Lesson", role: .cancel) { }
         } message: {
-            Text("Do you want to exit the lesson? Your progress will be lost.")
+            Text(hasSignificantProgress ? 
+                "Would you like to save your progress?" : 
+                "Are you sure you want to exit?")
+        }
+        .onAppear {
+            if shouldLoadSaveState {
+                loadSavedProgress()
+            }
+        }
+        .onDisappear {
+            // Auto-save when view disappears
+            if hasSignificantProgress && !finished {
+                saveCurrentProgress()
+            }
         }
     }
     
@@ -454,6 +530,104 @@ struct LessonDetailView: View {
         
         exerciseAttempts.append(attempt)
         exerciseStartTime = Date() // Reset for next exercise
+    }
+    
+    // MARK: - Save/Restore Methods
+    
+    private func saveCurrentProgress() {
+        guard hasSignificantProgress else { return }
+        
+        let savedExercises = shuffledExercises.map { tuple in
+            LessonGameState.SavedExercise(
+                exerciseId: tuple.exercise.id,
+                prompt: tuple.exercise.prompt,
+                shuffledOptions: tuple.shuffledOptions,
+                correctIndex: tuple.correctIndex,
+                correctAnswer: tuple.exercise.correctAnswer,
+                explanation: tuple.exercise.explanation,
+                vocabularyReference: tuple.exercise.vocabularyReference
+            )
+        }
+        
+        let gameState = LessonGameState(
+            lessonId: lesson.id,
+            lessonTitle: lesson.title,
+            currentExerciseIndex: currentExerciseIndex,
+            correctCount: correctCount,
+            userAnswers: userAnswers,
+            shuffledExercises: savedExercises,
+            lessonStartTime: lessonStartTime,
+            exerciseAttempts: exerciseAttempts
+        )
+        
+        SaveStateManager.shared.saveGameState(
+            gameType: .lesson,
+            gameData: gameState
+        )
+        
+        print("📚 Lesson progress saved - Index: \(currentExerciseIndex), Score: \(correctCount)/\(shuffledExercises.count)")
+    }
+    
+    private func loadSavedProgress() {
+        if let savedState = SaveStateManager.shared.loadGameState(
+            gameType: .lesson,
+            as: LessonGameState.self
+        ) {
+            // Only load if it's the same lesson
+            guard savedState.lessonId == lesson.id else {
+                print("📚 Saved lesson ID doesn't match current lesson, starting fresh")
+                return
+            }
+            
+            // Restore state
+            started = true
+            currentExerciseIndex = savedState.currentExerciseIndex
+            correctCount = savedState.correctCount
+            userAnswers = savedState.userAnswers
+            lessonStartTime = savedState.lessonStartTime
+            exerciseAttempts = savedState.exerciseAttempts
+            
+            // Restore shuffled exercises
+            shuffledExercises = savedState.shuffledExercises.map { savedExercise in
+                // Find the original exercise
+                let originalExercise = lesson.exercises.first { $0.id == savedExercise.exerciseId }
+                return (
+                    exercise: originalExercise ?? Exercise(
+                        type: .fillInBlank,
+                        prompt: savedExercise.prompt,
+                        options: savedExercise.shuffledOptions,
+                        correctAnswer: savedExercise.correctAnswer,
+                        explanation: savedExercise.explanation,
+                        vocabularyReference: savedExercise.vocabularyReference
+                    ),
+                    shuffledOptions: savedExercise.shuffledOptions,
+                    correctIndex: savedExercise.correctIndex
+                )
+            }
+            
+            // Restore current exercise state
+            if let currentAnswer = userAnswers[currentExerciseIndex] {
+                selectedAnswer = currentAnswer
+                showFeedback = true
+            }
+            
+            print("📚 Lesson progress loaded - Index: \(currentExerciseIndex), Score: \(correctCount)/\(shuffledExercises.count)")
+            HapticManager.shared.successNotification()
+        } else {
+            // No saved state found, start normally
+            print("📚 No saved state found, starting fresh lesson")
+        }
+    }
+    
+    private func clearSavedProgress() {
+        SaveStateManager.shared.deleteSaveState(gameType: .lesson)
+    }
+    
+    private func saveProgressAndDismiss() {
+        if hasSignificantProgress && !finished {
+            saveCurrentProgress()
+        }
+        presentationMode.wrappedValue.dismiss()
     }
 }
 

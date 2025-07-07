@@ -16,18 +16,7 @@ struct LearningPathView: View {
                 title: "Learning Path",
                 showBackButton: true,
                 showProfileIcon: false,
-                onBack: { dismiss() },
-                trailing: {
-                    AnyView(
-                        Button(action: {
-                            NavigationCoordinator.shared.dismissToRoot()
-                        }) {
-                            Image(systemName: "house.fill")
-                                .font(.title2)
-                                .foregroundColor(.blue)
-                        }
-                    )
-                }
+                onBack: { dismiss() }
             )
             
             ZStack {
@@ -64,7 +53,7 @@ struct LearningPathView: View {
         Group {
             if let lesson = selectedLesson {
                 if let actualLesson = lessonManager.lesson(withId: lesson.lessonId) {
-                    LessonDetailView(lesson: actualLesson, completedLessons: $completedLessons, viewModel: viewModel)
+                    LessonDetailView(lesson: actualLesson, completedLessons: $completedLessons, viewModel: viewModel, shouldLoadSaveState: SaveStateManager.shared.hasSaveState(gameType: .lesson))
                         .onDisappear {
                             checkAndMarkLessonCompletion(lesson)
                         }

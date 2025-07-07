@@ -25,6 +25,7 @@ struct GameSaveState: Codable {
         case writing
         case wordScramble
         case multipleChoice
+        case lesson
         
         var displayName: String {
             switch self {
@@ -36,6 +37,7 @@ struct GameSaveState: Codable {
             case .writing: return "Write Your Card"
             case .wordScramble: return "Word Scramble"
             case .multipleChoice: return "Multiple Choice"
+            case .lesson: return "Dutch Lesson"
             }
         }
         
@@ -49,6 +51,7 @@ struct GameSaveState: Codable {
             case .writing: return "pencil.and.scribble"
             case .wordScramble: return "textformat.abc"
             case .multipleChoice: return "list.bullet.circle.fill"
+            case .lesson: return "graduationcap.fill"
             }
         }
     }
@@ -125,6 +128,27 @@ struct DeHetGameState: Codable {
     let cards: [FlashCard]
     let showingAnswer: Bool
     let lastAnswerCorrect: Bool?
+}
+
+struct LessonGameState: Codable {
+    let lessonId: UUID
+    let lessonTitle: String
+    let currentExerciseIndex: Int
+    let correctCount: Int
+    let userAnswers: [Int: String]
+    let shuffledExercises: [SavedExercise]
+    let lessonStartTime: Date?
+    let exerciseAttempts: [ExerciseAttempt]
+    
+    struct SavedExercise: Codable {
+        let exerciseId: UUID
+        let prompt: String
+        let shuffledOptions: [String]
+        let correctIndex: Int
+        let correctAnswer: String
+        let explanation: String
+        let vocabularyReference: String?
+    }
 }
 
 // MARK: - Save State Manager
