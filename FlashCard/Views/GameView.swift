@@ -371,7 +371,7 @@ struct GameView: View {
                                             cardTapped(displayedCards[index])
                                         }
                                         .opacity(displayedCards[index].isMatched ? 0 : 1)
-                                        .animation(.easeInOut(duration: 0.3), value: displayedCards[index].isMatched)
+                                        .animation(.easeInOut(duration: 0.6), value: displayedCards[index].isMatched)
                                     } else {
                                         // Empty space with proper frame to maintain grid layout
                                         Spacer()
@@ -528,7 +528,7 @@ struct GameView: View {
                 displayedCards[index].isSelected = true
                 
                 // After a brief delay, mark cards as matched to fade them out
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                     // Clear selection and mark as matched to fade out
                     displayedCards[selectedIndex].isSelected = false
                     displayedCards[index].isSelected = false
@@ -539,7 +539,7 @@ struct GameView: View {
                     viewModel.recordCardShown(tappedCard.originalCard.id, isCorrect: true)
                     
                     // After fade out animation, replace with new cards
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
                         if remainingCards.count >= 2 {
                             // Replace with a complete pair (2 cards)
                             let newCard1 = remainingCards.removeFirst()
@@ -830,9 +830,9 @@ struct MemoryGameCardView: View {
         .scaleEffect(card.isSelected ? 1.05 : 1.0)
         .offset(y: floatingOffset)
         .opacity(card.isMatched ? 0 : 1)
-        .animation(.easeInOut(duration: 0.3), value: card.isSelected)
-        .animation(.easeInOut(duration: 0.3), value: card.isMatched)
-        .animation(.easeInOut(duration: 0.3), value: card.showWrongAnimation)
+        .animation(.easeInOut(duration: 0.5), value: card.isSelected)
+        .animation(.easeInOut(duration: 0.6), value: card.isMatched)
+        .animation(.easeInOut(duration: 0.4), value: card.showWrongAnimation)
         .onAppear {
             // Start subtle floating animation
             withAnimation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true)) {
