@@ -24,11 +24,6 @@ struct LessonsListView: View {
             
             ScrollView {
                 VStack(spacing: 24) {
-                    // Continue Lesson Section (if there's a saved state)
-                    if SaveStateManager.shared.hasSaveState(gameType: .lesson) {
-                        continueLessonSection
-                    }
-                    
                     // Learning Path Section
                     learningPathSection
                     
@@ -129,7 +124,7 @@ struct LessonsListView: View {
                 .fontWeight(.bold)
             
             LazyVStack(spacing: 12) {
-                ForEach(lessonManager.lessons.filter { $0.title != "Chapter 3.5 – Dutch Vocabulary in Context" }) { lesson in
+                ForEach(lessonManager.lessons) { lesson in
                     NavigationLink(destination: LessonDetailView(lesson: lesson, completedLessons: $completedLessons, viewModel: viewModel, shouldLoadSaveState: SaveStateManager.shared.hasSaveState(gameType: .lesson))) {
                         HStack {
                             VStack(alignment: .leading, spacing: 4) {
@@ -169,65 +164,6 @@ struct LessonsListView: View {
             }
         }
     }
-    
-    private var continueLessonSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Continue Lesson")
-                .font(.title2)
-                .fontWeight(.bold)
-            
-            if let savedState = SaveStateManager.shared.loadGameState(gameType: .lesson, as: LessonGameState.self),
-               let lesson = lessonManager.lesson(withId: savedState.lessonId) {
-                NavigationLink(destination: LessonDetailView(lesson: lesson, completedLessons: $completedLessons, viewModel: viewModel, shouldLoadSaveState: true)) {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack {
-                                Image(systemName: "graduationcap.fill")
-                                    .foregroundColor(.blue)
-                                Text(savedState.lessonTitle)
-                                    .font(.headline)
-                                    .foregroundColor(.primary)
-                            }
-                            
-                            HStack {
-                                Text("Progress: \(savedState.currentExerciseIndex + 1)/\(savedState.shuffledExercises.count)")
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-                                
-                                Spacer()
-                                
-                                Text("Score: \(savedState.correctCount)/\(savedState.shuffledExercises.count)")
-                                    .font(.subheadline)
-                                    .foregroundColor(.green)
-                            }
-                            
-                            if let savedAt = SaveStateManager.shared.getSaveStateInfo(gameType: .lesson) {
-                                Text("Saved \(timeAgoString(from: savedAt))")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                        
-                        Spacer()
-                        
-                        Image(systemName: "play.circle.fill")
-                            .font(.title2)
-                            .foregroundColor(.blue)
-                    }
-                    .padding()
-                    .background(Color(.secondarySystemGroupedBackground))
-                    .cornerRadius(12)
-                }
-                .buttonStyle(PlainButtonStyle())
-            }
-        }
-    }
-    
-    private func timeAgoString(from date: Date) -> String {
-        let formatter = RelativeDateTimeFormatter()
-        formatter.unitsStyle = .abbreviated
-        return formatter.localizedString(for: date, relativeTo: Date())
-    }
 }
 
 struct LessonDetailView: View {
@@ -242,14 +178,18 @@ struct LessonDetailView: View {
     @State private var finished = false
     @State private var reviewMode = false
     @State private var currentExerciseIndex = 0
-    @State private var selectedAnswer: String?
-    @State private var showFeedback = false
+    @State private var selectedAnswer: String = ""
+    @State private var showFeedback: Bool = false
     @State private var correctCount = 0
     @State private var userAnswers: [Int: String] = [:]
     @State private var lessonStartTime: Date?
     @State private var exerciseStartTime: Date?
     @State private var exerciseAttempts: [ExerciseAttempt] = []
     @State private var showingExitConfirmation = false
+    @State private var vocabularyExpanded = false
+    @State private var isInReviewMode = false
+    @State private var selectedWords: [String] = []
+    @State private var availableWords: [String] = []
 
     // New: Shuffled exercises and options
     @State private var shuffledExercises: [(exercise: Exercise, shuffledOptions: [String], correctIndex: Int)] = []
@@ -259,14 +199,15 @@ struct LessonDetailView: View {
     
     // Computed property to check if there's significant progress to save
     private var hasSignificantProgress: Bool {
-        return started && !finished && (currentExerciseIndex > 0 || !userAnswers.isEmpty)
+        // Don't consider review mode as significant progress that needs saving
+        return started && !finished && !isInReviewMode && (currentExerciseIndex > 0 || !userAnswers.isEmpty)
     }
     
     // Computed property to get user's existing words
     private var userWords: Set<String> {
         Set(viewModel.flashCards.map { $0.word.lowercased() })
     }
-
+    
     var filteredExercises: [Exercise] {
         lesson.exercises
     }
@@ -286,11 +227,12 @@ struct LessonDetailView: View {
     var body: some View {
         VStack(spacing: 0) {
             UnifiedHeader(
-                title: "Chapter 3.5",
+                title: lesson.title,
                 showBackButton: true,
                 showProfileIcon: false,
                 onBack: { 
-                    if started && !finished {
+                    // Don't show exit confirmation if lesson is complete and we're just reviewing
+                    if started && !finished && !isInReviewMode {
                         showingExitConfirmation = true
                     } else {
                         presentationMode.wrappedValue.dismiss()
@@ -301,204 +243,14 @@ struct LessonDetailView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
                     if !started {
-                        // Lesson intro
-                        Text(lesson.description)
-                        if !lesson.vocabulary.isEmpty {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Vocabulary:")
-                                    .font(.headline)
-                                // Clickable words with translations
-                                WrapHStack(vocabularyItems: lesson.vocabulary, userWords: userWords, onTap: { vocabularyItem in
-                                    // Navigate to AddCardView with pre-filled word and translation
-                                    navigationCoordinator.presentSheet(.addCard(initialWord: vocabularyItem.dutchWord, initialDefinition: vocabularyItem.translation))
-                                })
-                            }
-                        }
-                        Spacer()
-                        Button(action: {
-                            HapticManager.shared.buttonTap()
-                            started = true
-                            currentExerciseIndex = 0
-                            correctCount = 0
-                            finished = false
-                            userAnswers = [:]
-                            // Start analytics tracking
-                            lessonStartTime = analyticsManager.startLessonTracking(lessonId: lesson.id, lessonTitle: lesson.title)
-                            exerciseStartTime = Date()
-                            exerciseAttempts = []
-                            // Shuffle exercises and options
-                            shuffledExercises = lesson.exercises.shuffled().map { ex in
-                                let shuffled = ex.options.shuffled()
-                                let correctIdx = shuffled.firstIndex(of: ex.correctAnswer) ?? 0
-                                return (exercise: ex, shuffledOptions: shuffled, correctIndex: correctIdx)
-                            }
-                        }) {
-                            Text("Start Lesson")
-                                .font(.title2)
-                                .bold()
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(Color.blue)
-                                .foregroundColor(.white)
-                                .cornerRadius(12)
-                        }
-                        .padding(.bottom)
+                        lessonIntroView
                     } else if finished {
-                        // End screen with review option
-                        VStack(spacing: 16) {
-                            Text("Lesson Complete!")
-                                .font(.title)
-                                .bold()
-                            Text("You answered \(correctCount) out of \(shuffledExercises.count) correctly.")
-                                .font(.headline)
-                            Button("Back to Lessons") {
-                                HapticManager.shared.buttonTap()
-                                presentationMode.wrappedValue.dismiss()
-                            }
-                            .padding()
-                            .background(Color.gray.opacity(0.2))
-                            .foregroundColor(.blue)
-                            .cornerRadius(12)
-                            Button("Review Lesson") {
-                                HapticManager.shared.buttonTap()
-                                // Just go back to the last question and let them navigate normally
-                                finished = false
-                                currentExerciseIndex = shuffledExercises.count - 1
-                                selectedAnswer = userAnswers[currentExerciseIndex]
-                                showFeedback = true // Show feedback immediately in review
-                            }
-                            .padding()
-                            .background(Color.blue)
-                            .foregroundColor(.white)
-                            .cornerRadius(12)
-                        }
-                        Spacer()
+                        lessonCompleteView
                     } else if reviewMode {
                         // Remove this entire section - no longer needed
                         EmptyView()
                     } else if !shuffledExercises.isEmpty {
-                        // Game-style progress bar
-                        LessonProgressBar(completedQuestions: currentExerciseIndex + 1, total: shuffledExercises.count)
-                            .padding(.bottom, 8)
-                        // Exercise flow
-                        let tuple = shuffledExercises[currentExerciseIndex]
-                        let exercise = tuple.exercise
-                        let options = tuple.shuffledOptions
-                        let correctIdx = tuple.correctIndex
-                        VStack(alignment: .leading, spacing: 16) {
-                            // Custom UI per exercise type
-                                Text(exercise.prompt)
-                                    .font(.title2)
-                                    .bold()
-                            ForEach(options, id: \.self) { option in
-                                    Button(action: {
-                                        if !showFeedback {
-                                            // Immediate haptic feedback for responsiveness
-                                            HapticManager.shared.buttonTap()
-                                            
-                                            selectedAnswer = option
-                                            showFeedback = true
-                                            userAnswers[currentExerciseIndex] = option
-                                            
-                                            // Check if answer is correct
-                                            if let idx = options.firstIndex(of: option), idx == correctIdx {
-                                                correctCount += 1
-                                                // Success feedback for correct answer
-                                                HapticManager.shared.successNotification()
-                                            } else {
-                                                // Error feedback for incorrect answer
-                                                HapticManager.shared.errorNotification()
-                                            }
-                                            
-                                            // Record exercise attempt (async to avoid blocking UI)
-                                            DispatchQueue.main.async {
-                                                recordExerciseAttempt(exercise: exercise, userAnswer: option)
-                                            }
-                                        }
-                                    }) {
-                                        HStack {
-                                            Text(option)
-                                                .font(.body)
-                                                .foregroundColor(.primary)
-                                            Spacer()
-                                            if showFeedback {
-                                            if let idx = options.firstIndex(of: option), idx == correctIdx {
-                                                    Image(systemName: "checkmark.circle.fill").foregroundColor(.green)
-                                            } else if option == selectedAnswer && options.firstIndex(of: option) != correctIdx {
-                                                    Image(systemName: "xmark.circle.fill").foregroundColor(.red)
-                                                }
-                                            }
-                                        }
-                                        .padding()
-                                        .background(
-                                            showFeedback ?
-                                            ((options.firstIndex(of: option) == correctIdx) ? Color.green.opacity(0.15) :
-                                                    (option == selectedAnswer ? Color.red.opacity(0.15) : Color(.systemGray6))) :
-                                                Color(.systemGray6)
-                                        )
-                                        .cornerRadius(8)
-                                    }
-                                    .disabled(showFeedback)
-                            }
-                            if showFeedback {
-                                VStack(alignment: .leading, spacing: 8) {
-                                    Text(exercise.explanation)
-                                        .font(.body)
-                                        .foregroundColor(.secondary)
-                                    // Navigation buttons (Previous and Next/Finish)
-                                    HStack(spacing: 12) {
-                                        Button("Previous") {
-                                            HapticManager.shared.buttonTap()
-                                            if currentExerciseIndex > 0 {
-                                                currentExerciseIndex -= 1
-                                                selectedAnswer = userAnswers[currentExerciseIndex]
-                                                showFeedback = userAnswers[currentExerciseIndex] != nil
-                                            }
-                                        }
-                                        .disabled(currentExerciseIndex == 0)
-                                        .padding()
-                                        .frame(maxWidth: .infinity)
-                                        .background(currentExerciseIndex == 0 ? Color.gray.opacity(0.3) : Color.gray.opacity(0.2))
-                                        .foregroundColor(currentExerciseIndex == 0 ? .gray : .blue)
-                                        .cornerRadius(8)
-                                        Button(currentExerciseIndex < shuffledExercises.count - 1 ? "Next" : "Finish Lesson") {
-                                            HapticManager.shared.buttonTap()
-                                            if currentExerciseIndex < shuffledExercises.count - 1 {
-                                                currentExerciseIndex += 1
-                                                selectedAnswer = userAnswers[currentExerciseIndex]
-                                                showFeedback = userAnswers[currentExerciseIndex] != nil
-                                            } else {
-                                                finished = true
-                                                // Clear saved progress since lesson is complete
-                                                clearSavedProgress()
-                                                // Save progress
-                                                let percent = Int((Double(correctCount) / Double(shuffledExercises.count)) * 100)
-                                                let prev = completedLessons[lesson.id] ?? 0
-                                                if percent > prev { completedLessons[lesson.id] = percent }
-                                                // Record lesson completion analytics
-                                                if let startTime = lessonStartTime {
-                                                    analyticsManager.recordLessonCompletion(
-                                                        lessonId: lesson.id,
-                                                        lessonTitle: lesson.title,
-                                                        startTime: startTime,
-                                                        totalExercises: shuffledExercises.count,
-                                                        correctAnswers: correctCount,
-                                                        exerciseAttempts: exerciseAttempts
-                                                    )
-                                                }
-                                            }
-                                        }
-                                        .padding()
-                                        .frame(maxWidth: .infinity)
-                                        .background(Color.blue)
-                                        .foregroundColor(.white)
-                                        .cornerRadius(8)
-                                    }
-                                }
-                                .padding(.top)
-                            }
-                        }
-                        Spacer()
+                        lessonExerciseView
                     }
                 }
                 .padding(.horizontal)
@@ -534,6 +286,287 @@ struct LessonDetailView: View {
         }
     }
     
+    // MARK: - Sub-Views
+    
+    private var lessonIntroView: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text(lesson.description)
+            
+            if !lesson.vocabulary.isEmpty {
+                vocabularySection
+            }
+            
+            Spacer()
+            
+            Button(action: {
+                HapticManager.shared.buttonTap()
+                started = true
+                currentExerciseIndex = 0
+                correctCount = 0
+                finished = false
+                userAnswers = [:]
+                // Start analytics tracking
+                lessonStartTime = analyticsManager.startLessonTracking(lessonId: lesson.id, lessonTitle: lesson.title)
+                exerciseStartTime = Date()
+                exerciseAttempts = []
+                // Shuffle exercises and options
+                shuffledExercises = lesson.exercises.shuffled().map { ex in
+                    let shuffled = ex.options.shuffled()
+                    let correctIdx = shuffled.firstIndex(of: ex.correctAnswer) ?? 0
+                    return (exercise: ex, shuffledOptions: shuffled, correctIndex: correctIdx)
+                }
+                print("📚 Started lesson with \(shuffledExercises.count) exercises")
+                for (index, tuple) in shuffledExercises.enumerated() {
+                    print("📚 Exercise \(index): \(tuple.exercise.prompt)")
+                }
+            }) {
+                Text("Start Lesson")
+                    .font(.title2)
+                    .bold()
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.blue)
+                    .foregroundColor(.white)
+                    .cornerRadius(12)
+            }
+            .padding(.bottom)
+        }
+    }
+    
+    private var vocabularySection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Button(action: {
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    vocabularyExpanded.toggle()
+                }
+                HapticManager.shared.buttonTap()
+            }) {
+                HStack {
+                    Text("Vocabulary (\(lesson.vocabulary.count) words)")
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                    Spacer()
+                    Image(systemName: vocabularyExpanded ? "chevron.up" : "chevron.down")
+                        .foregroundColor(.blue)
+                        .font(.caption)
+                        .fontWeight(.semibold)
+                }
+                .padding(.vertical, 8)
+            }
+            .buttonStyle(PlainButtonStyle())
+            
+            if vocabularyExpanded {
+                VStack(alignment: .leading, spacing: 4) {
+                    // Clickable words with translations
+                    WrapHStack(vocabularyItems: lesson.vocabulary, userWords: userWords, onTap: { vocabularyItem in
+                        // Navigate to AddCardView with pre-filled word and translation
+                        navigationCoordinator.presentSheet(.addCard(initialWord: vocabularyItem.dutchWord, initialDefinition: vocabularyItem.translation))
+                    })
+                }
+                .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+        }
+        .padding(.vertical, 8)
+        .background(Color(.systemGray6).opacity(0.5))
+        .cornerRadius(12)
+    }
+    
+    private var lessonCompleteView: some View {
+        VStack(spacing: 16) {
+            Text("Lesson Complete!")
+                .font(.title)
+                .bold()
+            Text("You answered \(correctCount) out of \(shuffledExercises.count) correctly.")
+                .font(.headline)
+            Button("Back to Lessons") {
+                HapticManager.shared.buttonTap()
+                presentationMode.wrappedValue.dismiss()
+            }
+            .padding()
+            .background(Color.gray.opacity(0.2))
+            .foregroundColor(.blue)
+            .cornerRadius(12)
+            Button("Review Lesson") {
+                HapticManager.shared.buttonTap()
+                // Just go back to the last question and let them navigate normally
+                finished = false
+                isInReviewMode = true // Set review mode flag
+                currentExerciseIndex = shuffledExercises.count - 1
+                selectedAnswer = userAnswers[currentExerciseIndex] ?? ""
+                showFeedback = true // Show feedback immediately in review
+            }
+            .padding()
+            .background(Color.blue)
+            .foregroundColor(.white)
+            .cornerRadius(12)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+    
+    private var lessonExerciseView: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            // Game-style progress bar
+            LessonProgressBar(completedQuestions: currentExerciseIndex + 1, total: shuffledExercises.count)
+                .padding(.bottom, 8)
+            
+            // Exercise flow
+            let tuple = shuffledExercises[currentExerciseIndex]
+            let exercise = tuple.exercise
+            let options = tuple.shuffledOptions
+            let correctIdx = tuple.correctIndex
+            
+            Text(exercise.prompt)
+                .font(.title2)
+                .bold()
+            
+            if exercise.type == .sentenceBuilding {
+                // Sentence Building UI
+                sentenceBuildingView(exercise: exercise, options: options, correctIdx: correctIdx)
+                    .id("sentence-building-\(currentExerciseIndex)") // Force view recreation when exercise changes
+                    .onAppear {
+                        // Initialize sentence building state if not already done
+                        if availableWords.isEmpty {
+                            availableWords = options.shuffled()
+                            print("📚 Initialized sentence building for exercise \(currentExerciseIndex): \(exercise.prompt)")
+                        }
+                    }
+            } else {
+                // Standard multiple choice UI
+                multipleChoiceView(exercise: exercise, options: options, correctIdx: correctIdx)
+            }
+            
+            if showFeedback {
+                feedbackView(exercise: exercise)
+            }
+            
+            Spacer()
+        }
+        .onAppear {
+            print("📚 Displaying exercise \(currentExerciseIndex): \(shuffledExercises[currentExerciseIndex].exercise.prompt)")
+        }
+    }
+    
+    private func multipleChoiceView(exercise: Exercise, options: [String], correctIdx: Int) -> some View {
+        VStack(spacing: 8) {
+            ForEach(options, id: \.self) { option in
+                Button(action: {
+                    if !showFeedback {
+                        // Immediate haptic feedback for responsiveness
+                        HapticManager.shared.buttonTap()
+                        
+                        selectedAnswer = option
+                        showFeedback = true
+                        userAnswers[currentExerciseIndex] = option
+                        
+                        // Check if answer is correct
+                        if let idx = options.firstIndex(of: option), idx == correctIdx {
+                            correctCount += 1
+                            // Success feedback for correct answer
+                            HapticManager.shared.successNotification()
+                        } else {
+                            // Error feedback for incorrect answer
+                            HapticManager.shared.errorNotification()
+                        }
+                        
+                        // Record exercise attempt (async to avoid blocking UI)
+                        DispatchQueue.main.async {
+                            recordExerciseAttempt(exercise: exercise, userAnswer: option)
+                        }
+                    }
+                }) {
+                    HStack {
+                        Text(option)
+                            .font(.body)
+                            .foregroundColor(.primary)
+                        Spacer()
+                        if showFeedback {
+                            if let idx = options.firstIndex(of: option), idx == correctIdx {
+                                Image(systemName: "checkmark.circle.fill").foregroundColor(.green)
+                            } else if option == selectedAnswer && options.firstIndex(of: option) != correctIdx {
+                                Image(systemName: "xmark.circle.fill").foregroundColor(.red)
+                            }
+                        }
+                    }
+                    .padding()
+                    .background(
+                        showFeedback ?
+                        ((options.firstIndex(of: option) == correctIdx) ? Color.green.opacity(0.15) :
+                                (option == selectedAnswer ? Color.red.opacity(0.15) : Color(.systemGray6))) :
+                            Color(.systemGray6)
+                    )
+                    .cornerRadius(8)
+                }
+                .disabled(showFeedback)
+            }
+        }
+    }
+    
+    private func feedbackView(exercise: Exercise) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(exercise.explanation)
+                .font(.body)
+                .foregroundColor(.secondary)
+            
+            // Navigation buttons (Previous and Next/Finish)
+            HStack(spacing: 12) {
+                Button("Previous") {
+                    HapticManager.shared.buttonTap()
+                    if currentExerciseIndex > 0 {
+                        currentExerciseIndex -= 1
+                        selectedAnswer = userAnswers[currentExerciseIndex] ?? ""
+                        showFeedback = userAnswers[currentExerciseIndex] != nil
+                        // Restore sentence building state for previous exercise
+                        restoreSentenceBuildingState()
+                        print("📚 Navigated to previous exercise: \(currentExerciseIndex)")
+                    }
+                }
+                .disabled(currentExerciseIndex == 0)
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(currentExerciseIndex == 0 ? Color.gray.opacity(0.3) : Color.gray.opacity(0.2))
+                .foregroundColor(currentExerciseIndex == 0 ? .gray : .blue)
+                .cornerRadius(8)
+                
+                Button(currentExerciseIndex < shuffledExercises.count - 1 ? "Next" : "Finish Lesson") {
+                    HapticManager.shared.buttonTap()
+                    if currentExerciseIndex < shuffledExercises.count - 1 {
+                        currentExerciseIndex += 1
+                        selectedAnswer = userAnswers[currentExerciseIndex] ?? ""
+                        showFeedback = userAnswers[currentExerciseIndex] != nil
+                        // Restore sentence building state for next exercise
+                        restoreSentenceBuildingState()
+                        print("📚 Navigated to next exercise: \(currentExerciseIndex)")
+                    } else {
+                        finished = true
+                        // Clear saved progress since lesson is complete
+                        clearSavedProgress()
+                        // Save progress
+                        let percent = Int((Double(correctCount) / Double(shuffledExercises.count)) * 100)
+                        let prev = completedLessons[lesson.id] ?? 0
+                        if percent > prev { completedLessons[lesson.id] = percent }
+                        // Record lesson completion analytics
+                        if let startTime = lessonStartTime {
+                            analyticsManager.recordLessonCompletion(
+                                lessonId: lesson.id,
+                                lessonTitle: lesson.title,
+                                startTime: startTime,
+                                totalExercises: shuffledExercises.count,
+                                correctAnswers: correctCount,
+                                exerciseAttempts: exerciseAttempts
+                            )
+                        }
+                    }
+                }
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(Color.blue)
+                .foregroundColor(.white)
+                .cornerRadius(8)
+            }
+        }
+        .padding(.top)
+    }
+    
     // MARK: - Helper Functions
     
     private func recordExerciseAttempt(exercise: Exercise, userAnswer: String) {
@@ -552,6 +585,42 @@ struct LessonDetailView: View {
         
         exerciseAttempts.append(attempt)
         exerciseStartTime = Date() // Reset for next exercise
+    }
+    
+    private func resetSentenceBuildingState() {
+        // Reset sentence building state when changing exercises
+        selectedWords.removeAll()
+        availableWords.removeAll()
+        // Also reset feedback state if we're moving to a new exercise
+        if !userAnswers.keys.contains(currentExerciseIndex) {
+            showFeedback = false
+            selectedAnswer = ""
+        }
+        print("📚 Reset sentence building state for exercise \(currentExerciseIndex)")
+    }
+    
+    private func restoreSentenceBuildingState() {
+        let tuple = shuffledExercises[currentExerciseIndex]
+        let exercise = tuple.exercise
+        let options = tuple.shuffledOptions
+        
+        if exercise.type == .sentenceBuilding {
+            // Clear current state
+            selectedWords.removeAll()
+            availableWords.removeAll()
+            
+            if let savedAnswer = userAnswers[currentExerciseIndex] {
+                // Restore the user's previous answer
+                selectedWords = savedAnswer.components(separatedBy: " ")
+                // Rebuild available words from what wasn't used
+                availableWords = options.filter { !selectedWords.contains($0) }
+                print("📚 Restored sentence building state: \(selectedWords)")
+            } else {
+                // Initialize for new exercise
+                availableWords = options.shuffled()
+                print("📚 Initialized new sentence building exercise")
+            }
+        }
     }
     
     // MARK: - Save/Restore Methods
@@ -631,6 +700,11 @@ struct LessonDetailView: View {
             if let currentAnswer = userAnswers[currentExerciseIndex] {
                 selectedAnswer = currentAnswer
                 showFeedback = true
+                // Restore sentence building state if needed
+                restoreSentenceBuildingState()
+            } else {
+                // Initialize sentence building state for new exercise
+                restoreSentenceBuildingState()
             }
             
             print("📚 Lesson progress loaded - Index: \(currentExerciseIndex), Score: \(correctCount)/\(shuffledExercises.count)")
@@ -651,6 +725,158 @@ struct LessonDetailView: View {
         }
         presentationMode.wrappedValue.dismiss()
     }
+    
+    // MARK: - Sentence Building View
+    
+    @ViewBuilder
+    private func sentenceBuildingView(exercise: Exercise, options: [String], correctIdx: Int) -> some View {
+        VStack(spacing: 16) {
+            // Built sentence display
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Your sentence:")
+                    .font(.headline)
+                    .foregroundColor(.secondary)
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    if showFeedback {
+                        // Show the completed sentence as plain text
+                        Text(selectedWords.joined(separator: " "))
+                            .font(.body)
+                            .foregroundColor(.primary)
+                            .padding(.vertical, 8)
+                            .padding(.horizontal, 4)
+                    } else {
+                        LazyVStack(alignment: .leading, spacing: 4) {
+                            HStack(spacing: 2) {
+                                ForEach(selectedWords.indices, id: \.self) { index in
+                                    let word = selectedWords[index]
+                                    Text(word)
+                                        .padding(.horizontal, 4)
+                                        .padding(.vertical, 2)
+                                        .background(Color.blue.opacity(0.2))
+                                        .cornerRadius(3)
+                                        .onTapGesture {
+                                            if !showFeedback {
+                                                // Remove word from sentence and add back to available words
+                                                selectedWords.remove(at: index)
+                                                availableWords.append(word)
+                                            }
+                                        }
+                                }
+                                Spacer(minLength: 0)
+                            }
+                            .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                }
+                .frame(minHeight: 50)
+                .padding()
+                .background(
+                    showFeedback ? 
+                    (selectedAnswer == exercise.correctAnswer ? Color.green.opacity(0.15) : Color.red.opacity(0.15)) :
+                    Color(.systemGray6)
+                )
+                .cornerRadius(12)
+            }
+            
+            // Show correct answer if wrong
+            if showFeedback && selectedAnswer != exercise.correctAnswer {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Correct answer:")
+                        .font(.headline)
+                        .foregroundColor(.secondary)
+                    
+                    Text(exercise.correctAnswer)
+                        .padding()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color.green.opacity(0.15))
+                        .foregroundColor(.green)
+                        .cornerRadius(12)
+                }
+            }
+            
+            // Available words
+            if !showFeedback {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Available words:")
+                        .font(.headline)
+                        .foregroundColor(.secondary)
+                    
+                    LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 8) {
+                        ForEach(availableWords.indices, id: \.self) { index in
+                            let word = availableWords[index]
+                            Button(action: {
+                                if !showFeedback {
+                                    // Add word to sentence
+                                    selectedWords.append(word)
+                                    availableWords.remove(at: index)
+                                }
+                            }) {
+                                Text(word)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 6)
+                                    .frame(maxWidth: .infinity)
+                                    .background(Color.blue.opacity(0.1))
+                                    .foregroundColor(.blue)
+                                    .cornerRadius(8)
+                            }
+                            .disabled(showFeedback)
+                        }
+                    }
+                }
+            }
+            
+            // Check answer button
+            if !showFeedback && selectedWords.count == options.count {
+                Button("Check Answer") {
+                    HapticManager.shared.buttonTap()
+                    
+                    let userSentence = selectedWords.joined(separator: " ")
+                    selectedAnswer = userSentence
+                    showFeedback = true
+                    userAnswers[currentExerciseIndex] = userSentence
+                    
+                    // Check if answer is correct
+                    if userSentence == exercise.correctAnswer {
+                        correctCount += 1
+                        HapticManager.shared.successNotification()
+                    } else {
+                        HapticManager.shared.errorNotification()
+                    }
+                    
+                    // Record exercise attempt
+                    DispatchQueue.main.async {
+                        recordExerciseAttempt(exercise: exercise, userAnswer: userSentence)
+                    }
+                }
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(Color.blue)
+                .foregroundColor(.white)
+                .cornerRadius(12)
+            }
+            
+            // Reset button
+            if !showFeedback && !selectedWords.isEmpty {
+                Button("Reset") {
+                    HapticManager.shared.buttonTap()
+                    availableWords.append(contentsOf: selectedWords)
+                    selectedWords.removeAll()
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(Color.gray.opacity(0.2))
+                .foregroundColor(.gray)
+                .cornerRadius(8)
+            }
+        }
+        .onAppear {
+            // Initialize available words when exercise appears
+            if availableWords.isEmpty {
+                availableWords = options.shuffled()
+            }
+        }
+    }
 }
 
 // Helper for wrapping vocab words
@@ -659,10 +885,13 @@ struct WrapHStack: View {
     let userWords: Set<String>
     let onTap: (VocabularyItem) -> Void
     
+    @State private var showingTranslation: Set<UUID> = []
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             ForEach(vocabularyItems, id: \.id) { item in
                 if userWords.contains(item.dutchWord.lowercased()) {
+                    // Already added words
                     HStack(spacing: 4) {
                         Text(item.dutchWord)
                             .foregroundColor(.blue)
@@ -679,22 +908,54 @@ struct WrapHStack: View {
                     .background(Color.green.opacity(0.1))
                     .cornerRadius(8)
                 } else {
-                    Button(action: { onTap(item) }) {
+                    // Words not yet added
+                    VStack(alignment: .leading, spacing: 4) {
                         HStack(spacing: 4) {
                             Text(item.dutchWord)
                                 .foregroundColor(.blue)
                                 .fontWeight(.semibold)
-                            Text("-")
-                                .foregroundColor(.secondary)
-                            Text(item.translation)
-                                .foregroundColor(.primary)
-                            Image(systemName: "plus.circle")
+                            
+                            Spacer()
+                            
+                            Image(systemName: showingTranslation.contains(item.id) ? "plus.circle.fill" : "plus.circle")
                                 .foregroundColor(.blue)
                                 .font(.caption)
                         }
-                        .padding(6)
-                        .background(Color.blue.opacity(0.1))
-                        .cornerRadius(8)
+                        
+                        if showingTranslation.contains(item.id) {
+                            HStack(spacing: 4) {
+                                Text("-")
+                                    .foregroundColor(.secondary)
+                                Text(item.translation)
+                                    .foregroundColor(.primary)
+                                Spacer()
+                            }
+                        }
+                    }
+                    .padding(6)
+                    .background(Color.blue.opacity(0.1))
+                    .cornerRadius(8)
+                    .onTapGesture {
+                        // Single tap: show/hide translation
+                        if showingTranslation.contains(item.id) {
+                            showingTranslation.remove(item.id)
+                        } else {
+                            showingTranslation.insert(item.id)
+                        }
+                        HapticManager.shared.buttonTap()
+                    }
+                    .onTapGesture(count: 2) {
+                        // Double tap: add card
+                        onTap(item)
+                        HapticManager.shared.successNotification()
+                        
+                        // Show brief visual feedback
+                        showingTranslation.insert(item.id)
+                        
+                        // Hide translation after a delay
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                            showingTranslation.remove(item.id)
+                        }
                     }
                 }
             }

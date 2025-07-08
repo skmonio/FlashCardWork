@@ -366,16 +366,16 @@ struct GameView: View {
                             HStack(spacing: 16) {
                                 ForEach(0..<2, id: \.self) { col in
                                     let index = row * 2 + col
-                                    if index < displayedCards.count {
-                                        MemoryGameCardView(card: displayedCards[index]) {
-                                            cardTapped(displayedCards[index])
-                                        }
-                                        .opacity(displayedCards[index].isMatched ? 0 : 1)
+                            if index < displayedCards.count {
+                                MemoryGameCardView(card: displayedCards[index]) {
+                                    cardTapped(displayedCards[index])
+                                }
+                                .opacity(displayedCards[index].isMatched ? 0 : 1)
                                         .animation(.easeInOut(duration: 0.6), value: displayedCards[index].isMatched)
-                                    } else {
+                            } else {
                                         // Empty space with proper frame to maintain grid layout
                                         Spacer()
-                                            .frame(height: 70)
+                                    .frame(height: 70)
                                     }
                                 }
                             }
@@ -544,7 +544,7 @@ struct GameView: View {
                             // Replace with a complete pair (2 cards)
                             let newCard1 = remainingCards.removeFirst()
                             let newCard2 = remainingCards.removeFirst()
-                            
+                        
                             // Ensure we're replacing with a complete pair
                             if newCard1.originalCard.id == newCard2.originalCard.id {
                                 displayedCards[selectedIndex] = newCard1
@@ -564,29 +564,29 @@ struct GameView: View {
                             // Check if game is complete (all cards are matched)
                             let allCardsMatched = displayedCards.allSatisfy { $0.isMatched }
                             if allCardsMatched {
-                                // Stop the timer
-                                stopTimer()
+                            // Stop the timer
+                            stopTimer()
+                            
+                            // Clear saved progress since game is complete
+                            clearSavedProgress()
+                            
+                            // Call level completion callback if this is a progressive study session
+                            if let onLevelComplete = onLevelComplete {
+                                let levelNumber: Int
+                                switch studyMode {
+                                case .maintenance: levelNumber = 1
+                                case .cram: levelNumber = 2
+                                case .adaptive: levelNumber = 3
+                                default: levelNumber = 1
+                                }
                                 
-                                // Clear saved progress since game is complete
-                                clearSavedProgress()
-                                
-                                // Call level completion callback if this is a progressive study session
-                                if let onLevelComplete = onLevelComplete {
-                                    let levelNumber: Int
-                                    switch studyMode {
-                                    case .maintenance: levelNumber = 1
-                                    case .cram: levelNumber = 2
-                                    case .adaptive: levelNumber = 3
-                                    default: levelNumber = 1
-                                    }
-                                    
-                                    let result = LevelResult(
-                                        level: levelNumber,
-                                        score: score,
-                                        total: maxQuestions ?? cards.count
-                                    )
-                                    onLevelComplete(result)
-                                } else {
+                                let result = LevelResult(
+                                    level: levelNumber,
+                                    score: score,
+                                    total: maxQuestions ?? cards.count
+                                )
+                                onLevelComplete(result)
+                            } else {
                                     StreakManager.shared.recordGameCompletion()
                                     showingResults = true
                                 }

@@ -181,7 +181,7 @@ struct WordScrambleView: View {
                     }
                     
                     // Navigation buttons below the card
-                    HStack(spacing: 12) {
+                        HStack(spacing: 12) {
                         // Show Back button only after first card
                         if currentIndex > 0 {
                             Button(action: {
@@ -191,7 +191,7 @@ struct WordScrambleView: View {
                                     Image(systemName: "arrow.left.circle")
                                     Text("Back")
                                 }
-                                .font(.subheadline)
+                                    .font(.subheadline)
                                 .foregroundColor(.blue)
                                 .padding(.horizontal, 20)
                                 .padding(.vertical, 10)
@@ -209,14 +209,14 @@ struct WordScrambleView: View {
                                     Text("Next")
                                     Image(systemName: "arrow.right.circle")
                                 }
-                                .font(.subheadline)
+                                    .font(.subheadline)
                                 .foregroundColor(.blue)
                                 .padding(.horizontal, 20)
                                 .padding(.vertical, 10)
                                 .background(Color.blue.opacity(0.08))
                                 .cornerRadius(10)
-                            }
                         }
+                    }
                     }
                     .padding(.top, 8)
                     
@@ -333,9 +333,9 @@ struct WordScrambleView: View {
         
         // Only reset state if requested (for new questions, not when going back)
         if resetState {
-            selectedChunks.removeAll()
-            hasAnswered = false
-            isCorrect = nil
+        selectedChunks.removeAll()
+        hasAnswered = false
+        isCorrect = nil
         }
         
         // Break word into chunks of 2-4 characters
@@ -536,7 +536,7 @@ struct WordScrambleView: View {
                 selectedChunks.removeAll()
                 hasAnswered = false
                 isCorrect = nil
-                setupCurrentWord()
+            setupCurrentWord()
             }
         } else {
             // Clear saved progress since game is complete
@@ -681,9 +681,9 @@ struct WordScrambleView: View {
                                 Text("Correct answer:")
                                     .foregroundColor(.secondary)
                                 Spacer()
-                                Text(card.word)
-                                    .foregroundColor(.green)
-                                    .bold()
+                                    Text(card.word)
+                                        .foregroundColor(.green)
+                                        .bold()
                             }
                         }
                         .padding()
