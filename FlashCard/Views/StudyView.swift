@@ -384,6 +384,7 @@ struct StudyView: View {
                             .cornerRadius(10)
                         }
                         .disabled(currentIndex == 0)
+                        .buttonStyle(PlainButtonStyle())
 
                         Button(action: {
                             selectedCardForEdit = card
@@ -399,6 +400,7 @@ struct StudyView: View {
                             .background(Color.blue.opacity(0.08))
                             .cornerRadius(10)
                         }
+                        .buttonStyle(PlainButtonStyle())
 
                         // Show Next button only if user has gone back and is not on the latest question
                         if hasGoneBack && currentIndex < maxProgressIndex {
@@ -416,6 +418,7 @@ struct StudyView: View {
                                 .background(Color.blue.opacity(0.08))
                                 .cornerRadius(10)
                             }
+                            .buttonStyle(PlainButtonStyle())
                         }
                     }
                     .padding(.top, 8)

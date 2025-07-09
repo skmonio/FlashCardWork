@@ -336,6 +336,7 @@ struct TrueFalseView: View {
                                 .cornerRadius(10)
                             }
                             .disabled(currentIndex == 0)
+                            .buttonStyle(PlainButtonStyle())
 
                             Button(action: {
                                 selectedCardForEdit = question.originalCard
@@ -351,6 +352,7 @@ struct TrueFalseView: View {
                                 .background(Color.blue.opacity(0.08))
                                 .cornerRadius(10)
                             }
+                            .buttonStyle(PlainButtonStyle())
 
                             // Show Next button after answering a question
                             if hasAnswered {
@@ -368,6 +370,7 @@ struct TrueFalseView: View {
                                     .background(Color.blue.opacity(0.08))
                                     .cornerRadius(10)
                                 }
+                                .buttonStyle(PlainButtonStyle())
                             }
                         }
                         .padding(.top, 8)

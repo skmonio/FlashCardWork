@@ -599,6 +599,7 @@ struct LessonDetailView: View {
                 .background(currentExerciseIndex == 0 ? Color.gray.opacity(0.3) : Color.gray.opacity(0.2))
                 .foregroundColor(currentExerciseIndex == 0 ? .gray : .blue)
                 .cornerRadius(8)
+                .buttonStyle(PlainButtonStyle())
                 
                 Button(currentExerciseIndex < shuffledExercises.count - 1 ? "Next" : "Finish Lesson") {
                     HapticManager.shared.buttonTap()
@@ -635,6 +636,7 @@ struct LessonDetailView: View {
                 .background(Color.blue)
                 .foregroundColor(.white)
                 .cornerRadius(8)
+                .buttonStyle(PlainButtonStyle())
             }
         }
         .padding(.top)

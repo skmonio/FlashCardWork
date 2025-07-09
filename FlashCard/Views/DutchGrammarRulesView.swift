@@ -298,6 +298,7 @@ struct DutchGrammarRulesView: View {
                             showingAnswer = selectedAnswer != nil
                         }
                         .foregroundColor(.blue)
+                        .buttonStyle(PlainButtonStyle())
                     }
                     
                     Spacer()
@@ -315,6 +316,7 @@ struct DutchGrammarRulesView: View {
                         .padding(.vertical, 10)
                         .background(Color.blue)
                         .cornerRadius(8)
+                        .buttonStyle(PlainButtonStyle())
                         } else if allQuestionsAnswered {
                             // Show Finish button when all questions are answered and we're on the last question
                             Button("Finish") {
@@ -334,6 +336,7 @@ struct DutchGrammarRulesView: View {
                             .padding(.vertical, 10)
                             .background(Color.green)
                             .cornerRadius(8)
+                            .buttonStyle(PlainButtonStyle())
                         }
                     }
                 }
@@ -423,6 +426,7 @@ struct DutchGrammarRulesView: View {
                 .padding()
                 .background(Color.blue)
                 .cornerRadius(12)
+                .buttonStyle(PlainButtonStyle())
                 
                 Button("Review Rules") {
                     showingEndScreen = false
@@ -433,6 +437,7 @@ struct DutchGrammarRulesView: View {
                 .padding()
                 .background(Color.blue.opacity(0.1))
                 .cornerRadius(12)
+                .buttonStyle(PlainButtonStyle())
             }
         }
         .padding()
@@ -489,6 +494,7 @@ struct DutchGrammarRulesView: View {
                     .background(Color.green)
                     .cornerRadius(8)
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    .buttonStyle(PlainButtonStyle())
                     
                     // Explanation
                     VStack(alignment: .leading, spacing: 12) {

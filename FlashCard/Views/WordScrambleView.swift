@@ -199,6 +199,7 @@ struct WordScrambleView: View {
                                 .background(Color.blue.opacity(0.08))
                                 .cornerRadius(10)
                             }
+                            .buttonStyle(PlainButtonStyle())
                         }
 
                         // Show Next button after answering
@@ -217,6 +218,7 @@ struct WordScrambleView: View {
                                 .background(Color.blue.opacity(0.08))
                                 .cornerRadius(10)
                         }
+                        .buttonStyle(PlainButtonStyle())
                     }
                     }
                     .padding(.top, 8)
