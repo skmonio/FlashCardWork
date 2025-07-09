@@ -128,23 +128,96 @@ struct LessonsListView: View {
                     NavigationLink(destination: LessonDetailView(lesson: lesson, completedLessons: $completedLessons, viewModel: viewModel, shouldLoadSaveState: SaveStateManager.shared.hasSaveState(gameType: .lesson))) {
                         HStack {
                             VStack(alignment: .leading, spacing: 4) {
-                                Text(lesson.title)
-                                    .font(.headline)
+                                HStack {
+                                    Text(lesson.title)
+                                        .font(.headline)
+                                    Spacer()
+                                    let bestScore = analyticsManager.getBestScoreForLesson(lesson.id)
+                                    let hasSaveState = SaveStateManager.shared.hasSaveState(gameType: .lesson)
+                                    
+                                    if bestScore >= 100 {
+                                        Text("Complete")
+                                            .font(.caption)
+                                            .fontWeight(.bold)
+                                            .foregroundColor(.white)
+                                            .padding(.horizontal, 8)
+                                            .padding(.vertical, 2)
+                                            .background(Color.green)
+                                            .cornerRadius(8)
+                                    } else if hasSaveState && bestScore == 0 {
+                                        // Check if this specific lesson has a save state
+                                        if let savedState = SaveStateManager.shared.loadGameState(gameType: .lesson, as: LessonGameState.self),
+                                           savedState.lessonId == lesson.id {
+                                            Text("In Progress")
+                                                .font(.caption)
+                                                .fontWeight(.bold)
+                                                .foregroundColor(.white)
+                                                .padding(.horizontal, 8)
+                                                .padding(.vertical, 2)
+                                                .background(Color.orange)
+                                                .cornerRadius(8)
+                                        }
+                                    }
+                                }
                                 Text(lesson.description)
                                     .font(.subheadline)
                                     .foregroundColor(.secondary)
                                     .lineLimit(2)
+                                
+                                // Progress indicator
+                                let bestScore = analyticsManager.getBestScoreForLesson(lesson.id)
+                                let hasSaveState = SaveStateManager.shared.hasSaveState(gameType: .lesson)
+                                if bestScore > 0 {
+                                    HStack {
+                                        ProgressView(value: Double(bestScore) / 100.0)
+                                            .progressViewStyle(LinearProgressViewStyle(tint: bestScore >= 100 ? .green : .blue))
+                                            .scaleEffect(x: 1, y: 1.5, anchor: .center)
+                                        
+                                        Text("\(bestScore)%")
+                                            .font(.caption)
+                                            .fontWeight(.medium)
+                                            .foregroundColor(bestScore >= 100 ? .green : .blue)
+                                    }
+                                } else if hasSaveState {
+                                    // Check if this specific lesson has a save state
+                                    if let savedState = SaveStateManager.shared.loadGameState(gameType: .lesson, as: LessonGameState.self),
+                                       savedState.lessonId == lesson.id {
+                                        HStack {
+                                            ProgressView(value: Double(savedState.currentExerciseIndex) / Double(savedState.shuffledExercises.count))
+                                                .progressViewStyle(LinearProgressViewStyle(tint: .orange))
+                                                .scaleEffect(x: 1, y: 1.5, anchor: .center)
+                                            
+                                            Text("\(savedState.currentExerciseIndex)/\(savedState.shuffledExercises.count)")
+                                                .font(.caption)
+                                                .fontWeight(.medium)
+                                                .foregroundColor(.orange)
+                                        }
+                                    }
+                                }
                             }
                             Spacer()
                             VStack(alignment: .trailing, spacing: 2) {
                                 let bestScore = analyticsManager.getBestScoreForLesson(lesson.id)
+                                let hasSaveState = SaveStateManager.shared.hasSaveState(gameType: .lesson)
                                 if bestScore > 0 {
                                     HStack {
-                                        Image(systemName: "checkmark.seal.fill")
-                                            .foregroundColor(.green)
+                                        Image(systemName: bestScore >= 100 ? "checkmark.circle.fill" : "circle.fill")
+                                            .foregroundColor(bestScore >= 100 ? .green : .blue)
                                         Text("\(bestScore)%")
                                             .font(.caption)
-                                            .foregroundColor(.green)
+                                            .foregroundColor(bestScore >= 100 ? .green : .blue)
+                                    }
+                                } else if hasSaveState {
+                                    // Check if this specific lesson has a save state
+                                    if let savedState = SaveStateManager.shared.loadGameState(gameType: .lesson, as: LessonGameState.self),
+                                       savedState.lessonId == lesson.id {
+                                        HStack {
+                                            Image(systemName: "clock.fill")
+                                                .foregroundColor(.orange)
+                                            Text("In Progress")
+                                                .font(.caption)
+                                                .foregroundColor(.orange)
+                                        }
                                     }
                                 }
                                 let attempts = analyticsManager.getAnalyticsForLesson(lesson.id)
