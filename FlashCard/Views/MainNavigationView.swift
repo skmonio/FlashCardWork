@@ -76,134 +76,142 @@ struct MainNavigationView: View {
     private var mainContent: some View {
         switch navigationCoordinator.currentTab {
         case .home:
-            ScrollView {
-                VStack(spacing: 24) {
-                    // Study Modes Section
-                    VStack(alignment: .leading, spacing: 16) {
-                        Text("Flash Card Studies")
-                            .font(.headline)
-                            .foregroundColor(.secondary)
-                            .padding(.horizontal)
-                        VStack(spacing: 12) {
-                            NavigationButton(
-                                title: "Study Your Cards",
-                                icon: "book.fill",
-                                color: .teal,
-                                gameMode: .study,
-                                action: {
-                                    navigationCoordinator.push(NavigationDestination.studyTypeSelection(.study, .adaptive))
-                                }
-                            )
-                            
-                            NavigationButton(
-                                title: "Test Your Cards",
-                                icon: "checkmark.circle.fill",
-                                color: .orange,
-                                gameMode: .test,
-                                action: {
-                                    navigationCoordinator.push(NavigationDestination.studyTypeSelection(.test, .adaptive))
-                                }
-                            )
-                            
-                            NavigationButton(
-                                title: "True or False",
-                                icon: "questionmark.circle.fill",
-                                color: Color(red: 1.0, green: 0.4, blue: 0.3),
-                                gameMode: .truefalse,
-                                action: {
-                                    navigationCoordinator.push(NavigationDestination.studyTypeSelection(.truefalse, .adaptive))
-                                }
-                            )
-                            
-                            NavigationButton(
-                                title: "Write Your Card",
-                                icon: "pencil.and.scribble",
-                                color: Color(red: 1.0, green: 0.6, blue: 0.0),
-                                gameMode: .writing,
-                                action: {
-                                    navigationCoordinator.push(NavigationDestination.studyTypeSelection(.writing, .adaptive))
-                                }
-                            )
-                            
-                            NavigationButton(
-                                title: "Remember Your Cards",
-                                icon: "brain.fill",
-                                color: .orange,
-                                gameMode: .game,
-                                action: {
-                                    navigationCoordinator.push(NavigationDestination.studyTypeSelection(.game, .adaptive))
-                                }
-                            )
-                            
-                            NavigationButton(
-                                title: "Jumble Your Cards",
-                                icon: "textformat.abc",
-                                color: Color(red: 1.0, green: 0.4, blue: 0.3),
-                                gameMode: .wordScramble,
-                                action: {
-                                    navigationCoordinator.push(NavigationDestination.studyTypeSelection(.wordScramble, .adaptive))
-                                }
-                            )
-                        }
-                        .padding(.horizontal)
-                    }
-                    .padding(.top)
-                    
-                    // Resources Section
-                    VStack(alignment: .leading, spacing: 16) {
-                        Text("Resources")
-                            .font(.headline)
-                            .foregroundColor(.secondary)
-                            .padding(.horizontal)
-                        VStack(spacing: 12) {
-                            NavigationLink(destination: LessonsListView(viewModel: viewModel)) {
-                                HStack {
-                                    Image(systemName: "book.closed.fill")
-                                        .font(.title2)
-                                        .foregroundColor(.blue)
-                                        .frame(width: 30)
-                                    Text("Dutch Lessons")
-                                        .font(.body)
-                                        .foregroundColor(.primary)
-                                    Spacer()
-                                }
-                                .padding()
-                                .frame(maxWidth: .infinity)
-                                .background(Color(.secondarySystemGroupedBackground))
-                                .cornerRadius(12)
-                                .shadow(color: .blue.opacity(0.2), radius: 3, x: 0, y: 1)
+            VStack(spacing: 0) {
+                UnifiedHeader(
+                    title: "Taal Trek",
+                    showBackButton: false,
+                    onProfile: { navigationCoordinator.presentSheet(.userProfile) }
+                )
+                ScrollView {
+                    VStack(spacing: 24) {
+                        // Study Modes Section
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("Flash Card Studies")
+                                .font(.headline)
+                                .foregroundColor(.secondary)
+                                .padding(.horizontal)
+                            VStack(spacing: 12) {
+                                NavigationButton(
+                                    title: "Study Your Cards",
+                                    icon: "book.fill",
+                                    color: .teal,
+                                    gameMode: .study,
+                                    action: {
+                                        navigationCoordinator.push(NavigationDestination.studyTypeSelection(.study, .adaptive))
+                                    }
+                                )
+                                
+                                NavigationButton(
+                                    title: "Test Your Cards",
+                                    icon: "checkmark.circle.fill",
+                                    color: .orange,
+                                    gameMode: .test,
+                                    action: {
+                                        navigationCoordinator.push(NavigationDestination.studyTypeSelection(.test, .adaptive))
+                                    }
+                                )
+                                
+                                NavigationButton(
+                                    title: "True or False",
+                                    icon: "questionmark.circle.fill",
+                                    color: Color(red: 1.0, green: 0.4, blue: 0.3),
+                                    gameMode: .truefalse,
+                                    action: {
+                                        navigationCoordinator.push(NavigationDestination.studyTypeSelection(.truefalse, .adaptive))
+                                    }
+                                )
+                                
+                                NavigationButton(
+                                    title: "Write Your Card",
+                                    icon: "pencil.and.scribble",
+                                    color: Color(red: 1.0, green: 0.6, blue: 0.0),
+                                    gameMode: .writing,
+                                    action: {
+                                        navigationCoordinator.push(NavigationDestination.studyTypeSelection(.writing, .adaptive))
+                                    }
+                                )
+                                
+                                NavigationButton(
+                                    title: "Remember Your Cards",
+                                    icon: "brain.fill",
+                                    color: .orange,
+                                    gameMode: .game,
+                                    action: {
+                                        navigationCoordinator.push(NavigationDestination.studyTypeSelection(.game, .adaptive))
+                                    }
+                                )
+                                
+                                NavigationButton(
+                                    title: "Jumble Your Cards",
+                                    icon: "textformat.abc",
+                                    color: Color(red: 1.0, green: 0.4, blue: 0.3),
+                                    gameMode: .wordScramble,
+                                    action: {
+                                        navigationCoordinator.push(NavigationDestination.studyTypeSelection(.wordScramble, .adaptive))
+                                    }
+                                )
                             }
-                            Button(action: {
-                                navigationCoordinator.push(NavigationDestination.dutchGrammar)
-                            }) {
-                                HStack {
-                                    Image(systemName: "book.pages.fill")
-                                        .font(.title2)
-                                        .foregroundStyle(
-                                            LinearGradient(
-                                                colors: [.blue, .purple],
-                                                startPoint: .topLeading,
-                                                endPoint: .bottomTrailing
+                            .padding(.horizontal)
+                        }
+                        .padding(.top)
+                        
+                        // Resources Section
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("Resources")
+                                .font(.headline)
+                                .foregroundColor(.secondary)
+                                .padding(.horizontal)
+                            VStack(spacing: 12) {
+                                NavigationLink(destination: LessonsListView(viewModel: viewModel)) {
+                                    HStack {
+                                        Image(systemName: "book.closed.fill")
+                                            .font(.title2)
+                                            .foregroundColor(.blue)
+                                            .frame(width: 30)
+                                        Text("Dutch Lessons")
+                                            .font(.body)
+                                            .foregroundColor(.primary)
+                                        Spacer()
+                                    }
+                                    .padding()
+                                    .frame(maxWidth: .infinity)
+                                    .background(Color(.secondarySystemGroupedBackground))
+                                    .cornerRadius(12)
+                                    .shadow(color: .blue.opacity(0.2), radius: 3, x: 0, y: 1)
+                                }
+                                Button(action: {
+                                    navigationCoordinator.push(NavigationDestination.dutchGrammar)
+                                }) {
+                                    HStack {
+                                        Image(systemName: "book.pages.fill")
+                                            .font(.title2)
+                                            .foregroundStyle(
+                                                LinearGradient(
+                                                    colors: [.blue, .purple],
+                                                    startPoint: .topLeading,
+                                                    endPoint: .bottomTrailing
+                                                )
                                             )
-                                        )
-                                        .frame(width: 30)
-                                    Text("Dutch Grammar")
-                                        .font(.body)
-                                        .foregroundColor(.primary)
-                                    Spacer()
+                                            .frame(width: 30)
+                                        Text("Dutch Grammar")
+                                            .font(.body)
+                                            .foregroundColor(.primary)
+                                        Spacer()
+                                    }
+                                    .padding()
+                                    .frame(maxWidth: .infinity)
+                                    .background(Color(.secondarySystemGroupedBackground))
+                                    .cornerRadius(12)
+                                    .shadow(color: .blue.opacity(0.2), radius: 3, x: 0, y: 1)
                                 }
-                                .padding()
-                                .frame(maxWidth: .infinity)
-                                .background(Color(.secondarySystemGroupedBackground))
-                                .cornerRadius(12)
-                                .shadow(color: .blue.opacity(0.2), radius: 3, x: 0, y: 1)
                             }
+                            .padding(.horizontal)
                         }
-                        .padding(.horizontal)
                     }
+                    .padding(.horizontal)
                 }
-                .padding(.horizontal)
             }
+            .navigationBarHidden(true)
         case .cards:
             VStack(spacing: 0) {
                 UnifiedHeader(
