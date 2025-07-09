@@ -1749,6 +1749,505 @@ Learn Dutch vocabulary related to movement, body parts, and physical actions. Pr
             )
         ]
     )
+
+    static let chapter25: Lesson = Lesson(
+        id: UUID(),
+        title: "Chapter 2.5 – Healthcare and Community Vocabulary",
+        description: """
+Learn Dutch vocabulary related to healthcare, community services, and caregiving. Practice words for medical care, government services, and supporting others.
+""",
+        vocabulary: [
+            VocabularyItem(dutchWord: "aanpassen", translation: "adjust"),
+            VocabularyItem(dutchWord: "bejaarden", translation: "old people"),
+            VocabularyItem(dutchWord: "bestaan", translation: "exist"),
+            VocabularyItem(dutchWord: "geestelijk", translation: "spiritual, mentally"),
+            VocabularyItem(dutchWord: "geheugen", translation: "memory"),
+            VocabularyItem(dutchWord: "plotseling", translation: "suddenly, all of a sudden"),
+            VocabularyItem(dutchWord: "regering", translation: "government"),
+            VocabularyItem(dutchWord: "rekening", translation: "take into account / bill"),
+            VocabularyItem(dutchWord: "rolstoel", translation: "wheel chair"),
+            VocabularyItem(dutchWord: "toenamen", translation: "to grow, increase"),
+            VocabularyItem(dutchWord: "troosten", translation: "comfort, consolation"),
+            VocabularyItem(dutchWord: "verpleegkundig", translation: "nursing"),
+            VocabularyItem(dutchWord: "vrijwilliger", translation: "volunteer"),
+            VocabularyItem(dutchWord: "zorgen", translation: "care")
+        ],
+        exercises: [
+            // --- Sentence Building Exercises ---
+            Exercise(
+                type: .sentenceBuilding,
+                prompt: "Arrange the words to form a correct Dutch sentence:",
+                options: ["Ik", "moet", "mijn", "plannen", "aanpassen"],
+                correctAnswer: "Ik moet mijn plannen aanpassen",
+                explanation: "'Ik moet mijn plannen aanpassen' means 'I have to adjust my plans'. 'Aanpassen' means 'to adjust'.",
+                vocabularyReference: "aanpassen"
+            ),
+            Exercise(
+                type: .sentenceBuilding,
+                prompt: "Arrange the words to form a correct Dutch sentence:",
+                options: ["De", "bejaarden", "hebben", "hulp", "nodig"],
+                correctAnswer: "De bejaarden hebben hulp nodig",
+                explanation: "'De bejaarden hebben hulp nodig' means 'The elderly need help'. 'Bejaarden' means 'old people'.",
+                vocabularyReference: "bejaarden"
+            ),
+            Exercise(
+                type: .sentenceBuilding,
+                prompt: "Arrange the words to form a correct Dutch sentence:",
+                options: ["Dit", "probleem", "bestaat", "al", "lang"],
+                correctAnswer: "Dit probleem bestaat al lang",
+                explanation: "'Dit probleem bestaat al lang' means 'This problem has existed for a long time'. 'Bestaan' means 'to exist'.",
+                vocabularyReference: "bestaan"
+            ),
+            Exercise(
+                type: .sentenceBuilding,
+                prompt: "Arrange the words to form a correct Dutch sentence:",
+                options: ["Hij", "heeft", "geestelijke", "problemen"],
+                correctAnswer: "Hij heeft geestelijke problemen",
+                explanation: "'Hij heeft geestelijke problemen' means 'He has mental problems'. 'Geestelijk' means 'mental' or 'spiritual'.",
+                vocabularyReference: "geestelijk"
+            ),
+            Exercise(
+                type: .sentenceBuilding,
+                prompt: "Arrange the words to form a correct Dutch sentence:",
+                options: ["Mijn", "geheugen", "is", "niet", "zo", "goed"],
+                correctAnswer: "Mijn geheugen is niet zo goed",
+                explanation: "'Mijn geheugen is niet zo goed' means 'My memory is not so good'. 'Geheugen' means 'memory'.",
+                vocabularyReference: "geheugen"
+            ),
+            Exercise(
+                type: .sentenceBuilding,
+                prompt: "Arrange the words to form a correct Dutch sentence:",
+                options: ["Het", "regende", "plotseling", "heel", "hard"],
+                correctAnswer: "Het regende plotseling heel hard",
+                explanation: "'Het regende plotseling heel hard' means 'It suddenly rained very hard'. 'Plotseling' means 'suddenly'.",
+                vocabularyReference: "plotseling"
+            ),
+            Exercise(
+                type: .sentenceBuilding,
+                prompt: "Arrange the words to form a correct Dutch sentence:",
+                options: ["De", "regering", "maakt", "nieuwe", "wetten"],
+                correctAnswer: "De regering maakt nieuwe wetten",
+                explanation: "'De regering maakt nieuwe wetten' means 'The government makes new laws'. 'Regering' means 'government'.",
+                vocabularyReference: "regering"
+            ),
+            Exercise(
+                type: .sentenceBuilding,
+                prompt: "Arrange the words to form a correct Dutch sentence:",
+                options: ["Ik", "houd", "rekening", "met", "jouw", "wensen"],
+                correctAnswer: "Ik houd rekening met jouw wensen",
+                explanation: "'Ik houd rekening met jouw wensen' means 'I take your wishes into account'. 'Rekening houden met' means 'to take into account'.",
+                vocabularyReference: "rekening"
+            ),
+            Exercise(
+                type: .sentenceBuilding,
+                prompt: "Arrange the words to form a correct Dutch sentence:",
+                options: ["De", "rolstoel", "staat", "in", "de", "gang"],
+                correctAnswer: "De rolstoel staat in de gang",
+                explanation: "'De rolstoel staat in de gang' means 'The wheelchair is in the hallway'. 'Rolstoel' means 'wheelchair'.",
+                vocabularyReference: "rolstoel"
+            ),
+            Exercise(
+                type: .sentenceBuilding,
+                prompt: "Arrange the words to form a correct Dutch sentence:",
+                options: ["De", "bevolking", "neemt", "toe", "elk", "jaar"],
+                correctAnswer: "De bevolking neemt toe elk jaar",
+                explanation: "'De bevolking neemt toe elk jaar' means 'The population increases every year'. 'Toenemen' means 'to grow' or 'to increase'.",
+                vocabularyReference: "toenamen"
+            ),
+            Exercise(
+                type: .sentenceBuilding,
+                prompt: "Arrange the words to form a correct Dutch sentence:",
+                options: ["Ik", "probeer", "haar", "te", "troosten"],
+                correctAnswer: "Ik probeer haar te troosten",
+                explanation: "'Ik probeer haar te troosten' means 'I try to comfort her'. 'Troosten' means 'to comfort'.",
+                vocabularyReference: "troosten"
+            ),
+            Exercise(
+                type: .sentenceBuilding,
+                prompt: "Arrange the words to form a correct Dutch sentence:",
+                options: ["Zij", "werkt", "als", "verpleegkundige"],
+                correctAnswer: "Zij werkt als verpleegkundige",
+                explanation: "'Zij werkt als verpleegkundige' means 'She works as a nurse'. 'Verpleegkundig' means 'nursing'.",
+                vocabularyReference: "verpleegkundig"
+            ),
+            Exercise(
+                type: .sentenceBuilding,
+                prompt: "Arrange the words to form a correct Dutch sentence:",
+                options: ["De", "vrijwilliger", "helpt", "in", "het", "ziekenhuis"],
+                correctAnswer: "De vrijwilliger helpt in het ziekenhuis",
+                explanation: "'De vrijwilliger helpt in het ziekenhuis' means 'The volunteer helps in the hospital'. 'Vrijwilliger' means 'volunteer'.",
+                vocabularyReference: "vrijwilliger"
+            ),
+            Exercise(
+                type: .sentenceBuilding,
+                prompt: "Arrange the words to form a correct Dutch sentence:",
+                options: ["Ik", "zorg", "voor", "mijn", "grootmoeder"],
+                correctAnswer: "Ik zorg voor mijn grootmoeder",
+                explanation: "'Ik zorg voor mijn grootmoeder' means 'I take care of my grandmother'. 'Zorgen' means 'to care'.",
+                vocabularyReference: "zorgen"
+            ),
+            Exercise(
+                type: .sentenceBuilding,
+                prompt: "Arrange the words to form a correct Dutch sentence:",
+                options: ["De", "rekening", "is", "te", "hoog"],
+                correctAnswer: "De rekening is te hoog",
+                explanation: "'De rekening is te hoog' means 'The bill is too high'. 'Rekening' can also mean 'bill'.",
+                vocabularyReference: "rekening"
+            ),
+            // --- Match Meaning Exercises ---
+            Exercise(
+                type: .matchMeaning,
+                prompt: "Match: aanpassen",
+                options: ["adjust", "exist", "care"],
+                correctAnswer: "adjust",
+                explanation: "'Aanpassen' means 'to adjust'.",
+                vocabularyReference: "aanpassen"
+            ),
+            Exercise(
+                type: .matchMeaning,
+                prompt: "Match: bejaarden",
+                options: ["old people", "children", "adults"],
+                correctAnswer: "old people",
+                explanation: "'Bejaarden' means 'old people' or 'elderly'.",
+                vocabularyReference: "bejaarden"
+            ),
+            Exercise(
+                type: .matchMeaning,
+                prompt: "Match: bestaan",
+                options: ["exist", "begin", "end"],
+                correctAnswer: "exist",
+                explanation: "'Bestaan' means 'to exist'.",
+                vocabularyReference: "bestaan"
+            ),
+            Exercise(
+                type: .matchMeaning,
+                prompt: "Match: geestelijk",
+                options: ["spiritual, mentally", "physical", "emotional"],
+                correctAnswer: "spiritual, mentally",
+                explanation: "'Geestelijk' means 'spiritual' or 'mental'.",
+                vocabularyReference: "geestelijk"
+            ),
+            Exercise(
+                type: .matchMeaning,
+                prompt: "Match: geheugen",
+                options: ["memory", "brain", "mind"],
+                correctAnswer: "memory",
+                explanation: "'Geheugen' means 'memory'.",
+                vocabularyReference: "geheugen"
+            ),
+            Exercise(
+                type: .matchMeaning,
+                prompt: "Match: plotseling",
+                options: ["suddenly", "slowly", "always"],
+                correctAnswer: "suddenly",
+                explanation: "'Plotseling' means 'suddenly' or 'all of a sudden'.",
+                vocabularyReference: "plotseling"
+            ),
+            Exercise(
+                type: .matchMeaning,
+                prompt: "Match: regering",
+                options: ["government", "hospital", "school"],
+                correctAnswer: "government",
+                explanation: "'Regering' means 'government'.",
+                vocabularyReference: "regering"
+            ),
+            Exercise(
+                type: .matchMeaning,
+                prompt: "Match: rolstoel",
+                options: ["wheel chair", "car", "bicycle"],
+                correctAnswer: "wheel chair",
+                explanation: "'Rolstoel' means 'wheelchair'.",
+                vocabularyReference: "rolstoel"
+            ),
+            Exercise(
+                type: .matchMeaning,
+                prompt: "Match: toenemen",
+                options: ["to grow, increase", "to decrease", "to stay the same"],
+                correctAnswer: "to grow, increase",
+                explanation: "'Toenemen' means 'to grow' or 'to increase'.",
+                vocabularyReference: "toenamen"
+            ),
+            Exercise(
+                type: .matchMeaning,
+                prompt: "Match: troosten",
+                options: ["comfort, consolation", "help", "support"],
+                correctAnswer: "comfort, consolation",
+                explanation: "'Troosten' means 'to comfort' or 'to console'.",
+                vocabularyReference: "troosten"
+            ),
+            Exercise(
+                type: .matchMeaning,
+                prompt: "Match: verpleegkundig",
+                options: ["nursing", "medical", "health"],
+                correctAnswer: "nursing",
+                explanation: "'Verpleegkundig' means 'nursing'.",
+                vocabularyReference: "verpleegkundig"
+            ),
+            Exercise(
+                type: .matchMeaning,
+                prompt: "Match: vrijwilliger",
+                options: ["volunteer", "worker", "student"],
+                correctAnswer: "volunteer",
+                explanation: "'Vrijwilliger' means 'volunteer'.",
+                vocabularyReference: "vrijwilliger"
+            ),
+            Exercise(
+                type: .matchMeaning,
+                prompt: "Match: zorgen",
+                options: ["care", "help", "support"],
+                correctAnswer: "care",
+                explanation: "'Zorgen' means 'to care'.",
+                vocabularyReference: "zorgen"
+            ),
+            // --- Fill in Blank Exercises ---
+            Exercise(
+                type: .fillInBlank,
+                prompt: "Ik moet mijn plannen ___ aan de nieuwe situatie.",
+                options: ["aanpassen", "bestaan", "zorgen"],
+                correctAnswer: "aanpassen",
+                explanation: "'Aanpassen' means 'to adjust'. Ik moet mijn plannen aanpassen aan de nieuwe situatie. (I have to adjust my plans to the new situation.)",
+                vocabularyReference: "aanpassen"
+            ),
+            Exercise(
+                type: .fillInBlank,
+                prompt: "De ___ hebben speciale zorg nodig.",
+                options: ["bejaarden", "kinderen", "volwassenen"],
+                correctAnswer: "bejaarden",
+                explanation: "'Bejaarden' means 'old people'. De bejaarden hebben speciale zorg nodig. (The elderly need special care.)",
+                vocabularyReference: "bejaarden"
+            ),
+            Exercise(
+                type: .fillInBlank,
+                prompt: "Dit probleem ___ al jaren.",
+                options: ["bestaat", "begint", "eindigt"],
+                correctAnswer: "bestaat",
+                explanation: "'Bestaat' means 'exists'. Dit probleem bestaat al jaren. (This problem has existed for years.)",
+                vocabularyReference: "bestaan"
+            ),
+            Exercise(
+                type: .fillInBlank,
+                prompt: "Hij heeft ___ problemen door de stress.",
+                options: ["geestelijke", "fysieke", "emotionele"],
+                correctAnswer: "geestelijke",
+                explanation: "'Geestelijke' means 'mental'. Hij heeft geestelijke problemen door de stress. (He has mental problems due to stress.)",
+                vocabularyReference: "geestelijk"
+            ),
+            Exercise(
+                type: .fillInBlank,
+                prompt: "Mijn ___ is niet meer zo goed als vroeger.",
+                options: ["geheugen", "gezondheid", "kracht"],
+                correctAnswer: "geheugen",
+                explanation: "'Geheugen' means 'memory'. Mijn geheugen is niet meer zo goed als vroeger. (My memory is not as good as before.)",
+                vocabularyReference: "geheugen"
+            ),
+            Exercise(
+                type: .fillInBlank,
+                prompt: "Het begon ___ te regenen.",
+                options: ["plotseling", "langzaam", "altijd"],
+                correctAnswer: "plotseling",
+                explanation: "'Plotseling' means 'suddenly'. Het begon plotseling te regenen. (It suddenly started to rain.)",
+                vocabularyReference: "plotseling"
+            ),
+            Exercise(
+                type: .fillInBlank,
+                prompt: "De ___ heeft nieuwe wetten gemaakt.",
+                options: ["regering", "ziekenhuis", "school"],
+                correctAnswer: "regering",
+                explanation: "'Regering' means 'government'. De regering heeft nieuwe wetten gemaakt. (The government has made new laws.)",
+                vocabularyReference: "regering"
+            ),
+            Exercise(
+                type: .fillInBlank,
+                prompt: "Ik houd ___ met jouw wensen.",
+                options: ["rekening", "zorgen", "troosten"],
+                correctAnswer: "rekening",
+                explanation: "'Rekening houden met' means 'to take into account'. Ik houd rekening met jouw wensen. (I take your wishes into account.)",
+                vocabularyReference: "rekening"
+            ),
+            Exercise(
+                type: .fillInBlank,
+                prompt: "De ___ staat in de gang.",
+                options: ["rolstoel", "fiets", "auto"],
+                correctAnswer: "rolstoel",
+                explanation: "'Rolstoel' means 'wheelchair'. De rolstoel staat in de gang. (The wheelchair is in the hallway.)",
+                vocabularyReference: "rolstoel"
+            ),
+            Exercise(
+                type: .fillInBlank,
+                prompt: "De bevolking ___ elk jaar.",
+                options: ["neemt toe", "neemt af", "blijft gelijk"],
+                correctAnswer: "neemt toe",
+                explanation: "'Toenemen' means 'to increase'. De bevolking neemt toe elk jaar. (The population increases every year.)",
+                vocabularyReference: "toenamen"
+            ),
+            Exercise(
+                type: .fillInBlank,
+                prompt: "Ik probeer haar te ___ na het slechte nieuws.",
+                options: ["troosten", "helpen", "ondersteunen"],
+                correctAnswer: "troosten",
+                explanation: "'Troosten' means 'to comfort'. Ik probeer haar te troosten na het slechte nieuws. (I try to comfort her after the bad news.)",
+                vocabularyReference: "troosten"
+            ),
+            Exercise(
+                type: .fillInBlank,
+                prompt: "Zij werkt als ___ in het ziekenhuis.",
+                options: ["verpleegkundige", "arts", "dokter"],
+                correctAnswer: "verpleegkundige",
+                explanation: "'Verpleegkundige' means 'nurse'. Zij werkt als verpleegkundige in het ziekenhuis. (She works as a nurse in the hospital.)",
+                vocabularyReference: "verpleegkundig"
+            ),
+            Exercise(
+                type: .fillInBlank,
+                prompt: "De ___ helpt in het verzorgingstehuis.",
+                options: ["vrijwilliger", "werknemer", "student"],
+                correctAnswer: "vrijwilliger",
+                explanation: "'Vrijwilliger' means 'volunteer'. De vrijwilliger helpt in het verzorgingstehuis. (The volunteer helps in the nursing home.)",
+                vocabularyReference: "vrijwilliger"
+            ),
+            Exercise(
+                type: .fillInBlank,
+                prompt: "Ik ___ voor mijn zieke moeder.",
+                options: ["zorg", "help", "werk"],
+                correctAnswer: "zorg",
+                explanation: "'Zorgen' means 'to care'. Ik zorg voor mijn zieke moeder. (I take care of my sick mother.)",
+                vocabularyReference: "zorgen"
+            ),
+            // --- Use in Sentence Exercises ---
+            Exercise(
+                type: .useInSentence,
+                prompt: "Choose the correct use of 'aanpassen':",
+                options: [
+                    "Ik moet mijn plannen aanpassen.",
+                    "Zij past zich aan aan de nieuwe situatie.",
+                    "Wij passen de regels aan."
+                ],
+                correctAnswer: "Ik moet mijn plannen aanpassen.",
+                explanation: "'Aanpassen' means 'to adjust'. Ik moet mijn plannen aanpassen. (I have to adjust my plans.)",
+                vocabularyReference: "aanpassen"
+            ),
+            Exercise(
+                type: .useInSentence,
+                prompt: "Choose the correct use of 'bejaarden':",
+                options: [
+                    "De bejaarden hebben speciale zorg nodig.",
+                    "De kinderen spelen in de tuin.",
+                    "De volwassenen werken hard."
+                ],
+                correctAnswer: "De bejaarden hebben speciale zorg nodig.",
+                explanation: "'Bejaarden' means 'old people'. De bejaarden hebben speciale zorg nodig. (The elderly need special care.)",
+                vocabularyReference: "bejaarden"
+            ),
+            Exercise(
+                type: .useInSentence,
+                prompt: "Choose the correct use of 'bestaan':",
+                options: [
+                    "Dit probleem bestaat al jaren.",
+                    "Het boek bestaat uit 300 pagina's.",
+                    "De organisatie bestaat uit vrijwilligers."
+                ],
+                correctAnswer: "Dit probleem bestaat al jaren.",
+                explanation: "'Bestaan' means 'to exist'. Dit probleem bestaat al jaren. (This problem has existed for years.)",
+                vocabularyReference: "bestaan"
+            ),
+            Exercise(
+                type: .useInSentence,
+                prompt: "Choose the correct use of 'geestelijk':",
+                options: [
+                    "Hij heeft geestelijke problemen.",
+                    "De geestelijke gezondheid is belangrijk.",
+                    "Zij is geestelijk sterk."
+                ],
+                correctAnswer: "Hij heeft geestelijke problemen.",
+                explanation: "'Geestelijk' means 'mental' or 'spiritual'. Hij heeft geestelijke problemen. (He has mental problems.)",
+                vocabularyReference: "geestelijk"
+            ),
+            Exercise(
+                type: .useInSentence,
+                prompt: "Choose the correct use of 'plotseling':",
+                options: [
+                    "Het begon plotseling te regenen.",
+                    "Hij kwam plotseling binnen.",
+                    "Zij stopte plotseling met praten."
+                ],
+                correctAnswer: "Het begon plotseling te regenen.",
+                explanation: "'Plotseling' means 'suddenly'. Het begon plotseling te regenen. (It suddenly started to rain.)",
+                vocabularyReference: "plotseling"
+            ),
+            // --- Missing Word Exercises ---
+            Exercise(
+                type: .missingWord,
+                prompt: "De ___ is te hoog deze maand.",
+                options: ["rekening", "prijs", "kosten"],
+                correctAnswer: "rekening",
+                explanation: "'Rekening' means 'bill'. De rekening is te hoog deze maand. (The bill is too high this month.)",
+                vocabularyReference: "rekening"
+            ),
+            Exercise(
+                type: .missingWord,
+                prompt: "De ___ staat in de gang.",
+                options: ["rolstoel", "fiets", "auto"],
+                correctAnswer: "rolstoel",
+                explanation: "'Rolstoel' means 'wheelchair'. De rolstoel staat in de gang. (The wheelchair is in the hallway.)",
+                vocabularyReference: "rolstoel"
+            ),
+            Exercise(
+                type: .missingWord,
+                prompt: "De bevolking ___ elk jaar.",
+                options: ["neemt toe", "neemt af", "blijft gelijk"],
+                correctAnswer: "neemt toe",
+                explanation: "'Toenemen' means 'to increase'. De bevolking neemt toe elk jaar. (The population increases every year.)",
+                vocabularyReference: "toenamen"
+            ),
+            Exercise(
+                type: .missingWord,
+                prompt: "Ik probeer haar te ___.",
+                options: ["troosten", "helpen", "ondersteunen"],
+                correctAnswer: "troosten",
+                explanation: "'Troosten' means 'to comfort'. Ik probeer haar te troosten. (I try to comfort her.)",
+                vocabularyReference: "troosten"
+            ),
+            Exercise(
+                type: .missingWord,
+                prompt: "Zij werkt als ___.",
+                options: ["verpleegkundige", "arts", "dokter"],
+                correctAnswer: "verpleegkundige",
+                explanation: "'Verpleegkundige' means 'nurse'. Zij werkt als verpleegkundige. (She works as a nurse.)",
+                vocabularyReference: "verpleegkundig"
+            ),
+            Exercise(
+                type: .missingWord,
+                prompt: "De ___ helpt in het ziekenhuis.",
+                options: ["vrijwilliger", "werknemer", "student"],
+                correctAnswer: "vrijwilliger",
+                explanation: "'Vrijwilliger' means 'volunteer'. De vrijwilliger helpt in het ziekenhuis. (The volunteer helps in the hospital.)",
+                vocabularyReference: "vrijwilliger"
+            ),
+            Exercise(
+                type: .missingWord,
+                prompt: "Ik ___ voor mijn familie.",
+                options: ["zorg", "help", "werk"],
+                correctAnswer: "zorg",
+                explanation: "'Zorgen' means 'to care'. Ik zorg voor mijn familie. (I take care of my family.)",
+                vocabularyReference: "zorgen"
+            ),
+            Exercise(
+                type: .missingWord,
+                prompt: "Mijn ___ is niet meer zo goed.",
+                options: ["geheugen", "gezondheid", "kracht"],
+                correctAnswer: "geheugen",
+                explanation: "'Geheugen' means 'memory'. Mijn geheugen is niet meer zo goed. (My memory is not so good anymore.)",
+                vocabularyReference: "geheugen"
+            ),
+            Exercise(
+                type: .missingWord,
+                prompt: "De ___ heeft nieuwe wetten gemaakt.",
+                options: ["regering", "ziekenhuis", "school"],
+                correctAnswer: "regering",
+                explanation: "'Regering' means 'government'. De regering heeft nieuwe wetten gemaakt. (The government has made new laws.)",
+                vocabularyReference: "regering"
+            )
+        ]
+    )
 }
 
 class LessonManager: ObservableObject {
@@ -1759,6 +2258,7 @@ class LessonManager: ObservableObject {
     private init() {
         // Add more lessons here as needed
         self.lessons = [
+            Lesson.chapter25,
             Lesson.chapter26,
             Lesson.chapter31,
             Lesson.chapter33,
