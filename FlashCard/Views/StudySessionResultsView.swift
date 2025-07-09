@@ -179,13 +179,21 @@ struct StudySessionResultsView: View {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                     isLevelUpEffect = false
                     displayedLevel += 1
-                    animatedProgress = 0.0
-                    if remaining > 1 {
-                        animateLevel(level: level + 1, remaining: remaining - 1)
-                    } else {
-                        // Final fill to correct progress
-                        withAnimation(.easeInOut(duration: 1.0)) {
-                            animatedProgress = finalProgress
+                    
+                    // Smoothly animate back to 0% instead of jumping
+                    withAnimation(.easeInOut(duration: 0.5)) {
+                        animatedProgress = 0.0
+                    }
+                    
+                    // Wait for the reset animation to complete, then continue
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        if remaining > 1 {
+                            animateLevel(level: level + 1, remaining: remaining - 1)
+                        } else {
+                            // Final fill to correct progress
+                            withAnimation(.easeInOut(duration: 1.0)) {
+                                animatedProgress = finalProgress
+                            }
                         }
                     }
                 }
