@@ -412,7 +412,6 @@ struct TestView: View {
                 currentIndex: currentIndex + 1,
                 totalCards: maxQuestions ?? cards.count,
                 score: userProfileManager.xp,
-                combo: 0,
                 knownCount: nil,
                 unknownCount: nil,
                 skippedCount: nil,

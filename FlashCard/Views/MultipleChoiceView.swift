@@ -11,7 +11,6 @@ struct MultipleChoiceView: View {
     @State private var hasAnswered = false
     @State private var shuffledOptions: [String] = []
     @State private var showingCloseConfirmation = false
-    @State private var comboCount = 0
     @Environment(\.dismiss) private var dismiss
     
     // Save state properties
@@ -127,7 +126,6 @@ struct MultipleChoiceView: View {
                 currentIndex: currentIndex + 1,
                 totalCards: cards.count,
                 score: userProfileManager.xp, // Use current XP instead of calculated score
-                combo: comboCount,
                 knownCount: nil,
                 unknownCount: nil,
                 skippedCount: nil,
@@ -232,7 +230,6 @@ struct MultipleChoiceView: View {
         currentIndex = 0
         correctAnswers = 0
         totalAnswers = 0
-        comboCount = 0
         showingResults = false
         cards = viewModel.sortCardsForLearning(cards)
         setupCurrentQuestion()
@@ -303,7 +300,6 @@ struct MultipleChoiceView: View {
         let isCorrect = option == getCorrectAnswer()
         if isCorrect {
             correctAnswers += 1
-            comboCount += 1
             // Use custom sound for games (not study mode)
             HapticManager.shared.successNotification() // Haptic only
             SoundManager.shared.playTestCorrectSound() // Custom Correct.wav
@@ -312,7 +308,6 @@ struct MultipleChoiceView: View {
             userProfileManager.addXP(15)
             sessionXP += 15
         } else {
-            comboCount = 0
             // Use custom sound for games (not study mode)
             HapticManager.shared.errorNotification() // Haptic only
             SoundManager.shared.playTestWrongSound() // Custom Wrong.wav

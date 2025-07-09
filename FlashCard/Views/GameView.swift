@@ -31,8 +31,6 @@ struct GameView: View {
     @State private var incorrectMatches: Set<FlashCard> = []
     @State private var showingCloseConfirmation = false
     @State private var showingResults = false
-    @State private var comboCount = 0
-    @State private var consecutiveMatches = 0
     
     // Timer for Match Madness style
     @State private var timeRemaining: Int = 0
@@ -447,8 +445,6 @@ struct GameView: View {
         score = 0
         moves = 0
         incorrectMatches.removeAll()
-        consecutiveMatches = 0
-        comboCount = 0
         selectedCard = nil
 
         // Set up timer based on difficulty and number of cards
@@ -514,16 +510,10 @@ struct GameView: View {
                selectedCard?.type != tappedCard.type {
                 // It's a match! 
                 score += 1
-                consecutiveMatches += 1
                 
                 // Add XP for successful match
                 userProfileManager.addXP(10)
                 sessionXP += 10
-                
-                // Update combo count (after 2 consecutive matches)
-                if consecutiveMatches >= 2 {
-                    comboCount = consecutiveMatches
-                }
                 
                 displayedCards[index].isSelected = true
                 
@@ -609,10 +599,6 @@ struct GameView: View {
             } else {
                 // Not a match
                 displayedCards[index].showWrongAnimation = true
-                
-                // Reset combo on mismatch
-                consecutiveMatches = 0
-                comboCount = 0
                 
                 // Track incorrect matches
                 incorrectMatches.insert(selectedCard!.originalCard)

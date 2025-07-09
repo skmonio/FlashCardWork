@@ -115,7 +115,7 @@ struct StudyView: View {
         return currentIndex > 0 || hasSeenCards
     }
     
-    // Computed property for score (known cards)
+    // Computed property for score
     private var score: Int {
         return knownCards.count * 10
     }
@@ -318,7 +318,6 @@ struct StudyView: View {
                     currentIndex: currentIndex + 1,
                     totalCards: maxQuestions ?? cards.count,
                     score: userProfileManager.xp,
-                    combo: combo,
                     knownCount: nil,
                     unknownCount: nil,
                     skippedCount: nil,

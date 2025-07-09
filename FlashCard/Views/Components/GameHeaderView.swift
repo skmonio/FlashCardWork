@@ -4,7 +4,6 @@ struct GameHeaderView: View {
     let currentIndex: Int
     let totalCards: Int
     let score: Int
-    let combo: Int
     let knownCount: Int?
     let unknownCount: Int?
     let skippedCount: Int?
@@ -20,11 +19,10 @@ struct GameHeaderView: View {
     
     @StateObject private var userProfile = UserProfileManager.shared
     
-    init(currentIndex: Int, totalCards: Int, score: Int, combo: Int, knownCount: Int? = nil, unknownCount: Int? = nil, skippedCount: Int? = nil, onAudioTapped: (() -> Void)? = nil, isAudioPlaying: Bool = false, studyMode: StudyMode? = nil, currentRound: Int? = nil, totalRounds: Int? = nil, sessionXP: Int, showProgressIndicator: Bool = false, progressOverride: Double? = nil, isComplete: Bool = false) {
+    init(currentIndex: Int, totalCards: Int, score: Int, knownCount: Int? = nil, unknownCount: Int? = nil, skippedCount: Int? = nil, onAudioTapped: (() -> Void)? = nil, isAudioPlaying: Bool = false, studyMode: StudyMode? = nil, currentRound: Int? = nil, totalRounds: Int? = nil, sessionXP: Int, showProgressIndicator: Bool = false, progressOverride: Double? = nil, isComplete: Bool = false) {
         self.currentIndex = currentIndex
         self.totalCards = totalCards
         self.score = score
-        self.combo = combo
         self.knownCount = knownCount
         self.unknownCount = unknownCount
         self.skippedCount = skippedCount
@@ -130,25 +128,6 @@ struct GameHeaderView: View {
             
             // Combo and Stats Row
             HStack {
-                // Combo indicator
-                if combo > 1 {
-                    HStack(spacing: 4) {
-                        Image(systemName: "flame.fill")
-                            .foregroundColor(.orange)
-                            .font(.system(size: 16))
-                        Text("\(combo)")
-                            .font(.subheadline)
-                            .fontWeight(.bold)
-                            .foregroundColor(.orange)
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(Color.orange.opacity(0.1))
-                    )
-                }
-                
                 Spacer()
                 
                 // Audio button (center)
@@ -226,7 +205,6 @@ struct GameHeaderView_Previews: PreviewProvider {
                 currentIndex: 7,
                 totalCards: 20,
                 score: 150,
-                combo: 3,
                 knownCount: 5,
                 unknownCount: 2,
                 skippedCount: 1,

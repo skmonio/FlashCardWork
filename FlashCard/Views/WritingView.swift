@@ -12,7 +12,6 @@ struct WritingView: View {
     @State private var hasAnswered = false
     @State private var isCorrect: Bool? = nil
     @State private var showingCloseConfirmation = false
-    @State private var comboCount = 0
     @FocusState private var isKeyboardFocused: Bool
     @Environment(\.dismiss) private var dismiss
     
@@ -178,7 +177,6 @@ struct WritingView: View {
                 currentIndex: currentIndex + 1,
                 totalCards: maxQuestions ?? cards.count,
                 score: userProfileManager.xp,
-                combo: comboCount,
                 knownCount: nil,
                 unknownCount: nil,
                 skippedCount: nil,
@@ -390,7 +388,6 @@ struct WritingView: View {
         
         if answersMatch {
             correctAnswers += 1
-            comboCount += 1
             // Use custom sound for games (not study mode)
             HapticManager.shared.successNotification() // Haptic only
             SoundManager.shared.playTestCorrectSound() // Custom Correct.wav
@@ -400,7 +397,6 @@ struct WritingView: View {
             userProfileManager.addXP(15)
             sessionXP += 15
         } else {
-            comboCount = 0
             // Use custom sound for games (not study mode)
             HapticManager.shared.errorNotification() // Haptic only
             SoundManager.shared.playTestWrongSound() // Custom Wrong.wav
@@ -503,12 +499,7 @@ struct WritingView: View {
         currentIndex = 0
         correctAnswers = 0
         totalAnswers = 0
-        comboCount = 0
-        showingResults = false
-        resetForNextCard()
-        
-        // Clear any saved progress when resetting
-        clearSavedProgress()
+        isKeyboardFocused = true
     }
     
     private func handleBackButton() {

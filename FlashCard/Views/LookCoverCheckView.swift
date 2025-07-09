@@ -159,7 +159,6 @@ struct LookCoverCheckView: View {
                 currentIndex: currentIndex + 1,
                 totalCards: cards.count,
                 score: userProfileManager.xp, // Use current XP instead of calculated score
-                combo: 0, // Look Cover Check doesn't have combo system
                 knownCount: nil,
                 unknownCount: nil,
                 skippedCount: nil,

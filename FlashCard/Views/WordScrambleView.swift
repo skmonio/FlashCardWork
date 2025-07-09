@@ -12,7 +12,6 @@ struct WordScrambleView: View {
     @State private var hasAnswered = false
     @State private var isCorrect: Bool? = nil
     @State private var showingCloseConfirmation = false
-    @State private var comboCount = 0
     @Environment(\.dismiss) private var dismiss
     
     // Progressive study properties
@@ -146,7 +145,6 @@ struct WordScrambleView: View {
                 currentIndex: currentIndex + 1,
                 totalCards: maxQuestions ?? cards.count,
                 score: userProfileManager.xp,
-                combo: comboCount,
                 knownCount: nil,
                 unknownCount: nil,
                 skippedCount: nil,
@@ -325,7 +323,6 @@ struct WordScrambleView: View {
         currentIndex = 0
         correctAnswers = 0
         totalAnswers = 0
-        comboCount = 0
         showingResults = false
         sessionStartTime = Date()
         cards = viewModel.sortCardsForLearning(cards)
@@ -449,7 +446,6 @@ struct WordScrambleView: View {
             // Use custom sound for games (not study mode)
             HapticManager.shared.successNotification() // Haptic only
             SoundManager.shared.playTestCorrectSound() // Custom Correct.wav
-            comboCount += 1
             
             // Add XP for correct answer
             userProfileManager.addXP(15)
@@ -458,7 +454,6 @@ struct WordScrambleView: View {
             // Use custom sound for games (not study mode)
             HapticManager.shared.errorNotification() // Haptic only
             SoundManager.shared.playTestWrongSound() // Custom Wrong.wav
-            comboCount = 0
             
             // Add XP for attempting (even if wrong)
             userProfileManager.addXP(5)

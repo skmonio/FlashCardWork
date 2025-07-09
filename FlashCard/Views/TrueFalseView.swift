@@ -281,7 +281,6 @@ struct TrueFalseView: View {
                     currentIndex: currentIndex + 1,
                     totalCards: maxQuestions ?? cards.count,
                     score: userProfileManager.xp, // Use current XP instead of calculated score
-                    combo: 0, // No combo system for True/False
                     knownCount: nil,
                     unknownCount: nil,
                     skippedCount: nil,

@@ -87,44 +87,44 @@ class GameScene: SKScene {
     func createErrorEffect(at position: CGPoint) {
         print("❌ Creating error effect at: \(position)")
         
-        // Create shake effect and red particles for errors
-        let shake = SKAction.shake(duration: 0.5, amplitudeX: 15, amplitudeY: 10)
-        self.run(shake)
+        // Create red particles for wrong answers
+        let particleEmitter = SKEmitterNode()
+        particleEmitter.particleTexture = createRedParticleTexture()
+        particleEmitter.particleBirthRate = 50
+        particleEmitter.numParticlesToEmit = 20
+        particleEmitter.particleLifetime = 1.0
+        particleEmitter.particleLifetimeRange = 0.5
+        particleEmitter.particleSpeed = 100
+        particleEmitter.particleSpeedRange = 50
+        particleEmitter.particleAlpha = 0.8
+        particleEmitter.particleAlphaRange = 0.2
+        particleEmitter.particleScale = 1.0
+        particleEmitter.particleScaleRange = 0.5
+        particleEmitter.particleColor = UIColor.systemRed
+        particleEmitter.particleColorBlendFactor = 1.0
+        particleEmitter.particleColorBlendFactorRange = 0.3
+        particleEmitter.emissionAngle = 0
+        particleEmitter.emissionAngleRange = .pi * 2
+        particleEmitter.position = position
+        particleEmitter.zPosition = 200
         
-        // Red particle burst
-        let emitter = SKEmitterNode()
-        emitter.particleTexture = createRedParticleTexture()
-        emitter.particleBirthRate = 120
-        emitter.numParticlesToEmit = 60
-        emitter.particleLifetime = 2.0
-        emitter.particleLifetimeRange = 0.5
-        emitter.emissionAngle = CGFloat.pi / 2
-        emitter.emissionAngleRange = CGFloat.pi * 2
-        emitter.particleSpeed = 200
-        emitter.particleSpeedRange = 100
-        emitter.particleScale = 0.3
-        emitter.particleColor = UIColor.systemRed
-        emitter.particleAlpha = 0.9
-        emitter.particleRotationRange = CGFloat.pi * 2
+        addChild(particleEmitter)
         
-        emitter.position = position
-        emitter.zPosition = 100
-        addChild(emitter)
+        // Remove after animation completes
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            particleEmitter.removeFromParent()
+        }
         
-        // Add screen flash effect
-        let flashNode = SKSpriteNode(color: .systemRed, size: CGSize(width: size.width, height: size.height))
-        flashNode.position = CGPoint(x: size.width/2, y: size.height/2)
-        flashNode.alpha = 0.3
-        flashNode.zPosition = 50
-        addChild(flashNode)
+        // Add screen shake effect
+        let shake = SKAction.sequence([
+            SKAction.moveBy(x: 10, y: 0, duration: 0.05),
+            SKAction.moveBy(x: -20, y: 0, duration: 0.05),
+            SKAction.moveBy(x: 10, y: 0, duration: 0.05)
+        ])
+        let shake3 = SKAction.repeat(shake, count: 3)
         
-        let fadeOut = SKAction.fadeOut(withDuration: 0.2)
-        let removeFlash = SKAction.removeFromParent()
-        flashNode.run(SKAction.sequence([fadeOut, removeFlash]))
-        
-        let wait = SKAction.wait(forDuration: 3.0)
-        let remove = SKAction.removeFromParent()
-        emitter.run(SKAction.sequence([wait, remove]))
+        // Apply shake to the scene
+        run(shake3)
     }
     
     func createFloatingScore(score: String, at position: CGPoint, color: UIColor = .systemGreen) {
@@ -161,43 +161,6 @@ class GameScene: SKScene {
         let sequence = SKAction.sequence([scale, group, remove])
         
         scoreLabel.run(sequence)
-    }
-    
-    func createComboEffect(combo: Int, at position: CGPoint) {
-        print("🔥 Creating combo effect \(combo)x at: \(position)")
-        
-        // Create special effects for combo achievements
-        let comboLabel = SKLabelNode(text: "\(combo)x COMBO!")
-        comboLabel.fontSize = 36
-        comboLabel.fontColor = UIColor.systemYellow
-        comboLabel.fontName = "Helvetica-Bold"
-        comboLabel.position = position
-        comboLabel.zPosition = 250
-        
-        // Add outline for better visibility
-        let outlineLabel = SKLabelNode(text: "\(combo)x COMBO!")
-        outlineLabel.fontSize = 36
-        outlineLabel.fontColor = .black
-        outlineLabel.fontName = "Helvetica-Bold"
-        outlineLabel.position = CGPoint.zero
-        outlineLabel.zPosition = -1
-        comboLabel.addChild(outlineLabel)
-        
-        addChild(comboLabel)
-        
-        // Pulsing animation
-        let pulse = SKAction.sequence([
-            SKAction.scale(to: 1.4, duration: 0.3),
-            SKAction.scale(to: 1.0, duration: 0.3)
-        ])
-        let repeat3 = SKAction.repeat(pulse, count: 3)
-        let fadeOut = SKAction.fadeOut(withDuration: 0.5)
-        let remove = SKAction.removeFromParent()
-        
-        comboLabel.run(SKAction.sequence([repeat3, fadeOut, remove]))
-        
-        // Add sparkle particles around the combo text
-        createSuccessParticles(at: position)
     }
     
     // MARK: - Helper Methods
