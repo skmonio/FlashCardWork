@@ -111,6 +111,7 @@ struct StudySessionResultsView: View {
                     
                     // Session Summary Card
                     SessionSummaryCard(session: session)
+                        .padding(.top, 8)
                     
                     // Action Buttons
                     ActionButtonsView(
@@ -162,13 +163,6 @@ struct StudySessionResultsView: View {
         .navigationTitle("Session Complete!")
         .navigationBarTitleDisplayMode(.large)
         .navigationBarBackButtonHidden(true)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button("Done") {
-                    dismiss()
-                }
-            }
-        }
         .overlay(
             GlobalNotificationOverlay()
         )
@@ -463,8 +457,8 @@ struct ActionButtonsView: View {
                 }
                 .font(.headline)
                 .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .padding()
+                .padding(.horizontal, 32)
+                .padding(.vertical, 12)
                 .background(Color.blue)
                 .cornerRadius(12)
             }
@@ -477,13 +471,14 @@ struct ActionButtonsView: View {
                     }
                     .font(.headline)
                     .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding()
+                    .padding(.horizontal, 32)
+                    .padding(.vertical, 12)
                     .background(Color.red)
                     .cornerRadius(12)
                 }
             }
         }
+        .padding(.horizontal, 40)
     }
 }
 
