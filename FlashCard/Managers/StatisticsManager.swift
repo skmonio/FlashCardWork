@@ -325,6 +325,20 @@ class StatisticsManager: ObservableObject {
     func getTotalQuestionsAnswered() -> Int {
         return studySessions.reduce(0) { $0 + $1.totalCards }
     }
+    
+    // Reset all statistics data
+    func resetAllData() {
+        studySessions.removeAll()
+        currentStreak = 0
+        longestStreak = 0
+        totalStudyTime = 0
+        perfectSessions.removeAll()
+        
+        // Save the reset data
+        saveData()
+        
+        print("📊 All statistics data has been reset")
+    }
 }
 
 // MARK: - Data Models

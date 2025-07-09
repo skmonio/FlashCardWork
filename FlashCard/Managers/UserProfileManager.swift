@@ -165,6 +165,9 @@ class UserProfileManager: ObservableObject {
         // Reset session achievement tracking
         achievementsUnlockedThisSession.removeAll()
         
+        // Reset StatisticsManager data to keep achievements and stats in sync
+        StatisticsManager.shared.resetAllData()
+        
         // Trigger UI update
         objectWillChange.send()
         
