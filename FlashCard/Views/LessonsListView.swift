@@ -3,7 +3,6 @@ import SwiftUI
 struct LessonsListView: View {
     @ObservedObject var lessonManager = LessonManager.shared
     @ObservedObject var analyticsManager = LessonAnalyticsManager.shared
-    @ObservedObject var pathManager = LearningPathManager.shared
     @State private var completedLessons: [UUID: Int] = [:] // lessonId: bestScore
     let viewModel: FlashCardViewModel
     @Environment(\.dismiss) private var dismiss
@@ -24,9 +23,6 @@ struct LessonsListView: View {
             
             ScrollView {
                 VStack(spacing: 24) {
-                    // Learning Path Section
-                    learningPathSection
-                    
                     // Regular Lessons Section
                     regularLessonsSection
                 }
@@ -37,84 +33,6 @@ struct LessonsListView: View {
         .navigationBarHidden(true)
         .navigationBarBackButtonHidden(true)
         .background(Color(.systemGroupedBackground))
-    }
-    
-    private var learningPathSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Text("Learning Path")
-                    .font(.title2)
-                    .fontWeight(.bold)
-                Spacer()
-                if let path = pathManager.currentPath {
-                    Text("\(Int(path.progressPercentage * 100))% Complete")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-            }
-            
-            NavigationLink(destination: LearningPathView(viewModel: viewModel)) {
-                HStack {
-                    Image(systemName: "map.fill")
-                        .font(.title2)
-                        .foregroundColor(.purple)
-                        .frame(width: 30)
-                    
-                    VStack(alignment: .leading, spacing: 4) {
-                        HStack {
-                            Text("Chapter 3: Communication Mastery")
-                                .font(.headline)
-                                .foregroundColor(.primary)
-                            
-                            Text("NEW")
-                                .font(.caption2)
-                                .fontWeight(.bold)
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
-                                .background(Color.orange)
-                                .cornerRadius(4)
-                        }
-                        
-                        Text("Master Dutch communication skills from basic to advanced levels")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                            .lineLimit(2)
-                        
-                        if let path = pathManager.currentPath {
-                            HStack {
-                                ProgressView(value: path.progressPercentage)
-                                    .progressViewStyle(LinearProgressViewStyle(tint: .purple))
-                                    .scaleEffect(x: 1, y: 1.5, anchor: .center)
-                                
-                                Text("\(path.completedLessons)/\(path.totalLessons) lessons")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                    }
-                    
-                    Spacer()
-                    
-                    Image(systemName: "chevron.right")
-                        .foregroundColor(.secondary)
-                }
-                .padding()
-                .background(
-                    LinearGradient(
-                        colors: [Color.purple.opacity(0.1), Color.blue.opacity(0.1)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .cornerRadius(12)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(Color.purple.opacity(0.3), lineWidth: 1)
-                )
-            }
-            .buttonStyle(PlainButtonStyle())
-        }
     }
     
     private var regularLessonsSection: some View {
