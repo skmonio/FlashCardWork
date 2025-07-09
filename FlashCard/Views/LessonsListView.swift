@@ -402,6 +402,7 @@ struct LessonDetailView: View {
                     .foregroundColor(.white)
                     .cornerRadius(12)
             }
+            .buttonStyle(PlainButtonStyle())
             .padding(.bottom)
         }
     }
@@ -451,15 +452,20 @@ struct LessonDetailView: View {
                 .bold()
             Text("You answered \(correctCount) out of \(shuffledExercises.count) correctly.")
                 .font(.headline)
-            Button("Back to Lessons") {
+            Button(action: {
                 HapticManager.shared.buttonTap()
                 presentationMode.wrappedValue.dismiss()
+            }) {
+                Text("Back to Lessons")
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.gray.opacity(0.2))
+                    .foregroundColor(.blue)
+                    .cornerRadius(12)
             }
-            .padding()
-            .background(Color.gray.opacity(0.2))
-            .foregroundColor(.blue)
-            .cornerRadius(12)
-            Button("Review Lesson") {
+            .buttonStyle(PlainButtonStyle())
+            
+            Button(action: {
                 HapticManager.shared.buttonTap()
                 // Just go back to the last question and let them navigate normally
                 finished = false
@@ -467,11 +473,15 @@ struct LessonDetailView: View {
                 currentExerciseIndex = shuffledExercises.count - 1
                 selectedAnswer = userAnswers[currentExerciseIndex] ?? ""
                 showFeedback = true // Show feedback immediately in review
+            }) {
+                Text("Review Lesson")
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.blue)
+                    .foregroundColor(.white)
+                    .cornerRadius(12)
             }
-            .padding()
-            .background(Color.blue)
-            .foregroundColor(.white)
-            .cornerRadius(12)
+            .buttonStyle(PlainButtonStyle())
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -582,7 +592,7 @@ struct LessonDetailView: View {
             
             // Navigation buttons (Previous and Next/Finish)
             HStack(spacing: 12) {
-                Button("Previous") {
+                Button(action: {
                     HapticManager.shared.buttonTap()
                     if currentExerciseIndex > 0 {
                         currentExerciseIndex -= 1
@@ -592,16 +602,18 @@ struct LessonDetailView: View {
                         restoreSentenceBuildingState()
                         print("📚 Navigated to previous exercise: \(currentExerciseIndex)")
                     }
+                }) {
+                    Text("Previous")
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(currentExerciseIndex == 0 ? Color.gray.opacity(0.3) : Color.gray.opacity(0.2))
+                        .foregroundColor(currentExerciseIndex == 0 ? .gray : .blue)
+                        .cornerRadius(8)
                 }
                 .disabled(currentExerciseIndex == 0)
-                .padding()
-                .frame(maxWidth: .infinity)
-                .background(currentExerciseIndex == 0 ? Color.gray.opacity(0.3) : Color.gray.opacity(0.2))
-                .foregroundColor(currentExerciseIndex == 0 ? .gray : .blue)
-                .cornerRadius(8)
                 .buttonStyle(PlainButtonStyle())
                 
-                Button(currentExerciseIndex < shuffledExercises.count - 1 ? "Next" : "Finish Lesson") {
+                Button(action: {
                     HapticManager.shared.buttonTap()
                     if currentExerciseIndex < shuffledExercises.count - 1 {
                         currentExerciseIndex += 1
@@ -630,12 +642,14 @@ struct LessonDetailView: View {
                             )
                         }
                     }
+                }) {
+                    Text(currentExerciseIndex < shuffledExercises.count - 1 ? "Next" : "Finish Lesson")
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
                 }
-                .padding()
-                .frame(maxWidth: .infinity)
-                .background(Color.blue)
-                .foregroundColor(.white)
-                .cornerRadius(8)
                 .buttonStyle(PlainButtonStyle())
             }
         }
@@ -832,9 +846,9 @@ struct LessonDetailView: View {
                                         .cornerRadius(3)
                                         .onTapGesture {
                                             if !showFeedback {
-                                                // Remove word from sentence and add back to available words
-                                                selectedWords.remove(at: index)
-                                                availableWords.append(word)
+                                                // Remove word from sentence
+                                                let removedWord = selectedWords.remove(at: index)
+                                                // No need to update availableWords, grid will update automatically
                                             }
                                         }
                                 }
@@ -870,32 +884,38 @@ struct LessonDetailView: View {
                 }
             }
             
-            // Available words
+            // Available words (grid, stable positions)
             if !showFeedback {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Available words:")
                         .font(.headline)
                         .foregroundColor(.secondary)
                     
-                    LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 8) {
-                        ForEach(availableWords.indices, id: \.self) { index in
-                            let word = availableWords[index]
+                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 3), spacing: 12) {
+                        ForEach(options.indices, id: \.self) { index in
+                            let word = options[index]
+                            let isSelected = selectedWords.contains(word)
                             Button(action: {
-                                if !showFeedback {
-                                    // Add word to sentence
+                                if !showFeedback && !isSelected {
                                     selectedWords.append(word)
-                                    availableWords.remove(at: index)
                                 }
                             }) {
-                                Text(word)
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 6)
-                                    .frame(maxWidth: .infinity)
-                                    .background(Color.blue.opacity(0.1))
-                                    .foregroundColor(.blue)
-                                    .cornerRadius(8)
+                                if isSelected {
+                                    // Show empty/transparent cell for selected word
+                                    Color.clear
+                                        .frame(height: 32)
+                                } else {
+                                    Text(word)
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 6)
+                                        .frame(maxWidth: .infinity)
+                                        .background(Color.blue.opacity(0.1))
+                                        .foregroundColor(.blue)
+                                        .cornerRadius(8)
+                                        .fixedSize(horizontal: true, vertical: false)
+                                }
                             }
-                            .disabled(showFeedback)
+                            .disabled(showFeedback || isSelected)
                         }
                     }
                 }
@@ -903,7 +923,7 @@ struct LessonDetailView: View {
             
             // Check answer button
             if !showFeedback && selectedWords.count == options.count {
-                Button("Check Answer") {
+                Button(action: {
                     HapticManager.shared.buttonTap()
                     
                     let userSentence = selectedWords.joined(separator: " ")
@@ -923,32 +943,31 @@ struct LessonDetailView: View {
                     DispatchQueue.main.async {
                         recordExerciseAttempt(exercise: exercise, userAnswer: userSentence)
                     }
+                }) {
+                    Text("Check Answer")
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(12)
                 }
-                .padding()
-                .frame(maxWidth: .infinity)
-                .background(Color.blue)
-                .foregroundColor(.white)
-                .cornerRadius(12)
+                .buttonStyle(PlainButtonStyle())
             }
             
             // Reset button
             if !showFeedback && !selectedWords.isEmpty {
-                Button("Reset") {
+                Button(action: {
                     HapticManager.shared.buttonTap()
-                    availableWords.append(contentsOf: selectedWords)
                     selectedWords.removeAll()
+                }) {
+                    Text("Reset")
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(Color.gray.opacity(0.2))
+                        .foregroundColor(.gray)
+                        .cornerRadius(8)
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
-                .background(Color.gray.opacity(0.2))
-                .foregroundColor(.gray)
-                .cornerRadius(8)
-            }
-        }
-        .onAppear {
-            // Initialize available words when exercise appears
-            if availableWords.isEmpty {
-                availableWords = options.shuffled()
+                .buttonStyle(PlainButtonStyle())
             }
         }
     }
