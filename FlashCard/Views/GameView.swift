@@ -477,6 +477,80 @@ struct GameView: View {
         timer = nil
     }
     
+    private func endGame() {
+        // Stop the timer
+        stopTimer()
+        
+        // Check if we've reached the max questions limit (for progressive study)
+        if let maxQuestions = maxQuestions, score >= maxQuestions / 2 {
+            print("🧠 Reached max questions limit for progressive study")
+            HapticManager.shared.gameComplete()
+            
+            // Clear saved progress since game is complete
+            clearSavedProgress()
+            
+            // Call level completion callback if this is a progressive study session
+            if let onLevelComplete = onLevelComplete {
+                let levelNumber: Int
+                switch studyMode {
+                case .maintenance: levelNumber = 1
+                case .cram: levelNumber = 2
+                case .adaptive: levelNumber = 3
+                default: levelNumber = 1
+                }
+                
+                let result = LevelResult(
+                    level: levelNumber,
+                    score: score,
+                    total: maxQuestions / 2
+                )
+                onLevelComplete(result)
+            } else {
+                // Post notification for regular memory game mode
+                NotificationCenter.default.post(name: .memoryGameCompleted, object: nil)
+                
+                // Check for perfect session (100% accuracy with at least 5 pairs)
+                if gameCards.count >= 10 && score == gameCards.count / 2 {
+                    let sessionDuration = Date().timeIntervalSince(gameStartTime ?? Date())
+                    StatisticsManager.shared.recordPerfectSession(
+                        gameType: .game,
+                        totalCards: gameCards.count / 2,
+                        knownCards: score,
+                        duration: sessionDuration
+                    )
+                }
+                
+                withAnimation {
+                    StreakManager.shared.recordGameCompletion()
+                    showingResults = true
+                }
+            }
+            return
+        }
+        
+        // Regular game completion
+        HapticManager.shared.gameComplete()
+        
+        // Clear saved progress since game is complete
+        clearSavedProgress()
+        
+        // Check for perfect session (100% accuracy with at least 5 pairs)
+        if gameCards.count >= 10 && score == gameCards.count / 2 {
+            let sessionDuration = Date().timeIntervalSince(gameStartTime ?? Date())
+            StatisticsManager.shared.recordPerfectSession(
+                gameType: .game,
+                totalCards: gameCards.count / 2,
+                knownCards: score,
+                duration: sessionDuration
+            )
+        }
+        
+        withAnimation {
+            StreakManager.shared.recordGameCompletion()
+            showingResults = true
+        }
+    }
+    
     private func cardTapped(_ tappedCard: Card) {
         guard let index = displayedCards.firstIndex(where: { $0.id == tappedCard.id }) else { return }
         

@@ -60,11 +60,4 @@ struct NotificationBanner: View {
 
 #Preview {
     NotificationBanner()
-        .onAppear {
-            // Show a test notification
-            NotificationManager.shared.showAchievement(
-                title: "First Steps",
-                message: "Earn your first 100 XP"
-            )
-        }
 } 

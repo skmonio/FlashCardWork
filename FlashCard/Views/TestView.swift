@@ -119,44 +119,54 @@ struct TestView: View {
         return options.shuffled()
     }
     
-    private func handleAnswer(_ option: String) {
-        if !hasAnswered {
-            selectedAnswer = option
-            hasAnswered = true
-            // Save answer state
-            answerHistory[currentIndex] = option
-            hasAnsweredHistory[currentIndex] = true
-            let isCorrect = option == currentCard.definition
-            
-            // Update maxProgressIndex if answering the latest question
-            if currentIndex >= maxProgressIndex {
-                maxProgressIndex = currentIndex + 1
-                print("🔍 Updated maxProgressIndex to \(maxProgressIndex) after answering question \(currentIndex)")
-            }
-            
-            if isCorrect {
-                correctAnswers += 1
-                HapticManager.shared.testCorrectHaptic() // Haptic only, no system sound
-                SoundManager.shared.playTestCorrectSound() // Play custom correct sound
-                
-                // Apply SRS logic for correct answer
-                let updatedCard = srsManager.processSimpleReview(for: currentCard, simpleQuality: .know)
-                viewModel.updateCardWithSRSData(updatedCard)
-            } else {
-                incorrectCards.insert(currentCard.id)
-                HapticManager.shared.testWrongHaptic() // Haptic only, no system sound
-                SoundManager.shared.playTestWrongSound() // Play custom wrong sound
-                
-                // Apply SRS logic for incorrect answer
-                let updatedCard = srsManager.processSimpleReview(for: currentCard, simpleQuality: .dontKnow)
-                viewModel.updateCardWithSRSData(updatedCard)
-            }
-            
-            // Record learning statistics - card was shown and answered correctly/incorrectly
-            viewModel.recordCardShown(currentCard.id, isCorrect: isCorrect)
-            
-            // Don't automatically move to next question - let user review and click Next
+    private func handleAnswer(_ answer: String) {
+        print("🧪 handleAnswer() called with answer: '\(answer)'")
+        guard !hasAnswered else { return }
+        
+        selectedAnswer = answer
+        hasAnswered = true
+        
+        let isCorrect = answer == currentCard.definition
+        print("🧪 Answer check: selected='\(answer)' correct='\(currentCard.definition)' isCorrect=\(isCorrect)")
+        
+        // Save answer state for navigation
+        answerHistory[currentIndex] = answer
+        hasAnsweredHistory[currentIndex] = true
+        
+        // Update maxProgressIndex if answering the latest question
+        if currentIndex >= maxProgressIndex {
+            maxProgressIndex = currentIndex + 1
+            print("🔍 Updated maxProgressIndex to \(maxProgressIndex) after answering question \(currentIndex)")
         }
+        
+        if isCorrect {
+            print("🧪 CORRECT ANSWER - awarding XP")
+            correctAnswers += 1
+            HapticManager.shared.testCorrectHaptic() // Haptic only, no system sound
+            SoundManager.shared.playTestCorrectSound() // Play custom correct sound
+            
+            // Award XP for correct answer
+            sessionXP += 5
+            print("🧪 Correct answer! Session XP: \(sessionXP)")
+            
+            // Apply SRS logic for correct answer
+            let updatedCard = srsManager.processSimpleReview(for: currentCard, simpleQuality: .know)
+            viewModel.updateCardWithSRSData(updatedCard)
+        } else {
+            print("🧪 INCORRECT ANSWER")
+            incorrectCards.insert(currentCard.id)
+            HapticManager.shared.testWrongHaptic() // Haptic only, no system sound
+            SoundManager.shared.playTestWrongSound() // Play custom wrong sound
+            
+            // Apply SRS logic for incorrect answer
+            let updatedCard = srsManager.processSimpleReview(for: currentCard, simpleQuality: .dontKnow)
+            viewModel.updateCardWithSRSData(updatedCard)
+        }
+        
+        // Record learning statistics - card was shown and answered correctly/incorrectly
+        viewModel.recordCardShown(currentCard.id, isCorrect: isCorrect)
+        
+        // Don't automatically move to next question - let user review and click Next
     }
     
     private func moveToNextQuestion() {

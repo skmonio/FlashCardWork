@@ -70,9 +70,31 @@ struct UserProfileView: View {
                 animatedProgress = userProfile.progressToNextLevel
             }
             .onChange(of: userProfile.progressToNextLevel) { newProgress in
-                // Animate progress bar when XP changes
-                withAnimation(.easeInOut(duration: 1.0)) {
-                    animatedProgress = newProgress
+                // Check if we leveled up (progress went from high to low)
+                let oldProgress = animatedProgress
+                let newProgressValue = newProgress
+                
+                if oldProgress > 0.8 && newProgressValue < 0.2 {
+                    // Likely a level up - animate to 1.0 first (completion)
+                    withAnimation(.easeInOut(duration: 0.6)) {
+                        animatedProgress = 1.0
+                    }
+                    
+                    // After reaching 1.0, wait a moment, then start filling from 0 to new progress
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                        // Reset to 0 first (instant, no animation)
+                        animatedProgress = 0.0
+                        
+                        // Then animate from 0 to new progress
+                        withAnimation(.easeInOut(duration: 0.8)) {
+                            animatedProgress = newProgressValue
+                        }
+                    }
+                } else {
+                    // Normal progress update
+                    withAnimation(.easeInOut(duration: 1.0)) {
+                        animatedProgress = newProgressValue
+                    }
                 }
             }
         }

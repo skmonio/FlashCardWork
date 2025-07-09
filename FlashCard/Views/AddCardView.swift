@@ -41,6 +41,10 @@ struct AddCardView: View {
     @State private var showingTranslationError = false
     @State private var translationErrorMessage = ""
     
+    // Session tracking for summary notification
+    @State private var wordsAddedThisSession = 0
+    @State private var hasShownSummaryNotification = false
+    
     private let logger = Logger(subsystem: "com.flashcards", category: "AddCardView")
     
     private var canSave: Bool {
@@ -74,6 +78,22 @@ struct AddCardView: View {
                 HStack {
                     Button("Cancel") {
                         logger.debug("Cancel button tapped")
+                        // Show summary notification if words were added
+                        if wordsAddedThisSession > 1 && !hasShownSummaryNotification {
+                            logger.debug("Cancel: Showing summary notification for \(wordsAddedThisSession) words")
+                            showSummaryNotification()
+                        } else if wordsAddedThisSession == 1 && !hasShownSummaryNotification {
+                            // Show single word notification if only one word was added
+                            logger.debug("Cancel: Showing single word notification")
+                            NotificationManager.shared.showNotification(
+                                AppNotification(
+                                    type: .info,
+                                    title: "✅ Word Added",
+                                    message: "Added 1 new word to your collection",
+                                    duration: 3.0
+                                )
+                            )
+                        }
                         // Clean up any temporary audio recording
                         AudioManager.shared.deleteAudio(for: temporaryCardId)
                         dismiss()
@@ -336,12 +356,34 @@ struct AddCardView: View {
                 selectedDeckIds.insert(defaultDeck.id)
                 logger.debug("Pre-selected default deck: \(defaultDeck.name)")
             }
+            
+            // Reset session tracking for new session
+            wordsAddedThisSession = 0
+            hasShownSummaryNotification = false
+            logger.debug("Session tracking reset for new AddCardView session")
         }
         .onDisappear {
             logger.debug("AddCardView disappeared")
             // Stop any ongoing recording when view disappears
             AudioManager.shared.stopRecording()
             AudioManager.shared.stopPlayback()
+            
+            // Show summary notification if words were added and no summary was shown yet
+            if wordsAddedThisSession > 1 && !hasShownSummaryNotification {
+                logger.debug("onDisappear: Showing summary notification for \(wordsAddedThisSession) words")
+                showSummaryNotification()
+            } else if wordsAddedThisSession == 1 && !hasShownSummaryNotification {
+                // Show single word notification if only one word was added
+                logger.debug("onDisappear: Showing single word notification")
+                NotificationManager.shared.showNotification(
+                    AppNotification(
+                        type: .info,
+                        title: "✅ Word Added",
+                        message: "Added 1 new word to your collection",
+                        duration: 3.0
+                    )
+                )
+            }
         }
         .alert("Word Found", isPresented: $showingValidationAlert) {
             Button("OK") { }
@@ -425,7 +467,7 @@ struct AddCardView: View {
         
         logger.debug("Attempting to save card...")
         
-        viewModel.addCard(
+        let newCard = viewModel.addCard(
             word: trimmedWord,
             definition: trimmedDefinition,
             example: trimmedExample,
@@ -438,23 +480,46 @@ struct AddCardView: View {
             cardId: temporaryCardId // Pass the temporary ID so audio gets linked
         )
         
-        // Show success notification
-        NotificationManager.shared.showNotification(
-            AppNotification(
-                type: .info,
-                title: "✅ Card Saved",
-                message: "Added '\(trimmedWord)' to your collection",
-                duration: 3.0
-            )
-        )
+        // Increment session counter
+        wordsAddedThisSession += 1
+        logger.debug("Session counter incremented to: \(wordsAddedThisSession)")
+        
+        // Explicitly save the cards to ensure persistence
+        viewModel.saveAllData()
+        logger.debug("ViewModel data saved after adding card: '\(trimmedWord)'")
         
         // Force a save to UserDefaults
         UserDefaults.standard.synchronize()
         logger.debug("UserDefaults synchronized")
         
+        // Show updating notification for "Save & Add Another" mode
+        if shouldResetForm {
+            // Show updating notification that shows total words added so far
+            NotificationManager.shared.showNotification(
+                AppNotification(
+                    type: .info,
+                    title: "✅ Card Added",
+                    message: "Added '\(trimmedWord)' (\(wordsAddedThisSession) total this session)",
+                    duration: 2.0
+                )
+            )
+        } else {
+            // Show individual notification for single save
+            NotificationManager.shared.showNotification(
+                AppNotification(
+                    type: .info,
+                    title: "✅ Card Saved",
+                    message: "Added '\(trimmedWord)' to your collection",
+                    duration: 3.0
+                )
+            )
+        }
+        
         if shouldResetForm {
             resetForm()
         } else {
+            // Show summary notification before dismissing
+            showSummaryNotification()
             dismiss()
         }
     }
@@ -573,6 +638,25 @@ struct AddCardView: View {
         
         HapticManager.shared.lightImpact()
         logger.debug("✅ Manual translation request initiated")
+    }
+    
+    private func showSummaryNotification() {
+        guard wordsAddedThisSession > 1 && !hasShownSummaryNotification else { return }
+        
+        logger.debug("Showing summary notification for \(wordsAddedThisSession) words added this session")
+        hasShownSummaryNotification = true
+        
+        // Show summary notification with delay to avoid conflicts with individual card notifications
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            NotificationManager.shared.showNotification(
+                AppNotification(
+                    type: .info,
+                    title: "✅ Session Complete",
+                    message: "Great job! Added \(wordsAddedThisSession) new words to your collection",
+                    duration: 4.0
+                )
+            )
+        }
     }
 }
 

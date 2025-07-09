@@ -486,7 +486,383 @@ class DutchGrammarRulesDatabase {
         relatedRules: ["verb_present_a1", "verb_perfect_a2", "verb_irregular_past_a2"]
     )
     
-    // MARK: - B1 Level Verb Conjugation Rules
+    lazy var verledenTijdA2 = DutchGrammarRule(
+        id: "verleden_tijd_a2",
+        title: "Verleden Tijd - Praktijk Oefening (A2)",
+        type: .verbConjugation,
+        level: .a2,
+        explanation: """
+        De verleden tijd (imperfectum) gebruik je om te vertellen wat er in het verleden gebeurde. Deze oefening focust op veelvoorkomende werkwoorden zoals 'gaan', 'zijn', 'combineren', 'besparen', 'vertrouwen', 'logeren', en 'verwennen'.
+        
+        Belangrijke regels:
+        • Regelmatige werkwoorden: stam + de/te (volgens 't kofschip regel)
+        • Onregelmatige werkwoorden: speciale vormen (gaan → ging, zijn → was/waren)
+        • Meervoud krijgt extra -n: -den/-ten
+        
+        Onregelmatige werkwoorden in deze oefening:
+        • gaan → ging/gingen
+        • zijn → was/waren
+        """,
+        keyPoints: [
+            "Regelmatige werkwoorden volgen 't kofschip regel",
+            "Onregelmatige werkwoorden hebben speciale vormen",
+            "Gaan → ging/gingen (onregelmatig)",
+            "Zijn → was/waren (onregelmatig)",
+            "Meervoud krijgt altijd -n erbij",
+            "Let op de spelling van de stam"
+        ],
+        examples: [
+            GrammarExample(
+                dutch: "Gisteren ging ik naar de winkel.",
+                english: "Yesterday I went to the store.",
+                breakdown: "gaan → ging (onregelmatig werkwoord)",
+                audioHint: "ɣɪstərə(n) ɣɪŋ ɪk naːr də vɪŋkəl"
+            ),
+            GrammarExample(
+                dutch: "Vorig jaar waren we in Nederland.",
+                english: "Last year we were in the Netherlands.",
+                breakdown: "zijn → waren (onregelmatig, meervoud)",
+                audioHint: "voːrəx jaːr vaːrə(n) və ɪn neːdərlɑnt"
+            ),
+            GrammarExample(
+                dutch: "Hij combineerde de kleuren goed.",
+                english: "He combined the colors well.",
+                breakdown: "combineer + de (r is zacht)",
+                audioHint: "hɛi kɔmbiːneːrdə də kleːrə(n) ɣut"
+            ),
+            GrammarExample(
+                dutch: "Zij bespaarde veel geld.",
+                english: "She saved a lot of money.",
+                breakdown: "bespaar + de (r is zacht)",
+                audioHint: "zɛi bəspaːrdə veːl ɣɛlt"
+            ),
+            GrammarExample(
+                dutch: "Wij vertrouwden op elkaar.",
+                english: "We trusted each other.",
+                breakdown: "vertrouw + den (w is zacht + meervoud)",
+                audioHint: "vɛi vərtrɑudə(n) ɔp əlkaːr"
+            ),
+            GrammarExample(
+                dutch: "Jullie logeerden in een hotel.",
+                english: "You stayed in a hotel.",
+                breakdown: "logeer + den (r is zacht + meervoud)",
+                audioHint: "jɵli loːɣeːrdə(n) ɪn ən hoːtɛl"
+            ),
+            GrammarExample(
+                dutch: "Hij verwende zijn kinderen.",
+                english: "He spoiled his children.",
+                breakdown: "verwen + de (n is zacht)",
+                audioHint: "hɛi vərvɛndə zɛin kɪndərə(n)"
+            )
+        ],
+        exercises: [
+            // Gaan exercises
+            GrammarExercise(
+                question: "Verleden tijd van 'gaan': Gisteren ___ ik naar school.",
+                options: ["ga", "gaat", "ging", "gingen"],
+                correctAnswer: 2,
+                explanation: "Gaan is onregelmatig: gaan → ging (enkelvoud)",
+                hint: "Gaan is een onregelmatig werkwoord"
+            ),
+            GrammarExercise(
+                question: "Verleden tijd van 'gaan': Vorige week ___ wij naar Amsterdam.",
+                options: ["ga", "gaat", "ging", "gingen"],
+                correctAnswer: 3,
+                explanation: "Gaan is onregelmatig: gaan → gingen (meervoud)",
+                hint: "Dit is meervoud (wij)"
+            ),
+            GrammarExercise(
+                question: "Complete: 'Hij ___ naar de dokter' (He went to the doctor)",
+                options: ["ga", "gaat", "ging", "gingen"],
+                correctAnswer: 2,
+                explanation: "Hij ging naar de dokter - gaan → ging",
+                hint: "Gaan is onregelmatig in de verleden tijd",
+                exerciseType: .fillInTheBlank
+            ),
+            
+            // Zijn exercises
+            GrammarExercise(
+                question: "Verleden tijd van 'zijn': Ik ___ gisteren thuis.",
+                options: ["ben", "bent", "was", "waren"],
+                correctAnswer: 2,
+                explanation: "Zijn is onregelmatig: zijn → was (enkelvoud)",
+                hint: "Zijn is een onregelmatig werkwoord"
+            ),
+            GrammarExercise(
+                question: "Verleden tijd van 'zijn': Jullie ___ laat op het feest.",
+                options: ["zijn", "bent", "was", "waren"],
+                correctAnswer: 3,
+                explanation: "Zijn is onregelmatig: zijn → waren (meervoud)",
+                hint: "Dit is meervoud (jullie)"
+            ),
+            GrammarExercise(
+                question: "Complete: 'Zij ___ erg moe' (She was very tired)",
+                options: ["is", "bent", "was", "waren"],
+                correctAnswer: 2,
+                explanation: "Zij was erg moe - zijn → was",
+                hint: "Zijn is onregelmatig in de verleden tijd",
+                exerciseType: .fillInTheBlank
+            ),
+            
+            // Combineren exercises
+            GrammarExercise(
+                question: "Verleden tijd van 'combineren': Hij ___ de ingrediënten.",
+                options: ["combineer", "combineert", "combineerde", "combineerden"],
+                correctAnswer: 2,
+                explanation: "Combineer + de (r is zacht, niet in 't kofschip)",
+                hint: "Is de r hard of zacht? Denk aan 't kofschip"
+            ),
+            GrammarExercise(
+                question: "Verleden tijd van 'combineren': Wij ___ verschillende stijlen.",
+                options: ["combineer", "combineert", "combineerde", "combineerden"],
+                correctAnswer: 3,
+                explanation: "Combineer + den (r is zacht + meervoud krijgt -n)",
+                hint: "Meervoud krijgt extra -n"
+            ),
+            GrammarExercise(
+                question: "Complete: 'Ze ___ de kleuren perfect' (She combined the colors perfectly)",
+                options: ["combineer", "combineert", "combineerde", "combineerden"],
+                correctAnswer: 2,
+                explanation: "Ze combineerde de kleuren perfect - combineer + de",
+                hint: "R is een zachte medeklinker",
+                exerciseType: .fillInTheBlank
+            ),
+            
+            // Besparen exercises
+            GrammarExercise(
+                question: "Verleden tijd van 'besparen': Ik ___ veel geld.",
+                options: ["bespaar", "bespaart", "bespaarde", "bespaarden"],
+                correctAnswer: 2,
+                explanation: "Bespaar + de (r is zacht, niet in 't kofschip)",
+                hint: "Is de r hard of zacht?"
+            ),
+            GrammarExercise(
+                question: "Verleden tijd van 'besparen': Jullie ___ op energie.",
+                options: ["bespaar", "bespaart", "bespaarde", "bespaarden"],
+                correctAnswer: 3,
+                explanation: "Bespaar + den (r is zacht + meervoud krijgt -n)",
+                hint: "Meervoud krijgt extra -n"
+            ),
+            GrammarExercise(
+                question: "Complete: 'Hij ___ op zijn uitgaven' (He saved on his expenses)",
+                options: ["bespaar", "bespaart", "bespaarde", "bespaarden"],
+                correctAnswer: 2,
+                explanation: "Hij bespaarde op zijn uitgaven - bespaar + de",
+                hint: "R is een zachte medeklinker",
+                exerciseType: .fillInTheBlank
+            ),
+            
+            // Vertrouwen exercises
+            GrammarExercise(
+                question: "Verleden tijd van 'vertrouwen': Ik ___ op hem.",
+                options: ["vertrouw", "vertrouwt", "vertrouwde", "vertrouwden"],
+                correctAnswer: 2,
+                explanation: "Vertrouw + de (w is zacht, niet in 't kofschip)",
+                hint: "Is de w hard of zacht?"
+            ),
+            GrammarExercise(
+                question: "Verleden tijd van 'vertrouwen': Zij ___ elkaar volledig.",
+                options: ["vertrouw", "vertrouwt", "vertrouwde", "vertrouwden"],
+                correctAnswer: 3,
+                explanation: "Vertrouw + den (w is zacht + meervoud krijgt -n)",
+                hint: "Meervoud krijgt extra -n"
+            ),
+            GrammarExercise(
+                question: "Complete: 'We ___ op elkaar' (We trusted each other)",
+                options: ["vertrouw", "vertrouwt", "vertrouwde", "vertrouwden"],
+                correctAnswer: 3,
+                explanation: "We vertrouwden op elkaar - vertrouw + den (meervoud)",
+                hint: "Dit is meervoud (we)",
+                exerciseType: .fillInTheBlank
+            ),
+            
+            // Logeren exercises
+            GrammarExercise(
+                question: "Verleden tijd van 'logeren': Ik ___ bij mijn ouders.",
+                options: ["logeer", "logeert", "logeerde", "logeerden"],
+                correctAnswer: 2,
+                explanation: "Logeer + de (r is zacht, niet in 't kofschip)",
+                hint: "Is de r hard of zacht?"
+            ),
+            GrammarExercise(
+                question: "Verleden tijd van 'logeren': Wij ___ in een hotel.",
+                options: ["logeer", "logeert", "logeerde", "logeerden"],
+                correctAnswer: 3,
+                explanation: "Logeer + den (r is zacht + meervoud krijgt -n)",
+                hint: "Meervoud krijgt extra -n"
+            ),
+            GrammarExercise(
+                question: "Complete: 'Ze ___ bij vrienden' (She stayed with friends)",
+                options: ["logeer", "logeert", "logeerde", "logeerden"],
+                correctAnswer: 2,
+                explanation: "Ze logeerde bij vrienden - logeer + de",
+                hint: "R is een zachte medeklinker",
+                exerciseType: .fillInTheBlank
+            ),
+            
+            // Verwennen exercises
+            GrammarExercise(
+                question: "Verleden tijd van 'verwennen': Ik ___ mijn kinderen.",
+                options: ["verwen", "verwent", "verwende", "verwenden"],
+                correctAnswer: 2,
+                explanation: "Verwen + de (n is zacht, niet in 't kofschip)",
+                hint: "Is de n hard of zacht?"
+            ),
+            GrammarExercise(
+                question: "Verleden tijd van 'verwennen': Zij ___ zichzelf.",
+                options: ["verwen", "verwent", "verwende", "verwenden"],
+                correctAnswer: 2,
+                explanation: "Verwen + de (n is zacht, niet in 't kofschip)",
+                hint: "Is de n hard of zacht?"
+            ),
+            GrammarExercise(
+                question: "Complete: 'Hij ___ zijn vrouw' (He spoiled his wife)",
+                options: ["verwen", "verwent", "verwende", "verwenden"],
+                correctAnswer: 2,
+                explanation: "Hij verwende zijn vrouw - verwen + de",
+                hint: "N is een zachte medeklinker",
+                exerciseType: .fillInTheBlank
+            ),
+            
+            // Mixed exercises
+            GrammarExercise(
+                question: "How do you say 'I went to the store' in Dutch?",
+                options: ["Ik ga naar de winkel", "Ik ging naar de winkel", "Ik gaat naar de winkel", "Ik gingen naar de winkel"],
+                correctAnswer: 1,
+                explanation: "Ik ging naar de winkel - gaan is onregelmatig: gaan → ging",
+                hint: "Gaan is an irregular verb in the past tense",
+                exerciseType: .translation
+            ),
+            GrammarExercise(
+                question: "How do you say 'We were tired' in Dutch?",
+                options: ["Wij zijn moe", "Wij waren moe", "Wij was moe", "Wij bent moe"],
+                correctAnswer: 1,
+                explanation: "Wij waren moe - zijn is onregelmatig: zijn → waren (plural)",
+                hint: "Zijn is irregular and this is plural",
+                exerciseType: .translation
+            ),
+            GrammarExercise(
+                question: "Complete: 'Hij ___ veel geld' (He saved a lot of money)",
+                options: ["bespaar", "bespaart", "bespaarde", "bespaarden"],
+                correctAnswer: 2,
+                explanation: "Hij bespaarde veel geld - bespaar + de (r is soft)",
+                hint: "R is a soft consonant, not in 't kofschip",
+                exerciseType: .fillInTheBlank
+            ),
+            GrammarExercise(
+                question: "True or False: 'Gaan' is a regular verb in the past tense",
+                options: ["True", "False"],
+                correctAnswer: 1,
+                explanation: "False! 'Gaan' is irregular: gaan → ging/gingen",
+                hint: "Think about the past tense form of 'gaan'",
+                exerciseType: .trueFalse
+            ),
+            GrammarExercise(
+                question: "True or False: All verbs ending in -en follow the same past tense pattern",
+                options: ["True", "False"],
+                correctAnswer: 1,
+                explanation: "False! Some verbs like 'gaan' and 'zijn' are irregular and don't follow the regular -de/-te pattern.",
+                hint: "Think about irregular verbs",
+                exerciseType: .trueFalse
+            ),
+            GrammarExercise(
+                question: "Complete: 'Vorig jaar ___ wij in Nederland' (Last year we were in the Netherlands)",
+                options: ["zijn", "bent", "was", "waren"],
+                correctAnswer: 3,
+                explanation: "Vorig jaar waren wij in Nederland - zijn → waren (plural)",
+                hint: "This is plural (wij) and 'zijn' is irregular",
+                exerciseType: .fillInTheBlank
+            ),
+            GrammarExercise(
+                question: "Complete: 'Ze ___ de ingrediënten goed' (She combined the ingredients well)",
+                options: ["combineer", "combineert", "combineerde", "combineerden"],
+                correctAnswer: 2,
+                explanation: "Ze combineerde de ingrediënten goed - combineer + de",
+                hint: "R is a soft consonant",
+                exerciseType: .fillInTheBlank
+            ),
+            GrammarExercise(
+                question: "Complete: 'Jullie ___ op elkaar' (You trusted each other)",
+                options: ["vertrouw", "vertrouwt", "vertrouwde", "vertrouwden"],
+                correctAnswer: 3,
+                explanation: "Jullie vertrouwden op elkaar - vertrouw + den (plural)",
+                hint: "This is plural (jullie) so add -n",
+                exerciseType: .fillInTheBlank
+            ),
+            GrammarExercise(
+                question: "Complete: 'Wij ___ in een hotel' (We stayed in a hotel)",
+                options: ["logeer", "logeert", "logeerde", "logeerden"],
+                correctAnswer: 3,
+                explanation: "Wij logeerden in een hotel - logeer + den (plural)",
+                hint: "This is plural (wij) so add -n",
+                exerciseType: .fillInTheBlank
+            ),
+            GrammarExercise(
+                question: "Complete: 'Hij ___ zijn kinderen' (He spoiled his children)",
+                options: ["verwen", "verwent", "verwende", "verwenden"],
+                correctAnswer: 2,
+                explanation: "Hij verwende zijn kinderen - verwen + de",
+                hint: "N is a soft consonant",
+                exerciseType: .fillInTheBlank
+            ),
+            GrammarExercise(
+                question: "How do you say 'They combined the colors' in Dutch?",
+                options: ["Ze combineer de kleuren", "Ze combineerde de kleuren", "Ze combineerden de kleuren", "Ze combineert de kleuren"],
+                correctAnswer: 2,
+                explanation: "Ze combineerden de kleuren - combineer + den (plural)",
+                hint: "This is plural (ze) so add -n",
+                exerciseType: .translation
+            )
+        ],
+        commonMistakes: [
+            CommonMistake(
+                incorrect: "Ik ga gisteren",
+                correct: "Ik ging gisteren",
+                explanation: "Gaan is onregelmatig: gaan → ging (niet ga)"
+            ),
+            CommonMistake(
+                incorrect: "Wij was moe",
+                correct: "Wij waren moe",
+                explanation: "Zijn is onregelmatig: zijn → waren (meervoud, niet was)"
+            ),
+            CommonMistake(
+                incorrect: "Hij combineerde → Hij combineerde",
+                correct: "Hij combineerde",
+                explanation: "R is zacht, dus -de, niet -te"
+            ),
+            CommonMistake(
+                incorrect: "Wij bespaarde",
+                correct: "Wij bespaarden",
+                explanation: "Meervoud krijgt altijd -n erbij: -den of -ten"
+            ),
+            CommonMistake(
+                incorrect: "Ik vertrouwde → Ik vertrouwde",
+                correct: "Ik vertrouwde",
+                explanation: "W is zacht, dus -de, niet -te"
+            ),
+            CommonMistake(
+                incorrect: "Ze logeerde → Ze logeerde",
+                correct: "Ze logeerde",
+                explanation: "R is zacht, dus -de, niet -te"
+            ),
+            CommonMistake(
+                incorrect: "Hij verwende → Hij verwende",
+                correct: "Hij verwende",
+                explanation: "N is zacht, dus -de, niet -te"
+            )
+        ],
+        tips: [
+            "Leer de onregelmatige werkwoorden uit je hoofd: gaan → ging/gingen, zijn → was/waren",
+            "Denk aan 't kofschip voor harde medeklinkers: t-k-o-f-s-ch-i-p",
+            "Zachte letters (niet in 't kofschip) krijgen -de",
+            "Harde letters ('t kofschip) krijgen -te",
+            "Meervoud krijgt altijd een extra -n",
+            "Oefen eerst met de stam: haal -en eraf",
+            "Let op spelling: combineer (niet combiner), bespaar (niet bespar)",
+            "Onregelmatige werkwoorden moet je gewoon leren"
+        ],
+        relatedRules: ["verb_past_a2", "verb_irregular_past_a2", "verb_perfect_a2"]
+    )
     
     lazy var perfectTenseB1 = DutchGrammarRule(
         id: "verb_perfect_b1",
@@ -4316,6 +4692,7 @@ class DutchGrammarRulesDatabase {
         
         // A2 Level  
         pastTenseA2,
+        verledenTijdA2,
         adjectivesA2,
         negationA2,
         possessivesA2,

@@ -25,6 +25,9 @@ struct WordScrambleView: View {
     // Add user profile manager for XP tracking
     @StateObject private var userProfileManager = UserProfileManager.shared
     
+    // Add SRS manager for spaced repetition
+    @StateObject private var srsManager = SRSManager.shared
+    
     // Session XP tracking
     @State private var sessionXP: Int = 0 // Track XP gained during current session
     
@@ -300,6 +303,26 @@ struct WordScrambleView: View {
                 Text("\(percentage)%")
                     .font(.title)
                     .foregroundColor(.secondary)
+                
+                // XP Award Display
+                VStack(spacing: 8) {
+                    Text("XP Earned")
+                        .font(.headline)
+                        .foregroundColor(.secondary)
+                    
+                    let baseXP = 50
+                    let performanceBonus = correctAnswers * 5
+                    let totalXP = baseXP + performanceBonus
+                    
+                    Text("+\(totalXP)")
+                        .font(.system(size: 36, weight: .bold))
+                        .foregroundColor(.yellow)
+                    
+                    Text("\(baseXP) base + \(performanceBonus) bonus")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .padding(.top, 10)
             }
             
             Button("Play Again") {
@@ -317,6 +340,13 @@ struct WordScrambleView: View {
             .font(.headline)
         }
         .padding()
+        .onAppear {
+            // Award XP when results are shown
+            let baseXP = 50
+            let performanceBonus = correctAnswers * 5
+            let totalXP = baseXP + performanceBonus
+            userProfileManager.addXP(totalXP)
+        }
     }
     
     // MARK: - Game Logic
@@ -431,12 +461,14 @@ struct WordScrambleView: View {
     }
     
     private func checkAnswer() {
+        print("🔤 checkAnswer() called")
         guard let card = currentCard else { return }
         
         let userAnswer = selectedChunks.map { $0.text }.joined().lowercased()
         let correctAnswer = card.word.lowercased().replacingOccurrences(of: " ", with: "")
         
         let correct = userAnswer == correctAnswer
+        print("🔤 Answer check: user='\(userAnswer)' correct='\(correctAnswer)' isCorrect=\(correct)")
         isCorrect = correct
         hasAnswered = true
         totalAnswers += 1
@@ -448,14 +480,20 @@ struct WordScrambleView: View {
         print("🔤 Saved answer history for index \(currentIndex): \(selectedChunks.map { $0.text })")
         
         if correct {
+            print("🔤 CORRECT ANSWER - awarding XP")
             correctAnswers += 1
             HapticManager.shared.testCorrectHaptic()
             SoundManager.shared.playTestCorrectSound()
+            
+            // Award XP for correct answer
+            sessionXP += 5
+            print("🔤 Correct answer! Session XP: \(sessionXP)")
             
             // Apply SRS logic for correct answer
             let updatedCard = srsManager.processSimpleReview(for: card, simpleQuality: .know)
             viewModel.updateCardWithSRSData(updatedCard)
         } else {
+            print("🔤 INCORRECT ANSWER")
             HapticManager.shared.testWrongHaptic()
             SoundManager.shared.playTestWrongSound()
             

@@ -47,8 +47,8 @@ struct LessonsListView: View {
                         HStack {
                             VStack(alignment: .leading, spacing: 4) {
                                 HStack {
-                                    Text(lesson.title)
-                                        .font(.headline)
+                                Text(lesson.title)
+                                    .font(.headline)
                                     Spacer()
                                     let bestScore = analyticsManager.getBestScoreForLesson(lesson.id)
                                     let hasSaveState = SaveStateManager.shared.hasSaveState(gameType: .lesson)
@@ -287,19 +287,19 @@ struct LessonDetailView: View {
                 vocabularySection
             }
             
-            Spacer()
+                        Spacer()
             
-            Button(action: {
+                        Button(action: {
                 HapticManager.shared.buttonTap()
-                started = true
-                currentExerciseIndex = 0
-                correctCount = 0
-                finished = false
-                userAnswers = [:]
-                // Start analytics tracking
-                lessonStartTime = analyticsManager.startLessonTracking(lessonId: lesson.id, lessonTitle: lesson.title)
-                exerciseStartTime = Date()
-                exerciseAttempts = []
+                            started = true
+                            currentExerciseIndex = 0
+                            correctCount = 0
+                            finished = false
+                            userAnswers = [:]
+                            // Start analytics tracking
+                            lessonStartTime = analyticsManager.startLessonTracking(lessonId: lesson.id, lessonTitle: lesson.title)
+                            exerciseStartTime = Date()
+                            exerciseAttempts = []
                 // Shuffle exercises and options
                 shuffledExercises = lesson.exercises.shuffled().map { ex in
                     let shuffled = ex.options.shuffled()
@@ -310,18 +310,18 @@ struct LessonDetailView: View {
                 for (index, tuple) in shuffledExercises.enumerated() {
                     print("📚 Exercise \(index): \(tuple.exercise.prompt)")
                 }
-            }) {
-                Text("Start Lesson")
-                    .font(.title2)
-                    .bold()
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.blue)
-                    .foregroundColor(.white)
-                    .cornerRadius(12)
-            }
+                        }) {
+                            Text("Start Lesson")
+                                .font(.title2)
+                                .bold()
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color.blue)
+                                .foregroundColor(.white)
+                                .cornerRadius(12)
+                        }
             .buttonStyle(PlainButtonStyle())
-            .padding(.bottom)
+                        .padding(.bottom)
         }
     }
     
@@ -364,41 +364,41 @@ struct LessonDetailView: View {
     }
     
     private var lessonCompleteView: some View {
-        VStack(spacing: 16) {
-            Text("Lesson Complete!")
-                .font(.title)
-                .bold()
+                        VStack(spacing: 16) {
+                            Text("Lesson Complete!")
+                                .font(.title)
+                                .bold()
             Text("You answered \(correctCount) out of \(shuffledExercises.count) correctly.")
-                .font(.headline)
+                                .font(.headline)
             Button(action: {
                 HapticManager.shared.buttonTap()
-                presentationMode.wrappedValue.dismiss()
+                                presentationMode.wrappedValue.dismiss()
             }) {
                 Text("Back to Lessons")
                     .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.gray.opacity(0.2))
-                    .foregroundColor(.blue)
-                    .cornerRadius(12)
+                            .padding()
+                            .background(Color.gray.opacity(0.2))
+                            .foregroundColor(.blue)
+                            .cornerRadius(12)
             }
             .buttonStyle(PlainButtonStyle())
             
             Button(action: {
                 HapticManager.shared.buttonTap()
-                // Just go back to the last question and let them navigate normally
-                finished = false
+                                // Just go back to the last question and let them navigate normally
+                                finished = false
                 isInReviewMode = true // Set review mode flag
                 currentExerciseIndex = shuffledExercises.count - 1
                 selectedAnswer = userAnswers[currentExerciseIndex] ?? ""
-                showFeedback = true // Show feedback immediately in review
+                                showFeedback = true // Show feedback immediately in review
             }) {
                 Text("Review Lesson")
                     .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.blue)
-                    .foregroundColor(.white)
-                    .cornerRadius(12)
-            }
+                            .padding()
+                            .background(Color.blue)
+                            .foregroundColor(.white)
+                            .cornerRadius(12)
+                        }
             .buttonStyle(PlainButtonStyle())
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -406,19 +406,19 @@ struct LessonDetailView: View {
     
     private var lessonExerciseView: some View {
         VStack(alignment: .leading, spacing: 16) {
-            // Game-style progress bar
+                        // Game-style progress bar
             LessonProgressBar(completedQuestions: currentExerciseIndex + 1, total: shuffledExercises.count)
-                .padding(.bottom, 8)
+                            .padding(.bottom, 8)
             
-            // Exercise flow
+                        // Exercise flow
             let tuple = shuffledExercises[currentExerciseIndex]
             let exercise = tuple.exercise
             let options = tuple.shuffledOptions
             let correctIdx = tuple.correctIndex
             
-            Text(exercise.prompt)
-                .font(.title2)
-                .bold()
+                                Text(exercise.prompt)
+                                    .font(.title2)
+                                    .bold()
             
             if exercise.type == .sentenceBuilding {
                 // Sentence Building UI
@@ -450,124 +450,124 @@ struct LessonDetailView: View {
     private func multipleChoiceView(exercise: Exercise, options: [String], correctIdx: Int) -> some View {
         VStack(spacing: 8) {
             ForEach(options, id: \.self) { option in
-                Button(action: {
-                    if !showFeedback {
+                                    Button(action: {
+                                        if !showFeedback {
                         // Immediate haptic feedback for responsiveness
                         HapticManager.shared.buttonTap()
                         
-                        selectedAnswer = option
-                        showFeedback = true
-                        userAnswers[currentExerciseIndex] = option
+                                            selectedAnswer = option
+                                            showFeedback = true
+                                            userAnswers[currentExerciseIndex] = option
                         
                         // Check if answer is correct
                         if let idx = options.firstIndex(of: option), idx == correctIdx {
-                            correctCount += 1
+                                                correctCount += 1
                             // Success feedback for correct answer
                             HapticManager.shared.successNotification()
                         } else {
                             // Error feedback for incorrect answer
                             HapticManager.shared.errorNotification()
-                        }
+                                            }
                         
                         // Record exercise attempt (async to avoid blocking UI)
                         DispatchQueue.main.async {
-                            recordExerciseAttempt(exercise: exercise, userAnswer: option)
+                                            recordExerciseAttempt(exercise: exercise, userAnswer: option)
                         }
-                    }
-                }) {
-                    HStack {
-                        Text(option)
-                            .font(.body)
-                            .foregroundColor(.primary)
-                        Spacer()
-                        if showFeedback {
+                                        }
+                                    }) {
+                                        HStack {
+                                            Text(option)
+                                                .font(.body)
+                                                .foregroundColor(.primary)
+                                            Spacer()
+                                            if showFeedback {
                             if let idx = options.firstIndex(of: option), idx == correctIdx {
-                                Image(systemName: "checkmark.circle.fill").foregroundColor(.green)
+                                                    Image(systemName: "checkmark.circle.fill").foregroundColor(.green)
                             } else if option == selectedAnswer && options.firstIndex(of: option) != correctIdx {
-                                Image(systemName: "xmark.circle.fill").foregroundColor(.red)
-                            }
-                        }
-                    }
-                    .padding()
-                    .background(
-                        showFeedback ?
+                                                    Image(systemName: "xmark.circle.fill").foregroundColor(.red)
+                                                }
+                                            }
+                                        }
+                                        .padding()
+                                        .background(
+                                            showFeedback ?
                         ((options.firstIndex(of: option) == correctIdx) ? Color.green.opacity(0.15) :
-                                (option == selectedAnswer ? Color.red.opacity(0.15) : Color(.systemGray6))) :
-                            Color(.systemGray6)
-                    )
-                    .cornerRadius(8)
-                }
-                .disabled(showFeedback)
-            }
+                                                    (option == selectedAnswer ? Color.red.opacity(0.15) : Color(.systemGray6))) :
+                                                Color(.systemGray6)
+                                        )
+                                        .cornerRadius(8)
+                                    }
+                                    .disabled(showFeedback)
+                                }
         }
-    }
+                            }
     
     private func feedbackView(exercise: Exercise) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(exercise.explanation)
-                .font(.body)
-                .foregroundColor(.secondary)
-            
-            // Navigation buttons (Previous and Next/Finish)
-            HStack(spacing: 12) {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text(exercise.explanation)
+                                        .font(.body)
+                                        .foregroundColor(.secondary)
+                                    
+                                    // Navigation buttons (Previous and Next/Finish)
+                                    HStack(spacing: 12) {
                 Button(action: {
                     HapticManager.shared.buttonTap()
-                    if currentExerciseIndex > 0 {
-                        currentExerciseIndex -= 1
+                                            if currentExerciseIndex > 0 {
+                                                currentExerciseIndex -= 1
                         selectedAnswer = userAnswers[currentExerciseIndex] ?? ""
-                        showFeedback = userAnswers[currentExerciseIndex] != nil
+                                                showFeedback = userAnswers[currentExerciseIndex] != nil
                         // Restore sentence building state for previous exercise
                         restoreSentenceBuildingState()
                         print("📚 Navigated to previous exercise: \(currentExerciseIndex)")
-                    }
+                                            }
                 }) {
                     Text("Previous")
                         .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(currentExerciseIndex == 0 ? Color.gray.opacity(0.3) : Color.gray.opacity(0.2))
-                        .foregroundColor(currentExerciseIndex == 0 ? .gray : .blue)
-                        .cornerRadius(8)
+                                        .padding()
+                                        .background(currentExerciseIndex == 0 ? Color.gray.opacity(0.3) : Color.gray.opacity(0.2))
+                                        .foregroundColor(currentExerciseIndex == 0 ? .gray : .blue)
+                                        .cornerRadius(8)
                 }
                 .disabled(currentExerciseIndex == 0)
                 .buttonStyle(PlainButtonStyle())
-                
+                                        
                 Button(action: {
                     HapticManager.shared.buttonTap()
                     if currentExerciseIndex < shuffledExercises.count - 1 {
-                        currentExerciseIndex += 1
+                                                currentExerciseIndex += 1
                         selectedAnswer = userAnswers[currentExerciseIndex] ?? ""
-                        showFeedback = userAnswers[currentExerciseIndex] != nil
+                                                showFeedback = userAnswers[currentExerciseIndex] != nil
                         // Restore sentence building state for next exercise
                         restoreSentenceBuildingState()
                         print("📚 Navigated to next exercise: \(currentExerciseIndex)")
-                    } else {
-                        finished = true
+                                            } else {
+                                                finished = true
                         // Clear saved progress since lesson is complete
                         clearSavedProgress()
-                        // Save progress
+                                                // Save progress
                         let percent = Int((Double(correctCount) / Double(shuffledExercises.count)) * 100)
-                        let prev = completedLessons[lesson.id] ?? 0
-                        if percent > prev { completedLessons[lesson.id] = percent }
-                        // Record lesson completion analytics
-                        if let startTime = lessonStartTime {
-                            analyticsManager.recordLessonCompletion(
-                                lessonId: lesson.id,
-                                lessonTitle: lesson.title,
-                                startTime: startTime,
+                                                let prev = completedLessons[lesson.id] ?? 0
+                                                if percent > prev { completedLessons[lesson.id] = percent }
+                                                // Record lesson completion analytics
+                                                if let startTime = lessonStartTime {
+                                                    analyticsManager.recordLessonCompletion(
+                                                        lessonId: lesson.id,
+                                                        lessonTitle: lesson.title,
+                                                        startTime: startTime,
                                 totalExercises: shuffledExercises.count,
-                                correctAnswers: correctCount,
-                                exerciseAttempts: exerciseAttempts
-                            )
-                        }
-                    }
+                                                        correctAnswers: correctCount,
+                                                        exerciseAttempts: exerciseAttempts
+                                                    )
+                                                }
+                                            }
                 }) {
                     Text(currentExerciseIndex < shuffledExercises.count - 1 ? "Next" : "Finish Lesson")
                         .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(8)
-                }
+                                        .padding()
+                                        .background(Color.blue)
+                                        .foregroundColor(.white)
+                                        .cornerRadius(8)
+                                    }
                 .buttonStyle(PlainButtonStyle())
             }
         }
@@ -912,19 +912,19 @@ struct WrapHStack: View {
                             .foregroundColor(.secondary)
                         Text(item.translation)
                             .foregroundColor(.primary)
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(.green)
-                            .font(.caption)
-                    }
-                    .padding(6)
-                    .background(Color.green.opacity(0.1))
-                    .cornerRadius(8)
-                } else {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundColor(.green)
+                                    .font(.caption)
+                            }
+                            .padding(6)
+                            .background(Color.green.opacity(0.1))
+                            .cornerRadius(8)
+                        } else {
                     // Words not yet added
                     VStack(alignment: .leading, spacing: 4) {
                         HStack(spacing: 4) {
                             Text(item.dutchWord)
-                                .foregroundColor(.blue)
+                                        .foregroundColor(.blue)
                                 .fontWeight(.semibold)
                             
                             Spacer()
@@ -944,9 +944,9 @@ struct WrapHStack: View {
                             }
                         }
                     }
-                    .padding(6)
-                    .background(Color.blue.opacity(0.1))
-                    .cornerRadius(8)
+                                .padding(6)
+                                .background(Color.blue.opacity(0.1))
+                                .cornerRadius(8)
                     .onTapGesture {
                         // Single tap: show/hide translation
                         if showingTranslation.contains(item.id) {

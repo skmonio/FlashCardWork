@@ -17,15 +17,20 @@ struct CircularXPProgressBar: View {
             Circle()
                 .trim(from: 0, to: CGFloat(min(progress, 1.0)))
                 .stroke(
-                    AngularGradient(
-                        gradient: Gradient(colors: [.blue, .purple]),
-                        center: .center
-                    ),
+                    progress >= 1.0 ? 
+                        AngularGradient(
+                            gradient: Gradient(colors: [.green, .green.opacity(0.8)]),
+                            center: .center
+                        ) :
+                        AngularGradient(
+                            gradient: Gradient(colors: [.blue, .purple]),
+                            center: .center
+                        ),
                     style: StrokeStyle(lineWidth: 8, lineCap: .round)
                 )
                 .rotationEffect(.degrees(-90))
                 .frame(width: size, height: size)
-                .animation(.easeInOut(duration: 1.0), value: progress)
+                .animation(.easeInOut(duration: progress >= 1.0 ? 0.6 : 1.0), value: progress)
         }
     }
 }

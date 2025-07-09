@@ -253,12 +253,12 @@ class UserProfileManager: ObservableObject {
                 // Streak Achievements
                 Achievement(title: "Consistent Learner", description: "Maintain a 3-day streak", icon: "flame.fill", xpRequired: 0, levelRequired: 1, type: .streak),
                 Achievement(title: "Dedicated Student", description: "Maintain a 7-day streak", icon: "flame.circle.fill", xpRequired: 0, levelRequired: 2, type: .streak),
-                Achievement(title: "Learning Champion", description: "Maintain a 30-day streak", icon: "flame.square.fill", xpRequired: 0, levelRequired: 5, type: .streak),
+                Achievement(title: "Learning Champion", description: "Maintain a 30-day streak", icon: "flame", xpRequired: 0, levelRequired: 5, type: .streak),
                 
                 // Session Achievements
                 Achievement(title: "First Session", description: "Complete your first study session", icon: "book.fill", xpRequired: 0, levelRequired: 1, type: .sessions),
                 Achievement(title: "Regular Learner", description: "Complete 10 study sessions", icon: "book.circle.fill", xpRequired: 0, levelRequired: 2, type: .sessions),
-                Achievement(title: "Study Master", description: "Complete 50 study sessions", icon: "book.square.fill", xpRequired: 0, levelRequired: 5, type: .sessions),
+                Achievement(title: "Study Master", description: "Complete 50 study sessions", icon: "book", xpRequired: 0, levelRequired: 5, type: .sessions),
                 
                 // Perfect Session Achievements
                 Achievement(title: "Perfect Start", description: "Complete a perfect study session", icon: "checkmark.circle.fill", xpRequired: 0, levelRequired: 1, type: .perfect),
@@ -267,7 +267,7 @@ class UserProfileManager: ObservableObject {
                 
                 // Accuracy Achievements
                 Achievement(title: "Sharp Shooter", description: "Achieve 90% accuracy", icon: "target", xpRequired: 0, levelRequired: 2, type: .accuracy),
-                Achievement(title: "Accuracy Master", description: "Achieve 95% accuracy", icon: "target.fill", xpRequired: 0, levelRequired: 5, type: .accuracy)
+                Achievement(title: "Accuracy Master", description: "Achieve 95% accuracy", icon: "target", xpRequired: 0, levelRequired: 5, type: .accuracy)
             ]
             saveAchievements()
         }
@@ -312,11 +312,13 @@ class UserProfileManager: ObservableObject {
                 if !achievementsUnlockedThisSession.contains(achievements[i].id) {
                     achievementsUnlockedThisSession.insert(achievements[i].id)
                     
-                    // Show notification banner
-                    NotificationManager.shared.showAchievement(
-                        title: achievements[i].title,
-                        message: achievements[i].description
-                    )
+                    // Achievement notifications temporarily disabled
+                    // NotificationManager.shared.showAchievement(
+                    //     title: achievements[i].title,
+                    //     message: achievements[i].description
+                    // )
+                    
+                    print("🏆 Achievement unlocked: \(achievements[i].title)")
                 }
                 
                 saveAchievements()

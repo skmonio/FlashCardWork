@@ -102,6 +102,12 @@ struct GameHeaderView: View {
                             .fontWeight(.medium)
                             .foregroundColor(.primary)
                     }
+                    .onAppear {
+                        print("📊 GameHeaderView displaying sessionXP: \(sessionXP)")
+                    }
+                    .onChange(of: sessionXP) { newValue in
+                        print("📊 GameHeaderView sessionXP changed to: \(newValue)")
+                    }
                 }
                 
                 // Progress bar
