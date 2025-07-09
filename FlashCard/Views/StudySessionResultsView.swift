@@ -18,11 +18,11 @@ struct StudySessionResultsView: View {
     @State private var previousXP: Int = 0
     @State private var previousLevel: Int = 1
     @State private var previousProgress: Double = 0
-    @State private var showAchievementsModal = false
-    @State private var unlockedAchievements: [Achievement] = []
     @Environment(\.dismiss) private var dismiss
     @State private var showingAchievementModal = false
     @State private var achievementToShow: Achievement?
+    @State private var displayedLevel: Int = 1
+    @State private var isLevelUpEffect: Bool = false
     
     var body: some View {
         ZStack {
@@ -64,11 +64,13 @@ struct StudySessionResultsView: View {
                             // XP Progress Bar (animated from previous to new progress)
                             VStack(spacing: 8) {
                                 HStack {
-                                    Text("Level \(userProfile.level)")
+                                    Text("Level \(displayedLevel)")
                                         .font(.caption)
                                         .foregroundColor(.secondary)
+                                        .scaleEffect(isLevelUpEffect ? 1.3 : 1.0)
+                                        .animation(.easeInOut(duration: 0.3), value: isLevelUpEffect)
                                     Spacer()
-                                    Text("Level \(userProfile.level + 1)")
+                                    Text("Level \(displayedLevel + 1)")
                                         .font(.caption)
                                         .foregroundColor(.secondary)
                                 }
@@ -134,31 +136,6 @@ struct StudySessionResultsView: View {
             //         isShowing: $showingFloatingXP
             //     )
             // }
-            
-            // Achievements Modal
-            if showAchievementsModal && !unlockedAchievements.isEmpty {
-                Color.black.opacity(0.4)
-                    .ignoresSafeArea()
-                    .onTapGesture { showAchievementsModal = false }
-                VStack(spacing: 20) {
-                    Text("Achievements Unlocked!")
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .foregroundColor(.primary)
-                    HStack(spacing: 16) {
-                        ForEach(unlockedAchievements) { achievement in
-                            AchievementBadgeView(achievement: achievement)
-                        }
-                    }
-                    Button("Close") {
-                        showAchievementsModal = false
-                    }
-                    .padding(.top, 8)
-                }
-                .padding()
-                .background(RoundedRectangle(cornerRadius: 20).fill(Color(.systemBackground)))
-                .shadow(radius: 20)
-            }
         }
         .navigationTitle("Session Complete!")
         .navigationBarTitleDisplayMode(.large)
@@ -172,35 +149,57 @@ struct StudySessionResultsView: View {
     }
     
     private func setupAnimations() {
-        // Calculate XP gained
         calculateXPGained()
-        
-        // Store previous values for animation
         previousLevel = userProfile.level
         previousXP = userProfile.xp
-        previousProgress = userProfile.progressToNextLevel
-        
-        // Award XP and track achievements
+        let oldXP = previousXP
+        let newXP = previousXP + xpGained
+        let oldLevel = userProfile.calculateLevel(forXP: oldXP)
+        let newLevel = userProfile.calculateLevel(forXP: newXP)
+        let levelsGained = newLevel - oldLevel
+        let oldLevelXP = userProfile.xpForLevel(oldLevel)
+        let newLevelXP = userProfile.xpForLevel(newLevel)
+        let finalProgress = Double(newXP - newLevelXP) / Double(userProfile.xpForLevel(newLevel + 1) - newLevelXP)
+
+        displayedLevel = oldLevel
+        animatedProgress = Double(oldXP - oldLevelXP) / Double(userProfile.xpForLevel(oldLevel + 1) - oldLevelXP)
+
         awardXPAndTrackAchievements()
-        
-        // Start with previous progress
-        animatedProgress = previousProgress
-        
-        // STEP 1: Animate XP progress bar first
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            withAnimation(.easeInOut(duration: 1.5)) {
-                self.animatedProgress = self.userProfile.progressToNextLevel
+
+        func animateLevel(level: Int, remaining: Int) {
+            withAnimation(.easeInOut(duration: 1.0)) {
+                animatedProgress = 1.0
             }
-            
-            // STEP 2: After progress bar animation, check for level up and show notifications
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                if self.userProfile.level > self.previousLevel {
-                    // Level up notification is now handled by UserProfileManager's toast system
-                    // No need to show additional modal notification
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                // Level up effect
+                isLevelUpEffect = true
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    // Quick scale or color flash
                 }
-                
-                // STEP 3: Check for achievements last
-                self.checkForAchievements()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    isLevelUpEffect = false
+                    displayedLevel += 1
+                    animatedProgress = 0.0
+                    if remaining > 1 {
+                        animateLevel(level: level + 1, remaining: remaining - 1)
+                    } else {
+                        // Final fill to correct progress
+                        withAnimation(.easeInOut(duration: 1.0)) {
+                            animatedProgress = finalProgress
+                        }
+                    }
+                }
+            }
+        }
+
+        // Start animation after short delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            if levelsGained > 0 {
+                animateLevel(level: oldLevel, remaining: levelsGained)
+            } else {
+                withAnimation(.easeInOut(duration: 1.0)) {
+                    animatedProgress = finalProgress
+                }
             }
         }
     }
@@ -213,13 +212,6 @@ struct StudySessionResultsView: View {
         // }
     }
     
-    private func checkForAchievements() {
-        // Show achievements modal if any achievements were unlocked
-        if !unlockedAchievements.isEmpty {
-            showAchievementsModal = true
-        }
-    }
-    
     private func calculateXPGained() {
         // Calculate XP based on session performance
         let baseXP = 50
@@ -228,14 +220,11 @@ struct StudySessionResultsView: View {
     }
     
     private func awardXPAndTrackAchievements() {
-        // Track achievements before XP is awarded
-        let achievementsBefore = Set(userProfile.achievements.filter { $0.isUnlocked }.map { $0.id })
+        // Award XP - achievements are automatically checked and notifications shown by UserProfileManager.addXP()
         userProfile.addXP(xpGained)
-        // Track achievements after XP is awarded
-        let achievementsAfter = Set(userProfile.achievements.filter { $0.isUnlocked }.map { $0.id })
-        let newAchievementIDs = achievementsAfter.subtracting(achievementsBefore)
-        unlockedAchievements = userProfile.achievements.filter { newAchievementIDs.contains($0.id) }
-        // Don't show achievements modal here - let the main animation sequence handle it
+        
+        // No need to track achievements here since UserProfileManager handles all achievement notifications
+        // This prevents double notifications
     }
 }
 

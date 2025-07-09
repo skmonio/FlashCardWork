@@ -25,6 +25,9 @@ class StatisticsManager: ObservableObject {
     // MARK: - Study Session Management
     
     func startSession(deckIds: [UUID], cardCount: Int) -> StudySession {
+        // Reset achievement tracking for new session
+        UserProfileManager.shared.resetSessionAchievementTracking()
+        
         let session = StudySession(
             id: UUID(),
             startTime: Date(),

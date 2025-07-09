@@ -107,6 +107,9 @@ class UserProfileManager: ObservableObject {
     private let achievementsKey = "UserAchievements"
     private let levelRewardsKey = "LevelRewards"
     
+    // Track achievements unlocked in current session to prevent duplicate notifications
+    private var achievementsUnlockedThisSession: Set<UUID> = []
+    
     private init() {
         loadUserProfile()
         initializeAchievements()
@@ -159,12 +162,20 @@ class UserProfileManager: ObservableObject {
             levelRewards[i].isClaimed = false
         }
         
+        // Reset session achievement tracking
+        achievementsUnlockedThisSession.removeAll()
+        
         // Trigger UI update
         objectWillChange.send()
         
         saveUserProfile()
         saveAchievements()
         saveLevelRewards()
+    }
+    
+    // Reset session achievement tracking for new sessions
+    func resetSessionAchievementTracking() {
+        achievementsUnlockedThisSession.removeAll()
     }
     
     private func calculateLevel() -> Int {
@@ -209,8 +220,8 @@ class UserProfileManager: ObservableObject {
         level = newLevel
         levelUpMessage = "🎉 Level \(newLevel) Unlocked!"
         
-        // Show notification banner
-        NotificationManager.shared.showLevelUp(level: newLevel)
+        // No notification banner for level up
+        // NotificationManager.shared.showLevelUp(level: newLevel)
         
         // Check for level rewards
         checkLevelRewards()
@@ -294,11 +305,16 @@ class UserProfileManager: ObservableObject {
                 achievements[i].isUnlocked = true
                 achievements[i].unlockedDate = Date()
                 
-                // Show notification banner
-                NotificationManager.shared.showAchievement(
-                    title: achievements[i].title,
-                    message: achievements[i].description
-                )
+                // Only show notification if this achievement wasn't already unlocked this session
+                if !achievementsUnlockedThisSession.contains(achievements[i].id) {
+                    achievementsUnlockedThisSession.insert(achievements[i].id)
+                    
+                    // Show notification banner
+                    NotificationManager.shared.showAchievement(
+                        title: achievements[i].title,
+                        message: achievements[i].description
+                    )
+                }
                 
                 saveAchievements()
             }
@@ -422,5 +438,17 @@ class UserProfileManager: ObservableObject {
         if let data = try? JSONEncoder().encode(levelRewards) {
             UserDefaults.standard.set(data, forKey: levelRewardsKey)
         }
+    }
+    
+    func calculateLevel(forXP xp: Int) -> Int {
+        var currentLevel = 1
+        while true {
+            let nextLevelXP = xpForLevel(currentLevel + 1)
+            if xp < nextLevelXP {
+                break
+            }
+            currentLevel += 1
+        }
+        return currentLevel
     }
 } 
