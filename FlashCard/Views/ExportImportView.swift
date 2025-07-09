@@ -187,10 +187,19 @@ struct ExportImportView: View {
     }
     
     private var importAlertMessage: String {
-        var message = "Successfully imported \(importResult.success) cards."
+        var message = ""
+        
+        if importResult.success > 0 {
+            message += "✅ Successfully imported \(importResult.success) card\(importResult.success == 1 ? "" : "s")."
+        } else {
+            message += "❌ No cards were imported."
+        }
         
         if !importResult.errors.isEmpty {
-            message += "\n\nErrors encountered:"
+            if !message.isEmpty {
+                message += "\n\n"
+            }
+            message += "⚠️ Errors encountered:"
             for error in importResult.errors.prefix(5) {
                 message += "\n• \(error)"
             }
@@ -198,6 +207,11 @@ struct ExportImportView: View {
             if importResult.errors.count > 5 {
                 message += "\n... and \(importResult.errors.count - 5) more errors"
             }
+        }
+        
+        // Add helpful information
+        if importResult.success > 0 {
+            message += "\n\n💡 Tip: Cards without specified decks have been added to 'Uncategorized'."
         }
         
         return message

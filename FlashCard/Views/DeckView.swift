@@ -118,7 +118,6 @@ struct DeckView: View {
         HapticManager.shared.bulkActionComplete() // Feedback for bulk operation completion
         isSelectionMode = false
         selectedCards.removeAll()
-        refreshID = UUID()
     }
     
     var body: some View {
@@ -373,7 +372,6 @@ struct DeckView: View {
         .id(refreshID)
         .onAppear {
             logger.debug("DeckView appeared for deck: \(deck.name)")
-            refreshID = UUID()
         }
         
         // Navigation destinations
@@ -392,7 +390,6 @@ struct DeckView: View {
             // Refresh the view when returning from EditCardView
             if !newValue {
                 logger.debug("Returned from EditCardView, refreshing DeckView")
-                refreshID = UUID()
                 selectedCard = nil
             }
         }
@@ -405,7 +402,6 @@ struct DeckView: View {
                     if let index = viewModel.flashCards.firstIndex(where: { $0.id == card.id }) {
                         viewModel.deleteCard(at: IndexSet([index]))
                     }
-                    refreshID = UUID()
                 }
                 cardToDelete = nil
             }
@@ -451,7 +447,6 @@ struct DeckView: View {
                 onComplete: {
                     isSelectionMode = false
                     selectedCards.removeAll()
-                    refreshID = UUID()
                 }
             )
         }

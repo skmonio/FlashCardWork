@@ -409,12 +409,21 @@ class FlashCardViewModel: ObservableObject {
             return FlashCard(word: safeWord, definition: "Translation needed", example: example)
         }
         
+        // Ensure cards without decks go to Uncategorized
+        var finalDeckIds = deckIds
+        if finalDeckIds.isEmpty {
+            if let uncategorizedDeck = decks.first(where: { $0.name == "Uncategorized" }) {
+                finalDeckIds.insert(uncategorizedDeck.id)
+                print("📁 Card '\(safeWord)' has no decks - adding to Uncategorized")
+            }
+        }
+        
         do {
             var newCard = FlashCard(
                 word: safeWord, 
                 definition: safeDefinition, 
                 example: example.trimmingCharacters(in: .whitespacesAndNewlines), 
-                deckIds: deckIds,
+                deckIds: finalDeckIds,
                 article: article.trimmingCharacters(in: .whitespacesAndNewlines),
                 plural: plural.trimmingCharacters(in: .whitespacesAndNewlines),
                 pastTense: pastTense.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -433,7 +442,7 @@ class FlashCardViewModel: ObservableObject {
                 self?.updateCardDeckAssociations()
             }
             
-            print("✅ Successfully added card: '\(safeWord)' -> '\(safeDefinition)'")
+            print("✅ Successfully added card: '\(safeWord)' -> '\(safeDefinition)' to \(finalDeckIds.count) deck(s)")
             return newCard
         } catch {
             print("❌ Error creating card: \(error)")
@@ -858,6 +867,14 @@ func exportCardsToCSV() -> String {
         var successCount = 0
         var errors: [String] = []
         
+        // Ensure Uncategorized deck exists
+        let uncategorizedDeck: Deck
+        if let existing = decks.first(where: { $0.name == "Uncategorized" }) {
+            uncategorizedDeck = existing
+        } else {
+            uncategorizedDeck = createDeck(name: "Uncategorized")
+        }
+        
         // Skip header row
         for (index, line) in lines.dropFirst().enumerated() {
             let lineNumber = index + 2 // +2 because we dropped first and want 1-based indexing
@@ -901,10 +918,15 @@ func exportCardsToCSV() -> String {
                 }
             }
             
+            // If no decks were assigned, add to Uncategorized
+            if deckIds.isEmpty {
+                deckIds.insert(uncategorizedDeck.id)
+            }
+            
             // Handle success count
-            var successCount = 0
+            var cardSuccessCount = 0
             if fields.count > 9 {
-                successCount = Int(fields[9].trimmingCharacters(in: .whitespacesAndNewlines)) ?? 0
+                cardSuccessCount = Int(fields[9].trimmingCharacters(in: .whitespacesAndNewlines)) ?? 0
             }
             
             // Handle learning statistics
@@ -932,7 +954,7 @@ func exportCardsToCSV() -> String {
             
             // Update statistics if provided
             if let cardIndex = flashCards.firstIndex(where: { $0.id == newCard.id }) {
-                flashCards[cardIndex].successCount = successCount
+                flashCards[cardIndex].successCount = cardSuccessCount
                 flashCards[cardIndex].timesShown = timesShown
                 flashCards[cardIndex].timesCorrect = timesCorrect
             }

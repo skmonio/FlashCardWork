@@ -95,7 +95,8 @@ struct AllCardsView: View {
         }
         
         cardToDelete = nil
-        refreshID = UUID()
+        // Remove refreshID to prevent jumping to top
+        // refreshID = UUID()
     }
     
     private func removeCardFromSelectedDecks() {
@@ -121,7 +122,8 @@ struct AllCardsView: View {
         
         cardToDelete = nil
         selectedDecksForRemoval.removeAll()
-        refreshID = UUID()
+        // Remove refreshID to prevent jumping to top
+        // refreshID = UUID()
     }
     
     private func deleteSelectedCards(fromAllDecks: Bool) {
@@ -142,7 +144,8 @@ struct AllCardsView: View {
         
         isSelectionMode = false
         selectedCards.removeAll()
-        refreshID = UUID()
+        // Remove refreshID to prevent jumping to top
+        // refreshID = UUID()
     }
     
     var body: some View {
@@ -418,7 +421,6 @@ struct AllCardsView: View {
                     if let index = viewModel.flashCards.firstIndex(where: { $0.id == card.id }) {
                         viewModel.deleteCard(at: IndexSet([index]))
                     }
-                    refreshID = UUID()
                 }
                 cardToDelete = nil
             }
@@ -465,7 +467,6 @@ struct AllCardsView: View {
                 onComplete: {
                     isSelectionMode = false
                     selectedCards.removeAll()
-                    refreshID = UUID()
                 }
             )
         }
@@ -487,7 +488,6 @@ struct AllCardsView: View {
         .onChange(of: showingEditCardView) { newValue in
             if !newValue {
                 selectedCard = nil
-                refreshID = UUID()
             }
         }
         .id(refreshID)
