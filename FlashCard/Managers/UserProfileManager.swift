@@ -98,7 +98,6 @@ class UserProfileManager: ObservableObject {
     @Published var levelRewards: [LevelReward] = []
     
     // MARK: - Notification State
-    @Published var showingLevelUpNotification = false
     @Published var showingAchievementNotification = false
     @Published var levelUpMessage = ""
     @Published var lastUnlockedAchievement: Achievement?

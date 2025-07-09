@@ -18,12 +18,11 @@ struct StudySessionResultsView: View {
     @State private var previousXP: Int = 0
     @State private var previousLevel: Int = 1
     @State private var previousProgress: Double = 0
-    @State private var unlockedAchievements: [Achievement] = []
     @State private var showAchievementsModal = false
+    @State private var unlockedAchievements: [Achievement] = []
     @Environment(\.dismiss) private var dismiss
     @State private var showingAchievementModal = false
     @State private var achievementToShow: Achievement?
-    @State private var hasShownLevelUp = false
     
     var body: some View {
         ZStack {
@@ -202,22 +201,12 @@ struct StudySessionResultsView: View {
             // STEP 2: After progress bar animation, check for level up and show notifications
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                 if self.userProfile.level > self.previousLevel {
-                    self.showLevelUpNotification()
+                    // Level up notification is now handled by UserProfileManager's toast system
+                    // No need to show additional modal notification
                 }
                 
                 // STEP 3: Check for achievements last
                 self.checkForAchievements()
-            }
-        }
-    }
-    
-    private func showLevelUpNotification() {
-        if !hasShownLevelUp {
-            hasShownLevelUp = true
-            // Show level up notification using the user profile manager
-            userProfile.showingLevelUpNotification = true
-            DispatchQueue.main.asyncAfter(deadline: .now() + 4.0) {
-                userProfile.showingLevelUpNotification = false
             }
         }
     }
