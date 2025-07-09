@@ -215,6 +215,7 @@ struct CardsManagementView: View {
                 }
             }
         }
+        .padding(.horizontal)
         .padding(.bottom, 20)
     }
 } 
