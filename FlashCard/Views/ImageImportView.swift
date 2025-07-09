@@ -415,6 +415,18 @@ struct ImageImportView: View {
         
         logger.debug("Imported \(importedCount) words directly")
         
+        // Show success notification
+        if importedCount > 0 {
+            NotificationManager.shared.showNotification(
+                AppNotification(
+                    type: .info,
+                    title: "📸 Image Import Successful",
+                    message: "Imported \(importedCount) word\(importedCount == 1 ? "" : "s") from your image",
+                    duration: 4.0
+                )
+            )
+        }
+        
         // Go back to main view after import
         NavigationCoordinator.shared.pop()
     }

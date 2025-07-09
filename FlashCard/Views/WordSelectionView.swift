@@ -573,6 +573,18 @@ struct BatchImportView: View {
         }
         
         logger.debug("Imported \(importedCount) words directly out of \(selectedWords.count) selected")
+        
+        // Show success notification
+        if importedCount > 0 {
+            NotificationManager.shared.showNotification(
+                AppNotification(
+                    type: .info,
+                    title: "📸 Import Successful",
+                    message: "Imported \(importedCount) word\(importedCount == 1 ? "" : "s") to your collection",
+                    duration: 4.0
+                )
+            )
+        }
     }
     
     private func importFinalWords(_ entries: [CardEntry]) {
@@ -595,6 +607,18 @@ struct BatchImportView: View {
         }
         
         logger.debug("Imported \(importedCount) words after duplicate resolution out of \(entries.count) entries")
+        
+        // Show success notification
+        if importedCount > 0 {
+            NotificationManager.shared.showNotification(
+                AppNotification(
+                    type: .info,
+                    title: "📸 Import Successful",
+                    message: "Imported \(importedCount) word\(importedCount == 1 ? "" : "s") to your collection",
+                    duration: 4.0
+                )
+            )
+        }
     }
 }
 

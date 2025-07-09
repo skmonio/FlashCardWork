@@ -438,6 +438,16 @@ struct AddCardView: View {
             cardId: temporaryCardId // Pass the temporary ID so audio gets linked
         )
         
+        // Show success notification
+        NotificationManager.shared.showNotification(
+            AppNotification(
+                type: .info,
+                title: "✅ Card Saved",
+                message: "Added '\(trimmedWord)' to your collection",
+                duration: 3.0
+            )
+        )
+        
         // Force a save to UserDefaults
         UserDefaults.standard.synchronize()
         logger.debug("UserDefaults synchronized")
@@ -458,6 +468,10 @@ struct AddCardView: View {
         pastTense = ""
         futureTense = ""
         pastParticiple = ""
+        
+        // Clear translation state
+        translationConfiguration = nil
+        lastTranslatedWord = ""
         
         // Keep deck selection but clear other fields
         // selectedDeckIds remains the same for convenience

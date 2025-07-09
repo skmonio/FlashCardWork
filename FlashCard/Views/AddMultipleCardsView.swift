@@ -268,6 +268,16 @@ struct AddMultipleCardsView: View {
             )
         }
         
+        // Show success notification
+        NotificationManager.shared.showNotification(
+            AppNotification(
+                type: .info,
+                title: "✅ Cards Saved",
+                message: "Added \(entries.count) card\(entries.count == 1 ? "" : "s") to your collection",
+                duration: 4.0
+            )
+        )
+        
         // Force a save to UserDefaults
         UserDefaults.standard.synchronize()
         logger.debug("UserDefaults synchronized")
