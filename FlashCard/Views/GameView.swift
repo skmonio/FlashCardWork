@@ -446,6 +446,9 @@ struct GameView: View {
         moves = 0
         incorrectMatches.removeAll()
         selectedCard = nil
+        
+        // Reset session XP to 0 for new game
+        sessionXP = 0
 
         // Set up timer based on difficulty and number of cards
         let timePerCardSet = difficulty.timePerCardSet

@@ -318,6 +318,10 @@ struct TestView: View {
         hasAnsweredHistory = [:]
         maxProgressIndex = 1
         hasGoneBack = false
+        
+        // Reset session XP to 0 for new test
+        sessionXP = 0
+        
         // Start new session tracking
         sessionStartTime = Date()
         currentSession = statsManager.startSession(deckIds: deckIds, cardCount: cards.count)

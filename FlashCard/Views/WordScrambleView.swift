@@ -328,6 +328,10 @@ struct WordScrambleView: View {
         showingResults = false
         sessionStartTime = Date()
         cards = viewModel.sortCardsForLearning(cards)
+        
+        // Reset session XP to 0 for new game
+        sessionXP = 0
+        
         setupCurrentWord()
     }
     

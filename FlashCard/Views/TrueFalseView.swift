@@ -775,6 +775,9 @@ struct TrueFalseView: View {
         currentIndex = 0
         setupNextQuestion(incrementIndex: false)
         
+        // Reset session XP to 0 for new game
+        sessionXP = 0
+        
         // Clear navigation state
         maxProgressIndex = 1
         hasGoneBack = false

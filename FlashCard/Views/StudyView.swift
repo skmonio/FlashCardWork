@@ -853,6 +853,9 @@ struct StudyView: View {
         unknownCards.removeAll()
         skippedCards.removeAll()
         
+        // Reset session XP to 0 for new session
+        sessionXP = 0
+        
         // Clear navigation state
         maxProgressIndex = 1
         hasGoneBack = false

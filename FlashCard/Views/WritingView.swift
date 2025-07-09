@@ -500,6 +500,9 @@ struct WritingView: View {
         correctAnswers = 0
         totalAnswers = 0
         isKeyboardFocused = true
+        
+        // Reset session XP to 0 for new game
+        sessionXP = 0
     }
     
     private func handleBackButton() {

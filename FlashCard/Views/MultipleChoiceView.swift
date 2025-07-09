@@ -232,6 +232,10 @@ struct MultipleChoiceView: View {
         totalAnswers = 0
         showingResults = false
         cards = viewModel.sortCardsForLearning(cards)
+        
+        // Reset session XP to 0 for new game
+        sessionXP = 0
+        
         setupCurrentQuestion()
         sessionStartTime = Date()
     }

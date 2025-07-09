@@ -509,6 +509,10 @@ struct LookCoverCheckView: View {
         correctAnswers = 0
         totalAnswers = 0
         showingResults = false
+        
+        // Reset session XP to 0 for new game
+        sessionXP = 0
+        
         resetForNextCard()
         
         // Clear any saved progress when resetting
