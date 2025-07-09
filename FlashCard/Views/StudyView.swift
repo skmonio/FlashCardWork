@@ -472,10 +472,6 @@ struct StudyView: View {
         print("👆 About to record card shown...")
         viewModel.recordCardShown(cardId, isCorrect: true)
         
-        // Add XP for knowing the card
-        userProfileManager.addXP(10)
-        sessionXP += 10
-        
         print("👆 About to move to next card...")
         withAnimation(.easeOut(duration: 0.3)) {
             moveToNextCard()
@@ -513,10 +509,6 @@ struct StudyView: View {
         viewModel.updateCardWithSRSData(updatedCard)
         print("👆 About to record card shown...")
         viewModel.recordCardShown(cardId, isCorrect: false)
-        
-        // Add XP for attempting the card (even if you don't know it)
-        userProfileManager.addXP(5)
-        sessionXP += 5
         
         print("👆 About to move to next card...")
         withAnimation(.easeOut(duration: 0.3)) {
@@ -615,12 +607,6 @@ struct StudyView: View {
                 )
                 currentSession = session
                 
-                // Add XP for completing the study session
-                let baseXP = 50
-                let performanceBonus = knownCards.count * 5 // 5 XP per known card
-                let totalXP = baseXP + performanceBonus
-                userProfileManager.addXP(totalXP)
-                
                 // Check for perfect session (100% accuracy with at least 5 cards)
                 let totalAnswered = knownCards.count + unknownCards.count
                 if totalAnswered >= 5 && unknownCards.count == 0 {
@@ -632,7 +618,7 @@ struct StudyView: View {
                     )
                 }
                 
-                print("🎮 Study session complete! Earned \(totalXP) XP (Base: \(baseXP), Performance: \(performanceBonus))")
+                print("🎮 Study session complete! Earned \(sessionXP) XP")
             }
             
             // Clear saved progress since session is complete
@@ -712,12 +698,6 @@ struct StudyView: View {
                 )
                 currentSession = session
                 
-                // Add XP for completing the study session
-                let baseXP = 50
-                let performanceBonus = knownCards.count * 5 // 5 XP per known card
-                let totalXP = baseXP + performanceBonus
-                userProfileManager.addXP(totalXP)
-                
                 // Check for perfect session (100% accuracy with at least 5 cards)
                 let totalAnswered = knownCards.count + unknownCards.count
                 if totalAnswered >= 5 && unknownCards.count == 0 {
@@ -729,7 +709,7 @@ struct StudyView: View {
                     )
                 }
                 
-                print("🎮 Study session complete! Earned \(totalXP) XP (Base: \(baseXP), Performance: \(performanceBonus))")
+                print("🎮 Study session complete! Earned \(sessionXP) XP")
             }
             
             // Clear saved progress since session is complete

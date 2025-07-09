@@ -648,10 +648,6 @@ struct TrueFalseView: View {
             gameScene.createSuccessParticles(at: centerPoint)
             gameScene.createFloatingScore(score: "+10", at: centerPoint, color: .systemGreen)
             
-            // Add XP for correct answer
-            userProfileManager.addXP(12)
-            sessionXP += 12
-            
             // Use custom sound for games (not study mode)
             HapticManager.shared.successNotification() // Haptic only
             SoundManager.shared.playTestCorrectSound() // Custom Correct.wav
@@ -669,16 +665,11 @@ struct TrueFalseView: View {
             let centerPoint = CGPoint(x: gameScene.size.width / 2, y: gameScene.size.height / 2)
             gameScene.createErrorEffect(at: centerPoint)
             
-            // Add XP for attempting (even if wrong)
-            userProfileManager.addXP(5)
-            sessionXP += 5
-            
             // Use custom sound for games (not study mode)
             HapticManager.shared.errorNotification() // Haptic only
             SoundManager.shared.playTestWrongSound() // Custom Wrong.wav
             
             // Apply SRS logic for incorrect answer (50/50 consideration)
-            // Since True/False is easier, incorrect answers are penalized more heavily
             let updatedCard = srsManager.processSimpleReview(for: question.originalCard, simpleQuality: .dontKnow)
             viewModel.updateCardWithSRSData(updatedCard)
         }
@@ -710,17 +701,18 @@ struct TrueFalseView: View {
                 )
                 currentSession = session
                 
-                // Add XP for completing the True/False session
+                // Add XP for completing the true/false session
                 let baseXP = 50
-                let performanceBonus = correctAnswers * 12 // 12 XP per correct answer
+                let performanceBonus = correctAnswers * 5 // 5 XP per correct answer
                 let totalXP = baseXP + performanceBonus
-                userProfileManager.addXP(totalXP)
+                // Remove session completion XP - will be awarded in session results view
+                // userProfileManager.addXP(totalXP)
                 
-                // Check for perfect session (100% accuracy with at least 5 questions)
-                if questionsAnswered >= 5 && correctAnswers == questionsAnswered {
+                // Check for perfect session (100% accuracy with at least 5 cards)
+                if cards.count >= 5 && correctAnswers == cards.count {
                     statsManager.recordPerfectSession(
                         gameType: .truefalse,
-                        totalCards: questionsAnswered,
+                        totalCards: cards.count,
                         knownCards: correctAnswers,
                         duration: session.endTime!.timeIntervalSince(session.startTime)
                     )

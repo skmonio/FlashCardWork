@@ -139,10 +139,6 @@ struct TestView: View {
                 HapticManager.shared.testCorrectHaptic() // Haptic only, no system sound
                 SoundManager.shared.playTestCorrectSound() // Play custom correct sound
                 
-                // Add XP for correct answer
-                userProfileManager.addXP(15)
-                sessionXP += 15
-                
                 // Apply SRS logic for correct answer
                 let updatedCard = srsManager.processSimpleReview(for: currentCard, simpleQuality: .know)
                 viewModel.updateCardWithSRSData(updatedCard)
@@ -150,10 +146,6 @@ struct TestView: View {
                 incorrectCards.insert(currentCard.id)
                 HapticManager.shared.testWrongHaptic() // Haptic only, no system sound
                 SoundManager.shared.playTestWrongSound() // Play custom wrong sound
-                
-                // Add XP for attempting (even if wrong)
-                userProfileManager.addXP(5)
-                sessionXP += 5
                 
                 // Apply SRS logic for incorrect answer
                 let updatedCard = srsManager.processSimpleReview(for: currentCard, simpleQuality: .dontKnow)
@@ -192,11 +184,12 @@ struct TestView: View {
                 
                 // Add XP for completing the test session
                 let baseXP = 50
-                let performanceBonus = correctAnswers * 10 // 10 XP per correct answer
+                let performanceBonus = correctAnswers * 5 // 5 XP per correct answer
                 let totalXP = baseXP + performanceBonus
-                userProfileManager.addXP(totalXP)
+                // Remove session completion XP - will be awarded in session results view
+                // userProfileManager.addXP(totalXP)
                 
-                // Check for perfect session (100% accuracy with at least 5 questions)
+                // Check for perfect session (100% accuracy with at least 5 cards)
                 if maxQuestions >= 5 && correctAnswers == maxQuestions {
                     statsManager.recordPerfectSession(
                         gameType: .test,
@@ -276,11 +269,12 @@ struct TestView: View {
                 
                 // Add XP for completing the test session
                 let baseXP = 50
-                let performanceBonus = correctAnswers * 10 // 10 XP per correct answer
+                let performanceBonus = correctAnswers * 5 // 5 XP per correct answer
                 let totalXP = baseXP + performanceBonus
-                userProfileManager.addXP(totalXP)
+                // Remove session completion XP - will be awarded in session results view
+                // userProfileManager.addXP(totalXP)
                 
-                // Check for perfect session (100% accuracy with at least 5 questions)
+                // Check for perfect session (100% accuracy with at least 5 cards)
                 if originalCardCount >= 5 && correctAnswers == originalCardCount {
                     statsManager.recordPerfectSession(
                         gameType: .test,

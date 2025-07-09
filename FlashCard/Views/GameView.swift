@@ -514,90 +514,18 @@ struct GameView: View {
                 // It's a match! 
                 score += 1
                 
-                // Add XP for successful match
-                userProfileManager.addXP(10)
-                sessionXP += 10
+                // Mark both cards as matched
+                if let selectedIndex = gameCards.firstIndex(where: { $0.id == selectedCard?.id }),
+                   let currentIndex = gameCards.firstIndex(where: { $0.id == tappedCard.id }) {
+                    gameCards[selectedIndex].isMatched = true
+                    gameCards[currentIndex].isMatched = true
+                }
                 
-                displayedCards[index].isSelected = true
+                selectedCard = nil
                 
-                // After a brief delay, mark cards as matched to fade them out
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                    // Clear selection and mark as matched to fade out
-                    displayedCards[selectedIndex].isSelected = false
-                    displayedCards[index].isSelected = false
-                    displayedCards[selectedIndex].isMatched = true
-                    displayedCards[index].isMatched = true
-                    
-                    // Record successful match as correct answer
-                    viewModel.recordCardShown(tappedCard.originalCard.id, isCorrect: true)
-                    
-                    // After fade out animation, replace with new cards
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-                        if remainingCards.count >= 2 {
-                            // Replace with a complete pair (2 cards)
-                            let newCard1 = remainingCards.removeFirst()
-                            let newCard2 = remainingCards.removeFirst()
-                        
-                            // Ensure we're replacing with a complete pair
-                            if newCard1.originalCard.id == newCard2.originalCard.id {
-                                displayedCards[selectedIndex] = newCard1
-                                displayedCards[index] = newCard2
-                                print("🧠 Replaced matched pair with new pair: \(newCard1.content) and \(newCard2.content)")
-                            } else {
-                                // If we don't have a complete pair, put the cards back and try again
-                                remainingCards.insert(newCard2, at: 0)
-                                remainingCards.insert(newCard1, at: 0)
-                                print("🧠 Warning: Could not find complete pair for replacement")
-                            }
-                        } else {
-                            // No more cards to add, keep matched cards in place but invisible
-                            // Don't remove them to maintain grid layout
-                            print("🧠 No more cards remaining, keeping matched cards in place")
-                            
-                            // Check if game is complete (all cards are matched)
-                            let allCardsMatched = displayedCards.allSatisfy { $0.isMatched }
-                            if allCardsMatched {
-                                // Stop the timer
-                                stopTimer()
-                                
-                                // Clear saved progress since game is complete
-                                clearSavedProgress()
-                                
-                                // Check for perfect session (all cards matched with at least 5 pairs)
-                                let totalPairs = cards.count
-                                if totalPairs >= 5 && score == totalPairs {
-                                    let gameDuration = gameStartTime?.timeIntervalSinceNow ?? 0
-                                    StatisticsManager.shared.recordPerfectSession(
-                                        gameType: .game,
-                                        totalCards: totalPairs * 2, // Each pair has 2 cards
-                                        knownCards: totalPairs * 2,
-                                        duration: abs(gameDuration)
-                                    )
-                                }
-                                
-                                // Call level completion callback if this is a progressive study session
-                                if let onLevelComplete = onLevelComplete {
-                                    let levelNumber: Int
-                                    switch studyMode {
-                                    case .maintenance: levelNumber = 1
-                                    case .cram: levelNumber = 2
-                                    case .adaptive: levelNumber = 3
-                                    default: levelNumber = 1
-                                    }
-                                    
-                                    let result = LevelResult(
-                                        level: levelNumber,
-                                        score: score,
-                                        total: maxQuestions ?? cards.count
-                                    )
-                                    onLevelComplete(result)
-                                } else {
-                                    StreakManager.shared.recordGameCompletion()
-                                    showingResults = true
-                                }
-                            }
-                        }
-                    }
+                // Check if game is complete
+                if gameCards.allSatisfy({ $0.isMatched }) {
+                    endGame()
                 }
             } else {
                 // Not a match

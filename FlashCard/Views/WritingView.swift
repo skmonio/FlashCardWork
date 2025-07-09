@@ -388,23 +388,19 @@ struct WritingView: View {
         
         if answersMatch {
             correctAnswers += 1
-            // Use custom sound for games (not study mode)
-            HapticManager.shared.successNotification() // Haptic only
-            SoundManager.shared.playTestCorrectSound() // Custom Correct.wav
-            viewModel.setCardStatus(cardId: card.id, status: .known)
+            HapticManager.shared.testCorrectHaptic()
+            SoundManager.shared.playTestCorrectSound()
             
-            // Add XP for correct answer
-            userProfileManager.addXP(15)
-            sessionXP += 15
+            // Apply SRS logic for correct answer
+            let updatedCard = srsManager.processSimpleReview(for: card, simpleQuality: .know)
+            viewModel.updateCardWithSRSData(updatedCard)
         } else {
-            // Use custom sound for games (not study mode)
-            HapticManager.shared.errorNotification() // Haptic only
-            SoundManager.shared.playTestWrongSound() // Custom Wrong.wav
-            viewModel.setCardStatus(cardId: card.id, status: .unknown)
+            HapticManager.shared.testWrongHaptic()
+            SoundManager.shared.playTestWrongSound()
             
-            // Add XP for attempting (even if wrong)
-            userProfileManager.addXP(5)
-            sessionXP += 5
+            // Apply SRS logic for incorrect answer
+            let updatedCard = srsManager.processSimpleReview(for: card, simpleQuality: .dontKnow)
+            viewModel.updateCardWithSRSData(updatedCard)
         }
         
         // Record learning statistics
