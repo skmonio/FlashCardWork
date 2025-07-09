@@ -707,6 +707,24 @@ struct TrueFalseView: View {
                     skippedCards: 0
                 )
                 currentSession = session
+                
+                // Add XP for completing the True/False session
+                let baseXP = 50
+                let performanceBonus = correctAnswers * 12 // 12 XP per correct answer
+                let totalXP = baseXP + performanceBonus
+                userProfileManager.addXP(totalXP)
+                
+                // Check for perfect session (100% accuracy with at least 5 questions)
+                if questionsAnswered >= 5 && correctAnswers == questionsAnswered {
+                    statsManager.recordPerfectSession(
+                        gameType: .truefalse,
+                        totalCards: questionsAnswered,
+                        knownCards: correctAnswers,
+                        duration: session.endTime!.timeIntervalSince(session.startTime)
+                    )
+                }
+                
+                print("🎮 True/False session complete! Earned \(totalXP) XP (Base: \(baseXP), Performance: \(performanceBonus))")
             }
             
             // Clear saved progress since game is complete

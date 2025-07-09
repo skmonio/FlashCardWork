@@ -24,6 +24,9 @@ struct MultipleChoiceView: View {
     // Session XP tracking
     @State private var sessionXP: Int = 0 // Track XP gained during current session
     
+    // Session tracking
+    @State private var sessionStartTime: Date = Date()
+    
     // Computed property to check if there's significant progress to save
     private var hasSignificantProgress: Bool {
         return currentIndex > 0 || totalAnswers > 0
@@ -233,6 +236,7 @@ struct MultipleChoiceView: View {
         showingResults = false
         cards = viewModel.sortCardsForLearning(cards)
         setupCurrentQuestion()
+        sessionStartTime = Date()
     }
     
     private func setupCurrentQuestion() {
@@ -334,6 +338,18 @@ struct MultipleChoiceView: View {
         } else {
             // Clear saved progress since game is complete
             clearSavedProgress()
+            
+            // Check for perfect session (100% accuracy with at least 5 cards)
+            if cards.count >= 5 && correctAnswers == cards.count {
+                let sessionDuration = Date().timeIntervalSince(sessionStartTime)
+                StatisticsManager.shared.recordPerfectSession(
+                    gameType: .multipleChoice,
+                    totalCards: cards.count,
+                    knownCards: correctAnswers,
+                    duration: sessionDuration
+                )
+            }
+            
             showingResults = true
         }
     }

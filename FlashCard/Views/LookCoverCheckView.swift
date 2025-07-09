@@ -22,6 +22,9 @@ struct LookCoverCheckView: View {
     // Session XP tracking
     @State private var sessionXP: Int = 0 // Track XP gained during current session
     
+    // Session tracking
+    @State private var sessionStartTime: Date = Date()
+    
     // Save state properties
     private var deckIds: [UUID]
     private var shouldLoadSaveState: Bool
@@ -129,6 +132,7 @@ struct LookCoverCheckView: View {
         showingResults = false
         userInput = ""
         cards = viewModel.sortCardsForLearning(cards)
+        sessionStartTime = Date()
     }
     
     private var emptyStateView: some View {
@@ -477,6 +481,18 @@ struct LookCoverCheckView: View {
         } else {
             // Clear saved progress since game is complete
             clearSavedProgress()
+            
+            // Check for perfect session (100% accuracy with at least 5 cards)
+            if cards.count >= 5 && correctAnswers == cards.count {
+                let sessionDuration = Date().timeIntervalSince(sessionStartTime)
+                StatisticsManager.shared.recordPerfectSession(
+                    gameType: .lookCoverCheck,
+                    totalCards: cards.count,
+                    knownCards: correctAnswers,
+                    duration: sessionDuration
+                )
+            }
+            
             showingResults = true
             HapticManager.shared.gameComplete()
         }

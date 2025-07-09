@@ -564,29 +564,41 @@ struct GameView: View {
                             // Check if game is complete (all cards are matched)
                             let allCardsMatched = displayedCards.allSatisfy { $0.isMatched }
                             if allCardsMatched {
-                            // Stop the timer
-                            stopTimer()
-                            
-                            // Clear saved progress since game is complete
-                            clearSavedProgress()
-                            
-                            // Call level completion callback if this is a progressive study session
-                            if let onLevelComplete = onLevelComplete {
-                                let levelNumber: Int
-                                switch studyMode {
-                                case .maintenance: levelNumber = 1
-                                case .cram: levelNumber = 2
-                                case .adaptive: levelNumber = 3
-                                default: levelNumber = 1
+                                // Stop the timer
+                                stopTimer()
+                                
+                                // Clear saved progress since game is complete
+                                clearSavedProgress()
+                                
+                                // Check for perfect session (all cards matched with at least 5 pairs)
+                                let totalPairs = cards.count
+                                if totalPairs >= 5 && score == totalPairs {
+                                    let gameDuration = gameStartTime?.timeIntervalSinceNow ?? 0
+                                    StatisticsManager.shared.recordPerfectSession(
+                                        gameType: .game,
+                                        totalCards: totalPairs * 2, // Each pair has 2 cards
+                                        knownCards: totalPairs * 2,
+                                        duration: abs(gameDuration)
+                                    )
                                 }
                                 
-                                let result = LevelResult(
-                                    level: levelNumber,
-                                    score: score,
-                                    total: maxQuestions ?? cards.count
-                                )
-                                onLevelComplete(result)
-                            } else {
+                                // Call level completion callback if this is a progressive study session
+                                if let onLevelComplete = onLevelComplete {
+                                    let levelNumber: Int
+                                    switch studyMode {
+                                    case .maintenance: levelNumber = 1
+                                    case .cram: levelNumber = 2
+                                    case .adaptive: levelNumber = 3
+                                    default: levelNumber = 1
+                                    }
+                                    
+                                    let result = LevelResult(
+                                        level: levelNumber,
+                                        score: score,
+                                        total: maxQuestions ?? cards.count
+                                    )
+                                    onLevelComplete(result)
+                                } else {
                                     StreakManager.shared.recordGameCompletion()
                                     showingResults = true
                                 }

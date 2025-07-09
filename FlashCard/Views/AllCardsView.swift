@@ -31,11 +31,13 @@ struct AllCardsView: View {
     enum SortOption: Hashable {
         case az(ascending: Bool)
         case date(ascending: Bool)
+        case strength(ascending: Bool) // Strongest first (descending) or Weakest first (ascending)
         
         var label: String {
             switch self {
             case .az(let ascending): return ascending ? "A-Z" : "Z-A"
             case .date(let ascending): return ascending ? "Oldest" : "Recent"
+            case .strength(let ascending): return ascending ? "Weakest" : "Strongest"
             }
         }
         
@@ -43,6 +45,7 @@ struct AllCardsView: View {
             switch self {
             case .az(let ascending): return ascending ? "arrow.up" : "arrow.down"
             case .date(let ascending): return ascending ? "arrow.up" : "arrow.down"
+            case .strength(let ascending): return ascending ? "arrow.up" : "arrow.down"
             }
         }
     }
@@ -63,6 +66,16 @@ struct AllCardsView: View {
             case .date(let ascending):
                 let cmp = card1.dateCreated.compare(card2.dateCreated)
                 return ascending ? (cmp == .orderedAscending) : (cmp == .orderedDescending)
+            case .strength(let ascending):
+                let percentage1 = card1.learningPercentage ?? 0
+                let percentage2 = card2.learningPercentage ?? 0
+                if ascending {
+                    // Weakest first (ascending)
+                    return percentage1 < percentage2
+                } else {
+                    // Strongest first (descending)
+                    return percentage1 > percentage2
+                }
             }
         }
     }
@@ -188,7 +201,8 @@ struct AllCardsView: View {
                 HStack(spacing: 8) {
                     ForEach([
                         SortOption.az(ascending: true),
-                        SortOption.date(ascending: true)
+                        SortOption.date(ascending: true),
+                        SortOption.strength(ascending: true)
                     ], id: \.self) { option in
                         Button(action: {
                             if sortOption.label == option.label { // Compare by label for toggle
@@ -198,6 +212,8 @@ struct AllCardsView: View {
                                     sortOption = .az(ascending: !ascending)
                                 case .date(let ascending):
                                     sortOption = .date(ascending: !ascending)
+                                case .strength(let ascending):
+                                    sortOption = .strength(ascending: !ascending)
                                 }
                             } else {
                                 // Select new sort option
@@ -206,6 +222,8 @@ struct AllCardsView: View {
                                     sortOption = .az(ascending: true)
                                 case .date:
                                     sortOption = .date(ascending: true)
+                                case .strength:
+                                    sortOption = .strength(ascending: true)
                                 }
                             }
                         }) {
@@ -216,6 +234,8 @@ struct AllCardsView: View {
                                         if case .az(let ascending) = sortOption { return ascending ? "arrow.up" : "arrow.down" } else { return "arrow.up" }
                                     case .date:
                                         if case .date(let ascending) = sortOption { return ascending ? "arrow.up" : "arrow.down" } else { return "arrow.up" }
+                                    case .strength:
+                                        if case .strength(let ascending) = sortOption { return ascending ? "arrow.up" : "arrow.down" } else { return "arrow.up" }
                                     }
                                 }())
                                 Text({
@@ -223,7 +243,9 @@ struct AllCardsView: View {
                                     case .az:
                                         if case .az(let ascending) = sortOption { return ascending ? "A-Z" : "Z-A" } else { return "A-Z" }
                                     case .date:
-                                        if case .date(let ascending) = sortOption { return ascending ? "Oldest" : "Recent" } else { return "Oldest" }
+                                        return "Date"
+                                    case .strength:
+                                        return "%"
                                     }
                                 }())
                             }
@@ -234,6 +256,8 @@ struct AllCardsView: View {
                                     if case .az = sortOption { return .blue } else { return .primary }
                                 case .date:
                                     if case .date = sortOption { return .blue } else { return .primary }
+                                case .strength:
+                                    if case .strength = sortOption { return .blue } else { return .primary }
                                 }
                             }())
                             .padding(.vertical, 6)
@@ -244,6 +268,8 @@ struct AllCardsView: View {
                                     if case .az = sortOption { return Color(.systemGray5).opacity(0.2) } else { return Color.clear }
                                 case .date:
                                     if case .date = sortOption { return Color(.systemGray5).opacity(0.2) } else { return Color.clear }
+                                case .strength:
+                                    if case .strength = sortOption { return Color(.systemGray5).opacity(0.2) } else { return Color.clear }
                                 }
                             }())
                             .cornerRadius(8)

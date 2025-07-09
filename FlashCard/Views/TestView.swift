@@ -196,6 +196,16 @@ struct TestView: View {
                 let totalXP = baseXP + performanceBonus
                 userProfileManager.addXP(totalXP)
                 
+                // Check for perfect session (100% accuracy with at least 5 questions)
+                if maxQuestions >= 5 && correctAnswers == maxQuestions {
+                    statsManager.recordPerfectSession(
+                        gameType: .test,
+                        totalCards: maxQuestions,
+                        knownCards: correctAnswers,
+                        duration: session.endTime!.timeIntervalSince(session.startTime)
+                    )
+                }
+                
                 print("🎮 Test session complete! Earned \(totalXP) XP (Base: \(baseXP), Performance: \(performanceBonus))")
             }
             
@@ -269,6 +279,16 @@ struct TestView: View {
                 let performanceBonus = correctAnswers * 10 // 10 XP per correct answer
                 let totalXP = baseXP + performanceBonus
                 userProfileManager.addXP(totalXP)
+                
+                // Check for perfect session (100% accuracy with at least 5 questions)
+                if originalCardCount >= 5 && correctAnswers == originalCardCount {
+                    statsManager.recordPerfectSession(
+                        gameType: .test,
+                        totalCards: originalCardCount,
+                        knownCards: correctAnswers,
+                        duration: session.endTime!.timeIntervalSince(session.startTime)
+                    )
+                }
                 
                 print("🎮 Test session complete! Earned \(totalXP) XP (Base: \(baseXP), Performance: \(performanceBonus))")
             }

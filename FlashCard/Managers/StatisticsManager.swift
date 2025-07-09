@@ -9,10 +9,14 @@ class StatisticsManager: ObservableObject {
     @Published var longestStreak: Int = 0
     @Published var totalStudyTime: TimeInterval = 0
     
+    // Perfect session tracking
+    @Published var perfectSessions: [PerfectSession] = []
+    
     private let userDefaultsKey = "StudySessions"
     private let streakKey = "CurrentStreak"
     private let longestStreakKey = "LongestStreak"
     private let totalStudyTimeKey = "TotalStudyTime"
+    private let perfectSessionsKey = "PerfectSessions"
     
     init() {
         loadData()
@@ -45,7 +49,65 @@ class StatisticsManager: ObservableObject {
         studySessions.append(updatedSession)
         updateStreak()
         totalStudyTime += updatedSession.duration
+        
+        // Check for perfect session
+        checkForPerfectSession(updatedSession)
+        
         saveData()
+    }
+    
+    // MARK: - Perfect Session Tracking
+    
+    private func checkForPerfectSession(_ session: StudySession) {
+        // A perfect session is 100% accuracy with at least 5 cards
+        let totalAnswered = session.knownCards + session.unknownCards
+        let isPerfect = totalAnswered >= 5 && session.unknownCards == 0
+        
+        if isPerfect {
+            let perfectSession = PerfectSession(
+                id: UUID(),
+                gameType: .study, // Default to study, can be updated by specific game types
+                date: session.endTime ?? Date(),
+                totalCards: session.totalCards,
+                knownCards: session.knownCards,
+                duration: session.duration
+            )
+            perfectSessions.append(perfectSession)
+            print("🏆 Perfect session achieved! \(session.knownCards)/\(session.totalCards) cards")
+        }
+    }
+    
+    func recordPerfectSession(gameType: GameType, totalCards: Int, knownCards: Int, duration: TimeInterval) {
+        let perfectSession = PerfectSession(
+            id: UUID(),
+            gameType: gameType,
+            date: Date(),
+            totalCards: totalCards,
+            knownCards: knownCards,
+            duration: duration
+        )
+        perfectSessions.append(perfectSession)
+        saveData()
+        print("🏆 Perfect session recorded for \(gameType.displayName)! \(knownCards)/\(totalCards) cards")
+    }
+    
+    func getPerfectSessions(for gameType: GameType? = nil) -> [PerfectSession] {
+        if let gameType = gameType {
+            return perfectSessions.filter { $0.gameType == gameType }
+        }
+        return perfectSessions
+    }
+    
+    func getPerfectSessionCount(for gameType: GameType? = nil) -> Int {
+        return getPerfectSessions(for: gameType).count
+    }
+    
+    func hasPerfectSession(for gameType: GameType) -> Bool {
+        return getPerfectSessionCount(for: gameType) > 0
+    }
+    
+    func getLatestPerfectSession(for gameType: GameType) -> PerfectSession? {
+        return getPerfectSessions(for: gameType).max { $0.date < $1.date }
     }
     
     // MARK: - Analytics Methods
@@ -230,6 +292,9 @@ class StatisticsManager: ObservableObject {
         UserDefaults.standard.set(currentStreak, forKey: streakKey)
         UserDefaults.standard.set(longestStreak, forKey: longestStreakKey)
         UserDefaults.standard.set(totalStudyTime, forKey: totalStudyTimeKey)
+        if let encoded = try? JSONEncoder().encode(perfectSessions) {
+            UserDefaults.standard.set(encoded, forKey: perfectSessionsKey)
+        }
     }
     
     private func loadData() {
@@ -241,6 +306,11 @@ class StatisticsManager: ObservableObject {
         currentStreak = UserDefaults.standard.integer(forKey: streakKey)
         longestStreak = UserDefaults.standard.integer(forKey: longestStreakKey)
         totalStudyTime = UserDefaults.standard.double(forKey: totalStudyTimeKey)
+        
+        if let savedPerfectSessions = UserDefaults.standard.data(forKey: perfectSessionsKey),
+           let decodedPerfectSessions = try? JSONDecoder().decode([PerfectSession].self, from: savedPerfectSessions) {
+            perfectSessions = decodedPerfectSessions
+        }
     }
 }
 
@@ -377,6 +447,84 @@ struct StudyTimeBreakdown {
             return "\(hours)h \(minutes)m"
         } else {
             return "\(minutes)m"
+        }
+    }
+}
+
+// MARK: - Perfect Session Models
+
+struct PerfectSession: Codable, Identifiable {
+    let id: UUID
+    let gameType: GameType
+    let date: Date
+    let totalCards: Int
+    let knownCards: Int
+    let duration: TimeInterval
+    
+    var formattedDate: String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        return formatter.string(from: date)
+    }
+    
+    var formattedDuration: String {
+        let minutes = Int(duration) / 60
+        let seconds = Int(duration) % 60
+        if minutes > 0 {
+            return "\(minutes)m \(seconds)s"
+        } else {
+            return "\(seconds)s"
+        }
+    }
+}
+
+enum GameType: String, Codable, CaseIterable {
+    case study = "study"
+    case test = "test"
+    case game = "game"
+    case writing = "writing"
+    case wordScramble = "wordScramble"
+    case truefalse = "truefalse"
+    case lookCoverCheck = "lookCoverCheck"
+    case multipleChoice = "multipleChoice"
+    
+    var displayName: String {
+        switch self {
+        case .study: return "Study"
+        case .test: return "Test"
+        case .game: return "Memory Game"
+        case .writing: return "Writing"
+        case .wordScramble: return "Word Scramble"
+        case .truefalse: return "True/False"
+        case .lookCoverCheck: return "Look-Cover-Check"
+        case .multipleChoice: return "Multiple Choice"
+        }
+    }
+    
+    var icon: String {
+        switch self {
+        case .study: return "book.fill"
+        case .test: return "checkmark.circle.fill"
+        case .game: return "brain.head.profile"
+        case .writing: return "pencil"
+        case .wordScramble: return "arrow.triangle.2.circlepath"
+        case .truefalse: return "questionmark.circle.fill"
+        case .lookCoverCheck: return "eye.fill"
+        case .multipleChoice: return "list.bullet"
+        }
+    }
+    
+    var color: Color {
+        switch self {
+        case .study: return .blue
+        case .test: return .orange
+        case .game: return .purple
+        case .writing: return .green
+        case .wordScramble: return .red
+        case .truefalse: return .pink
+        case .lookCoverCheck: return .teal
+        case .multipleChoice: return .indigo
         }
     }
 }

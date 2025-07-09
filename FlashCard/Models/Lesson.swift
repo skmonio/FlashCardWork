@@ -1333,6 +1333,422 @@ Practice using new Dutch words in context. Learn their meanings and test your un
             )
         ]
     )
+
+    static let chapter26: Lesson = Lesson(
+        id: UUID(),
+        title: "Chapter 2.6 – Movement and Body Vocabulary",
+        description: """
+Learn Dutch vocabulary related to movement, body parts, and physical actions. Practice words for directions, body positions, and breathing exercises.
+""",
+        vocabulary: [
+            VocabularyItem(dutchWord: "Achteren", translation: "Backwards"),
+            VocabularyItem(dutchWord: "ademhaling", translation: "Breathing"),
+            VocabularyItem(dutchWord: "buigen", translation: "Bend"),
+            VocabularyItem(dutchWord: "evenwicht", translation: "Balance"),
+            VocabularyItem(dutchWord: "gespannen", translation: "Tense"),
+            VocabularyItem(dutchWord: "gevolg", translation: "Consequence, Result, Effect"),
+            VocabularyItem(dutchWord: "inademen", translation: "Breathe in"),
+            VocabularyItem(dutchWord: "leunen", translation: "Lean"),
+            VocabularyItem(dutchWord: "lijf", translation: "Body"),
+            VocabularyItem(dutchWord: "linker", translation: "Left"),
+            VocabularyItem(dutchWord: "omhoog", translation: "Upwards"),
+            VocabularyItem(dutchWord: "Omlaag", translation: "Downwards"),
+            VocabularyItem(dutchWord: "ondertussen", translation: "Meanwhile"),
+            VocabularyItem(dutchWord: "onthouden", translation: "Remember"),
+            VocabularyItem(dutchWord: "optillen", translation: "Lift up"),
+            VocabularyItem(dutchWord: "Rechter", translation: "Right (side)"),
+            VocabularyItem(dutchWord: "rechtop", translation: "Upright"),
+            VocabularyItem(dutchWord: "strekken", translation: "Stretch"),
+            VocabularyItem(dutchWord: "tijdelijk", translation: "Temporary"),
+            VocabularyItem(dutchWord: "Uitademen", translation: "Breathe out"),
+            VocabularyItem(dutchWord: "verminderen", translation: "Reduce, Decrease"),
+            VocabularyItem(dutchWord: "volhouden", translation: "Persevere, Continue, Persist"),
+            VocabularyItem(dutchWord: "Voorbij", translation: "Over, Finished"),
+            VocabularyItem(dutchWord: "voordoen", translation: "Demonstrate, Perform"),
+            VocabularyItem(dutchWord: "voren", translation: "Forward"),
+            VocabularyItem(dutchWord: "zakken", translation: "Go flat"),
+            VocabularyItem(dutchWord: "Zakt", translation: "Sinks")
+        ],
+        exercises: [
+            // --- Sentence Building Exercises ---
+            Exercise(
+                type: .sentenceBuilding,
+                prompt: "Arrange the words to form a correct Dutch sentence:",
+                options: ["Ik", "moet", "mijn", "ademhaling", "controleren"],
+                correctAnswer: "Ik moet mijn ademhaling controleren",
+                explanation: "'Ik moet mijn ademhaling controleren' means 'I have to control my breathing'. 'Ademhaling' means 'breathing'.",
+                vocabularyReference: "ademhaling"
+            ),
+            Exercise(
+                type: .sentenceBuilding,
+                prompt: "Arrange the words to form a correct Dutch sentence:",
+                options: ["Hij", "leunt", "tegen", "de", "muur"],
+                correctAnswer: "Hij leunt tegen de muur",
+                explanation: "'Hij leunt tegen de muur' means 'He leans against the wall'. 'Leunen' means 'to lean'.",
+                vocabularyReference: "leunen"
+            ),
+            Exercise(
+                type: .sentenceBuilding,
+                prompt: "Arrange the words to form a correct Dutch sentence:",
+                options: ["Ik", "moet", "mijn", "lijf", "strekken"],
+                correctAnswer: "Ik moet mijn lijf strekken",
+                explanation: "'Ik moet mijn lijf strekken' means 'I have to stretch my body'. 'Lijf' means 'body' and 'strekken' means 'to stretch'.",
+                vocabularyReference: "lijf"
+            ),
+            Exercise(
+                type: .sentenceBuilding,
+                prompt: "Arrange the words to form a correct Dutch sentence:",
+                options: ["De", "bal", "rolt", "omhoog", "de", "heuvel"],
+                correctAnswer: "De bal rolt omhoog de heuvel",
+                explanation: "'De bal rolt omhoog de heuvel' means 'The ball rolls up the hill'. 'Omhoog' means 'upwards'.",
+                vocabularyReference: "omhoog"
+            ),
+            Exercise(
+                type: .sentenceBuilding,
+                prompt: "Arrange the words to form a correct Dutch sentence:",
+                options: ["Ik", "moet", "rechtop", "zitten"],
+                correctAnswer: "Ik moet rechtop zitten",
+                explanation: "'Ik moet rechtop zitten' means 'I have to sit upright'. 'Rechtop' means 'upright'.",
+                vocabularyReference: "rechtop"
+            ),
+            Exercise(
+                type: .sentenceBuilding,
+                prompt: "Arrange the words to form a correct Dutch sentence:",
+                options: ["Ondertussen", "kookt", "het", "water"],
+                correctAnswer: "Ondertussen kookt het water",
+                explanation: "'Ondertussen kookt het water' means 'Meanwhile the water is boiling'. 'Ondertussen' means 'meanwhile'.",
+                vocabularyReference: "ondertussen"
+            ),
+            Exercise(
+                type: .sentenceBuilding,
+                prompt: "Arrange the words to form a correct Dutch sentence:",
+                options: ["Ik", "moet", "dit", "onthouden"],
+                correctAnswer: "Ik moet dit onthouden",
+                explanation: "'Ik moet dit onthouden' means 'I have to remember this'. 'Onthouden' means 'to remember'.",
+                vocabularyReference: "onthouden"
+            ),
+            Exercise(
+                type: .sentenceBuilding,
+                prompt: "Arrange the words to form a correct Dutch sentence:",
+                options: ["Kun", "je", "de", "doos", "optillen"],
+                correctAnswer: "Kun je de doos optillen",
+                explanation: "'Kun je de doos optillen' means 'Can you lift up the box'. 'Optillen' means 'to lift up'.",
+                vocabularyReference: "optillen"
+            ),
+            Exercise(
+                type: .sentenceBuilding,
+                prompt: "Arrange the words to form a correct Dutch sentence:",
+                options: ["De", "temperatuur", "zakt", "snel"],
+                correctAnswer: "De temperatuur zakt snel",
+                explanation: "'De temperatuur zakt snel' means 'The temperature drops quickly'. 'Zakt' means 'sinks' or 'drops'.",
+                vocabularyReference: "Zakt"
+            ),
+            Exercise(
+                type: .sentenceBuilding,
+                prompt: "Arrange the words to form a correct Dutch sentence:",
+                options: ["Ik", "moet", "diep", "inademen"],
+                correctAnswer: "Ik moet diep inademen",
+                explanation: "'Ik moet diep inademen' means 'I have to breathe in deeply'. 'Inademen' means 'to breathe in'.",
+                vocabularyReference: "inademen"
+            ),
+            Exercise(
+                type: .sentenceBuilding,
+                prompt: "Arrange the words to form a correct Dutch sentence:",
+                options: ["De", "ballon", "zakt", "naar", "beneden"],
+                correctAnswer: "De ballon zakt naar beneden",
+                explanation: "'De ballon zakt naar beneden' means 'The balloon sinks down'. 'Zakken' means 'to go flat' or 'to sink'.",
+                vocabularyReference: "zakken"
+            ),
+            Exercise(
+                type: .sentenceBuilding,
+                prompt: "Arrange the words to form a correct Dutch sentence:",
+                options: ["Ik", "moet", "mijn", "spieren", "strekken"],
+                correctAnswer: "Ik moet mijn spieren strekken",
+                explanation: "'Ik moet mijn spieren strekken' means 'I have to stretch my muscles'. 'Strekken' means 'to stretch'.",
+                vocabularyReference: "strekken"
+            ),
+            Exercise(
+                type: .sentenceBuilding,
+                prompt: "Arrange the words to form a correct Dutch sentence:",
+                options: ["De", "pijn", "verminderde", "langzaam"],
+                correctAnswer: "De pijn verminderde langzaam",
+                explanation: "'De pijn verminderde langzaam' means 'The pain decreased slowly'. 'Verminderen' means 'to reduce' or 'to decrease'.",
+                vocabularyReference: "verminderen"
+            ),
+            Exercise(
+                type: .sentenceBuilding,
+                prompt: "Arrange the words to form a correct Dutch sentence:",
+                options: ["Ik", "moet", "volhouden", "met", "oefenen"],
+                correctAnswer: "Ik moet volhouden met oefenen",
+                explanation: "'Ik moet volhouden met oefenen' means 'I have to persevere with practicing'. 'Volhouden' means 'to persevere' or 'to continue'.",
+                vocabularyReference: "volhouden"
+            ),
+            Exercise(
+                type: .sentenceBuilding,
+                prompt: "Arrange the words to form a correct Dutch sentence:",
+                options: ["De", "tijd", "is", "voorbij"],
+                correctAnswer: "De tijd is voorbij",
+                explanation: "'De tijd is voorbij' means 'The time is over'. 'Voorbij' means 'over' or 'finished'.",
+                vocabularyReference: "Voorbij"
+            ),
+            // --- Match Meaning Exercises ---
+            Exercise(
+                type: .matchMeaning,
+                prompt: "Match: ademhaling",
+                options: ["breathing", "body", "balance"],
+                correctAnswer: "breathing",
+                explanation: "'Ademhaling' means 'breathing'.",
+                vocabularyReference: "ademhaling"
+            ),
+            Exercise(
+                type: .matchMeaning,
+                prompt: "Match: evenwicht",
+                options: ["balance", "tension", "movement"],
+                correctAnswer: "balance",
+                explanation: "'Evenwicht' means 'balance'.",
+                vocabularyReference: "evenwicht"
+            ),
+            Exercise(
+                type: .matchMeaning,
+                prompt: "Match: gespannen",
+                options: ["tense", "relaxed", "strong"],
+                correctAnswer: "tense",
+                explanation: "'Gespannen' means 'tense'.",
+                vocabularyReference: "gespannen"
+            ),
+            Exercise(
+                type: .matchMeaning,
+                prompt: "Match: gevolg",
+                options: ["consequence", "beginning", "middle"],
+                correctAnswer: "consequence",
+                explanation: "'Gevolg' means 'consequence', 'result', or 'effect'.",
+                vocabularyReference: "gevolg"
+            ),
+            Exercise(
+                type: .matchMeaning,
+                prompt: "Match: lijf",
+                options: ["body", "head", "leg"],
+                correctAnswer: "body",
+                explanation: "'Lijf' means 'body'.",
+                vocabularyReference: "lijf"
+            ),
+            Exercise(
+                type: .matchMeaning,
+                prompt: "Match: linker",
+                options: ["left", "right", "center"],
+                correctAnswer: "left",
+                explanation: "'Linker' means 'left'.",
+                vocabularyReference: "linker"
+            ),
+            Exercise(
+                type: .matchMeaning,
+                prompt: "Match: rechter",
+                options: ["right", "left", "middle"],
+                correctAnswer: "right",
+                explanation: "'Rechter' means 'right' (side).",
+                vocabularyReference: "Rechter"
+            ),
+            Exercise(
+                type: .matchMeaning,
+                prompt: "Match: tijdelijk",
+                options: ["temporary", "permanent", "long"],
+                correctAnswer: "temporary",
+                explanation: "'Tijdelijk' means 'temporary'.",
+                vocabularyReference: "tijdelijk"
+            ),
+            // --- Fill in Blank Exercises ---
+            Exercise(
+                type: .fillInBlank,
+                prompt: "Ik moet diep ___ om te ontspannen.",
+                options: ["inademen", "uitademen", "ademhaling"],
+                correctAnswer: "inademen",
+                explanation: "'Inademen' means 'to breathe in'. Ik moet diep inademen om te ontspannen. (I have to breathe in deeply to relax.)",
+                vocabularyReference: "inademen"
+            ),
+            Exercise(
+                type: .fillInBlank,
+                prompt: "De ballon ___ naar beneden.",
+                options: ["zakt", "stijgt", "beweegt"],
+                correctAnswer: "zakt",
+                explanation: "'Zakt' means 'sinks'. De ballon zakt naar beneden. (The balloon sinks down.)",
+                vocabularyReference: "Zakt"
+            ),
+            Exercise(
+                type: .fillInBlank,
+                prompt: "Ik moet mijn spieren ___ voor de oefening.",
+                options: ["strekken", "buigen", "optillen"],
+                correctAnswer: "strekken",
+                explanation: "'Strekken' means 'to stretch'. Ik moet mijn spieren strekken voor de oefening. (I have to stretch my muscles before the exercise.)",
+                vocabularyReference: "strekken"
+            ),
+            Exercise(
+                type: .fillInBlank,
+                prompt: "De pijn ___ langzaam.",
+                options: ["verminderde", "verergerde", "bleef"],
+                correctAnswer: "verminderde",
+                explanation: "'Verminderde' means 'decreased'. De pijn verminderde langzaam. (The pain decreased slowly.)",
+                vocabularyReference: "verminderen"
+            ),
+            Exercise(
+                type: .fillInBlank,
+                prompt: "Ik moet ___ met mijn studie.",
+                options: ["volhouden", "stoppen", "beginnen"],
+                correctAnswer: "volhouden",
+                explanation: "'Volhouden' means 'to persevere'. Ik moet volhouden met mijn studie. (I have to persevere with my studies.)",
+                vocabularyReference: "volhouden"
+            ),
+            Exercise(
+                type: .fillInBlank,
+                prompt: "De tijd is ___.",
+                options: ["voorbij", "begonnen", "geweest"],
+                correctAnswer: "voorbij",
+                explanation: "'Voorbij' means 'over' or 'finished'. De tijd is voorbij. (The time is over.)",
+                vocabularyReference: "Voorbij"
+            ),
+            Exercise(
+                type: .fillInBlank,
+                prompt: "Ik ga je ___ hoe je het moet doen.",
+                options: ["voordoen", "onthouden", "leunen"],
+                correctAnswer: "voordoen",
+                explanation: "'Voordoen' means 'to demonstrate'. Ik ga je voordoen hoe je het moet doen. (I'm going to show you how to do it.)",
+                vocabularyReference: "voordoen"
+            ),
+            Exercise(
+                type: .fillInBlank,
+                prompt: "Ik loop ___ naar de deur.",
+                options: ["voren", "achteren", "omhoog"],
+                correctAnswer: "voren",
+                explanation: "'Voren' means 'forward'. Ik loop voren naar de deur. (I walk forward to the door.)",
+                vocabularyReference: "voren"
+            ),
+            // --- Use in Sentence Exercises ---
+            Exercise(
+                type: .useInSentence,
+                prompt: "Choose the correct use of 'buigen':",
+                options: [
+                    "Ik moet mijn knieën buigen.",
+                    "De bal buigt naar links.",
+                    "Hij buigt zijn hoofd."
+                ],
+                correctAnswer: "Ik moet mijn knieën buigen.",
+                explanation: "'Buigen' means 'to bend'. Ik moet mijn knieën buigen. (I have to bend my knees.)",
+                vocabularyReference: "buigen"
+            ),
+            Exercise(
+                type: .useInSentence,
+                prompt: "Choose the correct use of 'leunen':",
+                options: [
+                    "Hij leunt tegen de muur.",
+                    "De boom leunt naar links.",
+                    "Ik leun op mijn ellebogen."
+                ],
+                correctAnswer: "Hij leunt tegen de muur.",
+                explanation: "'Leunen' means 'to lean'. Hij leunt tegen de muur. (He leans against the wall.)",
+                vocabularyReference: "leunen"
+            ),
+            Exercise(
+                type: .useInSentence,
+                prompt: "Choose the correct use of 'optillen':",
+                options: [
+                    "Kun je de doos optillen?",
+                    "De vogel tilt op en vliegt weg.",
+                    "Hij tilt zijn hand op."
+                ],
+                correctAnswer: "Kun je de doos optillen?",
+                explanation: "'Optillen' means 'to lift up'. Kun je de doos optillen? (Can you lift up the box?)",
+                vocabularyReference: "optillen"
+            ),
+            Exercise(
+                type: .useInSentence,
+                prompt: "Choose the correct use of 'uitademen':",
+                options: [
+                    "Ik moet langzaam uitademen.",
+                    "De wind ademt uit.",
+                    "Hij ademt uit van vermoeidheid."
+                ],
+                correctAnswer: "Ik moet langzaam uitademen.",
+                explanation: "'Uitademen' means 'to breathe out'. Ik moet langzaam uitademen. (I have to breathe out slowly.)",
+                vocabularyReference: "Uitademen"
+            ),
+            Exercise(
+                type: .useInSentence,
+                prompt: "Choose the correct use of 'ondertussen':",
+                options: [
+                    "Ondertussen kookt het water.",
+                    "Ik ga ondertussen naar huis.",
+                    "Hij werkt ondertussen hard."
+                ],
+                correctAnswer: "Ondertussen kookt het water.",
+                explanation: "'Ondertussen' means 'meanwhile'. Ondertussen kookt het water. (Meanwhile the water is boiling.)",
+                vocabularyReference: "ondertussen"
+            ),
+            // --- Missing Word Exercises ---
+            Exercise(
+                type: .missingWord,
+                prompt: "Ik loop ___ naar achteren.",
+                options: ["achteren", "voren", "omhoog"],
+                correctAnswer: "achteren",
+                explanation: "'Achteren' means 'backwards'. Ik loop achteren naar achteren. (I walk backwards.)",
+                vocabularyReference: "Achteren"
+            ),
+            Exercise(
+                type: .missingWord,
+                prompt: "De bal rolt ___ de heuvel.",
+                options: ["omhoog", "omlaag", "voren"],
+                correctAnswer: "omhoog",
+                explanation: "'Omhoog' means 'upwards'. De bal rolt omhoog de heuvel. (The ball rolls up the hill.)",
+                vocabularyReference: "omhoog"
+            ),
+            Exercise(
+                type: .missingWord,
+                prompt: "De temperatuur gaat ___.",
+                options: ["omlaag", "omhoog", "voren"],
+                correctAnswer: "omlaag",
+                explanation: "'Omlaag' means 'downwards'. De temperatuur gaat omlaag. (The temperature goes down.)",
+                vocabularyReference: "Omlaag"
+            ),
+            Exercise(
+                type: .missingWord,
+                prompt: "Ik moet dit ___ voor het examen.",
+                options: ["onthouden", "voordoen", "volhouden"],
+                correctAnswer: "onthouden",
+                explanation: "'Onthouden' means 'to remember'. Ik moet dit onthouden voor het examen. (I have to remember this for the exam.)",
+                vocabularyReference: "onthouden"
+            ),
+            Exercise(
+                type: .missingWord,
+                prompt: "De spanning in mijn schouders is ___.",
+                options: ["gespannen", "ontspannen", "normaal"],
+                correctAnswer: "gespannen",
+                explanation: "'Gespannen' means 'tense'. De spanning in mijn schouders is gespannen. (The tension in my shoulders is tense.)",
+                vocabularyReference: "gespannen"
+            ),
+            Exercise(
+                type: .missingWord,
+                prompt: "Dit is een ___ oplossing.",
+                options: ["tijdelijk", "permanent", "langdurig"],
+                correctAnswer: "tijdelijk",
+                explanation: "'Tijdelijk' means 'temporary'. Dit is een tijdelijke oplossing. (This is a temporary solution.)",
+                vocabularyReference: "tijdelijk"
+            ),
+            Exercise(
+                type: .missingWord,
+                prompt: "Wat is het ___ van deze actie?",
+                options: ["gevolg", "begin", "midden"],
+                correctAnswer: "gevolg",
+                explanation: "'Gevolg' means 'consequence' or 'result'. Wat is het gevolg van deze actie? (What is the consequence of this action?)",
+                vocabularyReference: "gevolg"
+            ),
+            Exercise(
+                type: .missingWord,
+                prompt: "Ik moet mijn ___ strekken.",
+                options: ["lijf", "hoofd", "hand"],
+                correctAnswer: "lijf",
+                explanation: "'Lijf' means 'body'. Ik moet mijn lijf strekken. (I have to stretch my body.)",
+                vocabularyReference: "lijf"
+            )
+        ]
+    )
 }
 
 class LessonManager: ObservableObject {
@@ -1343,6 +1759,7 @@ class LessonManager: ObservableObject {
     private init() {
         // Add more lessons here as needed
         self.lessons = [
+            Lesson.chapter26,
             Lesson.chapter31,
             Lesson.chapter33,
             Lesson.chapter35

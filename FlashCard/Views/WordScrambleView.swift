@@ -29,6 +29,9 @@ struct WordScrambleView: View {
     // Session XP tracking
     @State private var sessionXP: Int = 0 // Track XP gained during current session
     
+    // Session tracking
+    @State private var sessionStartTime: Date = Date()
+    
     // Save state properties
     private var deckIds: [UUID]
     private var shouldLoadSaveState: Bool
@@ -324,6 +327,7 @@ struct WordScrambleView: View {
         totalAnswers = 0
         comboCount = 0
         showingResults = false
+        sessionStartTime = Date()
         cards = viewModel.sortCardsForLearning(cards)
         setupCurrentWord()
     }
@@ -499,6 +503,17 @@ struct WordScrambleView: View {
                 // Post notification for regular word scramble mode
                 NotificationCenter.default.post(name: .wordScrambleSessionCompleted, object: nil)
                 
+                // Check for perfect session (100% accuracy with at least 5 cards)
+                if maxQuestions >= 5 && correctAnswers == maxQuestions {
+                    let sessionDuration = Date().timeIntervalSince(sessionStartTime)
+                    StatisticsManager.shared.recordPerfectSession(
+                        gameType: .wordScramble,
+                        totalCards: maxQuestions,
+                        knownCards: correctAnswers,
+                        duration: sessionDuration
+                    )
+                }
+                
                 StreakManager.shared.recordGameCompletion(); showingResults = true
             }
             return
@@ -536,13 +551,25 @@ struct WordScrambleView: View {
                 selectedChunks.removeAll()
                 hasAnswered = false
                 isCorrect = nil
-            setupCurrentWord()
+                setupCurrentWord()
             }
         } else {
             // Clear saved progress since game is complete
             clearSavedProgress()
-            StreakManager.shared.recordGameCompletion(); showingResults = true
+            
+            // Check for perfect session (100% accuracy with at least 5 cards)
+            if cards.count >= 5 && correctAnswers == cards.count {
+                let sessionDuration = Date().timeIntervalSince(sessionStartTime)
+                StatisticsManager.shared.recordPerfectSession(
+                    gameType: .wordScramble,
+                    totalCards: cards.count,
+                    knownCards: correctAnswers,
+                    duration: sessionDuration
+                )
+            }
+            
             HapticManager.shared.gameComplete()
+            StreakManager.shared.recordGameCompletion(); showingResults = true
         }
     }
     

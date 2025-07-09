@@ -619,6 +619,17 @@ struct StudyView: View {
                 let totalXP = baseXP + performanceBonus
                 userProfileManager.addXP(totalXP)
                 
+                // Check for perfect session (100% accuracy with at least 5 cards)
+                let totalAnswered = knownCards.count + unknownCards.count
+                if totalAnswered >= 5 && unknownCards.count == 0 {
+                    statsManager.recordPerfectSession(
+                        gameType: .study,
+                        totalCards: totalAnswered,
+                        knownCards: knownCards.count,
+                        duration: session.endTime!.timeIntervalSince(session.startTime)
+                    )
+                }
+                
                 print("🎮 Study session complete! Earned \(totalXP) XP (Base: \(baseXP), Performance: \(performanceBonus))")
             }
             
@@ -704,6 +715,17 @@ struct StudyView: View {
                 let performanceBonus = knownCards.count * 5 // 5 XP per known card
                 let totalXP = baseXP + performanceBonus
                 userProfileManager.addXP(totalXP)
+                
+                // Check for perfect session (100% accuracy with at least 5 cards)
+                let totalAnswered = knownCards.count + unknownCards.count
+                if totalAnswered >= 5 && unknownCards.count == 0 {
+                    statsManager.recordPerfectSession(
+                        gameType: .study,
+                        totalCards: totalAnswered,
+                        knownCards: knownCards.count,
+                        duration: session.endTime!.timeIntervalSince(session.startTime)
+                    )
+                }
                 
                 print("🎮 Study session complete! Earned \(totalXP) XP (Base: \(baseXP), Performance: \(performanceBonus))")
             }

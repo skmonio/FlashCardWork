@@ -173,6 +173,16 @@ struct UserProfileView: View {
                                 subtitle: "100 sessions",
                                 achieved: statsManager.studySessions.count >= 100
                             )
+                            
+                            // Perfect Session Achievements
+                            ForEach(GameType.allCases, id: \.self) { gameType in
+                                AchievementBadge(
+                                    icon: "crown.fill",
+                                    title: "Perfect \(gameType.displayName)",
+                                    subtitle: "100% accuracy",
+                                    achieved: statsManager.hasPerfectSession(for: gameType)
+                                )
+                            }
                         }
                         .padding(.horizontal)
                     }

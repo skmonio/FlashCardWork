@@ -30,6 +30,9 @@ struct WritingView: View {
     // Session XP tracking
     @State private var sessionXP: Int = 0 // Track XP gained during current session
     
+    // Session tracking
+    @State private var sessionStartTime: Date = Date()
+    
     // Save state properties
     private var deckIds: [UUID]
     private var shouldLoadSaveState: Bool
@@ -126,6 +129,7 @@ struct WritingView: View {
                 loadSavedProgress()
             } else {
                 // Initialize normally - reset to first card and prepare for input
+                sessionStartTime = Date()
                 resetForNextCard()
             }
         }
@@ -445,6 +449,17 @@ struct WritingView: View {
                 // Post notification for regular writing mode
                 NotificationCenter.default.post(name: .writingSessionCompleted, object: nil)
                 
+                // Check for perfect session (100% accuracy with at least 5 cards)
+                if maxQuestions >= 5 && correctAnswers == maxQuestions {
+                    let sessionDuration = Date().timeIntervalSince(sessionStartTime)
+                    StatisticsManager.shared.recordPerfectSession(
+                        gameType: .writing,
+                        totalCards: maxQuestions,
+                        knownCards: correctAnswers,
+                        duration: sessionDuration
+                    )
+                }
+                
                 StreakManager.shared.recordGameCompletion(); showingResults = true
             }
             return
@@ -456,6 +471,17 @@ struct WritingView: View {
         } else {
             // Clear saved progress since game is complete
             clearSavedProgress()
+            
+            // Check for perfect session (100% accuracy with at least 5 cards)
+            if cards.count >= 5 && correctAnswers == cards.count {
+                let sessionDuration = Date().timeIntervalSince(sessionStartTime)
+                StatisticsManager.shared.recordPerfectSession(
+                    gameType: .writing,
+                    totalCards: cards.count,
+                    knownCards: correctAnswers,
+                    duration: sessionDuration
+                )
+            }
             
             HapticManager.shared.gameComplete()
             StreakManager.shared.recordGameCompletion(); showingResults = true
