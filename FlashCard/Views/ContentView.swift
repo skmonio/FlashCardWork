@@ -8,7 +8,7 @@ struct ContentView: View {
     
     var body: some View {
         LoadingView(
-            minimumDisplayTime: 1.5,
+            minimumDisplayTime: 0.8,
             isReadyCheck: {
                 // Check if ViewModel has finished basic initialization
                 return isViewModelReady || loadingTimeoutReached
@@ -18,7 +18,7 @@ struct ContentView: View {
         }
         .onAppear {
             // Add a timeout to prevent infinite loading
-            DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
                 print("⏰ Loading timeout reached, showing app anyway")
                 loadingTimeoutReached = true
             }
@@ -29,8 +29,8 @@ struct ContentView: View {
     }
     
     private func checkViewModelReadiness() {
-        // Check every 100ms if ViewModel is ready
-        Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { timer in
+        // Check every 50ms if ViewModel is ready
+        Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { timer in
             // Consider ready when we have at least the basic system decks
             // (which should be created even if no user data exists)
             let hasBasicDecks = viewModel.decks.count >= 2 // Uncategorized, Review

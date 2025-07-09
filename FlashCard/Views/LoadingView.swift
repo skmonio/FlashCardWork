@@ -73,26 +73,26 @@ struct LoadingView: View {
     
     private func startLoadingSequence() {
         // Simple fade in
-        withAnimation(.easeOut(duration: 0.5)) {
+        withAnimation(.easeOut(duration: 0.3)) {
             opacity = 1.0
         }
         
         // Start pulsing animation for progress indicator
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            withAnimation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true)) {
                 progressPulse = 1.2
             }
         }
         
-        // Update loading text progressively
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            withAnimation(.easeInOut(duration: 0.5)) {
+        // Update loading text progressively (faster)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+            withAnimation(.easeInOut(duration: 0.3)) {
                 loadingText = "Preparing your flashcards..."
             }
         }
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.2) {
-            withAnimation(.easeInOut(duration: 0.5)) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+            withAnimation(.easeInOut(duration: 0.3)) {
                 loadingText = "Almost ready..."
             }
         }
@@ -104,7 +104,7 @@ struct LoadingView: View {
     private func checkAndTransition() {
         let startTime = Date()
         
-        Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { timer in
+        Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { timer in
             let elapsed = Date().timeIntervalSince(startTime)
             let minimumTimeMet = elapsed >= minimumDisplayTime
             let isReady = isReadyCheck?() ?? true
@@ -118,7 +118,7 @@ struct LoadingView: View {
                 // Add haptic feedback for completion
                 HapticManager.shared.successNotification()
                 
-                withAnimation(.easeInOut(duration: 0.8)) {
+                withAnimation(.easeInOut(duration: 0.5)) {
                     showContent = true
                 }
             }

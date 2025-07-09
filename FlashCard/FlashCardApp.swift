@@ -22,9 +22,14 @@ struct FlashCardApp: App {
                     // Lock orientation to portrait
                     UIDevice.current.setValue(UIInterfaceOrientation.portrait.rawValue, forKey: "orientation")
                     
-                    // Only schedule notifications if they are enabled
-                    if settingsManager.isNotificationsEnabled {
-                    notificationManager.scheduleNotifications()
+                    // Defer notification scheduling to background to avoid blocking UI
+                    DispatchQueue.global(qos: .utility).async {
+                        // Only schedule notifications if they are enabled
+                        if settingsManager.isNotificationsEnabled {
+                            DispatchQueue.main.async {
+                                notificationManager.scheduleNotifications()
+                            }
+                        }
                     }
                 }
                 .onReceive(NotificationCenter.default.publisher(for: UIDevice.orientationDidChangeNotification)) { _ in
