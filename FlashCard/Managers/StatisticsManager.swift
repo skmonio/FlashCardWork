@@ -236,6 +236,12 @@ class StatisticsManager: ObservableObject {
     
     // MARK: - Helper Methods
     
+    func getOverallAccuracy() -> Double {
+        let totalCards = studySessions.reduce(0) { $0 + $1.totalCards }
+        let correctCards = studySessions.reduce(0) { $0 + $1.knownCards }
+        return totalCards > 0 ? Double(correctCards) / Double(totalCards) : 0.0
+    }
+    
     private func calculateWeaknessScore(for card: FlashCard) -> Double {
         let percentage = card.learningPercentage ?? 0
         let timesShown = card.timesShown
@@ -311,6 +317,10 @@ class StatisticsManager: ObservableObject {
            let decodedPerfectSessions = try? JSONDecoder().decode([PerfectSession].self, from: savedPerfectSessions) {
             perfectSessions = decodedPerfectSessions
         }
+    }
+    
+    func getTotalQuestionsAnswered() -> Int {
+        return studySessions.reduce(0) { $0 + $1.totalCards }
     }
 }
 

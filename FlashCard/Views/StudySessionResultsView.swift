@@ -13,98 +13,227 @@ struct StudySessionResultsView: View {
     @State private var xpGained: Int = 0
     @State private var showingXPAnimation = false
     @State private var animatedProgress: Double = 0
+    @State private var showingFloatingXP = false
+    @State private var floatingXPPosition = CGPoint(x: 200, y: 100)
+    @State private var previousXP: Int = 0
+    @State private var previousLevel: Int = 1
+    @State private var previousProgress: Double = 0
+    @State private var unlockedAchievements: [Achievement] = []
+    @State private var showAchievementsModal = false
+    @Environment(\.dismiss) private var dismiss
+    @State private var showingAchievementModal = false
+    @State private var achievementToShow: Achievement?
+    @State private var hasShownLevelUp = false
     
     var body: some View {
-        ScrollView {
-            VStack(spacing: 24) {
-                // Header
-                VStack(spacing: 8) {
-                    Image(systemName: "trophy.fill")
-                        .font(.system(size: 50))
-                        .foregroundColor(.yellow)
-                    
-                    Text("Study Session Complete! 🎉")
-                        .font(.title)
-                        .bold()
-                        .multilineTextAlignment(.center)
-                    
-                    Text("Great job! You've made progress on your learning journey.")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
-                }
-                
-                // XP Gain Section
-                VStack(spacing: 16) {
-                    VStack(spacing: 12) {
-                        // Centered XP Earned
-                        VStack(spacing: 8) {
-                        HStack {
-                            Image(systemName: "star.fill")
-                                .foregroundColor(.yellow)
-                                .font(.title2)
-                                Text("\(xpGained) XP")
-                                    .font(.title2)
-                                    .fontWeight(.bold)
-                                    .foregroundColor(.blue)
-                            }
-                        }
+        ZStack {
+            ScrollView {
+                VStack(spacing: 24) {
+                    // Header
+                    VStack(spacing: 8) {
+                        Image(systemName: "trophy.fill")
+                            .font(.system(size: 50))
+                            .foregroundColor(.yellow)
                         
-                        // XP Progress Bar
-                        VStack(spacing: 8) {
-                            HStack {
-                                Text("Level \(userProfile.level)")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                Spacer()
-                                Text("Level \(userProfile.level + 1)")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                            
-                            ProgressView(value: animatedProgress)
-                                .accentColor(.blue)
-                                .frame(height: 8)
-                                .scaleEffect(x: 1, y: 2, anchor: .center)
-                                .animation(.easeInOut(duration: 1.0), value: animatedProgress)
-                            
-                            HStack {
-                                Text("\(userProfile.xp) XP")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                Spacer()
-                                Text("\(userProfile.xpForLevel(userProfile.level + 1)) XP")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                        .padding()
-                        .background(Color(.secondarySystemGroupedBackground))
-                        .cornerRadius(12)
+                        Text("Study Session Complete! 🎉")
+                            .font(.title)
+                            .bold()
+                            .multilineTextAlignment(.center)
+                        
+                        Text("Great job! You've made progress on your learning journey.")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
                     }
+                    
+                    // XP Gain Section
+                    VStack(spacing: 16) {
+                        VStack(spacing: 12) {
+                            // Centered XP Earned
+                            VStack(spacing: 8) {
+                                HStack {
+                                    Image(systemName: "star.fill")
+                                        .foregroundColor(.yellow)
+                                        .font(.title2)
+                                    Text("\(xpGained) XP")
+                                        .font(.title2)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(.blue)
+                                }
+                            }
+                            
+                            // XP Progress Bar (animated from previous to new progress)
+                            VStack(spacing: 8) {
+                                HStack {
+                                    Text("Level \(userProfile.level)")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    Spacer()
+                                    Text("Level \(userProfile.level + 1)")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                                GeometryReader { geometry in
+                                    ZStack(alignment: .leading) {
+                                        // Background
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .fill(Color(.systemGray5))
+                                            .frame(height: 12)
+                                        
+                                        // Progress bar
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .fill(LinearGradient(
+                                                gradient: Gradient(colors: [.blue, .purple]),
+                                                startPoint: .leading,
+                                                endPoint: .trailing
+                                            ))
+                                            .frame(width: geometry.size.width * animatedProgress, height: 12)
+                                    }
+                                }
+                                .frame(height: 12)
+                                .animation(.easeInOut(duration: 1.5), value: animatedProgress)
+                                
+                                HStack {
+                                    Text("\(userProfile.xp) XP")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    Spacer()
+                                    Text("\(userProfile.xpForLevel(userProfile.level + 1)) XP")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                            .padding()
+                            .background(Color(.secondarySystemGroupedBackground))
+                            .cornerRadius(12)
+                        }
+                    }
+                    .padding(.horizontal)
+                    
+                    // Session Summary Card
+                    SessionSummaryCard(session: session)
+                    
+                    // Action Buttons
+                    ActionButtonsView(
+                        session: session,
+                        onStudyAgain: onStudyAgain,
+                        onReviewUnknown: onReviewUnknown,
+                        onDone: onDone
+                    )
+                    
+                    Spacer(minLength: 20)
                 }
-                .padding(.horizontal)
-                
-                // Session Summary Card
-                SessionSummaryCard(session: session)
-                
-                // Action Buttons
-                ActionButtonsView(
-                    session: session,
-                    onStudyAgain: onStudyAgain,
-                    onReviewUnknown: onReviewUnknown,
-                    onDone: onDone
-                )
-                
-                Spacer(minLength: 20)
+                .padding(.vertical)
             }
-            .padding(.vertical)
+            
+            // Floating XP Animation - REMOVED to fix yellow button issue
+            // if showingFloatingXP {
+            //     FloatingXPNotificationView(
+            //         amount: xpGained,
+            //         position: floatingXPPosition,
+            //         isShowing: $showingFloatingXP
+            //     )
+            // }
+            
+            // Achievements Modal
+            if showAchievementsModal && !unlockedAchievements.isEmpty {
+                Color.black.opacity(0.4)
+                    .ignoresSafeArea()
+                    .onTapGesture { showAchievementsModal = false }
+                VStack(spacing: 20) {
+                    Text("Achievements Unlocked!")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .foregroundColor(.primary)
+                    HStack(spacing: 16) {
+                        ForEach(unlockedAchievements) { achievement in
+                            AchievementBadgeView(achievement: achievement)
+                        }
+                    }
+                    Button("Close") {
+                        showAchievementsModal = false
+                    }
+                    .padding(.top, 8)
+                }
+                .padding()
+                .background(RoundedRectangle(cornerRadius: 20).fill(Color(.systemBackground)))
+                .shadow(radius: 20)
+            }
         }
+        .navigationTitle("Session Complete!")
+        .navigationBarTitleDisplayMode(.large)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button("Done") {
+                    dismiss()
+                }
+            }
+        }
+        .overlay(
+            GlobalNotificationOverlay()
+        )
         .onAppear {
-            calculateXPGained()
-            animateXPGain()
-            awardXP()
-            animateProgressBar()
+            setupAnimations()
+        }
+    }
+    
+    private func setupAnimations() {
+        // Calculate XP gained
+        calculateXPGained()
+        
+        // Store previous values for animation
+        previousLevel = userProfile.level
+        previousXP = userProfile.xp
+        previousProgress = userProfile.progressToNextLevel
+        
+        // Award XP and track achievements
+        awardXPAndTrackAchievements()
+        
+        // Start with previous progress
+        animatedProgress = previousProgress
+        
+        // STEP 1: Animate XP progress bar first
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            withAnimation(.easeInOut(duration: 1.5)) {
+                self.animatedProgress = self.userProfile.progressToNextLevel
+            }
+            
+            // STEP 2: After progress bar animation, check for level up and show notifications
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                if self.userProfile.level > self.previousLevel {
+                    self.showLevelUpNotification()
+                }
+                
+                // STEP 3: Check for achievements last
+                self.checkForAchievements()
+            }
+        }
+    }
+    
+    private func showLevelUpNotification() {
+        if !hasShownLevelUp {
+            hasShownLevelUp = true
+            // Show level up notification using the user profile manager
+            userProfile.showingLevelUpNotification = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 4.0) {
+                userProfile.showingLevelUpNotification = false
+            }
+        }
+    }
+    
+    private func showFloatingXPGain() {
+        // Remove floating XP notification to avoid yellow button issue
+        // showingFloatingXP = true
+        // DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+        //     showingFloatingXP = false
+        // }
+    }
+    
+    private func checkForAchievements() {
+        // Show achievements modal if any achievements were unlocked
+        if !unlockedAchievements.isEmpty {
+            showAchievementsModal = true
         }
     }
     
@@ -115,30 +244,15 @@ struct StudySessionResultsView: View {
         xpGained = baseXP + performanceBonus
     }
     
-    private func animateXPGain() {
-        // Animate the XP gain display
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            withAnimation(.easeInOut(duration: 1.0)) {
-                showingXPAnimation = true
-            }
-        }
-    }
-    
-    private func awardXP() {
-        // Award XP to the user based on session performance
+    private func awardXPAndTrackAchievements() {
+        // Track achievements before XP is awarded
+        let achievementsBefore = Set(userProfile.achievements.filter { $0.isUnlocked }.map { $0.id })
         userProfile.addXP(xpGained)
-    }
-    
-    private func animateProgressBar() {
-        // Start with 0 progress
-        animatedProgress = 0
-        
-        // Animate to the final progress value after a short delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-            withAnimation(.easeInOut(duration: 1.5)) {
-                animatedProgress = userProfile.progressToNextLevel
-            }
-        }
+        // Track achievements after XP is awarded
+        let achievementsAfter = Set(userProfile.achievements.filter { $0.isUnlocked }.map { $0.id })
+        let newAchievementIDs = achievementsAfter.subtracting(achievementsBefore)
+        unlockedAchievements = userProfile.achievements.filter { newAchievementIDs.contains($0.id) }
+        // Don't show achievements modal here - let the main animation sequence handle it
     }
 }
 

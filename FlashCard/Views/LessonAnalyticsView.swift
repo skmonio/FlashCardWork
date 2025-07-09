@@ -35,28 +35,28 @@ struct LessonAnalyticsView: View {
                 StatCard(
                     icon: "checkmark.circle.fill",
                     title: "Lessons Completed",
-                    subtitle: "\(analyticsManager.getTotalLessonsCompleted())",
+                    value: "\(analyticsManager.getTotalLessonsCompleted())",
                     color: .green
                 )
                 
                 StatCard(
                     icon: "clock.fill",
                     title: "Total Time",
-                    subtitle: formatTime(analyticsManager.getTotalTimeSpentOnLessons()),
+                    value: formatTime(analyticsManager.getTotalTimeSpentOnLessons()),
                     color: .blue
                 )
                 
                 StatCard(
                     icon: "repeat.circle.fill",
                     title: "Total Attempts",
-                    subtitle: "\(analyticsManager.lessonAttempts.count)",
+                    value: "\(analyticsManager.lessonAttempts.count)",
                     color: .orange
                 )
                 
                 StatCard(
                     icon: "target",
                     title: "Avg. Accuracy",
-                    subtitle: "\(Int(getOverallAccuracy() * 100))%",
+                    value: "\(Int(getOverallAccuracy() * 100))%",
                     color: .purple
                 )
             }

@@ -9,6 +9,7 @@ struct SettingsView: View {
     // State for data management features
     @State private var showingExportImport = false
     @State private var showingResetAlert = false
+    @State private var showingResetXPAlert = false
     @State private var showingCloudKitSettings = false
     
     // State for duplicate detection
@@ -64,6 +65,15 @@ struct SettingsView: View {
             Button("Cancel", role: .cancel) { }
         } message: {
             Text("This will reset all learning progress and percentages for all cards. This action cannot be undone.")
+        }
+        .alert("Reset XP & Level", isPresented: $showingResetXPAlert) {
+            Button("Reset", role: .destructive) {
+                UserProfileManager.shared.resetXP()
+                HapticManager.shared.successNotification()
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("This will reset your XP to 0, level to 1, and unlock all achievements and level rewards. This action cannot be undone.")
         }
         .alert("Duplicate Detection", isPresented: $showingDuplicateAlert) {
             Button("OK") { }
@@ -346,6 +356,21 @@ struct SettingsView: View {
                             .frame(width: 24)
                         
                         Text("Reset Statistics")
+                            .foregroundColor(.red)
+                        
+                        Spacer()
+                    }
+                }
+                
+                Button(action: {
+                    showingResetXPAlert = true
+                }) {
+                    HStack {
+                        Image(systemName: "star.slash")
+                            .foregroundColor(.red)
+                            .frame(width: 24)
+                        
+                        Text("Reset XP, Level & Achievements")
                             .foregroundColor(.red)
                         
                         Spacer()

@@ -69,21 +69,21 @@ struct WordSelectionView: View {
                     StatCard(
                         icon: "textformat.abc",
                         title: "Total Words",
-                        subtitle: "\(extractedWords.count) found",
+                        value: "\(extractedWords.count) found",
                         color: .blue
                     )
                     
                     StatCard(
                         icon: "questionmark.circle.fill",
                         title: "Unknown",
-                        subtitle: "\(unknownWordsCount) new",
+                        value: "\(unknownWordsCount) new",
                         color: .orange
                     )
                     
                     StatCard(
                         icon: "checkmark.circle.fill",
                         title: "Selected",
-                        subtitle: "\(selectedWordsCount) to add",
+                        value: "\(selectedWordsCount) to add",
                         color: .green
                     )
                 }

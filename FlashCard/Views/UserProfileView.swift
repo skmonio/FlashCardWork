@@ -6,6 +6,9 @@ struct UserProfileView: View {
     @StateObject private var userProfile = UserProfileManager.shared
     @StateObject private var statsManager = StatisticsManager.shared
     @State private var showingEditProfile = false
+    @State private var showingImagePicker = false
+    @State private var selectedTab = 0
+    @State private var animatedProgress: Double = 0
     
     private let avatarOptions = [
         "person.crop.circle.fill",
@@ -25,435 +28,493 @@ struct UserProfileView: View {
     var body: some View {
         NavigationView {
             ScrollView {
-                VStack(spacing: 32) {
-                    // Avatar with Circular Progress
-                    VStack(spacing: 16) {
-                        ZStack {
-                            // Circular Progress Background
-                            Circle()
-                                .stroke(Color(.systemGray5), lineWidth: 8)
-                                .frame(width: 120, height: 120)
-                            
-                            // Circular Progress Fill
-                            Circle()
-                                .trim(from: 0, to: userProfile.progressToNextLevel)
-                                .stroke(
-                                    LinearGradient(
-                                        colors: [.blue, .purple],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    ),
-                                    style: StrokeStyle(lineWidth: 8, lineCap: .round)
-                                )
-                                .frame(width: 120, height: 120)
-                                .rotationEffect(.degrees(-90))
-                                .animation(.easeInOut(duration: 1.0), value: userProfile.progressToNextLevel)
-                            
-                            // Avatar or Profile Image
-                            if let imageData = userProfile.profileImageData,
-                               let uiImage = UIImage(data: imageData) {
-                                Image(uiImage: uiImage)
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
-                                    .frame(width: 80, height: 80)
-                                    .background(Color(.systemBackground))
-                                    .clipShape(Circle())
-                                    .shadow(radius: 4)
-                            } else {
-                                Image(systemName: userProfile.selectedAvatar)
-                                    .resizable()
-                                    .frame(width: 80, height: 80)
-                                    .foregroundColor(.blue)
-                                    .background(Color(.systemBackground))
-                                    .clipShape(Circle())
-                                    .shadow(radius: 4)
-                            }
-                        }
-                        
-                        VStack(spacing: 4) {
-                            Text(userProfile.username)
-                                .font(.title2)
-                                .fontWeight(.bold)
-                            
-                            Text("Level \(userProfile.level)")
-                                .font(.headline)
-                                .foregroundColor(.blue)
-                            
-                            HStack(spacing: 8) {
-                                Text("XP: \(userProfile.xp)")
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-                                Text("•")
-                                    .foregroundColor(.secondary)
-                                Text("Next: \(userProfile.xpForLevel(userProfile.level + 1)) XP")
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                        
-                        Button("Edit Profile") {
-                            showingEditProfile = true
-                        }
-                        .font(.caption)
-                        .foregroundColor(.blue)
-                    }
-                    .padding(.top, 24)
+                VStack(spacing: 20) {
+                    // Profile Header
+                    profileHeader
                     
-                    // Key Stats Grid
-                    LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 16) {
-                        ProfileStatCard(title: "Total Sessions", value: "\(statsManager.studySessions.count)", icon: "clock.fill", color: .blue, subtitle: "sessions")
-                        ProfileStatCard(title: "Accuracy Rate", value: "\(Int(statsManager.getOverallAccuracy() * 100))%", icon: "target", color: .green, subtitle: "overall")
-                    }
-                    .padding(.horizontal)
+                    // Tab Selector
+                    tabSelector
                     
-                    // Learning Progress
-                    VStack(alignment: .leading, spacing: 16) {
-                        Text("Learning Progress")
-                            .font(.headline)
-                            .padding(.horizontal)
-                        
-                        VStack(spacing: 12) {
-                            ProgressStatRow(
-                                title: "Cards Studied",
-                                value: "\(statsManager.studySessions.reduce(0) { $0 + $1.totalCards })",
-                                icon: "rectangle.stack.fill",
-                                color: .blue,
-                                progress: min(Double(statsManager.studySessions.count) / 100.0, 1.0)
-                            )
-                            
-                            ProgressStatRow(
-                                title: "Accuracy Rate",
-                                value: "\(Int(statsManager.getOverallAccuracy() * 100))%",
-                                icon: "target",
-                                color: .green,
-                                progress: statsManager.getOverallAccuracy()
-                            )
-                        }
-                        .padding(.horizontal)
-                    }
-                    
-                    // Achievements Section
-                    VStack(alignment: .leading, spacing: 16) {
-                        Text("Achievements")
-                            .font(.headline)
-                            .padding(.horizontal)
-                        
-                        LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 16) {
-                            AchievementBadge(
-                                icon: "star.fill",
-                                title: "First Steps",
-                                subtitle: "Complete first session",
-                                achieved: statsManager.studySessions.count > 0
-                            )
-                            
-                            AchievementBadge(
-                                icon: "trophy.fill",
-                                title: "XP Master",
-                                subtitle: "1000 XP",
-                                achieved: userProfile.xp >= 1000
-                            )
-                            
-                            AchievementBadge(
-                                icon: "bolt.fill",
-                                title: "Speed Learner",
-                                subtitle: "10 sessions",
-                                achieved: statsManager.studySessions.count >= 10
-                            )
-                            
-                            AchievementBadge(
-                                icon: "target",
-                                title: "Sharp Shooter",
-                                subtitle: "90% accuracy",
-                                achieved: statsManager.getOverallAccuracy() >= 0.9
-                            )
-                            
-                            AchievementBadge(
-                                icon: "infinity",
-                                title: "Unstoppable",
-                                subtitle: "100 sessions",
-                                achieved: statsManager.studySessions.count >= 100
-                            )
-                            
-                            // Perfect Session Achievements
-                            ForEach(GameType.allCases, id: \.self) { gameType in
-                                AchievementBadge(
-                                    icon: "crown.fill",
-                                    title: "Perfect \(gameType.displayName)",
-                                    subtitle: "100% accuracy",
-                                    achieved: statsManager.hasPerfectSession(for: gameType)
-                                )
-                            }
-                        }
-                        .padding(.horizontal)
-                    }
-                    
-                    Spacer(minLength: 40)
+                    // Tab Content
+                    tabContent
                 }
+                .padding()
             }
-            .navigationTitle("Your Profile")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: { dismiss() }) {
-                        Image(systemName: "xmark")
-                            .font(.title2)
-                            .foregroundColor(.primary)
+            .navigationTitle("Profile")
+            .navigationBarTitleDisplayMode(.large)
+            .sheet(isPresented: $showingImagePicker) {
+                ImagePicker(selectedImage: Binding(
+                    get: {
+                        if let imageData = userProfile.profileImageData {
+                            return UIImage(data: imageData)
+                        }
+                        return nil
+                    },
+                    set: { uiImage in
+                        if let uiImage = uiImage {
+                            userProfile.profileImageData = uiImage.jpegData(compressionQuality: 0.8)
+                        } else {
+                            userProfile.profileImageData = nil
+                        }
                     }
-                }
+                ))
             }
             .sheet(isPresented: $showingEditProfile) {
-                EditProfileView(
-                    selectedAvatar: $userProfile.selectedAvatar,
-                    username: $userProfile.username,
-                    avatarOptions: avatarOptions
+                EditProfileView()
+            }
+            .overlay(
+                GlobalNotificationOverlay()
+            )
+            .onAppear {
+                // Initialize animated progress
+                animatedProgress = userProfile.progressToNextLevel
+            }
+            .onChange(of: userProfile.progressToNextLevel) { newProgress in
+                // Animate progress bar when XP changes
+                withAnimation(.easeInOut(duration: 1.0)) {
+                    animatedProgress = newProgress
+                }
+            }
+        }
+    }
+    
+    private var profileHeader: some View {
+        VStack(spacing: 16) {
+            // Profile Image with Circular XP Progress Bar
+            ZStack {
+                // Circular XP Progress Bar (larger, behind the photo)
+                CircularXPProgressBar(
+                    progress: animatedProgress,
+                    xp: userProfile.xp,
+                    level: userProfile.level,
+                    size: 140
                 )
+                
+                // Profile Photo (smaller, on top)
+                Button(action: {
+                    showingImagePicker = true
+                }) {
+                    if let imageData = userProfile.profileImageData,
+                       let uiImage = UIImage(data: imageData) {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: 100, height: 100)
+                            .clipShape(Circle())
+                    } else {
+                        Image(systemName: userProfile.selectedAvatar)
+                            .font(.system(size: 50))
+                            .foregroundColor(.blue)
+                            .frame(width: 100, height: 100)
+                            .background(Circle().fill(Color.blue.opacity(0.1)))
+                    }
+                }
+                
+                // Edit indicator
+                Circle()
+                    .fill(Color.blue)
+                    .frame(width: 30, height: 30)
+                    .overlay(
+                        Image(systemName: "pencil")
+                            .font(.caption)
+                            .foregroundColor(.white)
+                    )
+                    .offset(x: 35, y: 35)
+            }
+            
+            // User Info
+            VStack(spacing: 8) {
+                Text(userProfile.username)
+                    .font(.title2)
+                    .fontWeight(.bold)
+                
+                Text("Level \(userProfile.level)")
+                    .font(.headline)
+                    .foregroundColor(.blue)
             }
         }
     }
-}
-
-// MARK: - Edit Profile View
-struct EditProfileView: View {
-    @Environment(\.dismiss) private var dismiss
-    @Binding var selectedAvatar: String
-    @Binding var username: String
-    let avatarOptions: [String]
-    @StateObject private var userProfile = UserProfileManager.shared
-    @State private var selectedItem: PhotosPickerItem?
     
-    var body: some View {
-        NavigationView {
-            ScrollView {
-                VStack(spacing: 24) {
-                    // Profile Photo Section
-                    VStack(spacing: 16) {
-                        Text("Profile Photo")
-                            .font(.headline)
-                        
-                        // Current Photo Display
-                        if let imageData = userProfile.profileImageData,
-                           let uiImage = UIImage(data: imageData) {
-                            VStack(spacing: 12) {
-                                Image(uiImage: uiImage)
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
-                                    .frame(width: 100, height: 100)
-                                    .background(Color(.systemBackground))
-                                    .clipShape(Circle())
-                                    .shadow(radius: 4)
-                                
-                                Button("Remove Photo") {
-                                    userProfile.setProfileImage(nil)
-                                }
-                                .foregroundColor(.red)
-                                .font(.subheadline)
-                            }
-                        } else {
-                            VStack(spacing: 12) {
-                                Image(systemName: selectedAvatar)
-                                    .resizable()
-                                    .frame(width: 100, height: 100)
-                                    .foregroundColor(.blue)
-                                    .background(Color(.systemGray6))
-                                    .clipShape(Circle())
-                                
-                                PhotosPicker(selection: $selectedItem, matching: .images) {
-                                    Text("Upload Photo")
-                                        .foregroundColor(.blue)
-                                        .font(.subheadline)
-                                }
-                                .onChange(of: selectedItem) { newItem in
-                                    Task {
-                                        if let data = try? await newItem?.loadTransferable(type: Data.self) {
-                                            await MainActor.run {
-                                                userProfile.setProfileImage(data)
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    .padding()
+    private var tabSelector: some View {
+        HStack(spacing: 0) {
+            TabButton(
+                title: "Stats",
+                isSelected: selectedTab == 0,
+                action: { selectedTab = 0 }
+            )
+            
+            TabButton(
+                title: "Achievements",
+                isSelected: selectedTab == 1,
+                action: { selectedTab = 1 }
+            )
+            
+            TabButton(
+                title: "Rewards",
+                isSelected: selectedTab == 2,
+                action: { selectedTab = 2 }
+            )
+        }
+        .background(Color(.tertiarySystemGroupedBackground))
+        .cornerRadius(12)
+    }
+    
+    @ViewBuilder
+    private var tabContent: some View {
+        switch selectedTab {
+        case 0:
+            statsTab
+        case 1:
+            achievementsTab
+        case 2:
+            rewardsTab
+        default:
+            statsTab
+        }
+    }
+    
+    private var statsTab: some View {
+        VStack(spacing: 20) {
+            // Study Statistics
+            VStack(alignment: .leading, spacing: 16) {
+                Text("Study Statistics")
+                    .font(.headline)
+                    .padding(.horizontal)
+                
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 16) {
+                    StatCard(
+                        icon: "book.fill",
+                        title: "Total Sessions",
+                        value: "\(statsManager.studySessions.count)",
+                        color: .blue
+                    )
                     
-                    // Avatar Selection
-                    VStack(spacing: 16) {
-                        Text("Choose Avatar")
-                            .font(.headline)
-                        
-                        LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 4), spacing: 16) {
-                            ForEach(avatarOptions, id: \.self) { avatar in
-                                Button(action: {
-                                    selectedAvatar = avatar
-                                    // Clear profile image when selecting avatar
-                                    userProfile.setProfileImage(nil)
-                                }) {
-                                    Image(systemName: avatar)
-                                        .resizable()
-                                        .frame(width: 40, height: 40)
-                                        .foregroundColor(selectedAvatar == avatar ? .white : .blue)
-                                        .background(
-                                            Circle()
-                                                .fill(selectedAvatar == avatar ? .blue : Color(.systemGray6))
-                                        )
-                                        .frame(width: 60, height: 60)
-                                }
-                            }
-                        }
-                    }
-                    .padding()
+                    StatCard(
+                        icon: "clock.fill",
+                        title: "Total Time",
+                        value: formatTotalTime(),
+                        color: .green
+                    )
                     
-                    // Username Input
+                    StatCard(
+                        icon: "target",
+                        title: "Accuracy",
+                        value: "\(Int(statsManager.getOverallAccuracy() * 100))%",
+                        color: .orange
+                    )
+                    
+                    StatCard(
+                        icon: "flame.fill",
+                        title: "Current Streak",
+                        value: "\(StreakManager.shared.currentStreak) days",
+                        color: .red
+                    )
+                }
+            }
+            
+            // Recent Activity
+            VStack(alignment: .leading, spacing: 16) {
+                Text("Recent Activity")
+                    .font(.headline)
+                    .padding(.horizontal)
+                
+                if statsManager.studySessions.isEmpty {
                     VStack(spacing: 12) {
-                        Text("Username")
-                            .font(.headline)
+                        Image(systemName: "book.closed")
+                            .font(.system(size: 40))
+                            .foregroundColor(.secondary)
                         
-                        TextField("Enter username", text: $username)
-                            .textFieldStyle(RoundedBorderTextFieldStyle())
-                            .padding(.horizontal)
+                        Text("No study sessions yet")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        
+                        Text("Start studying to see your progress!")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color(.secondarySystemGroupedBackground))
+                    .cornerRadius(12)
+                } else {
+                    LazyVStack(spacing: 12) {
+                        ForEach(Array(statsManager.studySessions.prefix(5)), id: \.id) { session in
+                            SessionRowView(session: session)
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    private var achievementsTab: some View {
+        VStack(spacing: 20) {
+            // Achievement Summary
+            VStack(spacing: 12) {
+                HStack {
+                    Text("Achievements")
+                        .font(.headline)
+                    
+                    Spacer()
+                    
+                    Text("\(userProfile.unlockedAchievementsCount)/\(userProfile.totalAchievementsCount)")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+                
+                ProgressView(value: Double(userProfile.unlockedAchievementsCount) / Double(userProfile.totalAchievementsCount))
+                    .accentColor(.blue)
+            }
+            .padding()
+            .background(Color(.secondarySystemGroupedBackground))
+            .cornerRadius(12)
+            
+            // Achievement Categories
+            ForEach(AchievementType.allCases, id: \.self) { type in
+                VStack(alignment: .leading, spacing: 12) {
+                    let typeAchievements = userProfile.getAchievements(of: type)
+                    let unlockedCount = typeAchievements.filter { $0.isUnlocked }.count
+                    
+                    HStack {
+                        Image(systemName: type == .xp ? "star.fill" : type == .level ? "number.circle.fill" : type == .streak ? "flame.fill" : type == .sessions ? "book.fill" : type == .perfect ? "checkmark.circle.fill" : "target")
+                            .foregroundColor(type.color)
+                        
+                        Text(type.rawValue.uppercased())
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                        
+                        Spacer()
+                        
+                        Text("\(unlockedCount)/\(typeAchievements.count)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                     }
                     
-                    Spacer(minLength: 40)
-                }
-            }
-            .navigationTitle("Edit Profile")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") { dismiss() }
-                }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Save") { 
-                        // Profile is automatically saved via @Published properties
-                        dismiss() 
+                    LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 12) {
+                        ForEach(typeAchievements) { achievement in
+                            AchievementBadgeView(achievement: achievement)
+                        }
                     }
                 }
             }
         }
     }
-}
-
-// MARK: - Enhanced Stat Card
-struct ProfileStatCard: View {
-    let title: String
-    let value: String
-    let icon: String
-    let color: Color
-    let subtitle: String
     
-    var body: some View {
-        VStack(spacing: 8) {
-            Image(systemName: icon)
-                .font(.title2)
-                .foregroundColor(color)
-            Text(value)
-                .font(.title3)
-                .fontWeight(.bold)
-            Text(title)
-                .font(.caption)
-                .foregroundColor(.primary)
-            Text(subtitle)
-                .font(.caption2)
-                .foregroundColor(.secondary)
-        }
-        .frame(height: 100)
-        .frame(maxWidth: .infinity)
-        .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(16)
-        .shadow(color: color.opacity(0.08), radius: 2, x: 0, y: 1)
-    }
-}
-
-// MARK: - Progress Stat Row
-struct ProgressStatRow: View {
-    let title: String
-    let value: String
-    let icon: String
-    let color: Color
-    let progress: Double
-    
-    var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon)
-                .font(.title3)
-                .foregroundColor(color)
-                .frame(width: 30)
-            
-            VStack(alignment: .leading, spacing: 4) {
-                HStack {
-                    Text(title)
-                        .font(.subheadline)
-                        .foregroundColor(.primary)
-                    Spacer()
-                    Text(value)
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundColor(color)
+    private var rewardsTab: some View {
+        VStack(spacing: 20) {
+            // Available Rewards
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Available Rewards")
+                    .font(.headline)
+                
+                if userProfile.availableLevelRewards.isEmpty {
+                    VStack(spacing: 12) {
+                        Image(systemName: "gift")
+                            .font(.system(size: 40))
+                            .foregroundColor(.secondary)
+                        
+                        Text("No rewards available")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        
+                        Text("Level up to unlock rewards!")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color(.secondarySystemGroupedBackground))
+                    .cornerRadius(12)
+                } else {
+                    LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 16) {
+                        ForEach(userProfile.availableLevelRewards) { reward in
+                            LevelRewardView(reward: reward) {
+                                userProfile.claimLevelReward(reward)
+                            }
+                        }
+                    }
                 }
-                
-                ProgressView(value: progress)
-                    .accentColor(color)
-                    .frame(height: 4)
             }
-        }
-        .padding()
-        .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
-    }
-}
-
-// MARK: - Enhanced Achievement Badge
-struct AchievementBadge: View {
-    let icon: String
-    let title: String
-    let subtitle: String
-    let achieved: Bool
-    
-    var body: some View {
-        VStack(spacing: 6) {
-            Image(systemName: icon)
-                .font(.title2)
-                .foregroundColor(achieved ? .yellow : .gray)
-                .opacity(achieved ? 1.0 : 0.4)
             
-            VStack(spacing: 2) {
-                Text(title)
-                    .font(.caption)
-                    .fontWeight(.medium)
-                    .foregroundColor(.primary)
-                    .opacity(achieved ? 1.0 : 0.5)
+            // All Rewards
+            VStack(alignment: .leading, spacing: 12) {
+                Text("All Rewards")
+                    .font(.headline)
                 
-                Text(subtitle)
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-                    .opacity(achieved ? 1.0 : 0.3)
-                    .multilineTextAlignment(.center)
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 16) {
+                    ForEach(userProfile.levelRewards) { reward in
+                        LevelRewardView(reward: reward) {
+                            if !reward.isClaimed && userProfile.level >= reward.level {
+                                userProfile.claimLevelReward(reward)
+                            }
+                        }
+                    }
+                }
             }
         }
-        .frame(height: 80)
-        .frame(maxWidth: .infinity)
-        .background(Color(.systemGray6))
-        .cornerRadius(12)
-        .shadow(color: .black.opacity(0.04), radius: 1, x: 0, y: 1)
     }
-}
-
-// MARK: - Helpers
-extension StatisticsManager {
-    var formattedTotalStudyTime: String {
-        let hours = Int(totalStudyTime) / 3600
-        let minutes = (Int(totalStudyTime) % 3600) / 60
+    
+    private func formatTotalTime() -> String {
+        let totalSeconds = statsManager.studySessions.reduce(0) { $0 + $1.duration }
+        let hours = Int(totalSeconds) / 3600
+        let minutes = Int(totalSeconds) % 3600 / 60
+        
         if hours > 0 {
             return "\(hours)h \(minutes)m"
         } else {
             return "\(minutes)m"
         }
     }
+}
+
+// MARK: - Supporting Views
+
+struct TabButton: View {
+    let title: String
+    let isSelected: Bool
+    let action: () -> Void
     
-    func getOverallAccuracy() -> Double {
-        let totalCards = studySessions.reduce(0) { $0 + $1.totalCards }
-        let correctCards = studySessions.reduce(0) { $0 + $1.knownCards }
-        return totalCards > 0 ? Double(correctCards) / Double(totalCards) : 0.0
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .foregroundColor(isSelected ? .white : .primary)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(isSelected ? Color.blue : Color.clear)
+                )
+        }
+    }
+}
+
+struct SessionRowView: View {
+    let session: StudySession
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            // Session icon
+            ZStack {
+                Circle()
+                    .fill(Color.blue.opacity(0.2))
+                    .frame(width: 40, height: 40)
+                
+                Image(systemName: "book.fill")
+                    .font(.system(size: 16))
+                    .foregroundColor(.blue)
+            }
+            
+            // Session details
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Study Session")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                
+                Text("\(session.knownCards) known, \(session.unknownCards) unknown")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            
+            Spacer()
+            
+            // Session stats
+            VStack(alignment: .trailing, spacing: 4) {
+                Text("\(session.accuracyPercentage)%")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(session.accuracyPercentage >= 80 ? .green : .orange)
+                
+                Text(formatDuration(session.duration))
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .padding()
+        .background(Color(.secondarySystemGroupedBackground))
+        .cornerRadius(12)
+    }
+    
+    private func formatDuration(_ duration: TimeInterval) -> String {
+        let minutes = Int(duration) / 60
+        let seconds = Int(duration) % 60
+        return String(format: "%d:%02d", minutes, seconds)
+    }
+}
+
+struct EditProfileView: View {
+    @ObservedObject var userProfile = UserProfileManager.shared
+    @Environment(\.dismiss) private var dismiss
+    @State private var username: String = ""
+    @State private var selectedAvatar: String = ""
+    
+    var body: some View {
+        NavigationView {
+            Form {
+                Section("Profile Information") {
+                    TextField("Username", text: $username)
+                    
+                    Picker("Avatar", selection: $selectedAvatar) {
+                        ForEach(availableAvatars, id: \.self) { avatar in
+                            HStack {
+                                Image(systemName: avatar)
+                                    .foregroundColor(.blue)
+                                Text(avatarName(for: avatar))
+                            }
+                            .tag(avatar)
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Edit Profile")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Save") {
+                        userProfile.updateProfile(username: username, avatar: selectedAvatar)
+                        dismiss()
+                    }
+                }
+            }
+            .onAppear {
+                username = userProfile.username
+                selectedAvatar = userProfile.selectedAvatar
+            }
+        }
+    }
+    
+    private var availableAvatars: [String] {
+        return [
+            "person.crop.circle.fill",
+            "person.crop.circle.badge.plus",
+            "person.crop.circle.badge.checkmark",
+            "person.crop.circle.badge.questionmark",
+            "person.crop.circle.badge.exclamationmark",
+            "person.crop.circle.badge.moon",
+            "person.crop.circle.badge.clock",
+            "person.crop.circle.badge.xmark"
+        ]
+    }
+    
+    private func avatarName(for avatar: String) -> String {
+        switch avatar {
+        case "person.crop.circle.fill": return "Default"
+        case "person.crop.circle.badge.plus": return "Plus"
+        case "person.crop.circle.badge.checkmark": return "Checkmark"
+        case "person.crop.circle.badge.questionmark": return "Question"
+        case "person.crop.circle.badge.exclamationmark": return "Exclamation"
+        case "person.crop.circle.badge.moon": return "Moon"
+        case "person.crop.circle.badge.clock": return "Clock"
+        case "person.crop.circle.badge.xmark": return "X Mark"
+        default: return "Unknown"
+        }
     }
 }
 

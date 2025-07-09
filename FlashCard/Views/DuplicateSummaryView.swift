@@ -59,14 +59,14 @@ struct DuplicateSummaryView: View {
                         StatCard(
                             icon: "checkmark.circle.fill",
                             title: "Ready to Add",
-                            subtitle: "\(nonDuplicateEntries.count) cards",
+                            value: "\(nonDuplicateEntries.count) cards",
                             color: .green
                         )
                         
                         StatCard(
                             icon: "exclamationmark.triangle.fill",
                             title: "Need Review",
-                            subtitle: "\(duplicateIndices.count) duplicates",
+                            value: "\(duplicateIndices.count) duplicates",
                             color: .orange
                         )
                     }

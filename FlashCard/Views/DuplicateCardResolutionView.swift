@@ -55,20 +55,20 @@ struct DuplicateCardResolutionView: View {
                         StatCard(
                             icon: "doc.text.fill",
                             title: "Existing Card",
-                            subtitle: "\(comparison.existingFilledFields) fields filled"
+                            value: "\(comparison.existingFilledFields) fields filled",
+                            color: .blue
                         )
-                        
                         StatCard(
                             icon: "doc.badge.plus",
                             title: "New Card",
-                            subtitle: "\(comparison.newFilledFields) fields filled"
+                            value: "\(comparison.newFilledFields) fields filled",
+                            color: .blue
                         )
-                        
                         if comparison.newFieldsCount > 0 {
                             StatCard(
                                 icon: "plus.circle.fill",
                                 title: "New Info",
-                                subtitle: "\(comparison.newFieldsCount) additional fields",
+                                value: "\(comparison.newFieldsCount) additional fields",
                                 color: .green
                             )
                         }
@@ -164,34 +164,6 @@ struct DuplicateCardResolutionView: View {
         case "pastParticiple": return "Past Participle"
         default: return fieldKey.capitalized
         }
-    }
-}
-
-struct StatCard: View {
-    let icon: String
-    let title: String
-    let subtitle: String
-    var color: Color = .blue
-    
-    var body: some View {
-        VStack(spacing: 4) {
-            Image(systemName: icon)
-                .font(.title2)
-                .foregroundColor(color)
-            
-            Text(title)
-                .font(.caption)
-                .fontWeight(.medium)
-            
-            Text(subtitle)
-                .font(.caption2)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 12)
-        .background(color.opacity(0.1))
-        .cornerRadius(8)
     }
 }
 

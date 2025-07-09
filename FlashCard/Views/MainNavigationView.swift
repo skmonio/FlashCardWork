@@ -42,6 +42,9 @@ struct MainNavigationView: View {
         }
         .withNavigationCoordinator()
         .handleDismissToRoot()
+        .overlay(
+            GlobalNotificationOverlay()
+        )
         .onAppear {
             // Reset navigation state when app appears
             viewModel.resetNavigationToRoot()

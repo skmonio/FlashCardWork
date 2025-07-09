@@ -1,10 +1,60 @@
 import Foundation
 import UserNotifications
+import SwiftUI
 
+// MARK: - Notification Types
+enum NotificationType {
+    case achievement
+    case levelUp
+    case xpGain
+    case reward
+    case info
+    
+    var icon: String {
+        switch self {
+        case .achievement: return "star.fill"
+        case .levelUp: return "arrow.up.circle.fill"
+        case .xpGain: return "bolt.fill"
+        case .reward: return "gift.fill"
+        case .info: return "info.circle.fill"
+        }
+    }
+    
+    var color: Color {
+        switch self {
+        case .achievement: return .yellow
+        case .levelUp: return .blue
+        case .xpGain: return .green
+        case .reward: return .purple
+        case .info: return .gray
+        }
+    }
+}
+
+// MARK: - Notification Model
+struct AppNotification: Identifiable {
+    let id = UUID()
+    let type: NotificationType
+    let title: String
+    let message: String
+    let duration: TimeInterval
+    
+    init(type: NotificationType, title: String, message: String, duration: TimeInterval = 3.0) {
+        self.type = type
+        self.title = title
+        self.message = message
+        self.duration = duration
+    }
+}
+
+// MARK: - Notification Manager
 class NotificationManager: ObservableObject {
     static let shared = NotificationManager()
     
     private let settingsManager = SettingsManager.shared
+    
+    @Published var currentNotification: AppNotification?
+    @Published var isShowing = false
     
     private init() {
         requestNotificationPermission()
@@ -141,5 +191,69 @@ class NotificationManager: ObservableObject {
                 completion(requests)
             }
         }
+    }
+    
+    func showNotification(_ notification: AppNotification) {
+        DispatchQueue.main.async {
+            self.currentNotification = notification
+            self.isShowing = true
+            
+            // Auto-dismiss after duration
+            DispatchQueue.main.asyncAfter(deadline: .now() + notification.duration) {
+                self.dismissNotification()
+            }
+        }
+    }
+    
+    func dismissNotification() {
+        withAnimation(.easeInOut(duration: 0.3)) {
+            self.isShowing = false
+        }
+        
+        // Clear the notification after animation
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            self.currentNotification = nil
+        }
+    }
+    
+    // Convenience methods
+    func showAchievement(title: String, message: String) {
+        let notification = AppNotification(
+            type: .achievement,
+            title: title,
+            message: message,
+            duration: 4.0
+        )
+        showNotification(notification)
+    }
+    
+    func showLevelUp(level: Int) {
+        let notification = AppNotification(
+            type: .levelUp,
+            title: "🎉 Level \(level) Unlocked!",
+            message: "Congratulations! You've reached a new level.",
+            duration: 4.0
+        )
+        showNotification(notification)
+    }
+    
+    func showXPGain(amount: Int) {
+        let notification = AppNotification(
+            type: .xpGain,
+            title: "+\(amount) XP",
+            message: "Great job! You earned experience points.",
+            duration: 3.0
+        )
+        showNotification(notification)
+    }
+    
+    func showReward(title: String, message: String) {
+        let notification = AppNotification(
+            type: .reward,
+            title: title,
+            message: message,
+            duration: 4.0
+        )
+        showNotification(notification)
     }
 } 
