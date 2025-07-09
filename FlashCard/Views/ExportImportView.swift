@@ -222,7 +222,7 @@ struct ExportImportView: View {
             return
         }
         
-        // Calculate total cards in selected decks
+        // Calculate total cards in selected decks (including hierarchy)
         let totalCards = selectedDeckIds.reduce(0) { total, deckId in
             if let deck = viewModel.decks.first(where: { $0.id == deckId }) {
                 return total + viewModel.getTotalCardsInDeckHierarchy(deck)
@@ -232,6 +232,14 @@ struct ExportImportView: View {
         
         print("📊 Exporting \(totalCards) cards from \(selectedDeckIds.count) selected decks")
         
+        // Check if any cards will be exported
+        if totalCards == 0 {
+            print("❌ No cards found in selected decks")
+            exportErrorMessage = "No cards found in the selected decks. Please ensure the decks contain cards before exporting."
+            showingExportError = true
+            return
+        }
+        
         // Generate CSV content
         print("🔍 UI Export Debug: Exporting multiple decks: \(selectedDeckIds.count) selected")
         exportContent = viewModel.exportMultipleDecksToCSV(selectedDeckIds)
@@ -239,14 +247,14 @@ struct ExportImportView: View {
         // Validate CSV content
         guard !exportContent.isEmpty else {
             print("❌ Export failed: CSV content is empty")
-            exportErrorMessage = "Failed to generate CSV content. The export data appears to be empty."
+            exportErrorMessage = "Failed to generate CSV content. The export data appears to be empty. This might happen if the selected decks don't contain any cards."
             showingExportError = true
             return
         }
         
         guard exportContent.count > 100 else { // Minimum reasonable size for CSV with headers
             print("❌ Export failed: CSV content too small (\(exportContent.count) characters)")
-            exportErrorMessage = "Export data is too small (\(exportContent.count) characters). This may indicate a problem with the export process."
+            exportErrorMessage = "Export data is too small (\(exportContent.count) characters). This may indicate that the selected decks are empty or there's an issue with the export process."
             showingExportError = true
             return
         }
@@ -258,7 +266,7 @@ struct ExportImportView: View {
         let lines = exportContent.components(separatedBy: .newlines).filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
         guard lines.count >= 2 else { // At least header + 1 data row
             print("❌ Export failed: Invalid CSV structure (only \(lines.count) lines)")
-            exportErrorMessage = "Invalid CSV structure detected. Expected at least 2 lines but found \(lines.count)."
+            exportErrorMessage = "Invalid CSV structure detected. Expected at least 2 lines but found \(lines.count). This suggests the selected decks may be empty."
             showingExportError = true
             return
         }

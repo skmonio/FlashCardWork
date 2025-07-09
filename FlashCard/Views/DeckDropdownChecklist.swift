@@ -12,11 +12,31 @@ struct DeckDropdownChecklist: View {
             var uniqueCards: Set<FlashCard> = []
             for deckId in selectedDeckIds {
                 if let deck = viewModel.decks.first(where: { $0.id == deckId }) {
+                    // Add cards from this deck
                     uniqueCards.formUnion(deck.cards)
+                    
+                    // Add cards from all sub-decks
+                    let subDecks = viewModel.getSubDecks(for: deck.id)
+                    for subDeck in subDecks {
+                        uniqueCards.formUnion(subDeck.cards)
+                    }
                 }
             }
             return Array(uniqueCards)
         }
+    }
+    
+    var autoIncludedParentDecks: [Deck] {
+        var autoIncluded: [Deck] = []
+        for deckId in selectedDeckIds {
+            if let deck = viewModel.decks.first(where: { $0.id == deckId }),
+               let parentId = deck.parentId,
+               !selectedDeckIds.contains(parentId),
+               let parentDeck = viewModel.decks.first(where: { $0.id == parentId }) {
+                autoIncluded.append(parentDeck)
+            }
+        }
+        return autoIncluded
     }
     
     var body: some View {
@@ -39,9 +59,16 @@ struct DeckDropdownChecklist: View {
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         } else {
-                            Text("\(selectedDeckIds.count) deck\(selectedDeckIds.count == 1 ? "" : "s") • \(availableCards.count) cards")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                            let autoIncludedCount = autoIncludedParentDecks.count
+                            if autoIncludedCount > 0 {
+                                Text("\(selectedDeckIds.count) deck\(selectedDeckIds.count == 1 ? "" : "s") • \(availableCards.count) cards • \(autoIncludedCount) parent\(autoIncludedCount == 1 ? "" : "s") auto-included")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            } else {
+                                Text("\(selectedDeckIds.count) deck\(selectedDeckIds.count == 1 ? "" : "s") • \(availableCards.count) cards")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
                         }
                     }
                     
@@ -82,6 +109,34 @@ struct DeckDropdownChecklist: View {
                     .buttonStyle(PlainButtonStyle())
                     
                     Divider()
+                    
+                    // Show auto-included parent decks note
+                    if !autoIncludedParentDecks.isEmpty {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Note: Parent decks will be automatically included when exporting sub-decks")
+                                .font(.caption)
+                                .foregroundColor(.orange)
+                                .padding(.horizontal)
+                                .padding(.vertical, 8)
+                            
+                            ForEach(autoIncludedParentDecks) { parentDeck in
+                                HStack {
+                                    Text("    ↳ Auto-including: \(parentDeck.name)")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    Spacer()
+                                }
+                                .padding(.horizontal)
+                                .padding(.vertical, 2)
+                            }
+                        }
+                        .background(Color(.systemBackground))
+                        .cornerRadius(8)
+                        .padding(.horizontal)
+                        .padding(.vertical, 4)
+                        
+                        Divider()
+                    }
                     
                     // Deck list
                     LazyVStack(spacing: 0) {

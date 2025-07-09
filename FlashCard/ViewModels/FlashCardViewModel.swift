@@ -716,23 +716,48 @@ func exportCardsToCSV() -> String {
     }
     
     func exportMultipleDecksToCSV(_ deckIds: Set<UUID>) -> String {
+        print("🔍 Export Debug: Starting exportMultipleDecksToCSV with \(deckIds.count) deck IDs")
+        print("🔍 Export Debug: Selected deck IDs: \(deckIds)")
+        
+        // Auto-include parent decks when their sub-decks are selected
+        let expandedDeckIds = expandDeckSelectionWithParents(deckIds)
+        if expandedDeckIds.count > deckIds.count {
+            print("🔍 Export Debug: Auto-included \(expandedDeckIds.count - deckIds.count) parent decks")
+        }
+        
         let headers = ["Word", "Translation", "Example", "Article", "Plural", "Past Tense", "Future Tense", "Past Participle", "Decks", "Success Count", "Times Shown", "Times Correct"]
         var csvContent = headers.joined(separator: ",") + "\n"
         
         // Collect all cards from selected decks (including hierarchy)
         var allCards: Set<FlashCard> = []
         
-        for deckId in deckIds {
+        for deckId in expandedDeckIds {
             if let deck = decks.first(where: { $0.id == deckId }) {
+                print("🔍 Export Debug: Processing deck '\(deck.name)' with \(deck.cards.count) cards")
+                
                 // Add cards from this deck
                 allCards.formUnion(Set(deck.cards))
                 
                 // Add cards from all sub-decks
                 let subDecks = getSubDecks(for: deck.id)
+                print("🔍 Export Debug: Found \(subDecks.count) sub-decks for '\(deck.name)'")
+                
                 for subDeck in subDecks {
+                    print("🔍 Export Debug: Processing sub-deck '\(subDeck.name)' with \(subDeck.cards.count) cards")
                     allCards.formUnion(Set(subDeck.cards))
                 }
+            } else {
+                print("❌ Export Debug: Could not find deck with ID \(deckId)")
             }
+        }
+        
+        print("🔍 Export Debug: Total unique cards found: \(allCards.count)")
+        
+        if allCards.isEmpty {
+            print("⚠️ Export Debug: No cards found in selected decks. This might indicate:")
+            print("   - Selected decks are empty")
+            print("   - Cards are not properly associated with decks")
+            print("   - Only sub-decks were selected without their parent decks")
         }
         
         // Convert to sorted array for consistent output
@@ -759,7 +784,26 @@ func exportCardsToCSV() -> String {
             csvContent += row.joined(separator: ",") + "\n"
         }
         
+        print("🔍 Export Debug: Final CSV content length: \(csvContent.count) characters")
+        print("🔍 Export Debug: CSV has \(csvContent.components(separatedBy: .newlines).count) lines")
+        
         return csvContent
+    }
+    
+    // Helper function to automatically include parent decks when their sub-decks are selected
+    private func expandDeckSelectionWithParents(_ selectedDeckIds: Set<UUID>) -> Set<UUID> {
+        var expandedIds = selectedDeckIds
+        
+        for deckId in selectedDeckIds {
+            if let deck = decks.first(where: { $0.id == deckId }),
+               let parentId = deck.parentId {
+                // This is a sub-deck, add its parent
+                expandedIds.insert(parentId)
+                print("🔍 Export Debug: Auto-including parent deck for sub-deck '\(deck.name)'")
+            }
+        }
+        
+        return expandedIds
     }
     
     func getTotalCardsInDeckHierarchy(_ deck: Deck) -> Int {
