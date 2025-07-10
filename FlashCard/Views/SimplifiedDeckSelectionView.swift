@@ -3,6 +3,7 @@ import SwiftUI
 struct SimplifiedDeckSelectionView: View {
     @ObservedObject var viewModel: FlashCardViewModel
     let mode: GameMode
+    let startFlipped: Bool // NEW: for study flipped
     @EnvironmentObject var navigationCoordinator: NavigationCoordinator
     @Environment(\.dismiss) private var dismiss
     
@@ -13,6 +14,14 @@ struct SimplifiedDeckSelectionView: View {
     @State private var selectedStudyMode: StudyMode = .adaptive
     @State private var selectedDifficulty: MemoryGameDifficulty = .medium
     @State private var showingDeckPicker = false
+    @State private var localStartFlipped: Bool // NEW: local state for toggle binding
+    
+    init(viewModel: FlashCardViewModel, mode: GameMode, startFlipped: Bool) {
+        self.viewModel = viewModel
+        self.mode = mode
+        self.startFlipped = startFlipped
+        self._localStartFlipped = State(initialValue: startFlipped)
+    }
     
     var totalAvailableCards: [FlashCard] {
         if selectedDeckIds.isEmpty {
@@ -121,6 +130,14 @@ struct SimplifiedDeckSelectionView: View {
                                 difficultySelectionView
                             } else {
                                 studyModeSelectionView
+                                // NEW: Start Flipped toggle for study mode only
+                                if mode == .study {
+                                    Toggle(isOn: $localStartFlipped) {
+                                        Label("Start Flipped", systemImage: "arrow.2.circlepath")
+                                    }
+                                    .toggleStyle(SwitchToggleStyle(tint: .blue))
+                                    .padding(.top, 8)
+                                }
                             }
                         }
                     }
@@ -183,7 +200,8 @@ struct SimplifiedDeckSelectionView: View {
                 cards: availableCards,
                 deckIds: deckIdArray,
                 shouldContinue: shouldContinueGame,
-                selectedStudyMode: selectedStudyMode
+                selectedStudyMode: selectedStudyMode,
+                startFlipped: localStartFlipped // pass
             )
         case .test:
             TestViewWithSaveState(
@@ -682,6 +700,7 @@ struct SimplifiedStudyViewWithSaveState: View {
     let deckIds: [UUID]
     let shouldContinue: Bool
     let selectedStudyMode: StudyMode
+    let startFlipped: Bool // NEW
     @State private var shouldLoadSaveState = false
     
     var body: some View {
@@ -691,14 +710,16 @@ struct SimplifiedStudyViewWithSaveState: View {
                     viewModel: viewModel,
                     cards: cards,
                     deckIds: deckIds,
-                    shouldLoadSaveState: true
+                    shouldLoadSaveState: true,
+                    startFlipped: startFlipped // pass
                 )
             } else {
                 StudyView(
                     viewModel: viewModel,
                     cards: cards,
                     deckIds: deckIds,
-                    shouldLoadSaveState: false
+                    shouldLoadSaveState: false,
+                    startFlipped: startFlipped // pass
                 )
             }
         }

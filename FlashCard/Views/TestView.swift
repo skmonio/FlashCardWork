@@ -33,6 +33,9 @@ struct TestView: View {
     private var onLevelComplete: ((LevelResult) -> Void)?
     private var maxQuestions: Int?
     
+    // Start flipped property
+    private let startFlipped: Bool
+    
     // Session tracking for SRS
     @State private var currentSession: StudySession?
     @State private var sessionStartTime: Date = Date()
@@ -67,7 +70,7 @@ struct TestView: View {
         return speechService.isSpeaking && speechService.currentlySpeaking == textToSpeak
     }
     
-    init(viewModel: FlashCardViewModel, cards: [FlashCard], deckIds: [UUID] = [], shouldLoadSaveState: Bool = false, studyMode: StudyMode? = nil, maxQuestions: Int? = nil, onLevelComplete: ((LevelResult) -> Void)? = nil) {
+    init(viewModel: FlashCardViewModel, cards: [FlashCard], deckIds: [UUID] = [], shouldLoadSaveState: Bool = false, studyMode: StudyMode? = nil, maxQuestions: Int? = nil, onLevelComplete: ((LevelResult) -> Void)? = nil, startFlipped: Bool = false) {
         self.viewModel = viewModel
         // Apply intelligent ordering: less-known cards first, well-known cards later
         self.cards = viewModel.sortCardsForLearning(cards)
@@ -76,6 +79,7 @@ struct TestView: View {
         self.studyMode = studyMode
         self.maxQuestions = maxQuestions
         self.onLevelComplete = onLevelComplete
+        self.startFlipped = startFlipped
         // Track original number of cards for proper scoring
         self._originalCardCount = State(initialValue: cards.count)
     }
@@ -86,7 +90,8 @@ struct TestView: View {
     }
     
     private func generateOptions() -> [String] {
-        var options = [currentCard.definition] // Correct answer
+        let correctAnswer = startFlipped ? currentCard.word : currentCard.definition
+        var options = [correctAnswer] // Correct answer
         
         // Get all available decks for the current card
         let cardDecks = viewModel.decks.filter { deck in
@@ -96,21 +101,21 @@ struct TestView: View {
         // Get all cards from the same decks (excluding current card)
         var poolOfOptions = Set<String>()
         for deck in cardDecks {
-            let deckDefinitions = deck.cards
+            let deckOptions = deck.cards
                 .filter { $0.id != currentCard.id }
-                .map { $0.definition }
-            poolOfOptions.formUnion(deckDefinitions)
+                .map { startFlipped ? $0.word : $0.definition }
+            poolOfOptions.formUnion(deckOptions)
         }
         
         // If we don't have enough options from the same decks, use other cards
         if poolOfOptions.count < 3 {
-            let otherDefinitions = viewModel.flashCards
+            let otherOptions = viewModel.flashCards
                 .filter { $0.id != currentCard.id }
-                .map { $0.definition }
-            poolOfOptions.formUnion(otherDefinitions)
+                .map { startFlipped ? $0.word : $0.definition }
+            poolOfOptions.formUnion(otherOptions)
         }
         
-        // Add random definitions until we have 4 total options
+        // Add random options until we have 4 total options
         let additionalOptions = Array(poolOfOptions)
             .shuffled()
             .prefix(3)
@@ -126,8 +131,9 @@ struct TestView: View {
         selectedAnswer = answer
         hasAnswered = true
         
-        let isCorrect = answer == currentCard.definition
-        print("🧪 Answer check: selected='\(answer)' correct='\(currentCard.definition)' isCorrect=\(isCorrect)")
+        let correctAnswer = startFlipped ? currentCard.word : currentCard.definition
+        let isCorrect = answer == correctAnswer
+        print("🧪 Answer check: selected='\(answer)' correct='\(correctAnswer)' isCorrect=\(isCorrect)")
         
         // Save answer state for navigation
         answerHistory[currentIndex] = answer
@@ -429,16 +435,16 @@ struct TestView: View {
             
             VStack(spacing: 20) {
                 // Title outside the card
-                Text("Choose the correct definition:")
+                Text(startFlipped ? "Choose the correct word:" : "Choose the correct definition:")
                     .font(.title3)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
                 
-                // Use shared card component with vibrant borders - only show the word
+                // Use shared card component with vibrant borders - show definition or word based on startFlipped
                 SharedGameCardView(
                     card: currentCard,
                     title: "",
-                    content: currentCard.word,
+                    content: startFlipped ? currentCard.definition : currentCard.word,
                     showArticle: false
                 )
                 .id("\(currentCard.id)-\(forceRefreshID)")
@@ -527,7 +533,8 @@ struct TestView: View {
                                 .background(
                                     Group {
                                         if hasAnswered {
-                                            if option == currentCard.definition {
+                                            let correctAnswer = startFlipped ? currentCard.word : currentCard.definition
+                                            if option == correctAnswer {
                                                 Color.green.opacity(0.2)
                                             } else if option == selectedAnswer {
                                                 Color.red.opacity(0.2)

@@ -12,6 +12,7 @@ extension Notification.Name {
 struct ProgressiveStudyView: View {
     @ObservedObject var viewModel: FlashCardViewModel
     let gameMode: GameMode
+    let startFlipped: Bool // NEW: for study flipped
     @EnvironmentObject var navigationCoordinator: NavigationCoordinator
     @State private var currentLevel: Int = 1
     @State private var levelResults: [LevelResult] = []
@@ -148,7 +149,8 @@ struct ProgressiveStudyView: View {
                         // Level 3 completed, show final results
                         showingFinalResults = true
                     }
-                }
+                },
+                startFlipped: startFlipped
             )
         case .test:
             TestView(
@@ -172,7 +174,8 @@ struct ProgressiveStudyView: View {
                         // Level 3 completed, show final results
                         showingFinalResults = true
                     }
-                }
+                },
+                startFlipped: startFlipped
             )
         case .writing:
             WritingView(

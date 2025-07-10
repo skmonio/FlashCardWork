@@ -4,6 +4,7 @@ struct QuickStudyView: View {
     @ObservedObject var viewModel: FlashCardViewModel
     let gameMode: GameMode
     let selectedStudyMode: StudyMode
+    let startFlipped: Bool // NEW: for study flipped
     @EnvironmentObject var navigationCoordinator: NavigationCoordinator
     @State private var selectedCardCount: Int = 10
     @State private var selectedDifficulty: MemoryGameDifficulty = .medium
@@ -210,14 +211,16 @@ struct QuickStudyView: View {
                 viewModel: viewModel,
                 cards: availableCards,
                 deckIds: [], // Empty for quick study
-                shouldLoadSaveState: shouldContinueGame
+                shouldLoadSaveState: shouldContinueGame,
+                startFlipped: startFlipped
             )
         case .test:
             TestView(
                 viewModel: viewModel,
                 cards: availableCards,
                 deckIds: [],
-                shouldLoadSaveState: shouldContinueGame
+                shouldLoadSaveState: shouldContinueGame,
+                startFlipped: startFlipped
             )
         case .game:
             GameView(

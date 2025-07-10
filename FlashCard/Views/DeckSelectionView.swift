@@ -66,6 +66,7 @@ struct DeckSelectionView: View {
     @State private var showingWritingInfo = false
     @State private var showingMemoryGameInfo = false
     @State private var showingWordScrambleInfo = false
+    @State private var startFlipped = false // NEW: for study flipped
     
     enum GameMode: String {
         case study = "study"
@@ -222,6 +223,14 @@ struct DeckSelectionView: View {
                                     .cornerRadius(8)
                             }
                             .disabled(availableCards.isEmpty)
+                        }
+                        // NEW: Start Flipped toggle
+                        if mode == .study {
+                            Toggle(isOn: $startFlipped) {
+                                Label("Start Flipped", systemImage: "arrow.2.circlepath")
+                            }
+                            .toggleStyle(SwitchToggleStyle(tint: .blue))
+                            .padding(.top, 8)
                         }
                     }
                     .padding()
@@ -419,7 +428,8 @@ struct DeckSelectionView: View {
                 cards: availableCards,
                 deckIds: deckIdArray,
                 shouldContinue: shouldContinueGame,
-                selectedStudyMode: selectedStudyMode
+                selectedStudyMode: selectedStudyMode,
+                startFlipped: startFlipped
             )
         case .test:
             TestViewWithSaveState(
@@ -596,22 +606,24 @@ struct StudyViewWithSaveState: View {
     let deckIds: [UUID]
     let shouldContinue: Bool
     let selectedStudyMode: StudyMode
-    
+    let startFlipped: Bool // NEW
     var body: some View {
         Group {
             if shouldContinue {
                 StudyView(
-                    viewModel: viewModel, 
+                    viewModel: viewModel,
                     cards: cards,
                     deckIds: deckIds,
-                    shouldLoadSaveState: true
+                    shouldLoadSaveState: true,
+                    startFlipped: startFlipped // pass
                 )
             } else {
                 StudyView(
                     viewModel: viewModel,
                     cards: cards,
                     deckIds: deckIds,
-                    shouldLoadSaveState: false
+                    shouldLoadSaveState: false,
+                    startFlipped: startFlipped // pass
                 )
             }
         }
@@ -756,6 +768,6 @@ struct DeckSelectionDifficultyButton: View {
             .overlay(
                 RoundedRectangle(cornerRadius: 8)
                     .stroke(isSelected ? difficulty.color : Color.clear, lineWidth: 2)
-            )
+        )
     }
-}
+} 

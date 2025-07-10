@@ -207,6 +207,32 @@ struct MainNavigationView: View {
                                     .cornerRadius(12)
                                     .shadow(color: .blue.opacity(0.2), radius: 3, x: 0, y: 1)
                                 }
+                                
+                                Button(action: {
+                                    navigationCoordinator.push(NavigationDestination.bubbleWord)
+                                }) {
+                                    HStack {
+                                        Image(systemName: "bubble.left.and.bubble.right")
+                                            .font(.title2)
+                                            .foregroundStyle(
+                                                LinearGradient(
+                                                    colors: [.green, .teal],
+                                                    startPoint: .topLeading,
+                                                    endPoint: .bottomTrailing
+                                                )
+                                            )
+                                            .frame(width: 30)
+                                        Text("Bubble Word")
+                                            .font(.body)
+                                            .foregroundColor(.primary)
+                                        Spacer()
+                                    }
+                                    .padding()
+                                    .frame(maxWidth: .infinity)
+                                    .background(Color(.secondarySystemGroupedBackground))
+                                    .cornerRadius(12)
+                                    .shadow(color: .green.opacity(0.2), radius: 3, x: 0, y: 1)
+                                }
                             }
                             .padding(.horizontal)
                         }
@@ -254,17 +280,17 @@ struct MainNavigationView: View {
     private func destinationView(for destination: NavigationDestination) -> some View {
         switch destination {
         case .deckSelection(let mode):
-            SimplifiedDeckSelectionView(viewModel: viewModel, mode: mode)
+            SimplifiedDeckSelectionView(viewModel: viewModel, mode: mode, startFlipped: false)
         case .studyModeSelection(let gameMode):
             StudyModeSelectionView(viewModel: viewModel, gameMode: gameMode)
         case .studyTypeSelection(let gameMode, let studyMode):
             StudyTypeSelectionView(viewModel: viewModel, gameMode: gameMode)
-        case .quickStudy(let gameMode, let studyMode, let cardCount):
-            QuickStudyView(viewModel: viewModel, gameMode: gameMode, selectedStudyMode: studyMode)
-        case .normalStudy(let gameMode, let studyMode):
-            SimplifiedDeckSelectionView(viewModel: viewModel, mode: gameMode)
-        case .progressiveStudy(let gameMode):
-            ProgressiveStudyView(viewModel: viewModel, gameMode: gameMode)
+        case .quickStudy(let gameMode, let studyMode, let cardCount, let startFlipped):
+            QuickStudyView(viewModel: viewModel, gameMode: gameMode, selectedStudyMode: studyMode, startFlipped: startFlipped)
+        case .normalStudy(let gameMode, let studyMode, let startFlipped):
+            SimplifiedDeckSelectionView(viewModel: viewModel, mode: gameMode, startFlipped: startFlipped)
+        case .progressiveStudy(let gameMode, let startFlipped):
+            ProgressiveStudyView(viewModel: viewModel, gameMode: gameMode, startFlipped: startFlipped)
         case .continueGame(let gameMode):
             continueGameView(for: gameMode)
         case .deck(let deck):
@@ -278,7 +304,7 @@ struct MainNavigationView: View {
         case .studyView(let cards, let deckIds):
             StudyView(viewModel: viewModel, cards: cards, deckIds: deckIds, shouldLoadSaveState: false)
         case .testView(let cards, let deckIds):
-            TestView(viewModel: viewModel, cards: cards, deckIds: deckIds, shouldLoadSaveState: false)
+            TestView(viewModel: viewModel, cards: cards, deckIds: deckIds, shouldLoadSaveState: false, startFlipped: false)
         case .gameView(let cards, let deckIds):
             GameView(viewModel: viewModel, cards: cards, difficulty: .medium, deckIds: deckIds, shouldLoadSaveState: false)
         case .trueFalseView(let cards, let deckIds):
@@ -291,6 +317,8 @@ struct MainNavigationView: View {
             DutchVocabularyImportView(viewModel: viewModel)
         case .dutchGrammar:
             DutchGrammarRulesView()
+        case .bubbleWord:
+            BubbleWordView(viewModel: viewModel)
         case .custom(let key):
             if key == "lessons" {
                 LessonsListView(viewModel: viewModel)
@@ -311,10 +339,10 @@ struct MainNavigationView: View {
             }
         case .test:
             if let savedState = SaveStateManager.shared.loadGameState(gameType: .test, as: TestGameState.self) {
-                TestView(viewModel: viewModel, cards: savedState.cards, deckIds: [], shouldLoadSaveState: true)
+                TestView(viewModel: viewModel, cards: savedState.cards, deckIds: [], shouldLoadSaveState: true, startFlipped: false)
             } else {
                 // Fallback if no save state found
-                TestView(viewModel: viewModel, cards: [], deckIds: [], shouldLoadSaveState: false)
+                TestView(viewModel: viewModel, cards: [], deckIds: [], shouldLoadSaveState: false, startFlipped: false)
             }
         case .game:
             if let savedState = SaveStateManager.shared.loadGameState(gameType: .memoryGame, as: MemoryGameState.self) {

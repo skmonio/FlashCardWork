@@ -177,7 +177,7 @@ struct StudySessionResultsView: View {
                     displayedLevel += 1
                     
                     // Instant reset without backward animation
-                    animatedProgress = 0.0
+                        animatedProgress = 0.0
                     
                     // Continue with next level or final progress
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {

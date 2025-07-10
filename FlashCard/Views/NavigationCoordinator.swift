@@ -170,9 +170,9 @@ enum NavigationDestination: Hashable {
     case deckSelection(GameMode)
     case studyModeSelection(GameMode)
     case studyTypeSelection(GameMode, StudyMode)
-    case quickStudy(GameMode, StudyMode, Int)
-    case normalStudy(GameMode, StudyMode)
-    case progressiveStudy(GameMode)
+    case quickStudy(GameMode, StudyMode, Int, Bool) // Added startFlipped
+    case normalStudy(GameMode, StudyMode, Bool) // Added startFlipped
+    case progressiveStudy(GameMode, Bool) // Added startFlipped
     case continueGame(GameMode)
     case deck(Deck)
     case allCards
@@ -185,6 +185,7 @@ enum NavigationDestination: Hashable {
     case wordScrambleView([FlashCard], [UUID])
     case dutchVocabulary
     case dutchGrammar
+    case bubbleWord
     case imageImport
     case custom(String) // For custom navigation like Lessons
 }

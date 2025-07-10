@@ -553,6 +553,66 @@ class DutchGrammarRulesDatabase {
                 english: "He spoiled his children.",
                 breakdown: "verwen + de (n is zacht)",
                 audioHint: "hɛi vərvɛndə zɛin kɪndərə(n)"
+            ),
+            GrammarExample(
+                dutch: "Ik ging naar de winkel.",
+                english: "I went to the store.",
+                breakdown: "gaan → ging (onregelmatig werkwoord)",
+                audioHint: "ɪk ɣɪŋ naːr də vɪŋkəl"
+            ),
+            GrammarExample(
+                dutch: "Zij meldde zich voor de cursus.",
+                english: "She registered for the course.",
+                breakdown: "meld + de (d is zacht)",
+                audioHint: "zɛi mɛldə zɛix voːr də kɵrsɵs"
+            ),
+            GrammarExample(
+                dutch: "Wij twijfelden aan zijn verhaal.",
+                english: "We doubted his story.",
+                breakdown: "twijfel + den (l is zacht + meervoud)",
+                audioHint: "vɛi tvɛivəldə(n) aːn zɛin vərhaːl"
+            ),
+            GrammarExample(
+                dutch: "Hij belde zijn moeder op.",
+                english: "He called his mother.",
+                breakdown: "bel + de (l is zacht)",
+                audioHint: "hɛi bɛldə zɛin mudər ɔp"
+            ),
+            GrammarExample(
+                dutch: "Jullie reisden naar het buitenland.",
+                english: "You traveled abroad.",
+                breakdown: "reis + den (s is hard + meervoud)",
+                audioHint: "jɵli rɛisdə(n) naːr hət bɵtənlɑnt"
+            ),
+            GrammarExample(
+                dutch: "Ik betaalde de rekening.",
+                english: "I paid the bill.",
+                breakdown: "betaal + de (l is zacht)",
+                audioHint: "ɪk bətaːldə də rəkənɪŋ"
+            ),
+            GrammarExample(
+                dutch: "Zij luisterden naar muziek.",
+                english: "They listened to music.",
+                breakdown: "luister + den (r is zacht + meervoud)",
+                audioHint: "zɛi lɵistərdə(n) naːr myzik"
+            ),
+            GrammarExample(
+                dutch: "Hij antwoordde op de vraag.",
+                english: "He answered the question.",
+                breakdown: "antwoord + de (d is zacht)",
+                audioHint: "hɛi ɑntvoːrdə ɔp də vraːx"
+            ),
+            GrammarExample(
+                dutch: "Wij praatten over het weer.",
+                english: "We talked about the weather.",
+                breakdown: "praat + ten (t is hard + meervoud)",
+                audioHint: "vɛi praːtə(n) ovər hət veːr"
+            ),
+            GrammarExample(
+                dutch: "Jullie kochten een nieuwe auto.",
+                english: "You bought a new car.",
+                breakdown: "koop + ten (p is hard + meervoud)",
+                audioHint: "jɵli kɔxtə(n) ən nyvə ɑuto"
             )
         ],
         exercises: [
@@ -724,6 +784,222 @@ class DutchGrammarRulesDatabase {
                 exerciseType: .fillInTheBlank
             ),
             
+            // Melden exercises
+            GrammarExercise(
+                question: "Verleden tijd van 'melden': Ik ___ me voor de cursus.",
+                options: ["meld", "meldt", "meldde", "meldden"],
+                correctAnswer: 2,
+                explanation: "Meld + de (d is zacht, niet in 't kofschip)",
+                hint: "Is de d hard of zacht? Denk aan 't kofschip"
+            ),
+            GrammarExercise(
+                question: "Verleden tijd van 'melden': Zij ___ zich voor het examen.",
+                options: ["meld", "meldt", "meldde", "meldden"],
+                correctAnswer: 2,
+                explanation: "Meld + de (d is zacht, niet in 't kofschip)",
+                hint: "D is een zachte medeklinker"
+            ),
+            GrammarExercise(
+                question: "Complete: 'Hij ___ zich voor de wedstrijd' (He registered for the competition)",
+                options: ["meld", "meldt", "meldde", "meldden"],
+                correctAnswer: 2,
+                explanation: "Hij meldde zich voor de wedstrijd - meld + de",
+                hint: "D is een zachte medeklinker",
+                exerciseType: .fillInTheBlank
+            ),
+            
+            // Twijfelen exercises
+            GrammarExercise(
+                question: "Verleden tijd van 'twijfelen': Ik ___ aan zijn verhaal.",
+                options: ["twijfel", "twijfelt", "twijfelde", "twijfelden"],
+                correctAnswer: 2,
+                explanation: "Twijfel + de (l is zacht, niet in 't kofschip)",
+                hint: "Is de l hard of zacht?"
+            ),
+            GrammarExercise(
+                question: "Verleden tijd van 'twijfelen': Wij ___ aan de beslissing.",
+                options: ["twijfel", "twijfelt", "twijfelde", "twijfelden"],
+                correctAnswer: 3,
+                explanation: "Twijfel + den (l is zacht + meervoud krijgt -n)",
+                hint: "Meervoud krijgt extra -n"
+            ),
+            GrammarExercise(
+                question: "Complete: 'Ze ___ aan zijn woorden' (She doubted his words)",
+                options: ["twijfel", "twijfelt", "twijfelde", "twijfelden"],
+                correctAnswer: 2,
+                explanation: "Ze twijfelde aan zijn woorden - twijfel + de",
+                hint: "L is een zachte medeklinker",
+                exerciseType: .fillInTheBlank
+            ),
+            
+            // Bellen exercises
+            GrammarExercise(
+                question: "Verleden tijd van 'bellen': Ik ___ mijn moeder.",
+                options: ["bel", "belt", "belde", "belden"],
+                correctAnswer: 2,
+                explanation: "Bel + de (l is zacht, niet in 't kofschip)",
+                hint: "Is de l hard of zacht?"
+            ),
+            GrammarExercise(
+                question: "Verleden tijd van 'bellen': Zij ___ haar vriendin.",
+                options: ["bel", "belt", "belde", "belden"],
+                correctAnswer: 2,
+                explanation: "Bel + de (l is zacht, niet in 't kofschip)",
+                hint: "L is een zachte medeklinker"
+            ),
+            GrammarExercise(
+                question: "Complete: 'Hij ___ zijn vader' (He called his father)",
+                options: ["bel", "belt", "belde", "belden"],
+                correctAnswer: 2,
+                explanation: "Hij belde zijn vader - bel + de",
+                hint: "L is een zachte medeklinker",
+                exerciseType: .fillInTheBlank
+            ),
+            
+            // Reizen exercises
+            GrammarExercise(
+                question: "Verleden tijd van 'reizen': Ik ___ naar Amsterdam.",
+                options: ["reis", "reist", "reisde", "reisden"],
+                correctAnswer: 2,
+                explanation: "Reis + de (s is hard, maar reizen is een uitzondering)",
+                hint: "Reizen krijgt -de ondanks harde s"
+            ),
+            GrammarExercise(
+                question: "Verleden tijd van 'reizen': Wij ___ naar het buitenland.",
+                options: ["reis", "reist", "reisde", "reisden"],
+                correctAnswer: 3,
+                explanation: "Reis + den (meervoud krijgt -n)",
+                hint: "Meervoud krijgt extra -n"
+            ),
+            GrammarExercise(
+                question: "Complete: 'Ze ___ naar Parijs' (She traveled to Paris)",
+                options: ["reis", "reist", "reisde", "reisden"],
+                correctAnswer: 2,
+                explanation: "Ze reisde naar Parijs - reis + de",
+                hint: "Reizen is een uitzondering op 't kofschip regel",
+                exerciseType: .fillInTheBlank
+            ),
+            
+            // Betalen exercises
+            GrammarExercise(
+                question: "Verleden tijd van 'betalen': Ik ___ de rekening.",
+                options: ["betaal", "betaalt", "betaalde", "betaalden"],
+                correctAnswer: 2,
+                explanation: "Betaal + de (l is zacht, niet in 't kofschip)",
+                hint: "Is de l hard of zacht?"
+            ),
+            GrammarExercise(
+                question: "Verleden tijd van 'betalen': Zij ___ met pinpas.",
+                options: ["betaal", "betaalt", "betaalde", "betaalden"],
+                correctAnswer: 2,
+                explanation: "Betaal + de (l is zacht, niet in 't kofschip)",
+                hint: "L is een zachte medeklinker"
+            ),
+            GrammarExercise(
+                question: "Complete: 'Hij ___ de factuur' (He paid the invoice)",
+                options: ["betaal", "betaalt", "betaalde", "betaalden"],
+                correctAnswer: 2,
+                explanation: "Hij betaalde de factuur - betaal + de",
+                hint: "L is een zachte medeklinker",
+                exerciseType: .fillInTheBlank
+            ),
+            
+            // Luisteren exercises
+            GrammarExercise(
+                question: "Verleden tijd van 'luisteren': Ik ___ naar muziek.",
+                options: ["luister", "luistert", "luisterde", "luisterden"],
+                correctAnswer: 2,
+                explanation: "Luister + de (r is zacht, niet in 't kofschip)",
+                hint: "Is de r hard of zacht?"
+            ),
+            GrammarExercise(
+                question: "Verleden tijd van 'luisteren': Zij ___ naar de radio.",
+                options: ["luister", "luistert", "luisterde", "luisterden"],
+                correctAnswer: 2,
+                explanation: "Luister + de (r is zacht, niet in 't kofschip)",
+                hint: "R is een zachte medeklinker"
+            ),
+            GrammarExercise(
+                question: "Complete: 'We ___ naar het nieuws' (We listened to the news)",
+                options: ["luister", "luistert", "luisterde", "luisterden"],
+                correctAnswer: 3,
+                explanation: "We luisterden naar het nieuws - luister + den (meervoud)",
+                hint: "Dit is meervoud (we) dus -den",
+                exerciseType: .fillInTheBlank
+            ),
+            
+            // Antwoorden exercises
+            GrammarExercise(
+                question: "Verleden tijd van 'antwoorden': Ik ___ op de vraag.",
+                options: ["antwoord", "antwoordt", "antwoordde", "antwoordden"],
+                correctAnswer: 2,
+                explanation: "Antwoord + de (d is zacht, niet in 't kofschip)",
+                hint: "Is de d hard of zacht?"
+            ),
+            GrammarExercise(
+                question: "Verleden tijd van 'antwoorden': Zij ___ niet op mijn bericht.",
+                options: ["antwoord", "antwoordt", "antwoordde", "antwoordden"],
+                correctAnswer: 2,
+                explanation: "Antwoord + de (d is zacht, niet in 't kofschip)",
+                hint: "D is een zachte medeklinker"
+            ),
+            GrammarExercise(
+                question: "Complete: 'Hij ___ op de brief' (He answered the letter)",
+                options: ["antwoord", "antwoordt", "antwoordde", "antwoordden"],
+                correctAnswer: 2,
+                explanation: "Hij antwoordde op de brief - antwoord + de",
+                hint: "D is een zachte medeklinker",
+                exerciseType: .fillInTheBlank
+            ),
+            
+            // Praten exercises
+            GrammarExercise(
+                question: "Verleden tijd van 'praten': Ik ___ met mijn vriend.",
+                options: ["praat", "praatt", "praatte", "praatten"],
+                correctAnswer: 2,
+                explanation: "Praat + te (t is hard, 't kofschip)",
+                hint: "Is de t hard of zacht? Denk aan 't kofschip"
+            ),
+            GrammarExercise(
+                question: "Verleden tijd van 'praten': Wij ___ over het weer.",
+                options: ["praat", "praatt", "praatte", "praatten"],
+                correctAnswer: 3,
+                explanation: "Praat + ten (t is hard + meervoud krijgt -n)",
+                hint: "Meervoud krijgt extra -n"
+            ),
+            GrammarExercise(
+                question: "Complete: 'Ze ___ over de film' (She talked about the movie)",
+                options: ["praat", "praatt", "praatte", "praatten"],
+                correctAnswer: 2,
+                explanation: "Ze praatte over de film - praat + te",
+                hint: "T is een harde medeklinker",
+                exerciseType: .fillInTheBlank
+            ),
+            
+            // Kopen exercises
+            GrammarExercise(
+                question: "Verleden tijd van 'kopen': Ik ___ een nieuwe auto.",
+                options: ["koop", "koopt", "kochte", "kochten"],
+                correctAnswer: 2,
+                explanation: "Koop → kocht (onregelmatig werkwoord)",
+                hint: "Kopen is onregelmatig in de verleden tijd"
+            ),
+            GrammarExercise(
+                question: "Verleden tijd van 'kopen': Wij ___ een huis.",
+                options: ["koop", "koopt", "kochte", "kochten"],
+                correctAnswer: 3,
+                explanation: "Koop → kochten (onregelmatig, meervoud)",
+                hint: "Kopen is onregelmatig en dit is meervoud"
+            ),
+            GrammarExercise(
+                question: "Complete: 'Hij ___ een cadeau' (He bought a gift)",
+                options: ["koop", "koopt", "kochte", "kochten"],
+                correctAnswer: 2,
+                explanation: "Hij kocht een cadeau - kopen → kocht",
+                hint: "Kopen is onregelmatig in de verleden tijd",
+                exerciseType: .fillInTheBlank
+            ),
+            
             // Mixed exercises
             GrammarExercise(
                 question: "How do you say 'I went to the store' in Dutch?",
@@ -849,17 +1125,50 @@ class DutchGrammarRulesDatabase {
                 incorrect: "Hij verwende → Hij verwende",
                 correct: "Hij verwende",
                 explanation: "N is zacht, dus -de, niet -te"
+            ),
+            CommonMistake(
+                incorrect: "Ik meldte",
+                correct: "Ik meldde",
+                explanation: "D is zacht (niet in 't kofschip) dus gebruik -de, niet -te"
+            ),
+            CommonMistake(
+                incorrect: "Hij twijfelte",
+                correct: "Hij twijfelde",
+                explanation: "L is zacht (niet in 't kofschip) dus gebruik -de, niet -te"
+            ),
+            CommonMistake(
+                incorrect: "Ik belte",
+                correct: "Ik belde",
+                explanation: "L is zacht (niet in 't kofschip) dus gebruik -de, niet -te"
+            ),
+            CommonMistake(
+                incorrect: "Ik reiste",
+                correct: "Ik reisde",
+                explanation: "Reizen is een uitzondering op 't kofschip regel"
+            ),
+            CommonMistake(
+                incorrect: "Hij betaalte",
+                correct: "Hij betaalde",
+                explanation: "L is zacht (niet in 't kofschip) dus gebruik -de, niet -te"
+            ),
+            CommonMistake(
+                incorrect: "Ik koopte",
+                correct: "Ik kocht",
+                explanation: "Kopen is onregelmatig: kopen → kocht/kochten"
             )
         ],
         tips: [
-            "Leer de onregelmatige werkwoorden uit je hoofd: gaan → ging/gingen, zijn → was/waren",
+            "Leer de onregelmatige werkwoorden uit je hoofd: gaan → ging/gingen, zijn → was/waren, kopen → kocht/kochten",
             "Denk aan 't kofschip voor harde medeklinkers: t-k-o-f-s-ch-i-p",
             "Zachte letters (niet in 't kofschip) krijgen -de",
             "Harde letters ('t kofschip) krijgen -te",
             "Meervoud krijgt altijd een extra -n",
             "Oefen eerst met de stam: haal -en eraf",
             "Let op spelling: combineer (niet combiner), bespaar (niet bespar)",
-            "Onregelmatige werkwoorden moet je gewoon leren"
+            "Onregelmatige werkwoorden moet je gewoon leren",
+            "Uitzonderingen: reizen krijgt -de ondanks harde s",
+            "Veel voorkomende zachte medeklinkers: l, m, n, r, d, v, z",
+            "Veel voorkomende harde medeklinkers: p, t, k, f, s, ch"
         ],
         relatedRules: ["verb_past_a2", "verb_irregular_past_a2", "verb_perfect_a2"]
     )
@@ -4683,12 +4992,465 @@ class DutchGrammarRulesDatabase {
         relatedRules: ["basic_word_order_a1", "dutch_articles_a1", "pronouns_a1", "informal_speech_a2"]
     )
     
+    // MARK: - Dutch Nouns and Articles Grammar Rule
+    
+    lazy var dutchNounsAndArticlesA1 = DutchGrammarRule(
+        id: "dutch_articles_a1",
+        title: "Zelfstandige Naamwoorden en Lidwoorden (Nouns and Articles) - A1",
+        type: .pluralization,
+        level: .a1,
+        explanation: """
+        In het Nederlands hebben alle zelfstandige naamwoorden (nouns) een geslacht: mannelijk, vrouwelijk of onzijdig. Dit bepaalt welk lidwoord (article) je gebruikt: 'de' of 'het'.
+        
+        Er zijn twee soorten lidwoorden:
+        • DE-woorden: mannelijke en vrouwelijke woorden (de man, de vrouw, de auto)
+        • HET-woorden: onzijdige woorden (het huis, het boek, het kind)
+        
+        Belangrijke regels:
+        • Alle meervouden krijgen 'de' (de mannen, de huizen)
+        • Verkleinwoorden krijgen altijd 'het' (het mannetje, het huisje)
+        • Woorden die eindigen op -heid, -nis, -ing, -st zijn meestal DE-woorden
+        • Woorden die eindigen op -je, -tje zijn altijd HET-woorden
+        • Veel woorden moet je gewoon leren (geen duidelijke regel)
+        
+        Meervoud vorming:
+        • Meestal: enkelvoud + -en (de man → de mannen)
+        • Soms: enkelvoud + -s (de auto → de auto's)
+        • Speciale gevallen: kind → kinderen, stad → steden
+        """,
+        keyPoints: [
+            "Alle zelfstandige naamwoorden hebben een geslacht",
+            "DE voor mannelijke/vrouwelijke woorden",
+            "HET voor onzijdige woorden",
+            "Alle meervouden krijgen DE",
+            "Verkleinwoorden krijgen altijd HET",
+            "Meervoud meestal: + -en, soms + -s",
+            "Veel woorden moet je gewoon leren"
+        ],
+        examples: [
+            GrammarExample(
+                dutch: "de man",
+                english: "the man",
+                breakdown: "mannelijk → de",
+                audioHint: "də mɑn"
+            ),
+            GrammarExample(
+                dutch: "de mannen",
+                english: "the men",
+                breakdown: "meervoud → altijd de",
+                audioHint: "də mɑnə(n)"
+            ),
+            GrammarExample(
+                dutch: "het huis",
+                english: "the house",
+                breakdown: "onzijdig → het",
+                audioHint: "hət hɵis"
+            ),
+            GrammarExample(
+                dutch: "de huizen",
+                english: "the houses",
+                breakdown: "meervoud → altijd de",
+                audioHint: "də hɵizə(n)"
+            ),
+            GrammarExample(
+                dutch: "de hond",
+                english: "the dog",
+                breakdown: "mannelijk → de",
+                audioHint: "də hɔnt"
+            ),
+            GrammarExample(
+                dutch: "de honden",
+                english: "the dogs",
+                breakdown: "meervoud: hond + en",
+                audioHint: "də hɔndə(n)"
+            ),
+            GrammarExample(
+                dutch: "de auto",
+                english: "the car",
+                breakdown: "mannelijk → de",
+                audioHint: "də ɑuto"
+            ),
+            GrammarExample(
+                dutch: "de auto's",
+                english: "the cars",
+                breakdown: "meervoud: auto + 's",
+                audioHint: "də ɑutos"
+            ),
+            GrammarExample(
+                dutch: "de liefde",
+                english: "love",
+                breakdown: "vrouwelijk → de (eindigt op -de)",
+                audioHint: "də lifdə"
+            ),
+            GrammarExample(
+                dutch: "het boek",
+                english: "the book",
+                breakdown: "onzijdig → het",
+                audioHint: "hət buk"
+            ),
+            GrammarExample(
+                dutch: "de boeken",
+                english: "the books",
+                breakdown: "meervoud: boek + en",
+                audioHint: "də bukə(n)"
+            ),
+            GrammarExample(
+                dutch: "de school",
+                english: "the school",
+                breakdown: "vrouwelijk → de",
+                audioHint: "də sxoːl"
+            ),
+            GrammarExample(
+                dutch: "de scholen",
+                english: "the schools",
+                breakdown: "meervoud: school + en",
+                audioHint: "də sxoːlə(n)"
+            ),
+            GrammarExample(
+                dutch: "het kind",
+                english: "the child",
+                breakdown: "onzijdig → het",
+                audioHint: "hət kɪnt"
+            ),
+            GrammarExample(
+                dutch: "de kinderen",
+                english: "the children",
+                breakdown: "onregelmatig meervoud",
+                audioHint: "də kɪndərə(n)"
+            ),
+            GrammarExample(
+                dutch: "de vriend",
+                english: "the friend",
+                breakdown: "mannelijk → de",
+                audioHint: "də vrint"
+            ),
+            GrammarExample(
+                dutch: "de vrienden",
+                english: "the friends",
+                breakdown: "meervoud: vriend + en",
+                audioHint: "də vrində(n)"
+            ),
+            GrammarExample(
+                dutch: "het idee",
+                english: "the idea",
+                breakdown: "onzijdig → het",
+                audioHint: "hət ideː"
+            ),
+            GrammarExample(
+                dutch: "de ideeën",
+                english: "the ideas",
+                breakdown: "meervoud: idee + ën",
+                audioHint: "də ideːə(n)"
+            ),
+            GrammarExample(
+                dutch: "het mannetje",
+                english: "the little man",
+                breakdown: "verkleinwoord → altijd het",
+                audioHint: "hət mɑnətjə"
+            ),
+            GrammarExample(
+                dutch: "het huisje",
+                english: "the little house",
+                breakdown: "verkleinwoord → altijd het",
+                audioHint: "hət hɵisjə"
+            ),
+            GrammarExample(
+                dutch: "de vrijheid",
+                english: "freedom",
+                breakdown: "eindigt op -heid → de",
+                audioHint: "də vrɛihɛit"
+            ),
+            GrammarExample(
+                dutch: "de kennis",
+                english: "knowledge",
+                breakdown: "eindigt op -nis → de",
+                audioHint: "də kɛnis"
+            ),
+            GrammarExample(
+                dutch: "de vergadering",
+                english: "the meeting",
+                breakdown: "eindigt op -ing → de",
+                audioHint: "də vərɣaːdərɪŋ"
+            ),
+            GrammarExample(
+                dutch: "de kunst",
+                english: "art",
+                breakdown: "eindigt op -st → de",
+                audioHint: "də kɵnst"
+            )
+        ],
+        exercises: [
+            // Article exercises
+            GrammarExercise(
+                question: "Welk lidwoord gebruik je voor 'man'?",
+                options: ["de", "het", "een", "geen"],
+                correctAnswer: 0,
+                explanation: "'Man' is een mannelijk woord, dus gebruik 'de'",
+                hint: "Mannelijke woorden krijgen 'de'"
+            ),
+            GrammarExercise(
+                question: "Welk lidwoord gebruik je voor 'huis'?",
+                options: ["de", "het", "een", "geen"],
+                correctAnswer: 1,
+                explanation: "'Huis' is een onzijdig woord, dus gebruik 'het'",
+                hint: "Onzijdige woorden krijgen 'het'"
+            ),
+            GrammarExercise(
+                question: "Complete: '___ hond blaft' (The dog barks)",
+                options: ["De", "Het", "Een", "Geen"],
+                correctAnswer: 0,
+                explanation: "'Hond' is een mannelijk woord, dus 'De hond blaft'",
+                hint: "Honden zijn mannelijk",
+                exerciseType: .fillInTheBlank
+            ),
+            GrammarExercise(
+                question: "Complete: '___ boek is interessant' (The book is interesting)",
+                options: ["De", "Het", "Een", "Geen"],
+                correctAnswer: 1,
+                explanation: "'Boek' is een onzijdig woord, dus 'Het boek is interessant'",
+                hint: "Boeken zijn onzijdig",
+                exerciseType: .fillInTheBlank
+            ),
+            GrammarExercise(
+                question: "Welk lidwoord gebruik je voor 'auto'?",
+                options: ["de", "het", "een", "geen"],
+                correctAnswer: 0,
+                explanation: "'Auto' is een mannelijk woord, dus gebruik 'de'",
+                hint: "Auto's zijn mannelijk"
+            ),
+            GrammarExercise(
+                question: "Complete: '___ kind speelt' (The child plays)",
+                options: ["De", "Het", "Een", "Geen"],
+                correctAnswer: 1,
+                explanation: "'Kind' is een onzijdig woord, dus 'Het kind speelt'",
+                hint: "Kinderen zijn onzijdig",
+                exerciseType: .fillInTheBlank
+            ),
+            
+            // Plural exercises
+            GrammarExercise(
+                question: "Wat is het meervoud van 'man'?",
+                options: ["mans", "mannen", "manen", "mannes"],
+                correctAnswer: 1,
+                explanation: "Het meervoud van 'man' is 'mannen' (man + en)",
+                hint: "Meestal voeg je -en toe"
+            ),
+            GrammarExercise(
+                question: "Wat is het meervoud van 'huis'?",
+                options: ["huizen", "huises", "huisjes", "huizen"],
+                correctAnswer: 0,
+                explanation: "Het meervoud van 'huis' is 'huizen' (huis + en)",
+                hint: "Meestal voeg je -en toe"
+            ),
+            GrammarExercise(
+                question: "Complete: 'De ___ blaffen' (The dogs bark)",
+                options: ["hond", "honden", "honds", "hondes"],
+                correctAnswer: 1,
+                explanation: "Het meervoud van 'hond' is 'honden' (hond + en)",
+                hint: "Meestal voeg je -en toe",
+                exerciseType: .fillInTheBlank
+            ),
+            GrammarExercise(
+                question: "Wat is het meervoud van 'auto'?",
+                options: ["auto's", "autos", "auten", "autoën"],
+                correctAnswer: 0,
+                explanation: "Het meervoud van 'auto' is 'auto's' (auto + 's)",
+                hint: "Sommige woorden krijgen -s"
+            ),
+            GrammarExercise(
+                question: "Complete: 'De ___ zijn duur' (The cars are expensive)",
+                options: ["auto", "auto's", "autos", "auten"],
+                correctAnswer: 1,
+                explanation: "Het meervoud van 'auto' is 'auto's'",
+                hint: "Auto's krijgen -'s in meervoud",
+                exerciseType: .fillInTheBlank
+            ),
+            GrammarExercise(
+                question: "Wat is het meervoud van 'kind'?",
+                options: ["kinds", "kindes", "kinderen", "kindjes"],
+                correctAnswer: 2,
+                explanation: "Het meervoud van 'kind' is 'kinderen' (onregelmatig)",
+                hint: "Dit is een onregelmatig meervoud"
+            ),
+            GrammarExercise(
+                question: "Complete: 'De ___ spelen buiten' (The children play outside)",
+                options: ["kind", "kinds", "kinderen", "kindjes"],
+                correctAnswer: 2,
+                explanation: "Het meervoud van 'kind' is 'kinderen'",
+                hint: "Dit is een onregelmatig meervoud",
+                exerciseType: .fillInTheBlank
+            ),
+            
+            // Diminutive exercises
+            GrammarExercise(
+                question: "Welk lidwoord gebruik je voor 'mannetje'?",
+                options: ["de", "het", "een", "geen"],
+                correctAnswer: 1,
+                explanation: "Verkleinwoorden krijgen altijd 'het'",
+                hint: "Verkleinwoorden zijn altijd onzijdig"
+            ),
+            GrammarExercise(
+                question: "Complete: '___ huisje is klein' (The little house is small)",
+                options: ["De", "Het", "Een", "Geen"],
+                correctAnswer: 1,
+                explanation: "Verkleinwoorden krijgen altijd 'het'",
+                hint: "Huisje is een verkleinwoord",
+                exerciseType: .fillInTheBlank
+            ),
+            
+            // Pattern exercises
+            GrammarExercise(
+                question: "Welk lidwoord gebruik je voor 'vrijheid'?",
+                options: ["de", "het", "een", "geen"],
+                correctAnswer: 0,
+                explanation: "Woorden die eindigen op -heid krijgen 'de'",
+                hint: "Kijk naar de uitgang van het woord"
+            ),
+            GrammarExercise(
+                question: "Welk lidwoord gebruik je voor 'vergadering'?",
+                options: ["de", "het", "een", "geen"],
+                correctAnswer: 0,
+                explanation: "Woorden die eindigen op -ing krijgen 'de'",
+                hint: "Kijk naar de uitgang van het woord"
+            ),
+            GrammarExercise(
+                question: "Complete: '___ kennis is macht' (Knowledge is power)",
+                options: ["De", "Het", "Een", "Geen"],
+                correctAnswer: 0,
+                explanation: "Woorden die eindigen op -nis krijgen 'de'",
+                hint: "Kennis eindigt op -nis",
+                exerciseType: .fillInTheBlank
+            ),
+            
+            // Translation exercises
+            GrammarExercise(
+                question: "How do you say 'The man reads a book' in Dutch?",
+                options: ["De man leest een boek", "Het man leest een boek", "De man leest een boek", "Het man leest een boek"],
+                correctAnswer: 0,
+                explanation: "De man leest een boek - 'man' is mannelijk, dus 'de'",
+                hint: "Man is a masculine word",
+                exerciseType: .translation
+            ),
+            GrammarExercise(
+                question: "How do you say 'The house is big' in Dutch?",
+                options: ["De huis is groot", "Het huis is groot", "De huis is groot", "Het huis is groot"],
+                correctAnswer: 1,
+                explanation: "Het huis is groot - 'huis' is neuter, dus 'het'",
+                hint: "Huis is a neuter word",
+                exerciseType: .translation
+            ),
+            GrammarExercise(
+                question: "Complete: '___ hond blaft' (The dog barks)",
+                options: ["De", "Het", "Een", "Geen"],
+                correctAnswer: 0,
+                explanation: "De hond blaft - 'hond' is mannelijk",
+                hint: "Hond is a masculine word",
+                exerciseType: .fillInTheBlank
+            ),
+            GrammarExercise(
+                question: "Complete: '___ boek is interessant' (The book is interesting)",
+                options: ["De", "Het", "Een", "Geen"],
+                correctAnswer: 1,
+                explanation: "Het boek is interessant - 'boek' is neuter",
+                hint: "Boek is a neuter word",
+                exerciseType: .fillInTheBlank
+            ),
+            
+            // True/False exercises
+            GrammarExercise(
+                question: "True or False: All plural nouns use 'de'",
+                options: ["True", "False"],
+                correctAnswer: 0,
+                explanation: "True! All plural nouns in Dutch use 'de', regardless of their gender in singular form.",
+                hint: "Think about the rule for plurals",
+                exerciseType: .trueFalse
+            ),
+            GrammarExercise(
+                question: "True or False: Diminutives always use 'het'",
+                options: ["True", "False"],
+                correctAnswer: 0,
+                explanation: "True! All diminutives (words ending in -je, -tje) use 'het' regardless of the original word's gender.",
+                hint: "Think about verkleinwoorden",
+                exerciseType: .trueFalse
+            ),
+            GrammarExercise(
+                question: "True or False: Words ending in -heid are always 'de' words",
+                options: ["True", "False"],
+                correctAnswer: 0,
+                explanation: "True! Words ending in -heid are always feminine and therefore use 'de'.",
+                hint: "Think about the pattern for -heid words",
+                exerciseType: .trueFalse
+            )
+        ],
+        commonMistakes: [
+            CommonMistake(
+                incorrect: "het man",
+                correct: "de man",
+                explanation: "'Man' is mannelijk, dus gebruik 'de', niet 'het'"
+            ),
+            CommonMistake(
+                incorrect: "de huis",
+                correct: "het huis",
+                explanation: "'Huis' is onzijdig, dus gebruik 'het', niet 'de'"
+            ),
+            CommonMistake(
+                incorrect: "het mannen",
+                correct: "de mannen",
+                explanation: "Alle meervouden krijgen 'de', niet 'het'"
+            ),
+            CommonMistake(
+                incorrect: "de huisje",
+                correct: "het huisje",
+                explanation: "Verkleinwoorden krijgen altijd 'het', niet 'de'"
+            ),
+            CommonMistake(
+                incorrect: "mans",
+                correct: "mannen",
+                explanation: "Het meervoud van 'man' is 'mannen' (man + en), niet 'mans'"
+            ),
+            CommonMistake(
+                incorrect: "autos",
+                correct: "auto's",
+                explanation: "Het meervoud van 'auto' is 'auto's' (met apostrof), niet 'autos'"
+            ),
+            CommonMistake(
+                incorrect: "kinds",
+                correct: "kinderen",
+                explanation: "Het meervoud van 'kind' is 'kinderen' (onregelmatig), niet 'kinds'"
+            ),
+            CommonMistake(
+                incorrect: "de vrijheid",
+                correct: "de vrijheid",
+                explanation: "Dit is eigenlijk correct - woorden op -heid krijgen 'de'"
+            ),
+            CommonMistake(
+                incorrect: "het vergadering",
+                correct: "de vergadering",
+                explanation: "Woorden die eindigen op -ing krijgen 'de', niet 'het'"
+            )
+        ],
+        tips: [
+            "Leer eerst de meest voorkomende woorden uit je hoofd",
+            "Onthoud: alle meervouden krijgen 'de'",
+            "Verkleinwoorden krijgen altijd 'het'",
+            "Kijk naar de uitgang van het woord voor hints",
+            "Woorden op -heid, -nis, -ing, -st zijn meestal 'de' woorden",
+            "Woorden op -je, -tje zijn altijd 'het' woorden",
+            "Veel woorden moet je gewoon leren (geen duidelijke regel)",
+            "Oefen met echte zinnen, niet alleen losse woorden",
+            "Let op bij vertalingen: Engels 'the' ≠ Nederlands 'de'",
+            "Gebruik een woordenboek om het geslacht te controleren"
+        ],
+        relatedRules: ["verb_present_a1", "adjectives_a2", "possessives_a2", "demonstratives_a2"]
+    )
+    
     // MARK: - All Grammar Rules Array
     
     lazy var allGrammarRules: [DutchGrammarRule] = [
         // A1 Level
         presentTenseA1,
         irregularVerbsA1,
+        dutchNounsAndArticlesA1,
         
         // A2 Level  
         pastTenseA2,

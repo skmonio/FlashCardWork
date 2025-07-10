@@ -9,7 +9,7 @@ struct StudyView: View {
     @State private var unknownCards: Set<UUID> = []
     @State private var skippedCards: Set<UUID> = []
     @State private var showingResults = false
-    @State private var isShowingFront = true
+    @State private var isShowingFront: Bool
     @State private var isShowingExample = false
     @State private var dragOffset: CGFloat = 0
     @State private var verticalDragOffset: CGFloat = 0
@@ -126,7 +126,9 @@ struct StudyView: View {
         return knownCards.count >= 3 ? knownCards.count : 0
     }
     
-    init(viewModel: FlashCardViewModel, cards: [FlashCard], deckIds: [UUID] = [], shouldLoadSaveState: Bool = false, studyMode: StudyMode? = nil, maxQuestions: Int? = nil, onLevelComplete: ((LevelResult) -> Void)? = nil) {
+    private let startFlipped: Bool // NEW: store for all cards
+    
+    init(viewModel: FlashCardViewModel, cards: [FlashCard], deckIds: [UUID] = [], shouldLoadSaveState: Bool = false, studyMode: StudyMode? = nil, maxQuestions: Int? = nil, onLevelComplete: ((LevelResult) -> Void)? = nil, startFlipped: Bool = false) {
         self.viewModel = viewModel
         _cards = State(initialValue: SmartStudyManager.shared.sortCardsForStudyMode(cards, mode: SmartStudyManager.shared.currentStudyMode))
         self.deckIds = deckIds
@@ -134,6 +136,8 @@ struct StudyView: View {
         self.studyMode = studyMode
         self.maxQuestions = maxQuestions
         self.onLevelComplete = onLevelComplete
+        self.startFlipped = startFlipped // NEW
+        _isShowingFront = State(initialValue: !startFlipped ? true : false)
     }
     
     var body: some View {
@@ -203,7 +207,7 @@ struct StudyView: View {
                 // Don't call setupStudySession() as it deletes save states
                 currentIndex = 0
                 showingResults = false
-                isShowingFront = true
+                isShowingFront = !startFlipped
                 isShowingExample = false
                 dragOffset = 0
                 verticalDragOffset = 0
@@ -662,7 +666,7 @@ struct StudyView: View {
             print("🃏 Moving to next card: \(currentIndex) -> \(currentIndex + 1)")
             
             // Reset card display state BEFORE changing index
-            isShowingFront = true
+            isShowingFront = !startFlipped
             isShowingExample = false
             dragOffset = 0
             verticalDragOffset = 0
@@ -732,7 +736,7 @@ struct StudyView: View {
         if currentIndex > 0 {
             withAnimation(.easeInOut(duration: 0.3)) {
                 currentIndex -= 1
-                isShowingFront = true
+                isShowingFront = !startFlipped
                 isShowingExample = false
                 dragOffset = 0
                 verticalDragOffset = 0
@@ -828,7 +832,7 @@ struct StudyView: View {
     private func resetForNewSession() {
         currentIndex = 0
         showingResults = false
-        isShowingFront = true
+        isShowingFront = !startFlipped
         isShowingExample = false
         dragOffset = 0
         verticalDragOffset = 0
@@ -859,7 +863,7 @@ struct StudyView: View {
     private func setupStudySession() {
         currentIndex = 0
         showingResults = false
-        isShowingFront = true
+        isShowingFront = !startFlipped
         isShowingExample = false
         dragOffset = 0
         verticalDragOffset = 0

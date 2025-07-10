@@ -141,16 +141,16 @@ struct HomeView: View {
                     .foregroundColor(.secondary)
                     .padding(.horizontal)
                 VStack(spacing: 12) {
-                    NavigationLink(destination: SimplifiedDeckSelectionView(viewModel: viewModel, mode: .study)) {
+                    NavigationLink(destination: SimplifiedDeckSelectionView(viewModel: viewModel, mode: .study, startFlipped: false)) {
                         MenuButton(title: "Study Your Cards", icon: "book.fill", color: .teal)
                     }
-                    NavigationLink(destination: SimplifiedDeckSelectionView(viewModel: viewModel, mode: .test)) {
+                    NavigationLink(destination: SimplifiedDeckSelectionView(viewModel: viewModel, mode: .test, startFlipped: false)) {
                         MenuButton(title: "Test Your Cards", icon: "checkmark.circle.fill", color: .orange)
                     }
-                    NavigationLink(destination: SimplifiedDeckSelectionView(viewModel: viewModel, mode: .truefalse)) {
+                    NavigationLink(destination: SimplifiedDeckSelectionView(viewModel: viewModel, mode: .truefalse, startFlipped: false)) {
                         MenuButton(title: "True or False", icon: "questionmark.circle.fill", color: Color(red: 1.0, green: 0.4, blue: 0.3))
                     }
-                    NavigationLink(destination: SimplifiedDeckSelectionView(viewModel: viewModel, mode: .writing)) {
+                    NavigationLink(destination: SimplifiedDeckSelectionView(viewModel: viewModel, mode: .writing, startFlipped: false)) {
                         MenuButton(title: "Write Your Card", icon: "pencil.and.scribble", color: Color(red: 1.0, green: 0.6, blue: 0.0))
                     }
                 }
@@ -163,10 +163,10 @@ struct HomeView: View {
                     .foregroundColor(.secondary)
                     .padding(.horizontal)
                 VStack(spacing: 12) {
-                    NavigationLink(destination: SimplifiedDeckSelectionView(viewModel: viewModel, mode: .game)) {
+                    NavigationLink(destination: SimplifiedDeckSelectionView(viewModel: viewModel, mode: .game, startFlipped: false)) {
                         MenuButton(title: "Remember Your Cards", icon: "brain.fill", color: .orange)
                     }
-                    NavigationLink(destination: SimplifiedDeckSelectionView(viewModel: viewModel, mode: .wordScramble)) {
+                    NavigationLink(destination: SimplifiedDeckSelectionView(viewModel: viewModel, mode: .wordScramble, startFlipped: false)) {
                         MenuButton(title: "Jumble Your Cards", icon: "textformat.abc", color: Color(red: 1.0, green: 0.4, blue: 0.3))
                     }
                 }

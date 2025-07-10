@@ -263,7 +263,7 @@ struct GameView: View {
             
             // Start timer only if there's a time limit
             if difficulty != .easy {
-                startTimer()
+            startTimer()
             }
             
             print("🧠 Memory game progress loaded - Score: \(score), Moves: \(moves)")
@@ -333,22 +333,22 @@ struct GameView: View {
                     
                     // Time bar (hidden for no time limit mode)
                     if difficulty != .easy {
-                        GeometryReader { geometry in
-                            ZStack(alignment: .leading) {
-                                // Background bar
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(Color(.systemGray5))
-                                    .frame(height: 8)
-                                
-                                // Progress bar (time remaining) - grows from left to right
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(timeBarColor)
-                                    .frame(width: timeBarWidth(geometry), height: 8)
-                                    .animation(.linear(duration: 1.0), value: timeRemaining)
-                            }
+                    GeometryReader { geometry in
+                        ZStack(alignment: .leading) {
+                            // Background bar
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(Color(.systemGray5))
+                                .frame(height: 8)
+                            
+                            // Progress bar (time remaining) - grows from left to right
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(timeBarColor)
+                                .frame(width: timeBarWidth(geometry), height: 8)
+                                .animation(.linear(duration: 1.0), value: timeRemaining)
                         }
-                        .frame(height: 8)
-                        .padding(.horizontal, 16)
+                    }
+                    .frame(height: 8)
+                    .padding(.horizontal, 16)
                     }
                 }
                 .padding(.bottom, 16)
@@ -458,7 +458,7 @@ struct GameView: View {
 
         // Start timer only if there's a time limit
         if difficulty != .easy {
-            startTimer()
+        startTimer()
         }
     }
     

@@ -6,6 +6,7 @@ struct StudyTypeSelectionView: View {
     @EnvironmentObject var navigationCoordinator: NavigationCoordinator
     @State private var selectedCardCount: Int = 10
     @StateObject private var saveStateManager = SaveStateManager.shared
+    @State private var startFlipped = false // NEW: for study flipped
     
     var body: some View {
         VStack(spacing: 0) {
@@ -39,7 +40,7 @@ struct StudyTypeSelectionView: View {
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
             }
-            .padding(.top, 40)
+            .padding(.top, 16)
             
             // Study Type Options
             VStack(spacing: 20) {
@@ -51,7 +52,7 @@ struct StudyTypeSelectionView: View {
                     icon: "bolt.fill",
                     color: .orange,
                     onTap: {
-                        navigationCoordinator.push(NavigationDestination.quickStudy(gameMode, .adaptive, selectedCardCount))
+                        navigationCoordinator.push(NavigationDestination.quickStudy(gameMode, .adaptive, selectedCardCount, startFlipped))
                     }
                 )
                 
@@ -64,7 +65,7 @@ struct StudyTypeSelectionView: View {
                         icon: "chart.line.uptrend.xyaxis",
                         color: .purple,
                         onTap: {
-                            navigationCoordinator.push(NavigationDestination.progressiveStudy(gameMode))
+                            navigationCoordinator.push(NavigationDestination.progressiveStudy(gameMode, startFlipped))
                         }
                     )
                 }
@@ -77,9 +78,25 @@ struct StudyTypeSelectionView: View {
                     icon: "folder.fill",
                     color: .blue,
                     onTap: {
-                        navigationCoordinator.push(NavigationDestination.normalStudy(gameMode, .adaptive))
+                        navigationCoordinator.push(NavigationDestination.normalStudy(gameMode, .adaptive, startFlipped))
                     }
                 )
+                
+                // NEW: Start Flipped toggle (only for study mode) - moved under Normal Study
+                if gameMode == .study || gameMode == .test {
+                    VStack(spacing: 8) {
+                        Toggle(isOn: $startFlipped) {
+                            Label("Start Flipped", systemImage: "arrow.2.circlepath")
+                                .font(.subheadline)
+                                .foregroundColor(.primary)
+                        }
+                        .toggleStyle(SwitchToggleStyle(tint: .blue))
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                    .background(Color(.systemGray6))
+                    .cornerRadius(8)
+                }
             }
             .padding(.horizontal)
             
