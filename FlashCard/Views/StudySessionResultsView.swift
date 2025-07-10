@@ -4,6 +4,7 @@ import Charts
 struct StudySessionResultsView: View {
     let session: StudySession
     let viewModel: FlashCardViewModel
+    let sessionXP: Int // Add sessionXP parameter
     let onStudyAgain: () -> Void
     let onReviewUnknown: () -> Void
     let onDone: () -> Void
@@ -33,11 +34,6 @@ struct StudySessionResultsView: View {
                         Image(systemName: "trophy.fill")
                             .font(.system(size: 50))
                             .foregroundColor(.yellow)
-                        
-                        Text("Study Session Complete! 🎉")
-                            .font(.title)
-                            .bold()
-                            .multilineTextAlignment(.center)
                         
                         Text("Great job! You've made progress on your learning journey.")
                             .font(.subheadline)
@@ -137,8 +133,8 @@ struct StudySessionResultsView: View {
             //     )
             // }
         }
-        .navigationTitle("Session Complete!")
-        .navigationBarTitleDisplayMode(.large)
+        .navigationTitle("Session Complete")
+        .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
         .overlay(
             GlobalNotificationOverlay()
@@ -149,7 +145,7 @@ struct StudySessionResultsView: View {
     }
     
     private func setupAnimations() {
-        calculateXPGained()
+        xpGained = sessionXP // Use sessionXP directly
         previousLevel = userProfile.level
         previousXP = userProfile.xp
         let oldXP = previousXP
@@ -180,13 +176,11 @@ struct StudySessionResultsView: View {
                     isLevelUpEffect = false
                     displayedLevel += 1
                     
-                    // Smoothly animate back to 0% instead of jumping
-                    withAnimation(.easeInOut(duration: 0.5)) {
-                        animatedProgress = 0.0
-                    }
+                    // Instant reset without backward animation
+                    animatedProgress = 0.0
                     
-                    // Wait for the reset animation to complete, then continue
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    // Continue with next level or final progress
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
                         if remaining > 1 {
                             animateLevel(level: level + 1, remaining: remaining - 1)
                         } else {
@@ -221,10 +215,8 @@ struct StudySessionResultsView: View {
     }
     
     private func calculateXPGained() {
-        // Calculate XP based on session performance
-        let baseXP = 50
-        let performanceBonus = session.knownCards * 5 // 5 XP per known card
-        xpGained = baseXP + performanceBonus
+        // Use sessionXP that was tracked during the game session
+        xpGained = sessionXP
     }
     
     private func awardXPAndTrackAchievements() {

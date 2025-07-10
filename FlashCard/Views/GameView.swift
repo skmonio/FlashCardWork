@@ -261,8 +261,10 @@ struct GameView: View {
             let timePerCardSet = difficulty.timePerCardSet
             timeRemaining = displayedCards.count * timePerCardSet
             
-            // Start timer
-            startTimer()
+            // Start timer only if there's a time limit
+            if difficulty != .easy {
+                startTimer()
+            }
             
             print("🧠 Memory game progress loaded - Score: \(score), Moves: \(moves)")
         } else {
@@ -301,11 +303,6 @@ struct GameView: View {
                 // Time bar instead of progress bar
                 VStack(spacing: 8) {
                     HStack {
-                        Text("Match Madness")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                            .foregroundColor(.primary)
-                        
                         Spacer()
                         
                         // Show progress indicator for progressive study
@@ -329,28 +326,30 @@ struct GameView: View {
                         
                         Text(timeString)
                             .font(.headline)
-                            .foregroundColor(timeRemaining <= 10 ? .red : .primary)
+                            .foregroundColor(difficulty == .easy ? .green : (timeRemaining <= 10 ? .red : .primary))
                     }
                     .padding(.horizontal, 16)
                     .padding(.top, 8)
                     
-                    // Time bar
-                    GeometryReader { geometry in
-                        ZStack(alignment: .leading) {
-                            // Background bar
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(Color(.systemGray5))
-                                .frame(height: 8)
-                            
-                            // Progress bar (time remaining) - grows from left to right
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(timeBarColor)
-                                .frame(width: timeBarWidth(geometry), height: 8)
-                                .animation(.linear(duration: 1.0), value: timeRemaining)
+                    // Time bar (hidden for no time limit mode)
+                    if difficulty != .easy {
+                        GeometryReader { geometry in
+                            ZStack(alignment: .leading) {
+                                // Background bar
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(Color(.systemGray5))
+                                    .frame(height: 8)
+                                
+                                // Progress bar (time remaining) - grows from left to right
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(timeBarColor)
+                                    .frame(width: timeBarWidth(geometry), height: 8)
+                                    .animation(.linear(duration: 1.0), value: timeRemaining)
+                            }
                         }
+                        .frame(height: 8)
+                        .padding(.horizontal, 16)
                     }
-                    .frame(height: 8)
-                    .padding(.horizontal, 16)
                 }
                 .padding(.bottom, 16)
                 
@@ -388,6 +387,9 @@ struct GameView: View {
     }
     
     private var timeString: String {
+        if difficulty == .easy {
+            return "∞"
+        }
         let minutes = timeRemaining / 60
         let seconds = timeRemaining % 60
         return String(format: "%d:%02d", minutes, seconds)
@@ -454,11 +456,18 @@ struct GameView: View {
         let timePerCardSet = difficulty.timePerCardSet
         timeRemaining = gameCards.count * timePerCardSet
 
-        // Start timer
-        startTimer()
+        // Start timer only if there's a time limit
+        if difficulty != .easy {
+            startTimer()
+        }
     }
     
     private func startTimer() {
+        // Don't start timer for no time limit mode
+        if difficulty == .easy {
+            return
+        }
+        
         gameStartTime = Date()
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
             if timeRemaining > 0 {
@@ -582,23 +591,33 @@ struct GameView: View {
             saveCurrentProgress()
         }
         
-        if let selectedIndex = displayedCards.firstIndex(where: { $0.id == selectedCard?.id }) {
+        if let selectedDisplayIndex = displayedCards.firstIndex(where: { $0.id == selectedCard?.id }) {
             if selectedCard?.originalCard.id == tappedCard.originalCard.id &&
                selectedCard?.type != tappedCard.type {
                 // It's a match! 
                 score += 1
                 
-                // Mark both cards as matched
-                if let selectedIndex = gameCards.firstIndex(where: { $0.id == selectedCard?.id }),
-                   let currentIndex = gameCards.firstIndex(where: { $0.id == tappedCard.id }) {
-                    gameCards[selectedIndex].isMatched = true
-                    gameCards[currentIndex].isMatched = true
+                // Award XP for correct match immediately
+                sessionXP += 5
+                userProfileManager.addXP(5)
+                
+                // Mark both cards as matched in both arrays
+                if let selectedGameIndex = gameCards.firstIndex(where: { $0.id == selectedCard?.id }),
+                   let currentGameIndex = gameCards.firstIndex(where: { $0.id == tappedCard.id }) {
+                    gameCards[selectedGameIndex].isMatched = true
+                    gameCards[currentGameIndex].isMatched = true
                 }
+                
+                // Also update displayedCards to reflect the matched state
+                displayedCards[selectedDisplayIndex].isMatched = true
+                displayedCards[selectedDisplayIndex].isSelected = false
+                displayedCards[index].isMatched = true
+                displayedCards[index].isSelected = false
                 
                 selectedCard = nil
                 
                 // Check if game is complete
-                if gameCards.allSatisfy({ $0.isMatched }) {
+                if displayedCards.allSatisfy({ $0.isMatched }) {
                     endGame()
                 }
             } else {
@@ -614,7 +633,7 @@ struct GameView: View {
                 
                 // Reset both cards after a brief delay
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                    displayedCards[selectedIndex].isSelected = false
+                    displayedCards[selectedDisplayIndex].isSelected = false
                     displayedCards[index].showWrongAnimation = false
                 }
             }
@@ -782,6 +801,9 @@ struct GameView: View {
     
     private var timeBarWidth: (GeometryProxy) -> CGFloat {
         return { geometry in
+            if difficulty == .easy {
+                return 0 // No progress bar for no time limit
+            }
             let totalTime = displayedCards.count * difficulty.timePerCardSet
             let elapsedTime = totalTime - timeRemaining
             let progressRatio = CGFloat(elapsedTime) / CGFloat(totalTime)
@@ -790,7 +812,9 @@ struct GameView: View {
     }
     
     private var timeBarColor: Color {
-        if timeRemaining <= 10 {
+        if difficulty == .easy {
+            return .green // Green for no time limit
+        } else if timeRemaining <= 10 {
             return .red
         } else if timeRemaining <= 30 {
             return .orange

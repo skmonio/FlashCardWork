@@ -259,7 +259,7 @@ struct SimplifiedDeckSelectionView: View {
     private func getDifficultyDescription() -> String {
         switch selectedDifficulty {
         case .easy:
-            return "Plenty of time to find matches"
+            return "Take your time, no pressure"
         case .medium:
             return "Balanced challenge for most players"
         case .hard:
@@ -300,32 +300,11 @@ struct SimplifiedDeckSelectionView: View {
             
             HStack(spacing: 12) {
                 ForEach(MemoryGameDifficulty.allCases, id: \.self) { difficulty in
-                    Button(action: {
-                        selectedDifficulty = difficulty
-                    }) {
-                        VStack(spacing: 4) {
-                            Image(systemName: difficulty.icon)
-                                .font(.title3)
-                                .foregroundColor(selectedDifficulty == difficulty ? difficulty.color : .gray)
-                            
-                            Text(difficulty.displayName)
-                                .font(.caption2)
-                                .fontWeight(.medium)
-                                .foregroundColor(selectedDifficulty == difficulty ? difficulty.color : .gray)
-                                .multilineTextAlignment(.center)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 8)
-                        .background(
-                            RoundedRectangle(cornerRadius: 6)
-                                .fill(selectedDifficulty == difficulty ? difficulty.color.opacity(0.1) : Color(.systemGray6))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 6)
-                                        .stroke(selectedDifficulty == difficulty ? difficulty.color : Color.clear, lineWidth: 1)
-                                )
-                        )
-                    }
-                    .buttonStyle(PlainButtonStyle())
+                    DifficultyButton(
+                        difficulty: difficulty,
+                        isSelected: selectedDifficulty == difficulty,
+                        action: { selectedDifficulty = difficulty }
+                    )
                 }
             }
             
@@ -370,32 +349,11 @@ struct SimplifiedDeckSelectionView: View {
             
             HStack(spacing: 12) {
                 ForEach(StudyMode.allCases, id: \.self) { studyMode in
-                    Button(action: {
-                        selectedStudyMode = studyMode
-                    }) {
-                        VStack(spacing: 4) {
-                            Image(systemName: studyMode.icon)
-                                .font(.title3)
-                                .foregroundColor(selectedStudyMode == studyMode ? studyMode.color : .gray)
-                            
-                            Text(studyMode.displayName)
-                                .font(.caption2)
-                                .fontWeight(.medium)
-                                .foregroundColor(selectedStudyMode == studyMode ? studyMode.color : .gray)
-                                .multilineTextAlignment(.center)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 8)
-                        .background(
-                            RoundedRectangle(cornerRadius: 6)
-                                .fill(selectedStudyMode == studyMode ? studyMode.color.opacity(0.1) : Color(.systemGray6))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 6)
-                                        .stroke(selectedStudyMode == studyMode ? studyMode.color : Color.clear, lineWidth: 1)
-                                )
-                        )
-                    }
-                    .buttonStyle(PlainButtonStyle())
+                    StudyModeButton(
+                        studyMode: studyMode,
+                        isSelected: selectedStudyMode == studyMode,
+                        action: { selectedStudyMode = studyMode }
+                    )
                 }
             }
             
@@ -450,6 +408,78 @@ struct SimplifiedDeckSelectionView: View {
 }
 
 // MARK: - Helper Views
+
+struct DifficultyButton: View {
+    let difficulty: MemoryGameDifficulty
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 4) {
+                Image(systemName: difficulty.icon)
+                    .font(.title3)
+                    .foregroundColor(isSelected ? difficulty.color : .gray)
+                
+                Text(difficulty.displayName)
+                    .font(.caption2)
+                    .fontWeight(.medium)
+                    .foregroundColor(isSelected ? difficulty.color : .gray)
+                    .multilineTextAlignment(.center)
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 60)
+            .padding(.vertical, 8)
+            .background(backgroundView)
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+    
+    private var backgroundView: some View {
+        RoundedRectangle(cornerRadius: 6)
+            .fill(isSelected ? difficulty.color.opacity(0.1) : Color(.systemGray6))
+            .overlay(
+                RoundedRectangle(cornerRadius: 6)
+                    .stroke(isSelected ? difficulty.color : Color.clear, lineWidth: 1)
+            )
+    }
+}
+
+struct StudyModeButton: View {
+    let studyMode: StudyMode
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 4) {
+                Image(systemName: studyMode.icon)
+                    .font(.title3)
+                    .foregroundColor(isSelected ? studyMode.color : .gray)
+                
+                Text(studyMode.displayName)
+                    .font(.caption2)
+                    .fontWeight(.medium)
+                    .foregroundColor(isSelected ? studyMode.color : .gray)
+                    .multilineTextAlignment(.center)
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 60)
+            .padding(.vertical, 8)
+            .background(backgroundView)
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+    
+    private var backgroundView: some View {
+        RoundedRectangle(cornerRadius: 6)
+            .fill(isSelected ? studyMode.color.opacity(0.1) : Color(.systemGray6))
+            .overlay(
+                RoundedRectangle(cornerRadius: 6)
+                    .stroke(isSelected ? studyMode.color : Color.clear, lineWidth: 1)
+            )
+    }
+}
 
 struct SimplifiedDeckPickerView: View {
     @ObservedObject var viewModel: FlashCardViewModel

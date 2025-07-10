@@ -215,15 +215,13 @@ struct MultipleChoiceView: View {
                         .font(.headline)
                         .foregroundColor(.secondary)
                     
-                    let baseXP = 50
-                    let performanceBonus = correctAnswers * 5
-                    let totalXP = baseXP + performanceBonus
+                    let totalXP = correctAnswers * 5
                     
                     Text("+\(totalXP)")
                         .font(.system(size: 36, weight: .bold))
                         .foregroundColor(.yellow)
                     
-                    Text("\(baseXP) base + \(performanceBonus) bonus")
+                    Text("\(totalXP) XP earned")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -245,11 +243,7 @@ struct MultipleChoiceView: View {
             .font(.headline)
         }
         .onAppear {
-            // Award XP when results are shown
-            let baseXP = 50
-            let performanceBonus = correctAnswers * 5
-            let totalXP = baseXP + performanceBonus
-            userProfileManager.addXP(totalXP)
+            // XP is already awarded immediately for each correct answer
         }
     }
     
@@ -339,8 +333,9 @@ struct MultipleChoiceView: View {
             HapticManager.shared.testCorrectHaptic()
             SoundManager.shared.playTestCorrectSound()
             
-            // Award XP for correct answer
+            // Award XP for correct answer immediately
             sessionXP += 5
+            userProfileManager.addXP(5)
             print("❓ Correct answer! Session XP: \(sessionXP)")
             
             // Apply SRS logic for correct answer

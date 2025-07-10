@@ -486,6 +486,7 @@ struct TrueFalseView: View {
                 StudySessionResultsView(
                     session: session,
                     viewModel: viewModel,
+                    sessionXP: sessionXP,
                     onStudyAgain: {
                         resetGame()
                     },
@@ -643,10 +644,9 @@ struct TrueFalseView: View {
             score += 1
             correctAnswers += 1
             
-            // Show SpriteKit success effect instead of text
-            let centerPoint = CGPoint(x: gameScene.size.width / 2, y: gameScene.size.height / 2)
-            gameScene.createSuccessParticles(at: centerPoint)
-            gameScene.createFloatingScore(score: "+10", at: centerPoint, color: .systemGreen)
+            // Award XP for correct answer immediately
+            sessionXP += 5
+            userProfileManager.addXP(5)
             
             // Use custom sound for games (not study mode)
             HapticManager.shared.successNotification() // Haptic only
@@ -660,10 +660,6 @@ struct TrueFalseView: View {
             incorrectAnswers += 1
             // Track which card was answered incorrectly
             incorrectCards.insert(question.originalCard.id)
-            
-            // Show SpriteKit error effect instead of text
-            let centerPoint = CGPoint(x: gameScene.size.width / 2, y: gameScene.size.height / 2)
-            gameScene.createErrorEffect(at: centerPoint)
             
             // Use custom sound for games (not study mode)
             HapticManager.shared.errorNotification() // Haptic only
@@ -702,9 +698,7 @@ struct TrueFalseView: View {
                 currentSession = session
                 
                 // Add XP for completing the true/false session
-                let baseXP = 50
-                let performanceBonus = correctAnswers * 5 // 5 XP per correct answer
-                let totalXP = baseXP + performanceBonus
+                let totalXP = correctAnswers * 5 // 5 XP per correct answer
                 // Remove session completion XP - will be awarded in session results view
                 // userProfileManager.addXP(totalXP)
                 
@@ -718,7 +712,7 @@ struct TrueFalseView: View {
                     )
                 }
                 
-                print("🎮 True/False session complete! Earned \(totalXP) XP (Base: \(baseXP), Performance: \(performanceBonus))")
+                print("🎮 True/False session complete! Earned \(totalXP) XP")
             }
             
             // Clear saved progress since game is complete

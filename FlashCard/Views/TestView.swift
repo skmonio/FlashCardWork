@@ -145,8 +145,9 @@ struct TestView: View {
             HapticManager.shared.testCorrectHaptic() // Haptic only, no system sound
             SoundManager.shared.playTestCorrectSound() // Play custom correct sound
             
-            // Award XP for correct answer
+            // Award XP for correct answer immediately
             sessionXP += 5
+            userProfileManager.addXP(5)
             print("🧪 Correct answer! Session XP: \(sessionXP)")
             
             // Apply SRS logic for correct answer
@@ -193,9 +194,7 @@ struct TestView: View {
                 currentSession = session
                 
                 // Add XP for completing the test session
-                let baseXP = 50
-                let performanceBonus = correctAnswers * 5 // 5 XP per correct answer
-                let totalXP = baseXP + performanceBonus
+                let totalXP = correctAnswers * 5 // 5 XP per correct answer
                 // Remove session completion XP - will be awarded in session results view
                 // userProfileManager.addXP(totalXP)
                 
@@ -209,7 +208,7 @@ struct TestView: View {
                     )
                 }
                 
-                print("🎮 Test session complete! Earned \(totalXP) XP (Base: \(baseXP), Performance: \(performanceBonus))")
+                print("🎮 Test session complete! Earned \(totalXP) XP")
             }
             
             // Clear saved progress since test is complete
@@ -278,9 +277,7 @@ struct TestView: View {
                 currentSession = session
                 
                 // Add XP for completing the test session
-                let baseXP = 50
-                let performanceBonus = correctAnswers * 5 // 5 XP per correct answer
-                let totalXP = baseXP + performanceBonus
+                let totalXP = correctAnswers * 5 // 5 XP per correct answer
                 // Remove session completion XP - will be awarded in session results view
                 // userProfileManager.addXP(totalXP)
                 
@@ -294,7 +291,7 @@ struct TestView: View {
                     )
                 }
                 
-                print("🎮 Test session complete! Earned \(totalXP) XP (Base: \(baseXP), Performance: \(performanceBonus))")
+                print("🎮 Test session complete! Earned \(totalXP) XP")
             }
             
             // Clear saved progress since test is complete
@@ -560,6 +557,7 @@ struct TestView: View {
                 StudySessionResultsView(
                     session: session,
                     viewModel: viewModel,
+                    sessionXP: sessionXP,
                     onStudyAgain: {
                         resetTest()
                     },

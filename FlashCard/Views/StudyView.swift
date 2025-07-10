@@ -462,6 +462,10 @@ struct StudyView: View {
             print("🔍 Updated maxProgressIndex to \(maxProgressIndex) after answering question \(currentIndex)")
         }
         
+        // Award XP for correct answer immediately
+        sessionXP += 5
+        userProfileManager.addXP(5)
+        
         // SRS logic: process as 'know'
         let updatedCard = SRSManager.shared.processSimpleReviewWithStudyMode(
             for: cards[currentIndex], 
@@ -962,6 +966,7 @@ struct StudyView: View {
             AnyView(StudySessionResultsView(
                 session: session,
                 viewModel: viewModel,
+                sessionXP: sessionXP,
                 onStudyAgain: {
                     // Save the status of all cards
                     for cardId in knownCards {

@@ -16,7 +16,7 @@ enum MemoryGameDifficulty: String, CaseIterable {
     
     var description: String {
         switch self {
-        case .easy: return "6 seconds per set"
+        case .easy: return "No time pressure"
         case .medium: return "4 seconds per set"
         case .hard: return "2 seconds per set"
         }
@@ -40,7 +40,7 @@ enum MemoryGameDifficulty: String, CaseIterable {
     
     var timePerCardSet: Int {
         switch self {
-        case .easy: return 3
+        case .easy: return 0
         case .medium: return 2
         case .hard: return 1
         }
@@ -268,37 +268,11 @@ struct DeckSelectionView: View {
                             // Memory Game Difficulty Options
                             HStack(spacing: 12) {
                                 ForEach(MemoryGameDifficulty.allCases, id: \.self) { difficulty in
-                                    Button(action: {
-                                        selectedDifficulty = difficulty
-                                    }) {
-                                        VStack(spacing: 8) {
-                                            Image(systemName: difficulty.icon)
-                                                .font(.title2)
-                                                .foregroundColor(selectedDifficulty == difficulty ? difficulty.color : .gray)
-                                            
-                                            Text(difficulty.displayName)
-                                                .font(.caption)
-                                                .fontWeight(.medium)
-                                                .foregroundColor(selectedDifficulty == difficulty ? difficulty.color : .gray)
-                                                .multilineTextAlignment(.center)
-                                            
-                                            Text(difficulty.description)
-                                                .font(.caption2)
-                                                .foregroundColor(selectedDifficulty == difficulty ? difficulty.color : .gray)
-                                                .multilineTextAlignment(.center)
-                                        }
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 12)
-                                        .background(
-                                            RoundedRectangle(cornerRadius: 8)
-                                                .fill(selectedDifficulty == difficulty ? difficulty.color.opacity(0.1) : Color(.systemGray6))
-                                                .overlay(
-                                                    RoundedRectangle(cornerRadius: 8)
-                                                        .stroke(selectedDifficulty == difficulty ? difficulty.color : Color.clear, lineWidth: 2)
-                                                )
-                                        )
-                                    }
-                                    .buttonStyle(PlainButtonStyle())
+                                    DeckSelectionDifficultyButton(
+                                        difficulty: difficulty,
+                                        isSelected: selectedDifficulty == difficulty,
+                                        action: { selectedDifficulty = difficulty }
+                                    )
                                 }
                             }
                         } else {
@@ -741,4 +715,47 @@ struct WordScrambleViewWithSaveState: View {
             shouldLoadSaveState: shouldContinue
         )
     }
-} 
+}
+
+// MARK: - Helper Views
+
+struct DeckSelectionDifficultyButton: View {
+    let difficulty: MemoryGameDifficulty
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 8) {
+                Image(systemName: difficulty.icon)
+                    .font(.title2)
+                    .foregroundColor(isSelected ? difficulty.color : .gray)
+                
+                Text(difficulty.displayName)
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .foregroundColor(isSelected ? difficulty.color : .gray)
+                    .multilineTextAlignment(.center)
+                
+                Text(difficulty.description)
+                    .font(.caption2)
+                    .foregroundColor(isSelected ? difficulty.color : .gray)
+                    .multilineTextAlignment(.center)
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 80)
+            .padding(.vertical, 12)
+            .background(backgroundView)
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+    
+    private var backgroundView: some View {
+        RoundedRectangle(cornerRadius: 8)
+            .fill(isSelected ? difficulty.color.opacity(0.1) : Color(.systemGray6))
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(isSelected ? difficulty.color : Color.clear, lineWidth: 2)
+            )
+    }
+}

@@ -269,7 +269,7 @@ struct QuickStudyView: View {
     private func getDifficultyDescription() -> String {
         switch selectedDifficulty {
         case .easy:
-            return "Plenty of time to find matches"
+            return "Take your time, no pressure"
         case .medium:
             return "Balanced challenge for most players"
         case .hard:

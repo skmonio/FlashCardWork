@@ -42,6 +42,17 @@ struct UserProfileView: View {
             }
             .navigationTitle("Profile")
             .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: {
+                        dismiss()
+                    }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.title2)
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
             .sheet(isPresented: $showingImagePicker) {
                 ImagePicker(selectedImage: Binding(
                     get: {
