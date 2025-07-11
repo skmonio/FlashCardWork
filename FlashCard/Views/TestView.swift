@@ -457,7 +457,9 @@ struct TestView: View {
                 }
                 .onTapGesture(count: 1) {
                     // Single tap for audio
+                    #if !LITE_VERSION
                     speakCurrentWord()
+                    #endif
                     HapticManager.shared.lightImpact()
                 }
                 // Previous and Edit Card buttons below the card
@@ -697,6 +699,7 @@ struct TestView: View {
     }
     
     // MARK: - Speech Functions
+    #if !LITE_VERSION
     private func speakCurrentWord() {
         let text = textToSpeak.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return }
@@ -704,6 +707,7 @@ struct TestView: View {
         // Use slower speech rate for learning
         speechService.speakDutch(text, rate: 0.4)
     }
+    #endif
     
     // Add a function to go to the previous question
     private func goToPreviousQuestion() {

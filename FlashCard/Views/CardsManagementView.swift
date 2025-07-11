@@ -190,25 +190,27 @@ struct CardsManagementView: View {
                             .shadow(color: .red.opacity(0.2), radius: 3, x: 0, y: 1)
                         }
                         
-                        // Dutch Vocabulary Import
-                        Button(action: {
-                            navigationCoordinator.push(NavigationDestination.dutchVocabulary)
-                        }) {
-                            HStack {
-                                Image(systemName: "textformat.abc")
-                                    .font(.title2)
-                                    .foregroundColor(.purple)
-                                    .frame(width: 30)
-                                Text("Dutch Vocabulary Import")
-                                    .font(.body)
-                                    .foregroundColor(.primary)
-                                Spacer()
+                        // Dutch Vocabulary Import - Only show in full version
+                        if BuildConfiguration.isFeatureAvailable(.dutchVocabulary) {
+                            Button(action: {
+                                navigationCoordinator.push(NavigationDestination.dutchVocabulary)
+                            }) {
+                                HStack {
+                                    Image(systemName: "textformat.abc")
+                                        .font(.title2)
+                                        .foregroundColor(.purple)
+                                        .frame(width: 30)
+                                    Text("Dutch Vocabulary Import")
+                                        .font(.body)
+                                        .foregroundColor(.primary)
+                                    Spacer()
+                                }
+                                .padding()
+                                .frame(maxWidth: .infinity)
+                                .background(Color(.secondarySystemGroupedBackground))
+                                .cornerRadius(12)
+                                .shadow(color: .purple.opacity(0.2), radius: 3, x: 0, y: 1)
                             }
-                            .padding()
-                            .frame(maxWidth: .infinity)
-                            .background(Color(.secondarySystemGroupedBackground))
-                            .cornerRadius(12)
-                            .shadow(color: .purple.opacity(0.2), radius: 3, x: 0, y: 1)
                         }
                     }
                     .padding(.horizontal)

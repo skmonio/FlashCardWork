@@ -123,6 +123,7 @@ class FlashCardViewModel: ObservableObject {
         print("🔄 Starting deferred initialization...")
         
         // Add example Dutch cards if no cards exist
+        #if !LITE_VERSION
         if flashCards.isEmpty {
             print("📝 Creating example cards...")
             DispatchQueue.main.async { [weak self] in
@@ -132,6 +133,13 @@ class FlashCardViewModel: ObservableObject {
         } else {
             print("✅ Using existing cards: \(flashCards.count)")
         }
+        #else
+        if flashCards.isEmpty {
+            print("📝 Skipping example cards in LITE_VERSION")
+        } else {
+            print("✅ Using existing cards: \(flashCards.count)")
+        }
+        #endif
         
         // Initialize statistics for existing cards that might not have them
         print("📈 Initializing statistics...")

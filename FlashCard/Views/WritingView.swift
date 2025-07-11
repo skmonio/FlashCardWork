@@ -286,7 +286,9 @@ struct WritingView: View {
                                         if isCurrentWordSpeaking {
                                             speechService.stopSpeaking()
                                         } else {
+                                            #if !LITE_VERSION
                                             speakCurrentWord()
+                                            #endif
                                         }
                                         HapticManager.shared.lightImpact()
                                     }) {
@@ -614,6 +616,7 @@ struct WritingView: View {
     }
     
     // MARK: - Speech Functions
+    #if !LITE_VERSION
     private func speakCurrentWord() {
         let text = textToSpeak.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return }
@@ -621,6 +624,7 @@ struct WritingView: View {
         // Use slower speech rate for learning
         speechService.speakDutch(text, rate: 0.4)
     }
+    #endif
     
     // MARK: - Hangman Game Logic
 

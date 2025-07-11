@@ -1,3 +1,44 @@
+#if LITE_VERSION
+import Foundation
+import SwiftUI
+
+// MARK: - Notification Types (keep for type safety)
+enum NotificationType {
+    case achievement, levelUp, xpGain, reward, info
+    var icon: String { "" }
+    var color: Color { .clear }
+}
+
+struct AppNotification: Identifiable {
+    let id = UUID()
+    let type: NotificationType
+    let title: String
+    let message: String
+    let duration: TimeInterval
+    init(type: NotificationType, title: String, message: String, duration: TimeInterval = 3.0) {
+        self.type = type
+        self.title = title
+        self.message = message
+        self.duration = duration
+    }
+}
+
+class NotificationManager: ObservableObject {
+    static let shared = NotificationManager()
+    @Published var currentNotification: AppNotification?
+    @Published var isShowing = false
+    private init() {}
+    func requestNotificationPermission(completion: @escaping (Bool) -> Void = { _ in }) { completion(false) }
+    func scheduleNotifications() {}
+    func cancelAllNotifications() {}
+    func showNotification(_ notification: AppNotification) {}
+    func dismissNotification() {}
+    func showAchievement(title: String, message: String) {}
+    func showLevelUp(level: Int) {}
+    func showXPGain(amount: Int) {}
+    func showReward(title: String, message: String) {}
+}
+#else
 import Foundation
 import UserNotifications
 import SwiftUI
@@ -256,4 +297,5 @@ class NotificationManager: ObservableObject {
         )
         showNotification(notification)
     }
-} 
+}
+#endif 

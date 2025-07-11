@@ -100,10 +100,12 @@ struct StudyView: View {
     }
     
     // Speech function
+    #if !LITE_VERSION
     private func speakCurrentText(_ text: String) {
         guard !text.isEmpty else { return }
         speechService.speakDutch(text, rate: 0.4)
     }
+    #endif
     
     // Computed property to check if user has seen any cards
     private var hasSeenCards: Bool {

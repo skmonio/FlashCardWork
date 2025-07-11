@@ -218,7 +218,9 @@ struct LookCoverCheckView: View {
                         if isCurrentWordSpeaking {
                             speechService.stopSpeaking()
                         } else {
+                            #if !LITE_VERSION
                             speakCurrentWord()
+                            #endif
                         }
                         HapticManager.shared.lightImpact()
                     }) {
@@ -254,9 +256,11 @@ struct LookCoverCheckView: View {
         }
         .onAppear {
             // Auto-play pronunciation when word appears
+            #if !LITE_VERSION
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 speakCurrentWord()
             }
+            #endif
         }
     }
     
@@ -341,7 +345,9 @@ struct LookCoverCheckView: View {
                                 if isCurrentWordSpeaking {
                                     speechService.stopSpeaking()
                                 } else {
+                                    #if !LITE_VERSION
                                     speakCurrentWord()
+                                    #endif
                                 }
                                 HapticManager.shared.lightImpact()
                             }) {
@@ -384,7 +390,9 @@ struct LookCoverCheckView: View {
             // Auto-play correct word pronunciation in check phase
             if isCorrect == false {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                    #if !LITE_VERSION
                     speakCurrentWord()
+                    #endif
                 }
             }
         }
@@ -505,9 +513,11 @@ struct LookCoverCheckView: View {
             resetForNextCard()
             
             // Auto-play pronunciation for new word in look phase
+            #if !LITE_VERSION
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 speakCurrentWord()
             }
+            #endif
         } else {
             // Clear saved progress since game is complete
             clearSavedProgress()
@@ -636,6 +646,7 @@ struct LookCoverCheckView: View {
     }
     
     // MARK: - Speech Functions
+    #if !LITE_VERSION
     private func speakCurrentWord() {
         let text = textToSpeak.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return }
@@ -643,6 +654,7 @@ struct LookCoverCheckView: View {
         // Use slower speech rate for learning
         speechService.speakDutch(text, rate: 0.4)
     }
+    #endif
     
     private func handleBackButton() {
         if hasSignificantProgress && !showingResults {

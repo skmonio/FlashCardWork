@@ -180,7 +180,9 @@ struct WordScrambleView: View {
                     }
                     .onTapGesture(count: 1) {
                         // Single tap for audio
+                        #if !LITE_VERSION
                         speakCurrentWord()
+                        #endif
                         HapticManager.shared.lightImpact()
                     }
                     
@@ -702,6 +704,7 @@ struct WordScrambleView: View {
     }
     
     // MARK: - Speech Functions
+    #if !LITE_VERSION
     private func speakCurrentWord() {
         let text = textToSpeak.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return }
@@ -709,6 +712,7 @@ struct WordScrambleView: View {
         // Use slower speech rate for learning
         speechService.speakDutch(text, rate: 0.4)
     }
+    #endif
     
     private func answerFeedbackView(for card: FlashCard) -> some View {
         VStack(spacing: 16) {

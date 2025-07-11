@@ -81,7 +81,7 @@ struct MainNavigationView: View {
         case .home:
             VStack(spacing: 0) {
                 UnifiedHeader(
-                    title: "Taal Trek",
+                    title: BuildConfiguration.appName,
                     showBackButton: false,
                     onProfile: { navigationCoordinator.presentSheet(.userProfile) }
                 )
@@ -158,83 +158,128 @@ struct MainNavigationView: View {
                         }
                         .padding(.top)
                         
-                        // Resources Section
-                        VStack(alignment: .leading, spacing: 16) {
-                            Text("Resources")
-                                .font(.headline)
-                                .foregroundColor(.secondary)
+                        // Resources Section - Only show if there are available features
+                        if BuildConfiguration.isFeatureAvailable(.dutchLessons) || BuildConfiguration.isFeatureAvailable(.dutchGrammar) {
+                            VStack(alignment: .leading, spacing: 16) {
+                                Text("Resources")
+                                    .font(.headline)
+                                    .foregroundColor(.secondary)
+                                    .padding(.horizontal)
+                                VStack(spacing: 12) {
+                                    // Only show Dutch Lessons in full version
+                                    if BuildConfiguration.isFeatureAvailable(.dutchLessons) {
+                                        NavigationLink(destination: LessonsListView(viewModel: viewModel)) {
+                                            HStack {
+                                                Image(systemName: "book.closed.fill")
+                                                    .font(.title2)
+                                                    .foregroundColor(.blue)
+                                                    .frame(width: 30)
+                                                Text("Dutch Lessons")
+                                                    .font(.body)
+                                                    .foregroundColor(.primary)
+                                                Spacer()
+                                            }
+                                            .padding()
+                                            .frame(maxWidth: .infinity)
+                                            .background(Color(.secondarySystemGroupedBackground))
+                                            .cornerRadius(12)
+                                            .shadow(color: .blue.opacity(0.2), radius: 3, x: 0, y: 1)
+                                        }
+                                    }
+                                    
+                                    // Only show Dutch Grammar in full version
+                                    if BuildConfiguration.isFeatureAvailable(.dutchGrammar) {
+                                        Button(action: {
+                                            navigationCoordinator.push(NavigationDestination.dutchGrammar)
+                                        }) {
+                                            HStack {
+                                                Image(systemName: "book.pages.fill")
+                                                    .font(.title2)
+                                                    .foregroundStyle(
+                                                        LinearGradient(
+                                                            colors: [.blue, .purple],
+                                                            startPoint: .topLeading,
+                                                            endPoint: .bottomTrailing
+                                                        )
+                                                    )
+                                                    .frame(width: 30)
+                                                Text("Dutch Grammar")
+                                                    .font(.body)
+                                                    .foregroundColor(.primary)
+                                                Spacer()
+                                            }
+                                            .padding()
+                                            .frame(maxWidth: .infinity)
+                                            .background(Color(.secondarySystemGroupedBackground))
+                                            .cornerRadius(12)
+                                            .shadow(color: .blue.opacity(0.2), radius: 3, x: 0, y: 1)
+                                        }
+                                    }
+                                    
+                                    Button(action: {
+                                        navigationCoordinator.push(NavigationDestination.bubbleWordMapSelection)
+                                    }) {
+                                        HStack {
+                                            Image(systemName: "bubble.left.and.bubble.right")
+                                                .font(.title2)
+                                                .foregroundStyle(
+                                                    LinearGradient(
+                                                        colors: [.green, .teal],
+                                                        startPoint: .topLeading,
+                                                        endPoint: .bottomTrailing
+                                                    )
+                                                )
+                                                .frame(width: 30)
+                                            Text("Bubble Word")
+                                                .font(.body)
+                                                .foregroundColor(.primary)
+                                            Spacer()
+                                        }
+                                        .padding()
+                                        .frame(maxWidth: .infinity)
+                                        .background(Color(.secondarySystemGroupedBackground))
+                                        .cornerRadius(12)
+                                        .shadow(color: .green.opacity(0.2), radius: 3, x: 0, y: 1)
+                                    }
+                                }
                                 .padding(.horizontal)
-                            VStack(spacing: 12) {
-                                NavigationLink(destination: LessonsListView(viewModel: viewModel)) {
-                                    HStack {
-                                        Image(systemName: "book.closed.fill")
-                                            .font(.title2)
-                                            .foregroundColor(.blue)
-                                            .frame(width: 30)
-                                        Text("Dutch Lessons")
-                                            .font(.body)
-                                            .foregroundColor(.primary)
-                                        Spacer()
-                                    }
-                                    .padding()
-                                    .frame(maxWidth: .infinity)
-                                    .background(Color(.secondarySystemGroupedBackground))
-                                    .cornerRadius(12)
-                                    .shadow(color: .blue.opacity(0.2), radius: 3, x: 0, y: 1)
-                                }
-                                Button(action: {
-                                    navigationCoordinator.push(NavigationDestination.dutchGrammar)
-                                }) {
-                                    HStack {
-                                        Image(systemName: "book.pages.fill")
-                                            .font(.title2)
-                                            .foregroundStyle(
-                                                LinearGradient(
-                                                    colors: [.blue, .purple],
-                                                    startPoint: .topLeading,
-                                                    endPoint: .bottomTrailing
-                                                )
-                                            )
-                                            .frame(width: 30)
-                                        Text("Dutch Grammar")
-                                            .font(.body)
-                                            .foregroundColor(.primary)
-                                        Spacer()
-                                    }
-                                    .padding()
-                                    .frame(maxWidth: .infinity)
-                                    .background(Color(.secondarySystemGroupedBackground))
-                                    .cornerRadius(12)
-                                    .shadow(color: .blue.opacity(0.2), radius: 3, x: 0, y: 1)
-                                }
-                                
-                                Button(action: {
-                                    navigationCoordinator.push(NavigationDestination.bubbleWordMapSelection)
-                                }) {
-                                    HStack {
-                                        Image(systemName: "bubble.left.and.bubble.right")
-                                            .font(.title2)
-                                            .foregroundStyle(
-                                                LinearGradient(
-                                                    colors: [.green, .teal],
-                                                    startPoint: .topLeading,
-                                                    endPoint: .bottomTrailing
-                                                )
-                                            )
-                                            .frame(width: 30)
-                                        Text("Bubble Word")
-                                            .font(.body)
-                                            .foregroundColor(.primary)
-                                        Spacer()
-                                    }
-                                    .padding()
-                                    .frame(maxWidth: .infinity)
-                                    .background(Color(.secondarySystemGroupedBackground))
-                                    .cornerRadius(12)
-                                    .shadow(color: .green.opacity(0.2), radius: 3, x: 0, y: 1)
-                                }
                             }
-                            .padding(.horizontal)
+                        } else {
+                            // Show only Bubble Word in lite version
+                            VStack(alignment: .leading, spacing: 16) {
+                                Text("Features")
+                                    .font(.headline)
+                                    .foregroundColor(.secondary)
+                                    .padding(.horizontal)
+                                VStack(spacing: 12) {
+                                    Button(action: {
+                                        navigationCoordinator.push(NavigationDestination.bubbleWordMapSelection)
+                                    }) {
+                                        HStack {
+                                            Image(systemName: "bubble.left.and.bubble.right")
+                                                .font(.title2)
+                                                .foregroundStyle(
+                                                    LinearGradient(
+                                                        colors: [.green, .teal],
+                                                        startPoint: .topLeading,
+                                                        endPoint: .bottomTrailing
+                                                    )
+                                                )
+                                                .frame(width: 30)
+                                            Text("Bubble Word")
+                                                .font(.body)
+                                                .foregroundColor(.primary)
+                                            Spacer()
+                                        }
+                                        .padding()
+                                        .frame(maxWidth: .infinity)
+                                        .background(Color(.secondarySystemGroupedBackground))
+                                        .cornerRadius(12)
+                                        .shadow(color: .green.opacity(0.2), radius: 3, x: 0, y: 1)
+                                    }
+                                }
+                                .padding(.horizontal)
+                            }
                         }
                     }
                     .padding(.horizontal)
@@ -314,9 +359,19 @@ struct MainNavigationView: View {
         case .wordScrambleView(let cards, let deckIds):
             WordScrambleView(viewModel: viewModel, cards: cards, deckIds: deckIds, shouldLoadSaveState: false)
         case .dutchVocabulary:
-            DutchVocabularyImportView(viewModel: viewModel)
+            // Only show in full version
+            if BuildConfiguration.isFeatureAvailable(.dutchVocabulary) {
+                DutchVocabularyImportView(viewModel: viewModel)
+            } else {
+                FeatureNotAvailableView(feature: "Dutch Vocabulary Import")
+            }
         case .dutchGrammar:
-            DutchGrammarRulesView()
+            // Only show in full version
+            if BuildConfiguration.isFeatureAvailable(.dutchGrammar) {
+                DutchGrammarRulesView()
+            } else {
+                FeatureNotAvailableView(feature: "Dutch Grammar")
+            }
         case .bubbleWord:
             BubbleWordView(viewModel: viewModel)
                 .navigationBarHidden(true)
@@ -325,7 +380,12 @@ struct MainNavigationView: View {
                 .navigationBarHidden(true)
         case .custom(let key):
             if key == "lessons" {
-                LessonsListView(viewModel: viewModel)
+                // Only show in full version
+                if BuildConfiguration.isFeatureAvailable(.dutchLessons) {
+                    LessonsListView(viewModel: viewModel)
+                } else {
+                    FeatureNotAvailableView(feature: "Dutch Lessons")
+                }
             }
         }
     }

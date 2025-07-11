@@ -221,9 +221,11 @@ struct CardView: View {
                 Spacer()
                 
                 // Pronunciation button on the right
+                #if !LITE_VERSION
                 pronunciationButton
                     .padding(.trailing, 20)
                     .padding(.top, 20)
+                #endif
             }
             Spacer()
         }
@@ -264,6 +266,7 @@ struct CardView: View {
     }
     
     // MARK: - Speech Functions
+    #if !LITE_VERSION
     private func speakCurrentText() {
         let text = textToSpeak.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return }
@@ -271,6 +274,7 @@ struct CardView: View {
         // Use slower speech rate for learning
         speechService.speakDutch(text, rate: 0.4)
     }
+    #endif
 
     private var rotationOffset: Double {
         return offset.width / 20  // Subtle rotation while dragging

@@ -316,7 +316,9 @@ struct TrueFalseView: View {
                     }
                     .onTapGesture(count: 1) {
                         // Single tap for audio
+                        #if !LITE_VERSION
                         speakCurrentWord()
+                        #endif
                         HapticManager.shared.lightImpact()
                     }
                         // Navigation buttons below the card
@@ -905,7 +907,9 @@ struct TrueFalseView: View {
         guard !text.isEmpty else { return }
         
         // Use slower speech rate for learning
+        #if !LITE_VERSION
         speechService.speakDutch(text, rate: 0.4)
+        #endif
     }
     
     private func setupSpriteKitScene() {

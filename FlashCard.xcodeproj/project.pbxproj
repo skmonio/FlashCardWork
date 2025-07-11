@@ -12,6 +12,11 @@
 		DC7C27372E03014C0089C13B /* Wrong.wav in Resources */ = {isa = PBXBuildFile; fileRef = DC7C27352E03014C0089C13B /* Wrong.wav */; };
 		DC7C273A2E0304560089C13B /* Complete.wav in Resources */ = {isa = PBXBuildFile; fileRef = DC7C27382E0304560089C13B /* Complete.wav */; };
 		DC7C273B2E0304560089C13B /* Game.wav in Resources */ = {isa = PBXBuildFile; fileRef = DC7C27392E0304560089C13B /* Game.wav */; };
+		DC837CBD2E21585A00F8A51E /* Correct.wav in Resources */ = {isa = PBXBuildFile; fileRef = DC7C27342E03014C0089C13B /* Correct.wav */; };
+		DC837CBE2E21585A00F8A51E /* Wrong.wav in Resources */ = {isa = PBXBuildFile; fileRef = DC7C27352E03014C0089C13B /* Wrong.wav */; };
+		DC837CBF2E21585A00F8A51E /* Begin.wav in Resources */ = {isa = PBXBuildFile; fileRef = DC7C27322E02FEF20089C13B /* Begin.wav */; };
+		DC837CC02E21585A00F8A51E /* Complete.wav in Resources */ = {isa = PBXBuildFile; fileRef = DC7C27382E0304560089C13B /* Complete.wav */; };
+		DC837CC12E21585A00F8A51E /* Game.wav in Resources */ = {isa = PBXBuildFile; fileRef = DC7C27392E0304560089C13B /* Game.wav */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -40,11 +45,28 @@
 		DC7C27352E03014C0089C13B /* Wrong.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Wrong.wav; sourceTree = "<group>"; };
 		DC7C27382E0304560089C13B /* Complete.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Complete.wav; sourceTree = "<group>"; };
 		DC7C27392E0304560089C13B /* Game.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Game.wav; sourceTree = "<group>"; };
+		DC837CC52E21585A00F8A51E /* Taal Trek Lite.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Taal Trek Lite.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		DC837CC62E21585A00F8A51E /* Exceptions for "FlashCard" folder in "Taal Trek Lite" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist.backup,
+				Info.plist.reference,
+				Resources/BUBBLE_WORD_README.md,
+				Resources/README.md,
+			);
+			target = DC837CB92E21585A00F8A51E /* Taal Trek Lite */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		0A780FA02DF0528600F71F44 /* FlashCard */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				DC837CC62E21585A00F8A51E /* Exceptions for "FlashCard" folder in "Taal Trek Lite" target */,
+			);
 			path = FlashCard;
 			sourceTree = "<group>";
 		};
@@ -82,6 +104,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		DC837CBB2E21585A00F8A51E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -106,6 +135,7 @@
 				0A780F9E2DF0528600F71F44 /* FlashCard.app */,
 				0A780FAB2DF0528700F71F44 /* FlashCardTests.xctest */,
 				0A780FB52DF0528700F71F44 /* FlashCardUITests.xctest */,
+				DC837CC52E21585A00F8A51E /* Taal Trek Lite.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -181,6 +211,28 @@
 			productReference = 0A780FB52DF0528700F71F44 /* FlashCardUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		DC837CB92E21585A00F8A51E /* Taal Trek Lite */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DC837CC22E21585A00F8A51E /* Build configuration list for PBXNativeTarget "Taal Trek Lite" */;
+			buildPhases = (
+				DC837CBA2E21585A00F8A51E /* Sources */,
+				DC837CBB2E21585A00F8A51E /* Frameworks */,
+				DC837CBC2E21585A00F8A51E /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				0A780FA02DF0528600F71F44 /* FlashCard */,
+			);
+			name = "Taal Trek Lite";
+			packageProductDependencies = (
+			);
+			productName = FlashCard;
+			productReference = DC837CC52E21585A00F8A51E /* Taal Trek Lite.app */;
+			productType = "com.apple.product-type.application";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -221,6 +273,7 @@
 				0A780F9D2DF0528600F71F44 /* FlashCard */,
 				0A780FAA2DF0528700F71F44 /* FlashCardTests */,
 				0A780FB42DF0528700F71F44 /* FlashCardUITests */,
+				DC837CB92E21585A00F8A51E /* Taal Trek Lite */,
 			);
 		};
 /* End PBXProject section */
@@ -252,6 +305,18 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		DC837CBC2E21585A00F8A51E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DC837CBD2E21585A00F8A51E /* Correct.wav in Resources */,
+				DC837CBE2E21585A00F8A51E /* Wrong.wav in Resources */,
+				DC837CBF2E21585A00F8A51E /* Begin.wav in Resources */,
+				DC837CC02E21585A00F8A51E /* Complete.wav in Resources */,
+				DC837CC12E21585A00F8A51E /* Game.wav in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -270,6 +335,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		0A780FB12DF0528700F71F44 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DC837CBA2E21585A00F8A51E /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -449,6 +521,7 @@
 				MARKETING_VERSION = 3.1;
 				PRODUCT_BUNDLE_IDENTIFIER = Dutch.FlashCard;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+					SWIFT_ACTIVE_COMPILATION_CONDITIONS = "LITE_VERSION";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -491,6 +564,7 @@
 				MARKETING_VERSION = 3.1;
 				PRODUCT_BUNDLE_IDENTIFIER = Dutch.FlashCard;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+					SWIFT_ACTIVE_COMPILATION_CONDITIONS = "LITE_VERSION";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -509,6 +583,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = Dutch.FlashCardTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+					SWIFT_ACTIVE_COMPILATION_CONDITIONS = "LITE_VERSION";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -528,6 +603,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = Dutch.FlashCardTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+					SWIFT_ACTIVE_COMPILATION_CONDITIONS = "LITE_VERSION";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -545,6 +621,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = Dutch.FlashCardUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+					SWIFT_ACTIVE_COMPILATION_CONDITIONS = "LITE_VERSION";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -562,10 +639,98 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = Dutch.FlashCardUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+					SWIFT_ACTIVE_COMPILATION_CONDITIONS = "LITE_VERSION";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_TARGET_NAME = FlashCard;
+			};
+			name = Release;
+		};
+		DC837CC32E21585A00F8A51E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = FlashCard/FlashCardDebug.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 3;
+				DEVELOPMENT_TEAM = 33JRS76UKD;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Taal Trek Lite";
+				INFOPLIST_KEY_CFBundleDocumentTypes = "{\n    CFBundleTypeName = \"CSV File\";\n    CFBundleTypeRole = Editor;\n    LSHandlerRank = Default;\n    LSItemContentTypes =     (\n        \"public.comma-separated-values-text\",\n        \"public.plain-text\",\n        \"public.text\"\n    );\n}";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
+				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "This app needs access to the camera to take photos of text and extract words for your flashcards. This allows you to quickly import vocabulary from books, signs, and other printed materials.";
+				INFOPLIST_KEY_NSDocumentsFolderUsageDescription = "Access to Documents is needed to import and export your flashcard data";
+				INFOPLIST_KEY_NSDownloadsFolderUsageDescription = "Access to Downloads is needed to import your flashcard data";
+				INFOPLIST_KEY_NSFileProviderDomainUsageDescription = "Access is needed to manage your flashcard files across your devices";
+				INFOPLIST_KEY_NSFileProviderPresenceUsageDescription = "Access is needed to import and manage your flashcard files";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This app needs access to the microphone to record pronunciation for your flashcards. This helps you practice speaking and pronunciation of foreign words.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "This app needs access to your photo library to select images containing text and extract words for your flashcards. This allows you to import vocabulary from photos you've already taken.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UIFileSharingEnabled = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportsDocumentBrowser = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 3.1;
+				PRODUCT_BUNDLE_IDENTIFIER = Dutch.TaalTrekLite;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+					SWIFT_ACTIVE_COMPILATION_CONDITIONS = "LITE_VERSION";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG LITE_VERSION";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		DC837CC42E21585A00F8A51E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = FlashCard/FlashCardRelease.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 3;
+				DEVELOPMENT_TEAM = 33JRS76UKD;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Taal Trek Lite";
+				INFOPLIST_KEY_CFBundleDocumentTypes = "{\n    CFBundleTypeName = \"CSV File\";\n    CFBundleTypeRole = Editor;\n    LSHandlerRank = Default;\n    LSItemContentTypes =     (\n        \"public.comma-separated-values-text\",\n        \"public.plain-text\",\n        \"public.text\"\n    );\n}";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
+				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "This app needs access to the camera to take photos of text and extract words for your flashcards. This allows you to quickly import vocabulary from books, signs, and other printed materials.";
+				INFOPLIST_KEY_NSDocumentsFolderUsageDescription = "Access to Documents is needed to import and export your flashcard data";
+				INFOPLIST_KEY_NSDownloadsFolderUsageDescription = "Access to Downloads is needed to import your flashcard data";
+				INFOPLIST_KEY_NSFileProviderDomainUsageDescription = "Access is needed to manage your flashcard files across your devices";
+				INFOPLIST_KEY_NSFileProviderPresenceUsageDescription = "Access is needed to import and manage your flashcard files";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This app needs access to the microphone to record pronunciation for your flashcards. This helps you practice speaking and pronunciation of foreign words.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "This app needs access to your photo library to select images containing text and extract words for your flashcards. This allows you to import vocabulary from photos you've already taken.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UIFileSharingEnabled = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportsDocumentBrowser = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 3.1;
+				PRODUCT_BUNDLE_IDENTIFIER = "Taal-Trek-Lite";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+					SWIFT_ACTIVE_COMPILATION_CONDITIONS = "LITE_VERSION";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};
@@ -604,6 +769,15 @@
 			buildConfigurations = (
 				0A780FC62DF0528700F71F44 /* Debug */,
 				0A780FC72DF0528700F71F44 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		DC837CC22E21585A00F8A51E /* Build configuration list for PBXNativeTarget "Taal Trek Lite" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DC837CC32E21585A00F8A51E /* Debug */,
+				DC837CC42E21585A00F8A51E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

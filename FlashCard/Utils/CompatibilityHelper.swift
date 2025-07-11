@@ -113,6 +113,11 @@ struct TranslationCompatibility {
     
     /// Get translation using available methods
     static func getTranslation(for word: String) async -> String {
+        // Check if translation features are available in the current version
+        guard BuildConfiguration.isFeatureAvailable(.dutchTranslation) else {
+            return "Translation unavailable in lite version"
+        }
+        
         if #available(iOS 18.0, *), CompatibilityHelper.isTranslationFrameworkAvailable {
             // Use Apple's Translation framework on iOS 18.0+
             return await getAppleTranslation(for: word)

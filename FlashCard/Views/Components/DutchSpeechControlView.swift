@@ -1,3 +1,4 @@
+#if !LITE_VERSION
 import SwiftUI
 import AVFoundation
 
@@ -255,4 +256,37 @@ struct DutchSpeechControlView_Previews: PreviewProvider {
         }
         .padding()
     }
-} 
+}
+
+#else
+import SwiftUI
+
+// MARK: - Stubbed Dutch Speech Control View for Lite Version
+struct DutchSpeechControlView: View {
+    let text: String
+    let mode: SpeechControlMode
+    
+    enum SpeechControlMode {
+        case compact
+        case full
+        case minimal
+    }
+    
+    var body: some View {
+        // Return empty view in lite version - no Dutch pronunciation features
+        EmptyView()
+    }
+}
+
+// MARK: - Preview
+struct DutchSpeechControlView_Previews: PreviewProvider {
+    static var previews: some View {
+        VStack(spacing: 20) {
+            DutchSpeechControlView(text: "Hallo wereld", mode: .minimal)
+            DutchSpeechControlView(text: "Hoe gaat het met je?", mode: .compact)
+            DutchSpeechControlView(text: "Dit is een test van de Nederlandse uitspraak", mode: .full)
+        }
+        .padding()
+    }
+}
+#endif 

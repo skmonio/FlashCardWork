@@ -203,6 +203,18 @@ struct ImageImportView: View {
             onTranslationError: { word in
                 // Try fallback translation using TranslationService
                 Task {
+                    // Check if translation features are available
+                    guard BuildConfiguration.isFeatureAvailable(.dutchTranslation) else {
+                        await MainActor.run {
+                            if let finalIndex = extractedWords.firstIndex(where: { $0.text == word }) {
+                                extractedWords[finalIndex].suggestedTranslation = "Translation unavailable in lite version"
+                                extractedWords[finalIndex].isLoadingTranslation = false
+                                currentTranslatingWords.remove(word)
+                            }
+                        }
+                        return
+                    }
+                    
                     let fallbackTranslation = await TranslationService.shared.getTranslationWithFallback(for: word)
                     await MainActor.run {
                         if let finalIndex = extractedWords.firstIndex(where: { $0.text == word }) {
@@ -318,6 +330,12 @@ struct ImageImportView: View {
     }
     
     private func fetchTranslationsForUnknownWords() {
+        // Check if translation features are available
+        guard BuildConfiguration.isFeatureAvailable(.dutchTranslation) else {
+            logger.debug("Translation features disabled in lite version")
+            return
+        }
+        
         let unknownWords = extractedWords.filter { !$0.isKnownWord && !$0.isLoadingTranslation }
         
         logger.debug("Fetching translations for \(unknownWords.count) unknown words")
@@ -386,6 +404,12 @@ struct ImageImportView: View {
         // This method is now replaced by translationTask
         // Keeping for backwards compatibility if needed
         Task {
+            // Check if translation features are available
+            guard BuildConfiguration.isFeatureAvailable(.dutchTranslation) else {
+                completion("Translation unavailable in lite version")
+                return
+            }
+            
             let translation = await TranslationService.shared.getTranslationWithFallback(for: word)
             completion(translation)
         }

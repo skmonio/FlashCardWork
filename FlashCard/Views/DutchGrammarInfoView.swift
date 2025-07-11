@@ -45,37 +45,37 @@ struct DutchGrammarInfoView: View {
                             .foregroundColor(.primary)
                         
                         VStack(spacing: 12) {
-                            FeatureRow(
+                            GrammarFeatureRow(
                                 icon: "textformat.abc",
                                 title: "Basic Grammar Rules",
                                 description: "Articles, nouns, adjectives, and basic sentence structure"
                             )
                             
-                            FeatureRow(
+                            GrammarFeatureRow(
                                 icon: "arrow.left.and.right",
                                 title: "Word Order",
                                 description: "Dutch sentence structure and word placement rules"
                             )
                             
-                            FeatureRow(
+                            GrammarFeatureRow(
                                 icon: "person.2.fill",
                                 title: "Verb Conjugation",
                                 description: "Present, past, and future tense verb forms"
                             )
                             
-                            FeatureRow(
+                            GrammarFeatureRow(
                                 icon: "questionmark.circle.fill",
                                 title: "Question Formation",
                                 description: "How to ask questions in Dutch"
                             )
                             
-                            FeatureRow(
+                            GrammarFeatureRow(
                                 icon: "arrow.triangle.2.circlepath",
                                 title: "Negation",
                                 description: "How to form negative sentences"
                             )
                             
-                            FeatureRow(
+                            GrammarFeatureRow(
                                 icon: "link",
                                 title: "Connectors",
                                 description: "Linking words and conjunctions"
@@ -158,7 +158,7 @@ struct DutchGrammarInfoView: View {
 }
 
 // MARK: - Supporting Views
-struct FeatureRow: View {
+struct GrammarFeatureRow: View {
     let icon: String
     let title: String
     let description: String

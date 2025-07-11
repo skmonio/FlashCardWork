@@ -315,9 +315,11 @@ struct GameCardView: View {
     
     // MARK: - Helper Methods
     
+    #if !LITE_VERSION
     private func speakCurrentText() {
         speechService.speakDutch(textToSpeak, rate: 0.4)
     }
+    #endif
     
     private var rotationOffset: Double {
         return offset.width / 20  // Subtle rotation while dragging

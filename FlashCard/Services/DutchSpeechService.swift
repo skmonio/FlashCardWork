@@ -1,3 +1,4 @@
+#if !LITE_VERSION
 import Foundation
 import AVFoundation
 
@@ -133,4 +134,55 @@ extension DutchSpeechService: AVSpeechSynthesizerDelegate {
     nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didContinue utterance: AVSpeechUtterance) {
         // Could add continued state if needed
     }
-} 
+}
+
+#else
+import Foundation
+import SwiftUI
+
+// MARK: - Stubbed Dutch Speech Service for Lite Version
+@MainActor
+class DutchSpeechService: NSObject, ObservableObject {
+    static let shared = DutchSpeechService()
+    
+    @Published var isSpeaking = false
+    @Published var currentlySpeaking: String = ""
+    @Published var speechRate: Float = 0.4
+    @Published var pitchMultiplier: Float = 1.0
+    @Published var volume: Float = 1.0
+    @Published var availableDutchVoices: [Any] = []
+    @Published var selectedVoice: Any?
+    
+    override init() {
+        super.init()
+    }
+    
+    func speakDutch(_ text: String) {
+        // No-op in lite version
+    }
+    
+    func speakDutch(_ text: String, rate: Float) {
+        // No-op in lite version
+    }
+    
+    func stopSpeaking() {
+        // No-op in lite version
+    }
+    
+    func pauseSpeaking() {
+        // No-op in lite version
+    }
+    
+    func continueSpeaking() {
+        // No-op in lite version
+    }
+    
+    func isDutchTTSAvailable() -> Bool {
+        return false
+    }
+    
+    func getVoiceDisplayName(for voice: Any) -> String {
+        return ""
+    }
+}
+#endif 

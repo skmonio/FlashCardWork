@@ -146,9 +146,11 @@ struct AddCardView: View {
                                         logger.debug("Word changed: \(newValue)")
                                     }
                                 
+                                #if !LITE_VERSION
                                 if !word.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                                     DutchSpeechControlView(text: word, mode: .minimal)
                                 }
+                                #endif
                             }
                             
                             // Persistent translation button - always available when word has 3+ characters
@@ -159,16 +161,17 @@ struct AddCardView: View {
                                     } label: {
                                         HStack(spacing: 6) {
                                             Image(systemName: "translate")
-                                            Text("Get Translation")
+                                            Text(BuildConfiguration.isFeatureAvailable(.dutchTranslation) ? "Get Translation" : "Translation (Lite)")
                                         }
                                         .font(.caption)
-                                        .foregroundColor(.blue)
+                                        .foregroundColor(BuildConfiguration.isFeatureAvailable(.dutchTranslation) ? .blue : .gray)
                                     }
                                     .buttonStyle(.bordered)
                                     .controlSize(.small)
+                                    .disabled(!BuildConfiguration.isFeatureAvailable(.dutchTranslation))
                                     
                                     // Show compatibility info for older iOS versions
-                                    if !CompatibilityHelper.isTranslationFrameworkAvailable {
+                                    if !CompatibilityHelper.isTranslationFrameworkAvailable && BuildConfiguration.isFeatureAvailable(.dutchTranslation) {
                                         Button {
                                             compatibilityFeature = .translation
                                             showingCompatibilityAlert = true
@@ -185,18 +188,20 @@ struct AddCardView: View {
                                 .padding(.top, 4)
                             }
                             
-                            // Compatibility notice for older iOS versions
-                            if !CompatibilityHelper.isTranslationFrameworkAvailable && !word.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && word.count >= 3 {
+                            // Compatibility notice for older iOS versions or lite version
+                            if (!CompatibilityHelper.isTranslationFrameworkAvailable || !BuildConfiguration.isFeatureAvailable(.dutchTranslation)) && !word.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && word.count >= 3 {
                                 VStack(alignment: .leading, spacing: 8) {
                                     HStack {
                                         Image(systemName: "info.circle.fill")
                                             .foregroundColor(.orange)
-                                        Text("Limited Translation")
+                                        Text(BuildConfiguration.isFeatureAvailable(.dutchTranslation) ? "Limited Translation" : "Translation Unavailable")
                                             .font(.caption)
                                             .foregroundColor(.secondary)
                                     }
                                     
-                                    Text("Using local dictionary only. For full translation features, update to iOS 18.0+")
+                                    Text(BuildConfiguration.isFeatureAvailable(.dutchTranslation) ? 
+                                         "Using local dictionary only. For full translation features, update to iOS 18.0+" :
+                                         "Translation features are only available in the full version of \(BuildConfiguration.appName).")
                                         .padding(.horizontal, 12)
                                         .padding(.vertical, 8)
                                         .background(Color.orange.opacity(0.1))
@@ -220,37 +225,60 @@ struct AddCardView: View {
                                     logger.debug("Example changed: \(newValue)")
                                 }
                             
+                            #if !LITE_VERSION
                             if !example.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                                 DutchSpeechControlView(text: example, mode: .minimal)
                             }
+                            #endif
                         }
                     }
                     
                     Section(header: Text("Additional Grammar (Optional)")) {
-                        TextField("Article (de/het)", text: $article)
-                            .onChange(of: article) { newValue in
-                                logger.debug("Article changed: \(newValue)")
+                        if BuildConfiguration.isFeatureAvailable(.additionalGrammar) {
+                            TextField("Article (de/het)", text: $article)
+                                .onChange(of: article) { newValue in
+                                    logger.debug("Article changed: \(newValue)")
+                                }
+                            
+                            TextField("Plural form", text: $plural)
+                                .onChange(of: plural) { newValue in
+                                    logger.debug("Plural changed: \(newValue)")
+                                }
+                            
+                            TextField("Past tense", text: $pastTense)
+                                .onChange(of: pastTense) { newValue in
+                                    logger.debug("Past tense changed: \(newValue)")
+                                }
+                            
+                            TextField("Future tense", text: $futureTense)
+                                .onChange(of: futureTense) { newValue in
+                                    logger.debug("Future tense changed: \(newValue)")
+                                }
+                            
+                            TextField("Past participle", text: $pastParticiple)
+                                .onChange(of: pastParticiple) { newValue in
+                                    logger.debug("Past participle changed: \(newValue)")
+                                }
+                        } else {
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack {
+                                    Image(systemName: "lock.circle.fill")
+                                        .foregroundColor(.orange)
+                                    Text("Advanced Grammar Features")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                                
+                                Text("Advanced grammar fields (articles, tenses, etc.) are only available in the full version of \(BuildConfiguration.appName).")
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 8)
+                                    .background(Color.orange.opacity(0.1))
+                                    .cornerRadius(8)
+                                    .font(.caption)
+                                    .foregroundColor(.orange)
                             }
-                        
-                        TextField("Plural form", text: $plural)
-                            .onChange(of: plural) { newValue in
-                                logger.debug("Plural changed: \(newValue)")
-                            }
-                        
-                        TextField("Past tense", text: $pastTense)
-                            .onChange(of: pastTense) { newValue in
-                                logger.debug("Past tense changed: \(newValue)")
-                            }
-                        
-                        TextField("Future tense", text: $futureTense)
-                            .onChange(of: futureTense) { newValue in
-                                logger.debug("Future tense changed: \(newValue)")
-                            }
-                        
-                        TextField("Past participle", text: $pastParticiple)
-                            .onChange(of: pastParticiple) { newValue in
-                                logger.debug("Past participle changed: \(newValue)")
-                            }
+                            .padding(.vertical, 8)
+                        }
                     }
 
                     Section(header: Text("Decks (Select one or more)")) {
@@ -550,6 +578,13 @@ struct AddCardView: View {
     private func manualTranslationRequest() {
         let trimmedWord = word.trimmingCharacters(in: .whitespacesAndNewlines)
         guard trimmedWord.count >= 3 else { return }
+        
+        // Check if translation features are available
+        guard BuildConfiguration.isFeatureAvailable(.dutchTranslation) else {
+            self.validationMessage = "Translation features are only available in the full version of \(BuildConfiguration.appName)."
+            self.showingValidationAlert = true
+            return
+        }
         
         logger.debug("🔄 Manual translation request for: '\(trimmedWord)'")
         
