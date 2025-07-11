@@ -321,7 +321,7 @@ struct MainNavigationView: View {
             BubbleWordView(viewModel: viewModel)
                 .navigationBarHidden(true)
         case .bubbleWordMapSelection:
-            BubbleWordMapSelectionView(viewModel: viewModel)
+            BubbleWordMapSelectionView(viewModel: viewModel, bubbleManager: BubbleWordManager.shared)
                 .navigationBarHidden(true)
         case .custom(let key):
             if key == "lessons" {

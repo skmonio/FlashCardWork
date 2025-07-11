@@ -5,6 +5,7 @@ struct BubbleWordView: View {
     @StateObject private var bubbleManager: BubbleWordManager
     @State private var newWord = ""
     @State private var newNoteColorValue: Color = .blue
+    @State private var newDefinition = "" // Add definition field
     @State private var showingAddWord = false
     @State private var showingAddTypeSheet = false // For action sheet
     @State private var showingAddExistingCard = false // For card picker
@@ -39,18 +40,19 @@ struct BubbleWordView: View {
     }
     
     @EnvironmentObject private var navigationCoordinator: NavigationCoordinator
+    @State private var showingSavePrompt = false
     
     // MARK: - Initializers
     
     init(viewModel: FlashCardViewModel, bubbleManager: BubbleWordManager? = nil, initialMapId: UUID? = nil) {
         self.viewModel = viewModel
-        self._bubbleManager = StateObject(wrappedValue: bubbleManager ?? BubbleWordManager())
+        self._bubbleManager = StateObject(wrappedValue: bubbleManager ?? BubbleWordManager.shared)
         
         // If an initial map ID is provided, select it
         if let mapId = initialMapId {
             // Select the map immediately
             self._bubbleManager = StateObject(wrappedValue: {
-                let manager = bubbleManager ?? BubbleWordManager()
+                let manager = bubbleManager ?? BubbleWordManager.shared
                 manager.selectMap(mapId)
                 return manager
             }())
@@ -177,12 +179,16 @@ struct BubbleWordView: View {
         }
         .gesture(backgroundPanGesture) // Attach pan gesture to the whole ZStack
         .navigationBarHidden(true) // Hide default navigation bar
+        .onDisappear {
+            // Only auto-save if not discarding
+            if !showingSavePrompt { bubbleManager.saveData() }
+        }
         .overlay(
             VStack(spacing: 0) {
                 CustomHeaderView(
                     title: bubbleManager.currentMap?.name ?? "Bubble Word",
                     onBack: {
-                        navigationCoordinator.pop()
+                        showingSavePrompt = true
                     },
                     trailing: trailingMenu
                 )
@@ -190,6 +196,16 @@ struct BubbleWordView: View {
                 Spacer()
             }
         )
+        .confirmationDialog("Do you want to save changes to this map before leaving?", isPresented: $showingSavePrompt, titleVisibility: .visible) {
+            Button("Save and Go Back") {
+                bubbleManager.saveData()
+                navigationCoordinator.pop()
+            }
+            Button("Discard Changes", role: .destructive) {
+                navigationCoordinator.pop()
+            }
+            Button("Cancel", role: .cancel) { }
+        }
         .onChange(of: bubbleManager.selectedNodeId) { newValue in
             handleNodeSelectionChange(oldValue: previousSelectedNodeId, newValue: newValue)
             previousSelectedNodeId = newValue
@@ -429,6 +445,7 @@ struct BubbleWordView: View {
                     showingAddWord = false
                     newWord = ""
                     newNoteColorValue = .blue
+                    newDefinition = ""
                 })
                     .foregroundColor(.blue)
                 Spacer()
@@ -444,9 +461,24 @@ struct BubbleWordView: View {
             }
             .padding(.horizontal)
             
-            TextField("Enter note", text: $newWord)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .padding(.horizontal)
+            VStack(spacing: 16) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Word/Note")
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                    TextField("Enter word or note", text: $newWord)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                }
+                
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Definition (Optional)")
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                    TextField("Enter definition for flipped side", text: $newDefinition)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                }
+            }
+            .padding(.horizontal)
             
             ColorPicker("Pick a color", selection: $newNoteColorValue, supportsOpacity: false)
                 .padding(.horizontal)
@@ -486,8 +518,8 @@ struct BubbleWordView: View {
             ColorPicker("Pick a color", selection: $editedColorValue, supportsOpacity: false)
                 .padding(.horizontal)
             
-            // Action buttons for cards
-            if let node = selectedNodeForEdit, node.isCard {
+            // Action buttons for flippable nodes
+            if let node = selectedNodeForEdit, node.isFlippable {
                 VStack(spacing: 12) {
                     // Flip button
                     Button(action: {
@@ -547,9 +579,19 @@ struct BubbleWordView: View {
         if !newWord.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             let centerPosition = getNextAvailablePosition()
             let colorHex = newNoteColorValue.toHex() ?? "0000ff"
-            _ = bubbleManager.addNode(word: newWord.trimmingCharacters(in: .whitespacesAndNewlines), at: centerPosition, color: colorHex)
+            let definition = newDefinition.trimmingCharacters(in: .whitespacesAndNewlines)
+            
+            // Add the node with definition
+            _ = bubbleManager.addNodeWithDefinition(
+                word: newWord.trimmingCharacters(in: .whitespacesAndNewlines),
+                definition: definition,
+                at: centerPosition,
+                color: colorHex
+            )
+            
             newWord = ""
             newNoteColorValue = .blue
+            newDefinition = ""
             showingAddWord = false
         }
     }
@@ -700,8 +742,8 @@ struct BubbleWordView: View {
                         systemImage: bubbleManager.globalFlipEnabled ? "eye.slash" : "eye"
                     )
                 }
-                Button(action: { bubbleManager.flipAllCards() }) {
-                    Label("Flip All Cards", systemImage: "arrow.triangle.2.circlepath")
+                Button(action: { bubbleManager.flipAllFlippable() }) {
+                    Label("Flip All Flippable", systemImage: "arrow.triangle.2.circlepath")
                 }
                 if bubbleManager.selectedNodeId != nil {
                     Divider()

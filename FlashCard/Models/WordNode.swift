@@ -116,6 +116,11 @@ struct WordNode: Identifiable, Codable, Hashable {
         return cardId != nil && !definition.isEmpty
     }
     
+    // Check if this node is flippable (has definition to show when flipped)
+    var isFlippable: Bool {
+        return !definition.isEmpty
+    }
+    
     // Implement Hashable
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
@@ -139,6 +144,9 @@ struct WordConnection: Identifiable, Codable {
 
 // MARK: - Bubble Word Manager
 class BubbleWordManager: ObservableObject {
+    // Shared instance for app-wide consistency
+    static let shared = BubbleWordManager()
+    
     @Published var maps: [BubbleWordMap] = []
     @Published var selectedMapId: UUID?
     @Published var selectedNodeId: UUID?
@@ -174,9 +182,11 @@ class BubbleWordManager: ObservableObject {
     // MARK: - Map Management
     
     func createMap(name: String) -> BubbleWordMap {
+        print("🗺️ BubbleWordManager: Creating new map: '\(name)'")
         let newMap = BubbleWordMap(name: name)
         maps.append(newMap)
         selectedMapId = newMap.id
+        print("✅ BubbleWordManager: Map created with ID: \(newMap.id)")
         saveData()
         return newMap
     }
@@ -232,6 +242,39 @@ class BubbleWordManager: ObservableObject {
         saveStateForUndo()
         
         let newNode = WordNode(word: word, position: position, color: color)
+        currentMap.nodes.append(newNode)
+        currentMap.lastModified = Date()
+        
+        // Update the map in the array
+        if let index = maps.firstIndex(where: { $0.id == currentMap.id }) {
+            maps[index] = currentMap
+        }
+        
+        saveData()
+        return newNode
+    }
+    
+    // Add node with definition
+    func addNodeWithDefinition(word: String, definition: String, at position: CGPoint, color: String = "blue") -> WordNode {
+        guard var currentMap = currentMap else { 
+            let newNode = WordNode(word: word, position: position, color: color)
+            var nodeWithDefinition = newNode
+            nodeWithDefinition.definition = definition
+            // Apply global flip setting if enabled
+            if globalFlipEnabled {
+                nodeWithDefinition.isFlipped = true
+            }
+            return nodeWithDefinition
+        }
+        
+        saveStateForUndo()
+        
+        var newNode = WordNode(word: word, position: position, color: color)
+        newNode.definition = definition
+        // Apply global flip setting if enabled
+        if globalFlipEnabled {
+            newNode.isFlipped = true
+        }
         currentMap.nodes.append(newNode)
         currentMap.lastModified = Date()
         
@@ -355,13 +398,13 @@ class BubbleWordManager: ObservableObject {
         }
     }
     
-    func flipAllCards() {
+    func flipAllFlippable() {
         guard var currentMap = currentMap else { return }
         
         saveStateForUndo()
         
         for i in 0..<currentMap.nodes.count {
-            if currentMap.nodes[i].isCard {
+            if currentMap.nodes[i].isFlippable {
                 currentMap.nodes[i].isFlipped.toggle()
             }
         }
@@ -509,13 +552,19 @@ class BubbleWordManager: ObservableObject {
     // MARK: - Data Persistence
     
     func saveData() {
+        print("💾 BubbleWordManager: Saving \(maps.count) maps")
         if let mapsData = try? JSONEncoder().encode(maps) {
             userDefaults.set(mapsData, forKey: mapsKey)
+            print("✅ BubbleWordManager: Maps saved successfully")
+        } else {
+            print("❌ BubbleWordManager: Failed to encode maps")
         }
         if let selectedId = selectedMapId {
             userDefaults.set(selectedId.uuidString, forKey: selectedMapKey)
+            print("✅ BubbleWordManager: Selected map ID saved: \(selectedId)")
         }
         userDefaults.set(globalFlipEnabled, forKey: globalFlipKey)
+        print("💾 BubbleWordManager: Save complete")
     }
     
     // MARK: - Undo/Redo Functionality
@@ -581,16 +630,24 @@ class BubbleWordManager: ObservableObject {
     }
     
     private func loadData() {
+        print("📂 BubbleWordManager: Loading data...")
         if let mapsData = userDefaults.data(forKey: mapsKey),
            let loadedMaps = try? JSONDecoder().decode([BubbleWordMap].self, from: mapsData) {
             maps = loadedMaps
+            print("✅ BubbleWordManager: Loaded \(maps.count) maps")
+        } else {
+            print("❌ BubbleWordManager: No maps found or failed to decode")
         }
         
         if let selectedIdString = userDefaults.string(forKey: selectedMapKey),
            let selectedId = UUID(uuidString: selectedIdString) {
             selectedMapId = selectedId
+            print("✅ BubbleWordManager: Selected map ID loaded: \(selectedId)")
+        } else {
+            print("❌ BubbleWordManager: No selected map ID found")
         }
         
         globalFlipEnabled = userDefaults.bool(forKey: globalFlipKey)
+        print("📂 BubbleWordManager: Load complete")
     }
 } 

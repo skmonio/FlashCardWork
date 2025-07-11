@@ -2,17 +2,22 @@ import SwiftUI
 
 struct BubbleWordMapSelectionView: View {
     @ObservedObject var viewModel: FlashCardViewModel
-    @StateObject private var bubbleManager = BubbleWordManager()
+    @StateObject private var bubbleManager: BubbleWordManager
     @State private var showingCreateMap = false
     @State private var newMapName = ""
-    @State private var showingDeleteAlert = false
-    @State private var mapToDelete: BubbleWordMap?
-    @State private var showingRenameAlert = false
-    @State private var mapToRename: BubbleWordMap?
-    @State private var renameText = ""
-    @State private var navigateToBubbleWord = false
     @State private var selectedMapId: UUID?
+    @State private var mapToDelete: BubbleWordMap?
+    @State private var showingDeleteAlert = false
+    @State private var mapToRename: BubbleWordMap?
+    @State private var showingRenameAlert = false
+    @State private var renameText = ""
+    
     @EnvironmentObject private var navigationCoordinator: NavigationCoordinator
+    
+    init(viewModel: FlashCardViewModel, bubbleManager: BubbleWordManager? = nil) {
+        self.viewModel = viewModel
+        self._bubbleManager = StateObject(wrappedValue: bubbleManager ?? BubbleWordManager.shared)
+    }
     
     var body: some View {
         VStack(spacing: 0) {
@@ -97,14 +102,6 @@ struct BubbleWordMapSelectionView: View {
         } message: {
             Text("Enter a new name for your map:")
         }
-        .background(
-            NavigationLink(
-                destination: BubbleWordView(viewModel: viewModel, bubbleManager: bubbleManager, initialMapId: selectedMapId),
-                isActive: $navigateToBubbleWord
-            ) {
-                EmptyView()
-            }
-        )
     }
     
     // MARK: - Views
