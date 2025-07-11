@@ -466,7 +466,13 @@ class BubbleWordManager: ObservableObject {
             // Merge definitions and connect only the specific matching nodes
             if let baseNodeIndex = currentMap?.nodes.firstIndex(where: { $0.id == duplicate.baseNode.id }) {
                 var updatedMap = currentMap!
-                updatedMap.nodes[baseNodeIndex].definition += "\n" + duplicate.overlayNode.definition
+                let baseDefinition = updatedMap.nodes[baseNodeIndex].definition
+                let overlayDefinition = duplicate.overlayNode.definition
+                
+                // Only append the overlay definition if it's not already present
+                if !baseDefinition.contains(overlayDefinition) && !overlayDefinition.isEmpty {
+                    updatedMap.nodes[baseNodeIndex].definition += "\n" + overlayDefinition
+                }
                 
                 // Don't add permanent connections to the base map
                 // Only add connections to overlay maps for temporary linking
@@ -556,6 +562,94 @@ class BubbleWordManager: ObservableObject {
             showingDuplicateDialog = false
         }
         
+        saveData()
+    }
+    
+    func handleAllDuplicates(_ choice: DuplicateChoice) {
+        print("🔄 DEBUG: Handling all \(duplicateNodes.count) duplicates with choice: \(choice)")
+        
+        // Create a copy of all duplicates to process
+        let allDuplicates = duplicateNodes
+        
+        // Process each duplicate with the same choice
+        for duplicate in allDuplicates {
+            switch choice {
+            case .merge:
+                // Merge definitions and connect only the specific matching nodes
+                if let baseNodeIndex = currentMap?.nodes.firstIndex(where: { $0.id == duplicate.baseNode.id }) {
+                    var updatedMap = currentMap!
+                    let baseDefinition = updatedMap.nodes[baseNodeIndex].definition
+                    let overlayDefinition = duplicate.overlayNode.definition
+                    
+                    // Only append the overlay definition if it's not already present
+                    if !baseDefinition.contains(overlayDefinition) && !overlayDefinition.isEmpty {
+                        updatedMap.nodes[baseNodeIndex].definition += "\n" + overlayDefinition
+                    }
+                    
+                    // Update the base map
+                    if let mapIndex = maps.firstIndex(where: { $0.id == updatedMap.id }) {
+                        maps[mapIndex] = updatedMap
+                    }
+                }
+                
+                // Add the base node connection to the overlay node in its original map
+                for overlayMapId in overlayMapIds {
+                    if var overlayMap = maps.first(where: { $0.id == overlayMapId }) {
+                        if let overlayNodeIndex = overlayMap.nodes.firstIndex(where: { $0.id == duplicate.overlayNode.id }) {
+                            // Only connect this specific overlay node to the base node
+                            overlayMap.nodes[overlayNodeIndex].connections.insert(duplicate.baseNode.id)
+                            
+                            // Add the reverse connection in the overlay map
+                            let reverseConnection = WordConnection(fromNodeId: duplicate.overlayNode.id, toNodeId: duplicate.baseNode.id)
+                            overlayMap.connections.append(reverseConnection)
+                            
+                            if let mapIndex = maps.firstIndex(where: { $0.id == overlayMapId }) {
+                                maps[mapIndex] = overlayMap
+                            }
+                        }
+                    }
+                }
+                
+            case .keepBoth:
+                // Keep both nodes separate (no connection, both can exist independently)
+                // Offset the overlay node's position relative to the base node so both nodes are visible
+                for overlayMapId in overlayMapIds {
+                    if var overlayMap = maps.first(where: { $0.id == overlayMapId }) {
+                        if let overlayNodeIndex = overlayMap.nodes.firstIndex(where: { $0.id == duplicate.overlayNode.id }) {
+                            // Offset the overlay node position relative to the base node (50 points to the right and down)
+                            let offsetPosition = CGPoint(
+                                x: duplicate.baseNode.position.x + 50,
+                                y: duplicate.baseNode.position.y + 50
+                            )
+                            overlayMap.nodes[overlayNodeIndex].position = offsetPosition
+                            
+                            // Ensure NO connections are created for "Keep Both"
+                            overlayMap.nodes[overlayNodeIndex].connections.remove(duplicate.baseNode.id)
+                            
+                            // Remove any connection records that might connect these nodes
+                            overlayMap.connections.removeAll { connection in
+                                (connection.fromNodeId == duplicate.overlayNode.id && connection.toNodeId == duplicate.baseNode.id) ||
+                                (connection.fromNodeId == duplicate.baseNode.id && connection.toNodeId == duplicate.overlayNode.id)
+                            }
+                            
+                            if let mapIndex = maps.firstIndex(where: { $0.id == overlayMapId }) {
+                                maps[mapIndex] = overlayMap
+                            }
+                        }
+                    }
+                }
+                
+            case .cancel:
+                // This shouldn't happen with handleAllDuplicates, but handle it just in case
+                break
+            }
+        }
+        
+        // Clear all duplicates and close the dialog
+        duplicateNodes.removeAll()
+        showingDuplicateDialog = false
+        
+        print("✅ DEBUG: Completed handling all duplicates")
         saveData()
     }
     

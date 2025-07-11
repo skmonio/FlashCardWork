@@ -289,16 +289,34 @@ struct BubbleWordView: View {
         }
         .alert("Duplicate Found", isPresented: $bubbleManager.showingDuplicateDialog) {
             if let firstDuplicate = bubbleManager.duplicateNodes.first {
-                Button("Keep Both") {
-                    bubbleManager.handleDuplicateChoice(.keepBoth, for: firstDuplicate)
-                }
-                Button("Merge") {
-                    bubbleManager.handleDuplicateChoice(.merge, for: firstDuplicate)
+                let duplicateCount = bubbleManager.duplicateNodes.count
+                
+                if duplicateCount == 1 {
+                    // Single duplicate - show individual options
+                    Button("Keep Separate") {
+                        bubbleManager.handleDuplicateChoice(.keepBoth, for: firstDuplicate)
+                    }
+                    Button("Merge") {
+                        bubbleManager.handleDuplicateChoice(.merge, for: firstDuplicate)
+                    }
+                } else {
+                    // Multiple duplicates - show bulk options
+                    Button("Keep All Separate") {
+                        bubbleManager.handleAllDuplicates(.keepBoth)
+                    }
+                    Button("Merge All") {
+                        bubbleManager.handleAllDuplicates(.merge)
+                    }
                 }
             }
         } message: {
             if let firstDuplicate = bubbleManager.duplicateNodes.first {
-                Text("The word '\(firstDuplicate.overlayNode.word)' already exists in the base map. How would you like to handle this?")
+                let duplicateCount = bubbleManager.duplicateNodes.count
+                if duplicateCount == 1 {
+                    Text("The word '\(firstDuplicate.overlayNode.word)' already exists in the base map. How would you like to handle this?")
+                } else {
+                    Text("Found \(duplicateCount) duplicate words. Choose how to handle all of them.")
+                }
             }
         }
     }
@@ -1065,65 +1083,11 @@ struct BubbleWordView: View {
         bubbleManager.flipNode(node.id)
     }
     
-    private func autoLayoutNodes() {
-        let screenWidth = UIScreen.main.bounds.width
-        let screenHeight = UIScreen.main.bounds.height
-        let centerX = screenWidth / 2
-        let centerY = screenHeight / 2
-        
-        let nodeSpacing: CGFloat = 150
-        let maxAttempts = 20
-        
-        var newPositions: [CGPoint] = []
-        
-        for attempt in 0..<maxAttempts {
-            let angle = Double(attempt) * (2 * Double.pi / Double(maxAttempts))
-            let radius = nodeSpacing * (1 + Double(attempt) / Double(maxAttempts))
-            
-            let x = centerX + CGFloat(cos(angle)) * radius
-            let y = centerY + CGFloat(sin(angle)) * radius
-            
-            let newPosition = CGPoint(x: x, y: y)
-            
-            // Check if this position is far enough from existing nodes
-            var isPositionAvailable = true
-            for existingNode in bubbleManager.nodes {
-                let distance = sqrt(pow(existingNode.position.x - newPosition.x, 2) + pow(existingNode.position.y - newPosition.y, 2))
-                if distance < nodeSpacing {
-                    isPositionAvailable = false
-                    break
-                }
-            }
-            
-            if isPositionAvailable {
-                newPositions.append(newPosition)
-            }
-        }
-        
-        // If not enough positions found, use random ones
-        if newPositions.count < bubbleManager.nodes.count {
-            for _ in newPositions.count..<bubbleManager.nodes.count {
-                let randomX = CGFloat.random(in: 100...(screenWidth - 100))
-                let randomY = CGFloat.random(in: 100...(screenHeight - 100))
-                newPositions.append(CGPoint(x: randomX, y: randomY))
-            }
-        }
-        
-        for (index, node) in bubbleManager.nodes.enumerated() {
-            if index < newPositions.count {
-                bubbleManager.updateNodePosition(node.id, to: newPositions[index])
-            }
-        }
-    }
-    
     private var trailingMenu: AnyView {
         AnyView(
             Menu {
                 Button(action: { resetZoom() }) {
                     Label("Center Map", systemImage: "scope")
-                }
-                Button(action: { autoLayoutNodes() }) {
-                    Label("Auto Layout", systemImage: "rectangle.3.group")
                 }
                 Divider()
                 Button(action: { bubbleManager.setGlobalFlip(!bubbleManager.globalFlipEnabled) }) {
