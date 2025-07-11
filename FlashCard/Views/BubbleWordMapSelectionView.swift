@@ -140,15 +140,14 @@ struct BubbleWordMapSelectionView: View {
     }
     
     private var mapsListView: some View {
-        ScrollView {
-            LazyVStack(spacing: 16) {
-                ForEach(bubbleManager.maps) { map in
-                    mapCardView(for: map)
-                }
+        List {
+            ForEach(bubbleManager.maps) { map in
+                mapCardView(for: map)
+                    .listRowSeparator(.hidden)
+                    .listRowBackground(Color.clear)
             }
-            .padding(.horizontal)
-            .padding(.top, 24)
         }
+        .listStyle(.plain)
     }
     
     private func mapCardView(for map: BubbleWordMap) -> some View {
@@ -167,37 +166,26 @@ struct BubbleWordMapSelectionView: View {
                         Text(map.name)
                             .font(.headline)
                             .foregroundColor(.primary)
-                        
                         HStack(spacing: 16) {
                             Label("\(map.nodes.count) words", systemImage: "bubble.left.and.bubble.right")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
-                            
                             Label("\(map.connections.count) connections", systemImage: "line.diagonal")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
                     }
-                    
                     Spacer()
-                    
-                    VStack(alignment: .trailing, spacing: 4) {
-                        Text(map.lastModified, style: .relative)
+                    if bubbleManager.selectedMapId == map.id {
+                        Text("Current")
                             .font(.caption)
-                            .foregroundColor(.secondary)
-                        
-                        if bubbleManager.selectedMapId == map.id {
-                            Text("Current")
-                                .font(.caption)
-                                .foregroundColor(.green)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 2)
-                                .background(Color.green.opacity(0.1))
-                                .cornerRadius(4)
-                        }
+                            .foregroundColor(.green)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 2)
+                            .background(Color.green.opacity(0.1))
+                            .cornerRadius(4)
                     }
                 }
-                
                 // Preview of nodes (if any)
                 if !map.nodes.isEmpty {
                     HStack(spacing: 8) {
@@ -210,13 +198,11 @@ struct BubbleWordMapSelectionView: View {
                                 .foregroundColor(Color(hex: node.color) ?? .blue)
                                 .cornerRadius(8)
                         }
-                        
                         if map.nodes.count > 5 {
                             Text("+\(map.nodes.count - 5)")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
-                        
                         Spacer()
                     }
                 }
@@ -227,22 +213,21 @@ struct BubbleWordMapSelectionView: View {
             .shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1)
         }
         .buttonStyle(PlainButtonStyle())
-        .contextMenu {
-            Button(action: {
+        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+            Button(role: .destructive) {
+                mapToDelete = map
+                showingDeleteAlert = true
+            } label: {
+                Label("Delete", systemImage: "trash")
+            }
+            Button {
                 mapToRename = map
                 renameText = map.name
                 showingRenameAlert = true
-            }) {
+            } label: {
                 Label("Rename", systemImage: "pencil")
             }
-            
-            Button(action: {
-                mapToDelete = map
-                showingDeleteAlert = true
-            }) {
-                Label("Delete", systemImage: "trash")
-            }
-            .foregroundColor(.red)
+            .tint(.blue)
         }
     }
     
@@ -313,9 +298,13 @@ struct BubbleWordMapSelectionView: View {
         showingCreateMap = false
         newMapName = ""
         
-        // Navigate to the new map
+        // Select and open the new map
         selectedMapId = newMap.id
-        navigateToBubbleWord = true
+        bubbleManager.selectMap(newMap.id)
+        var path = NavigationPath()
+        path.append(NavigationDestination.bubbleWordMapSelection)
+        path.append(NavigationDestination.bubbleWord)
+        navigationCoordinator.navigationPath = path
     }
     
     private func renameMap(_ map: BubbleWordMap, to newName: String) {
