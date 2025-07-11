@@ -19,6 +19,7 @@ struct BubbleWordView: View {
     
     // State for editing
     @State private var editedWord: String = ""
+    @State private var editedDefinition: String = ""
     @State private var editedColorValue: Color = .blue
     // Color palette
     private let noteColors: [NoteColor] = [.blue, .green, .orange, .purple, .red, .pink, .yellow, .mint, .indigo]
@@ -41,6 +42,7 @@ struct BubbleWordView: View {
     
     @EnvironmentObject private var navigationCoordinator: NavigationCoordinator
     @State private var showingSavePrompt = false
+    @State private var showingOverlaySelection = false
     
     // MARK: - Initializers
     
@@ -282,11 +284,28 @@ struct BubbleWordView: View {
         } message: {
             Text("Are you sure you want to delete this connection?")
         }
+        .sheet(isPresented: $showingOverlaySelection) {
+            overlaySelectionSheet
+        }
+        .alert("Duplicate Found", isPresented: $bubbleManager.showingDuplicateDialog) {
+            if let firstDuplicate = bubbleManager.duplicateNodes.first {
+                Button("Keep Both") {
+                    bubbleManager.handleDuplicateChoice(.keepBoth, for: firstDuplicate)
+                }
+                Button("Merge") {
+                    bubbleManager.handleDuplicateChoice(.merge, for: firstDuplicate)
+                }
+            }
+        } message: {
+            if let firstDuplicate = bubbleManager.duplicateNodes.first {
+                Text("The word '\(firstDuplicate.overlayNode.word)' already exists in the base map. How would you like to handle this?")
+            }
+        }
     }
     
     private var bubbleArea: some View {
         ZStack {
-            // Connection lines
+            // Base map connection lines
             ForEach(bubbleManager.connections) { connection in
                 if let fromNode = bubbleManager.nodes.first(where: { $0.id == connection.fromNodeId }),
                    let toNode = bubbleManager.nodes.first(where: { $0.id == connection.toNodeId }) {
@@ -310,8 +329,24 @@ struct BubbleWordView: View {
                     }
                 }
             }
-            // Word bubbles
+            
+            // Overlay connection lines
+            ForEach(bubbleManager.overlayConnections) { connection in
+                if let fromNode = bubbleManager.overlayNodes.first(where: { $0.id == connection.fromNodeId }),
+                   let toNode = bubbleManager.overlayNodes.first(where: { $0.id == connection.toNodeId }) {
+                    Path { path in
+                        path.move(to: fromNode.position)
+                        path.addLine(to: toNode.position)
+                    }
+                    .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                }
+            }
+            
+            // Base map word bubbles
             wordNodesView
+            
+            // Overlay word bubbles
+            overlayWordNodesView
         }
         .scaleEffect(bubbleManager.scale)
         .offset(bubbleManager.offset)
@@ -399,6 +434,13 @@ struct BubbleWordView: View {
         }
     }
     
+    private var overlayWordNodesView: some View {
+        ForEach(bubbleManager.overlayNodes) { node in
+            overlayWordBubbleView(for: node)
+                .highPriorityGesture(overlayNodeDragGesture(for: node))
+        }
+    }
+    
     private func wordBubbleView(for node: WordNode) -> some View {
         WordBubbleView(
             node: node,
@@ -420,6 +462,27 @@ struct BubbleWordView: View {
         .position(node.position)
     }
     
+    private func overlayWordBubbleView(for node: WordNode) -> some View {
+        WordBubbleView(
+            node: node,
+            isSelected: bubbleManager.selectedNodeId == node.id,
+            onTap: {
+                handleNodeTap(node)
+            },
+            onDoubleTap: {
+                handleNodeDoubleTap(node)
+            },
+            onDelete: {
+                // Overlay nodes can't be deleted directly
+            },
+            onFlip: {
+                handleNodeFlip(node)
+            }
+        )
+        .position(node.position)
+        .opacity(0.7) // Make overlay nodes semi-transparent
+    }
+    
     private func nodeDragGesture(for node: WordNode) -> some Gesture {
         DragGesture(minimumDistance: 5)
             .onChanged { value in
@@ -431,7 +494,130 @@ struct BubbleWordView: View {
                     x: start.x + value.translation.width,
                     y: start.y + value.translation.height
                 )
-                bubbleManager.updateNodePosition(node.id, to: newPosition)
+                
+                print("🔍 DEBUG: Base node drag gesture triggered for '\(node.word)'")
+                
+                // Check if this node has any actual connections in overlay maps (from merge operations only)
+                var hasMergeConnections = false
+                print("🔍 DEBUG: Checking for merge connections for base node '\(node.word)' (ID: \(node.id))")
+                
+                for overlayMapId in bubbleManager.overlayMapIds {
+                    if let overlayMap = bubbleManager.maps.first(where: { $0.id == overlayMapId }) {
+                        print("🔍 DEBUG: Checking overlay map: \(overlayMapId)")
+                        
+                        // Check if any overlay node has a connection TO this base node (from merge operations)
+                        for connection in overlayMap.connections {
+                            if connection.toNodeId == node.id {
+                                // Only count it as a merge if the fromNode is an overlay node
+                                if overlayMap.nodes.contains(where: { $0.id == connection.fromNodeId }) {
+                                    print("🔍 DEBUG: Found merge connection to base node '\(node.word)' from overlay node \(connection.fromNodeId)")
+                                    hasMergeConnections = true
+                                    break
+                                }
+                            }
+                        }
+                        
+                        // Also check if any overlay node has this base node in its connections list
+                        for overlayNode in overlayMap.nodes {
+                            if overlayNode.connections.contains(node.id) {
+                                print("🔍 DEBUG: Found merge connection from overlay node '\(overlayNode.word)' to base node '\(node.word)'")
+                                print("🔍 DEBUG: Overlay node connections: \(overlayNode.connections)")
+                                hasMergeConnections = true
+                                break
+                            }
+                        }
+                    }
+                    if hasMergeConnections { break }
+                }
+                
+                print("🔍 DEBUG: Base node '\(node.word)' hasMergeConnections: \(hasMergeConnections)")
+                
+                if hasMergeConnections {
+                    // Use updateMergedNodes to move only the specifically merged nodes
+                    print("🔗 DEBUG: Moving base node '\(node.word)' with merged nodes")
+                    bubbleManager.updateMergedNodes(node.id, to: newPosition)
+                } else {
+                    // Update just this node (including "Keep Both" nodes which have no connections)
+                    print("🔗 DEBUG: Moving base node '\(node.word)' alone")
+                    bubbleManager.updateNodePosition(node.id, to: newPosition)
+                }
+            }
+            .onEnded { _ in
+                dragStartPositions[node.id] = nil
+            }
+    }
+    
+    private func overlayNodeDragGesture(for node: WordNode) -> some Gesture {
+        DragGesture(minimumDistance: 5)
+            .onChanged { value in
+                if dragStartPositions[node.id] == nil {
+                    dragStartPositions[node.id] = node.position
+                }
+                let start = dragStartPositions[node.id] ?? node.position
+                let newPosition = CGPoint(
+                    x: start.x + value.translation.width,
+                    y: start.y + value.translation.height
+                )
+                
+                // Check if this overlay node has actual merge connections (not just "Keep Both" positioning)
+                var hasMergeConnections = false
+                var connectedBaseNodeId: UUID? = nil
+                
+                // Look for actual connection records in overlay maps
+                for overlayMapId in bubbleManager.overlayMapIds {
+                    if let overlayMap = bubbleManager.maps.first(where: { $0.id == overlayMapId }) {
+                        // Check if this overlay node has connections to base nodes
+                        if let overlayNode = overlayMap.nodes.first(where: { $0.id == node.id }) {
+                            print("🔍 DEBUG: Overlay node '\(node.word)' connections: \(overlayNode.connections)")
+                            for connectedNodeId in overlayNode.connections {
+                                // Only count it as a merge if it connects to a base node
+                                if bubbleManager.nodes.contains(where: { $0.id == connectedNodeId }) {
+                                    hasMergeConnections = true
+                                    connectedBaseNodeId = connectedNodeId
+                                    print("🔗 DEBUG: Found merge connection from overlay node \(node.word) to base node \(connectedNodeId)")
+                                    break
+                                }
+                            }
+                        }
+                        
+                        // Also check if any base node connects to this overlay node
+                        print("🔍 DEBUG: Overlay map connections: \(overlayMap.connections)")
+                        for connection in overlayMap.connections {
+                            if connection.toNodeId == node.id {
+                                // Only count it as a merge if the fromNode is a base node
+                                if bubbleManager.nodes.contains(where: { $0.id == connection.fromNodeId }) {
+                                    hasMergeConnections = true
+                                    connectedBaseNodeId = connection.fromNodeId
+                                    print("🔗 DEBUG: Found merge connection from base node \(connection.fromNodeId) to overlay node \(node.word)")
+                                    break
+                                }
+                            }
+                        }
+                    }
+                    if hasMergeConnections { break }
+                }
+                
+                print("🔍 DEBUG: Node '\(node.word)' hasMergeConnections: \(hasMergeConnections)")
+                
+                if hasMergeConnections, let baseNodeId = connectedBaseNodeId {
+                    // This is a truly merged node - move both together
+                    print("🔗 DEBUG: Moving merged node '\(node.word)' with base node \(baseNodeId)")
+                    bubbleManager.updateMergedNodes(baseNodeId, to: newPosition)
+                } else {
+                    // This is a regular overlay node (including "Keep Both" nodes) - move it independently
+                    // "Keep Both" nodes should have no connections, so they move alone
+                    print("🔗 DEBUG: Moving independent overlay node '\(node.word)' alone")
+                    for overlayMapId in bubbleManager.overlayMapIds {
+                        if var overlayMap = bubbleManager.maps.first(where: { $0.id == overlayMapId }) {
+                            if let nodeIndex = overlayMap.nodes.firstIndex(where: { $0.id == node.id }) {
+                                overlayMap.nodes[nodeIndex].position = newPosition
+                                if let mapIndex = bubbleManager.maps.firstIndex(where: { $0.id == overlayMapId }) {
+                                    bubbleManager.maps[mapIndex] = overlayMap
+                                }
+                            }
+                        }
+                    }
+                }
             }
             .onEnded { _ in
                 dragStartPositions[node.id] = nil
@@ -511,7 +697,15 @@ struct BubbleWordView: View {
             }
             .padding(.horizontal)
             
-            TextField("Enter text", text: $editedWord)
+            TextField("Enter word", text: $editedWord)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+                .padding(.horizontal)
+            
+            Text("Definition")
+                .font(.headline)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal)
+            TextField("Definition", text: $editedDefinition)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
                 .padding(.horizontal)
             
@@ -570,7 +764,142 @@ struct BubbleWordView: View {
         .onAppear {
             if let node = selectedNodeForEdit {
                 editedWord = node.word
+                editedDefinition = node.definition
                 editedColorValue = Color(hex: node.color) ?? .blue
+            }
+        }
+    }
+    
+    private var overlaySelectionSheet: some View {
+        NavigationView {
+            VStack(spacing: 24) {
+                VStack(spacing: 16) {
+                    Image(systemName: "plus.rectangle.on.rectangle")
+                        .font(.system(size: 60))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [.blue, .purple],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                    
+                    Text("Manage Map Overlays")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                    
+                    Text("Add or remove map overlays")
+                        .font(.body)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                
+                // Current overlays
+                if !bubbleManager.overlayMapIds.isEmpty {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Current Overlays")
+                            .font(.headline)
+                            .padding(.horizontal)
+                        
+                        ForEach(bubbleManager.maps.filter { bubbleManager.overlayMapIds.contains($0.id) }) { map in
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(map.name)
+                                        .font(.subheadline)
+                                        .fontWeight(.medium)
+                                    Text("\(map.nodes.count) nodes")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                                Spacer()
+                                Button(action: {
+                                    bubbleManager.removeOverlay(map.id)
+                                }) {
+                                    Image(systemName: "minus.circle.fill")
+                                        .foregroundColor(.red)
+                                        .font(.title2)
+                                }
+                            }
+                            .padding()
+                            .background(Color(.systemGray6))
+                            .cornerRadius(10)
+                            .padding(.horizontal)
+                        }
+                    }
+                }
+                
+                // Available maps to add as overlays
+                let availableMaps = bubbleManager.maps.filter { map in
+                    map.id != bubbleManager.selectedMapId && !bubbleManager.overlayMapIds.contains(map.id)
+                }
+                
+                if !availableMaps.isEmpty {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Available Maps")
+                            .font(.headline)
+                            .padding(.horizontal)
+                        
+                        ForEach(availableMaps) { map in
+                            Button(action: {
+                                bubbleManager.addOverlay(map.id)
+                                // Check for duplicates
+                                let duplicates = bubbleManager.checkForDuplicates()
+                                if !duplicates.isEmpty {
+                                    bubbleManager.duplicateNodes = duplicates
+                                    bubbleManager.showingDuplicateDialog = true
+                                }
+                            }) {
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(map.name)
+                                            .font(.subheadline)
+                                            .fontWeight(.medium)
+                                            .foregroundColor(.primary)
+                                        Text("\(map.nodes.count) nodes")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+                                    Spacer()
+                                    Image(systemName: "plus.circle.fill")
+                                        .foregroundColor(.blue)
+                                        .font(.title2)
+                                }
+                            }
+                            .padding()
+                            .background(Color(.systemGray6))
+                            .cornerRadius(10)
+                            .padding(.horizontal)
+                        }
+                    }
+                }
+                
+                if availableMaps.isEmpty && bubbleManager.overlayMapIds.isEmpty {
+                    VStack(spacing: 12) {
+                        Image(systemName: "tray")
+                            .font(.system(size: 40))
+                            .foregroundColor(.secondary)
+                        Text("No Maps Available")
+                            .font(.headline)
+                            .foregroundColor(.secondary)
+                        Text("Create more maps to use as overlays")
+                            .font(.body)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    .padding()
+                }
+                
+                Spacer()
+            }
+            .padding()
+            .navigationTitle("Manage Overlays")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Done") {
+                        showingOverlaySelection = false
+                    }
+                }
             }
         }
     }
@@ -712,7 +1041,14 @@ struct BubbleWordView: View {
     // Add card as bubble
     private func addCardAsBubble(_ card: FlashCard) {
         let centerPosition = getNextAvailablePosition()
-        _ = bubbleManager.addCardNode(from: card, at: centerPosition)
+        // Only use the first line of the definition, trimmed
+        var definition = card.definition.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let firstLine = definition.components(separatedBy: "\n").first {
+            definition = firstLine
+        }
+        var cardCopy = card
+        cardCopy.definition = definition
+        _ = bubbleManager.addCardNode(from: cardCopy, at: centerPosition)
         showingAddExistingCard = false
     }
     
@@ -720,7 +1056,7 @@ struct BubbleWordView: View {
     private func saveEditedNode() {
         guard let node = selectedNodeForEdit else { return }
         let colorHex = editedColorValue.toHex() ?? "0000ff"
-        bubbleManager.updateNode(node.id, word: editedWord, color: colorHex)
+        bubbleManager.updateNodeWithDefinition(node.id, word: editedWord, definition: editedDefinition, color: colorHex)
         showingEditCard = false
         selectedNodeForEdit = nil
     }
@@ -729,11 +1065,65 @@ struct BubbleWordView: View {
         bubbleManager.flipNode(node.id)
     }
     
+    private func autoLayoutNodes() {
+        let screenWidth = UIScreen.main.bounds.width
+        let screenHeight = UIScreen.main.bounds.height
+        let centerX = screenWidth / 2
+        let centerY = screenHeight / 2
+        
+        let nodeSpacing: CGFloat = 150
+        let maxAttempts = 20
+        
+        var newPositions: [CGPoint] = []
+        
+        for attempt in 0..<maxAttempts {
+            let angle = Double(attempt) * (2 * Double.pi / Double(maxAttempts))
+            let radius = nodeSpacing * (1 + Double(attempt) / Double(maxAttempts))
+            
+            let x = centerX + CGFloat(cos(angle)) * radius
+            let y = centerY + CGFloat(sin(angle)) * radius
+            
+            let newPosition = CGPoint(x: x, y: y)
+            
+            // Check if this position is far enough from existing nodes
+            var isPositionAvailable = true
+            for existingNode in bubbleManager.nodes {
+                let distance = sqrt(pow(existingNode.position.x - newPosition.x, 2) + pow(existingNode.position.y - newPosition.y, 2))
+                if distance < nodeSpacing {
+                    isPositionAvailable = false
+                    break
+                }
+            }
+            
+            if isPositionAvailable {
+                newPositions.append(newPosition)
+            }
+        }
+        
+        // If not enough positions found, use random ones
+        if newPositions.count < bubbleManager.nodes.count {
+            for _ in newPositions.count..<bubbleManager.nodes.count {
+                let randomX = CGFloat.random(in: 100...(screenWidth - 100))
+                let randomY = CGFloat.random(in: 100...(screenHeight - 100))
+                newPositions.append(CGPoint(x: randomX, y: randomY))
+            }
+        }
+        
+        for (index, node) in bubbleManager.nodes.enumerated() {
+            if index < newPositions.count {
+                bubbleManager.updateNodePosition(node.id, to: newPositions[index])
+            }
+        }
+    }
+    
     private var trailingMenu: AnyView {
         AnyView(
             Menu {
                 Button(action: { resetZoom() }) {
                     Label("Center Map", systemImage: "scope")
+                }
+                Button(action: { autoLayoutNodes() }) {
+                    Label("Auto Layout", systemImage: "rectangle.3.group")
                 }
                 Divider()
                 Button(action: { bubbleManager.setGlobalFlip(!bubbleManager.globalFlipEnabled) }) {
@@ -745,6 +1135,7 @@ struct BubbleWordView: View {
                 Button(action: { bubbleManager.flipAllFlippable() }) {
                     Label("Flip All Flippable", systemImage: "arrow.triangle.2.circlepath")
                 }
+                
                 if bubbleManager.selectedNodeId != nil {
                     Divider()
                     Button(action: {
@@ -752,6 +1143,18 @@ struct BubbleWordView: View {
                     }) {
                         Label("Disconnect All", systemImage: "link.badge.minus")
                     }
+                }
+                
+                if !bubbleManager.overlayMapIds.isEmpty {
+                    Divider()
+                    Button(action: { bubbleManager.clearAllOverlays() }) {
+                        Label("Clear All Overlays", systemImage: "rectangle.slash")
+                    }
+                }
+                
+                Divider()
+                Button(action: { showingOverlaySelection = true }) {
+                    Label("Manage Overlays", systemImage: "rectangle.on.rectangle")
                 }
             } label: {
                 Image(systemName: "ellipsis.circle")

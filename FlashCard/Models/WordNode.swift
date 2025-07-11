@@ -157,6 +157,11 @@ class BubbleWordManager: ObservableObject {
     // Global flip setting
     @Published var globalFlipEnabled: Bool = false
     
+    // Overlay functionality
+    @Published var overlayMapIds: Set<UUID> = []
+    @Published var showingDuplicateDialog: Bool = false
+    @Published var duplicateNodes: [(overlayNode: WordNode, baseNode: WordNode)] = []
+    
     // Undo/Redo functionality
     private var undoStack: [BubbleWordMap] = []
     private var redoStack: [BubbleWordMap] = []
@@ -166,6 +171,7 @@ class BubbleWordManager: ObservableObject {
     private let mapsKey = "BubbleWordMaps"
     private let selectedMapKey = "BubbleWordSelectedMap"
     private let globalFlipKey = "BubbleWordGlobalFlip"
+    private let overlayMapIdsKey = "BubbleWordOverlayMapIds"
     
     init() {
         loadData()
@@ -206,6 +212,8 @@ class BubbleWordManager: ObservableObject {
         offset = .zero
         lastOffset = .zero
         selectedNodeId = nil
+        // Clear all overlays when switching maps for a clean start
+        overlayMapIds.removeAll()
         saveData()
     }
     
@@ -229,6 +237,36 @@ class BubbleWordManager: ObservableObject {
     
     var connections: [WordConnection] {
         return currentMap?.connections ?? []
+    }
+    
+    // MARK: - Overlay Computed Properties
+    
+    var overlayNodes: [WordNode] {
+        var allOverlayNodes: [WordNode] = []
+        for overlayMapId in overlayMapIds {
+            if let overlayMap = maps.first(where: { $0.id == overlayMapId }) {
+                allOverlayNodes.append(contentsOf: overlayMap.nodes)
+            }
+        }
+        return allOverlayNodes
+    }
+    
+    var overlayConnections: [WordConnection] {
+        var allOverlayConnections: [WordConnection] = []
+        for overlayMapId in overlayMapIds {
+            if let overlayMap = maps.first(where: { $0.id == overlayMapId }) {
+                allOverlayConnections.append(contentsOf: overlayMap.connections)
+            }
+        }
+        return allOverlayConnections
+    }
+    
+    var allNodes: [WordNode] {
+        return nodes + overlayNodes
+    }
+    
+    var allConnections: [WordConnection] {
+        return connections + overlayConnections
     }
     
     // MARK: - Node Management
@@ -378,6 +416,236 @@ class BubbleWordManager: ObservableObject {
         saveData()
     }
     
+    // MARK: - Overlay Management
+    
+    func addOverlay(_ mapId: UUID) {
+        guard mapId != selectedMapId else { return }
+        overlayMapIds.insert(mapId)
+        saveData()
+    }
+    
+    func removeOverlay(_ mapId: UUID) {
+        overlayMapIds.remove(mapId)
+        saveData()
+    }
+    
+    func clearAllOverlays() {
+        overlayMapIds.removeAll()
+        saveData()
+    }
+    
+    func toggleOverlay(_ mapId: UUID) {
+        if overlayMapIds.contains(mapId) {
+            removeOverlay(mapId)
+        } else {
+            addOverlay(mapId)
+        }
+    }
+    
+    func checkForDuplicates() -> [(overlayNode: WordNode, baseNode: WordNode)] {
+        var duplicates: [(overlayNode: WordNode, baseNode: WordNode)] = []
+        
+        for overlayNode in overlayNodes {
+            if let baseNode = nodes.first(where: { $0.word.lowercased() == overlayNode.word.lowercased() }) {
+                duplicates.append((overlayNode: overlayNode, baseNode: baseNode))
+            }
+        }
+        
+        return duplicates
+    }
+    
+    enum DuplicateChoice {
+        case merge
+        case keepBoth
+        case cancel
+    }
+    
+    func handleDuplicateChoice(_ choice: DuplicateChoice, for duplicate: (overlayNode: WordNode, baseNode: WordNode)) {
+        switch choice {
+        case .merge:
+            // Merge definitions and connect only the specific matching nodes
+            if let baseNodeIndex = currentMap?.nodes.firstIndex(where: { $0.id == duplicate.baseNode.id }) {
+                var updatedMap = currentMap!
+                updatedMap.nodes[baseNodeIndex].definition += "\n" + duplicate.overlayNode.definition
+                
+                // Don't add permanent connections to the base map
+                // Only add connections to overlay maps for temporary linking
+                
+                // Update the base map
+                if let mapIndex = maps.firstIndex(where: { $0.id == updatedMap.id }) {
+                    maps[mapIndex] = updatedMap
+                }
+            }
+            
+            // Add the base node connection to the overlay node in its original map
+            for overlayMapId in overlayMapIds {
+                if var overlayMap = maps.first(where: { $0.id == overlayMapId }) {
+                    if let overlayNodeIndex = overlayMap.nodes.firstIndex(where: { $0.id == duplicate.overlayNode.id }) {
+                        // Only connect this specific overlay node to the base node
+                        overlayMap.nodes[overlayNodeIndex].connections.insert(duplicate.baseNode.id)
+                        
+                        // Add the reverse connection in the overlay map
+                        let reverseConnection = WordConnection(fromNodeId: duplicate.overlayNode.id, toNodeId: duplicate.baseNode.id)
+                        overlayMap.connections.append(reverseConnection)
+                        
+                        if let mapIndex = maps.firstIndex(where: { $0.id == overlayMapId }) {
+                            maps[mapIndex] = overlayMap
+                        }
+                    }
+                }
+            }
+            break
+            
+        case .keepBoth:
+            // Keep both nodes separate (no connection, both can exist independently)
+            // Offset the overlay node's position relative to the base node so both nodes are visible
+            print("🔍 DEBUG: Starting .keepBoth for word: \(duplicate.overlayNode.word)")
+            print("🔍 DEBUG: Base node ID: \(duplicate.baseNode.id)")
+            print("🔍 DEBUG: Overlay node ID: \(duplicate.overlayNode.id)")
+            
+            for overlayMapId in overlayMapIds {
+                if var overlayMap = maps.first(where: { $0.id == overlayMapId }) {
+                    if let overlayNodeIndex = overlayMap.nodes.firstIndex(where: { $0.id == duplicate.overlayNode.id }) {
+                        // Offset the overlay node position relative to the base node (50 points to the right and down)
+                        let offsetPosition = CGPoint(
+                            x: duplicate.baseNode.position.x + 50,
+                            y: duplicate.baseNode.position.y + 50
+                        )
+                        overlayMap.nodes[overlayNodeIndex].position = offsetPosition
+                        
+                        // Ensure NO connections are created for "Keep Both"
+                        overlayMap.nodes[overlayNodeIndex].connections.remove(duplicate.baseNode.id)
+                        
+                        // Remove any connection records that might connect these nodes
+                        overlayMap.connections.removeAll { connection in
+                            (connection.fromNodeId == duplicate.overlayNode.id && connection.toNodeId == duplicate.baseNode.id) ||
+                            (connection.fromNodeId == duplicate.baseNode.id && connection.toNodeId == duplicate.overlayNode.id)
+                        }
+                        
+                        print("🔍 DEBUG: Removed any connections between overlay node and base node")
+                        print("🔍 DEBUG: Overlay node connections after cleanup: \(overlayMap.nodes[overlayNodeIndex].connections)")
+                        print("🔍 DEBUG: Overlay map connections after cleanup: \(overlayMap.connections.count)")
+                        
+                        if let mapIndex = maps.firstIndex(where: { $0.id == overlayMapId }) {
+                            maps[mapIndex] = overlayMap
+                        }
+                    }
+                }
+            }
+            print("✅ DEBUG: Completed .keepBoth for word: \(duplicate.overlayNode.word)")
+            
+        case .cancel:
+            // Remove the overlay entirely - don't add it at all
+            // Find which overlay map contains this duplicate node and remove it
+            for overlayMapId in overlayMapIds {
+                if let overlayMap = maps.first(where: { $0.id == overlayMapId }) {
+                    if overlayMap.nodes.contains(where: { $0.id == duplicate.overlayNode.id }) {
+                        // Remove this overlay map entirely
+                        removeOverlay(overlayMapId)
+                        break
+                    }
+                }
+            }
+        }
+        
+        // Remove this duplicate from the list
+        duplicateNodes.removeAll { $0.overlayNode.id == duplicate.overlayNode.id }
+        
+        // Check for more duplicates
+        if duplicateNodes.isEmpty {
+            showingDuplicateDialog = false
+        }
+        
+        saveData()
+    }
+    
+    func updateMergedNodes(_ nodeId: UUID, to position: CGPoint) {
+        // Update base map node
+        updateNodePosition(nodeId, to: position)
+        
+        // Find only the nodes that were specifically merged with this node
+        var mergedNodeIds: Set<UUID> = []
+        
+        // Check for connections from this specific node in overlay maps
+        for overlayMapId in overlayMapIds {
+            if let overlayMap = maps.first(where: { $0.id == overlayMapId }) {
+                if let overlayNode = overlayMap.nodes.first(where: { $0.id == nodeId }) {
+                    mergedNodeIds.formUnion(overlayNode.connections)
+                }
+                
+                // Check for connections to this specific node in overlay maps
+                for connection in overlayMap.connections {
+                    if connection.toNodeId == nodeId {
+                        mergedNodeIds.insert(connection.fromNodeId)
+                    }
+                }
+            }
+        }
+        
+        // Update only the merged nodes in overlays (don't update base map nodes)
+        for mergedNodeId in mergedNodeIds {
+            for overlayMapId in overlayMapIds {
+                if var overlayMap = maps.first(where: { $0.id == overlayMapId }) {
+                    if let nodeIndex = overlayMap.nodes.firstIndex(where: { $0.id == mergedNodeId }) {
+                        overlayMap.nodes[nodeIndex].position = position
+                        if let mapIndex = maps.firstIndex(where: { $0.id == overlayMapId }) {
+                            maps[mapIndex] = overlayMap
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Don't update base map nodes - they should stay in their original positions
+        // This prevents nodes from getting stuck on top of each other when overlays are removed
+    }
+    
+    func updateConnectedNodes(_ nodeId: UUID, to position: CGPoint) {
+        // Update base map node
+        updateNodePosition(nodeId, to: position)
+        
+        // Find only the specifically connected nodes (the ones that were merged)
+        var connectedNodeIds: Set<UUID> = []
+        
+        // Check for connections from this specific node only
+        if let baseNode = nodes.first(where: { $0.id == nodeId }) {
+            connectedNodeIds.formUnion(baseNode.connections)
+        }
+        
+        // Check for connections to this specific node only
+        for connection in connections {
+            if connection.toNodeId == nodeId {
+                connectedNodeIds.insert(connection.fromNodeId)
+            }
+        }
+        
+        // Update only the specifically connected nodes in overlays
+        for connectedNodeId in connectedNodeIds {
+            for overlayMapId in overlayMapIds {
+                if var overlayMap = maps.first(where: { $0.id == overlayMapId }) {
+                    if let nodeIndex = overlayMap.nodes.firstIndex(where: { $0.id == connectedNodeId }) {
+                        overlayMap.nodes[nodeIndex].position = position
+                        if let mapIndex = maps.firstIndex(where: { $0.id == overlayMapId }) {
+                            maps[mapIndex] = overlayMap
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Also update only the specifically connected nodes in the base map
+        for connectedNodeId in connectedNodeIds {
+            if let nodeIndex = currentMap?.nodes.firstIndex(where: { $0.id == connectedNodeId }) {
+                if var currentMap = currentMap {
+                    currentMap.nodes[nodeIndex].position = position
+                    if let mapIndex = maps.firstIndex(where: { $0.id == currentMap.id }) {
+                        maps[mapIndex] = currentMap
+                    }
+                }
+            }
+        }
+    }
+    
     // MARK: - Card Flipping Functionality
     
     func flipNode(_ nodeId: UUID) {
@@ -394,26 +662,82 @@ class BubbleWordManager: ObservableObject {
                 maps[mapIndex] = currentMap
             }
             
+            // Find only the specifically connected nodes (the ones that were merged)
+            var connectedNodeIds: Set<UUID> = []
+            
+            // Check for connections from this specific node only
+            if let baseNode = currentMap.nodes.first(where: { $0.id == nodeId }) {
+                connectedNodeIds.formUnion(baseNode.connections)
+            }
+            
+            // Check for connections to this specific node only
+            for connection in currentMap.connections {
+                if connection.toNodeId == nodeId {
+                    connectedNodeIds.insert(connection.fromNodeId)
+                }
+            }
+            
+            // Flip only the specifically connected nodes in overlays
+            for connectedNodeId in connectedNodeIds {
+                for overlayMapId in overlayMapIds {
+                    if var overlayMap = maps.first(where: { $0.id == overlayMapId }) {
+                        if let nodeIndex = overlayMap.nodes.firstIndex(where: { $0.id == connectedNodeId }) {
+                            overlayMap.nodes[nodeIndex].isFlipped.toggle()
+                            if let mapIndex = maps.firstIndex(where: { $0.id == overlayMapId }) {
+                                maps[mapIndex] = overlayMap
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Flip only the specifically connected nodes in base map
+            for connectedNodeId in connectedNodeIds {
+                if let nodeIndex = currentMap.nodes.firstIndex(where: { $0.id == connectedNodeId }) {
+                    currentMap.nodes[nodeIndex].isFlipped.toggle()
+                    if let mapIndex = maps.firstIndex(where: { $0.id == currentMap.id }) {
+                        maps[mapIndex] = currentMap
+                    }
+                }
+            }
+            
             saveData()
         }
     }
     
     func flipAllFlippable() {
-        guard var currentMap = currentMap else { return }
-        
         saveStateForUndo()
         
-        for i in 0..<currentMap.nodes.count {
-            if currentMap.nodes[i].isFlippable {
-                currentMap.nodes[i].isFlipped.toggle()
+        // Flip all flippable nodes in the base map
+        if var currentMap = currentMap {
+            for i in 0..<currentMap.nodes.count {
+                if currentMap.nodes[i].isFlippable {
+                    currentMap.nodes[i].isFlipped.toggle()
+                }
+            }
+            currentMap.lastModified = Date()
+            
+            // Update the map in the array
+            if let mapIndex = maps.firstIndex(where: { $0.id == currentMap.id }) {
+                maps[mapIndex] = currentMap
             }
         }
         
-        currentMap.lastModified = Date()
-        
-        // Update the map in the array
-        if let mapIndex = maps.firstIndex(where: { $0.id == currentMap.id }) {
-            maps[mapIndex] = currentMap
+        // Flip all flippable nodes in overlay maps
+        for overlayMapId in overlayMapIds {
+            if var overlayMap = maps.first(where: { $0.id == overlayMapId }) {
+                for i in 0..<overlayMap.nodes.count {
+                    if overlayMap.nodes[i].isFlippable {
+                        overlayMap.nodes[i].isFlipped.toggle()
+                    }
+                }
+                overlayMap.lastModified = Date()
+                
+                // Update the overlay map in the array
+                if let mapIndex = maps.firstIndex(where: { $0.id == overlayMapId }) {
+                    maps[mapIndex] = overlayMap
+                }
+            }
         }
         
         saveData()
@@ -564,6 +888,12 @@ class BubbleWordManager: ObservableObject {
             print("✅ BubbleWordManager: Selected map ID saved: \(selectedId)")
         }
         userDefaults.set(globalFlipEnabled, forKey: globalFlipKey)
+        
+        // Save overlay map IDs
+        let overlayMapIdStrings = overlayMapIds.map { $0.uuidString }
+        userDefaults.set(overlayMapIdStrings, forKey: overlayMapIdsKey)
+        print("✅ BubbleWordManager: Overlay map IDs saved: \(overlayMapIds)")
+        
         print("💾 BubbleWordManager: Save complete")
     }
     
@@ -649,5 +979,29 @@ class BubbleWordManager: ObservableObject {
         
         globalFlipEnabled = userDefaults.bool(forKey: globalFlipKey)
         print("📂 BubbleWordManager: Load complete")
+        
+        // Load overlay map IDs
+        if let overlayMapIdStrings = userDefaults.stringArray(forKey: overlayMapIdsKey) {
+            overlayMapIds = Set(overlayMapIdStrings.compactMap { UUID(uuidString: $0) })
+            print("✅ BubbleWordManager: Overlay map IDs loaded: \(overlayMapIds)")
+        } else {
+            print("❌ BubbleWordManager: No overlay map IDs found")
+        }
+    }
+    
+    func updateNodeWithDefinition(_ nodeId: UUID, word: String, definition: String, color: String) {
+        guard var currentMap = currentMap else { return }
+        saveStateForUndo()
+        if let nodeIndex = currentMap.nodes.firstIndex(where: { $0.id == nodeId }) {
+            currentMap.nodes[nodeIndex].word = word
+            currentMap.nodes[nodeIndex].definition = definition
+            currentMap.nodes[nodeIndex].color = color
+            currentMap.lastModified = Date()
+            // Update the map in the array
+            if let mapIndex = maps.firstIndex(where: { $0.id == currentMap.id }) {
+                maps[mapIndex] = currentMap
+            }
+            saveData()
+        }
     }
 } 

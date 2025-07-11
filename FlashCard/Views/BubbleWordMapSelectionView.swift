@@ -183,26 +183,7 @@ struct BubbleWordMapSelectionView: View {
                             .cornerRadius(4)
                     }
                 }
-                // Preview of nodes (if any)
-                if !map.nodes.isEmpty {
-                    HStack(spacing: 8) {
-                        ForEach(Array(map.nodes.prefix(5))) { node in
-                            Text(node.word)
-                                .font(.caption)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(Color(hex: node.color)?.opacity(0.2) ?? Color.blue.opacity(0.2))
-                                .foregroundColor(Color(hex: node.color) ?? .blue)
-                                .cornerRadius(8)
-                        }
-                        if map.nodes.count > 5 {
-                            Text("+\(map.nodes.count - 5)")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                        Spacer()
-                    }
-                }
+                // Removed preview of node words here
             }
             .padding()
             .background(Color(.secondarySystemGroupedBackground))
