@@ -209,7 +209,7 @@ struct MainNavigationView: View {
                                 }
                                 
                                 Button(action: {
-                                    navigationCoordinator.push(NavigationDestination.bubbleWord)
+                                    navigationCoordinator.push(NavigationDestination.bubbleWordMapSelection)
                                 }) {
                                     HStack {
                                         Image(systemName: "bubble.left.and.bubble.right")
@@ -319,6 +319,10 @@ struct MainNavigationView: View {
             DutchGrammarRulesView()
         case .bubbleWord:
             BubbleWordView(viewModel: viewModel)
+                .navigationBarHidden(true)
+        case .bubbleWordMapSelection:
+            BubbleWordMapSelectionView(viewModel: viewModel)
+                .navigationBarHidden(true)
         case .custom(let key):
             if key == "lessons" {
                 LessonsListView(viewModel: viewModel)

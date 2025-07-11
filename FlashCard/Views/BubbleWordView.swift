@@ -2,16 +2,13 @@ import SwiftUI
 
 struct BubbleWordView: View {
     @ObservedObject var viewModel: FlashCardViewModel
-    @StateObject private var bubbleManager = BubbleWordManager()
+    @StateObject private var bubbleManager: BubbleWordManager
     @State private var newWord = ""
     @State private var newNoteColorValue: Color = .blue
     @State private var showingAddWord = false
     @State private var showingAddTypeSheet = false // For action sheet
     @State private var showingAddExistingCard = false // For card picker
     @State private var searchText = ""
-    @State private var showingResetAlert = false
-    @State private var showingDisconnectAlert = false
-    @State private var selectedConnection: WordConnection? = nil
     @State private var nodeToDelete: UUID? = nil
     @State private var selectedNodeForEdit: WordNode? = nil
     @State private var showingEditCard = false
@@ -41,6 +38,25 @@ struct BubbleWordView: View {
         }
     }
     
+    @EnvironmentObject private var navigationCoordinator: NavigationCoordinator
+    
+    // MARK: - Initializers
+    
+    init(viewModel: FlashCardViewModel, bubbleManager: BubbleWordManager? = nil, initialMapId: UUID? = nil) {
+        self.viewModel = viewModel
+        self._bubbleManager = StateObject(wrappedValue: bubbleManager ?? BubbleWordManager())
+        
+        // If an initial map ID is provided, select it
+        if let mapId = initialMapId {
+            // Select the map immediately
+            self._bubbleManager = StateObject(wrappedValue: {
+                let manager = bubbleManager ?? BubbleWordManager()
+                manager.selectMap(mapId)
+                return manager
+            }())
+        }
+    }
+    
     var body: some View {
         ZStack {
             // Background
@@ -49,81 +65,93 @@ struct BubbleWordView: View {
             
             // Main content
             VStack {
-                // Bubble word area (no toolbarView)
-                ZStack {
-                    // Connection lines
-                    ForEach(bubbleManager.connections) { connection in
-                        if let fromNode = bubbleManager.nodes.first(where: { $0.id == connection.fromNodeId }),
-                           let toNode = bubbleManager.nodes.first(where: { $0.id == connection.toNodeId }) {
-                            ZStack {
-                                // Visible line
-                                Path { path in
-                                    path.move(to: fromNode.position)
-                                    path.addLine(to: toNode.position)
-                                }
-                                .stroke(Color.gray.opacity(0.6), lineWidth: 2)
-                                // Invisible tappable line
-                                Path { path in
-                                    path.move(to: fromNode.position)
-                                    path.addLine(to: toNode.position)
-                                }
-                                .stroke(Color.clear, lineWidth: 24)
-                                .contentShape(Rectangle())
-                                .onTapGesture(count: 2) {
-                                    pendingDeleteConnection = connection
-                                }
-                            }
-                        }
-                    }
-                    
-                    // Word bubbles
-                    wordNodesView
-                }
-                .scaleEffect(bubbleManager.scale)
-                .offset(bubbleManager.offset)
-                .gesture(backgroundPanGesture)
-                .simultaneousGesture(pinchGesture)
-                
+                bubbleArea
                 Spacer()
             }
-            // Floating action buttons - Top right
-            VStack(spacing: 18) {
-                Button(action: { showingAddTypeSheet = true }) {
-                    Image(systemName: "plus")
-                        .font(.system(size: 28, weight: .bold))
-                        .foregroundColor(.white)
-                        .frame(width: 54, height: 54)
-                        .background(Circle().fill(Color.blue))
-                        .shadow(radius: 4, y: 2)
-                }
-                Button(action: { showingResetAlert = true }) {
-                    Image(systemName: "arrow.clockwise")
-                        .font(.system(size: 28, weight: .bold))
-                        .foregroundColor(.white)
-                        .frame(width: 54, height: 54)
-                        .background(Circle().fill(Color.orange))
-                        .shadow(radius: 4, y: 2)
-                }
-                if bubbleManager.selectedNodeId != nil {
-                    Button(action: {
-                        if let nodeId = bubbleManager.selectedNodeId {
-                            nodeToDelete = nodeId
-                            deleteSelectedNode()
-                        }
-                    }) {
-                        Image(systemName: "trash")
-                            .font(.system(size: 28, weight: .bold))
-                            .foregroundColor(.white)
-                            .frame(width: 54, height: 54)
-                            .background(Circle().fill(Color.red))
-                            .shadow(radius: 4, y: 2)
-                    }
-                }
-            }
-            .padding(.top, 32)
-            .padding(.trailing, 20)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
-            // Floating zoom buttons - Bottom right
+            
+            // Floating action button for adding words - positioned in top right
+            // VStack {
+            //     HStack {
+            //         Spacer()
+            //         VStack(spacing: 12) {
+            //             // Add bubble button (now at top)
+            //             Button(action: {
+            //                 showingAddTypeSheet = true
+            //             }) {
+            //                 Image(systemName: "plus")
+            //                     .font(.title)
+            //                     .fontWeight(.bold)
+            //                     .foregroundColor(.white)
+            //                     .frame(width: 50, height: 50)
+            //                     .background(
+            //                         Circle()
+            //                             .fill(
+            //                                 LinearGradient(
+            //                                     colors: [.green, .teal],
+            //                                     startPoint: .topLeading,
+            //                                     endPoint: .bottomTrailing
+            //                                 )
+            //                             )
+            //                     )
+            //                     .shadow(color: .black.opacity(0.3), radius: 6, x: 0, y: 3)
+            //             }
+            //             
+            //             // Redo button
+            //             Button(action: {
+            //                 bubbleManager.redo()
+            //             }) {
+            //                 Image(systemName: "arrow.uturn.forward")
+            //                     .font(.title2)
+            //                     .fontWeight(.bold)
+            //                     .foregroundColor(.white)
+            //                     .frame(width: 40, height: 40)
+            //                     .background(
+            //                         Circle()
+            //                             .fill(
+            //                                 LinearGradient(
+            //                                     colors: [.purple, .blue],
+            //                                     startPoint: .topLeading,
+            //                                     endPoint: .bottomTrailing
+            //                                 )
+            //                             )
+            //                     )
+            //                     .shadow(color: .black.opacity(0.3), radius: 4, x: 0, y: 2)
+            //             }
+            //             .disabled(!bubbleManager.canRedo())
+            //             .opacity(bubbleManager.canRedo() ? 1.0 : 0.5)
+            //             
+            //             // Undo button (now at bottom)
+            //             Button(action: {
+            //                 bubbleManager.undo()
+            //             }) {
+            //                 Image(systemName: "arrow.uturn.backward")
+            //                     .font(.title2)
+            //                     .fontWeight(.bold)
+            //                     .foregroundColor(.white)
+            //                     .frame(width: 40, height: 40)
+            //                     .background(
+            //                         Circle()
+            //                             .fill(
+            //                                 LinearGradient(
+            //                                     colors: [.orange, .red],
+            //                                     startPoint: .topLeading,
+            //                                     endPoint: .bottomTrailing
+            //                                 )
+            //                             )
+            //                     )
+            //                     .shadow(color: .black.opacity(0.3), radius: 4, x: 0, y: 2)
+            //             }
+            //             .disabled(!bubbleManager.canUndo())
+            //             .opacity(bubbleManager.canUndo() ? 1.0 : 0.5)
+            //         }
+            //         .padding(.trailing, 20)
+            //         .padding(.top, 12)
+            //     }
+            //     Spacer()
+            // }
+            // .zIndex(1000) // Ensure it's above everything
+            
+            // Zoom controls - positioned in bottom right
             VStack(spacing: 18) {
                 Button(action: { bubbleManager.scale = min(bubbleManager.scale * 1.2, 3.0) }) {
                     Image(systemName: "plus.magnifyingglass")
@@ -145,19 +173,35 @@ struct BubbleWordView: View {
             .padding(.bottom, 32)
             .padding(.trailing, 20)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+            .zIndex(999) // Below FAB but above content
         }
-        .navigationTitle("Bubble Word")
-        .navigationBarTitleDisplayMode(.inline)
+        .gesture(backgroundPanGesture) // Attach pan gesture to the whole ZStack
+        .navigationBarHidden(true) // Hide default navigation bar
+        .overlay(
+            VStack(spacing: 0) {
+                CustomHeaderView(
+                    title: bubbleManager.currentMap?.name ?? "Bubble Word",
+                    onBack: {
+                        navigationCoordinator.pop()
+                    },
+                    trailing: trailingMenu
+                )
+                actionButtons
+                Spacer()
+            }
+        )
         .onChange(of: bubbleManager.selectedNodeId) { newValue in
             handleNodeSelectionChange(oldValue: previousSelectedNodeId, newValue: newValue)
             previousSelectedNodeId = newValue
         }
-        .actionSheet(isPresented: $showingAddTypeSheet) {
-            ActionSheet(title: Text("Add Bubble"), buttons: [
-                .default(Text("Add Existing Card")) { showingAddExistingCard = true },
-                .default(Text("Add Note")) { showingAddWord = true },
-                .cancel()
-            ])
+        .confirmationDialog("Add Bubble", isPresented: $showingAddTypeSheet, titleVisibility: .visible) {
+            Button("Add Existing Card") { 
+                showingAddExistingCard = true 
+            }
+            Button("Add Note") { 
+                showingAddWord = true 
+            }
+            Button("Cancel", role: .cancel) { }
         }
         .sheet(isPresented: $showingAddWord) {
             addWordSheet
@@ -206,22 +250,6 @@ struct BubbleWordView: View {
         .sheet(isPresented: $showingEditCard) {
             editWordSheet
         }
-        .alert("Reset Bubble Word", isPresented: $showingResetAlert) {
-            Button("Reset", role: .destructive) {
-                bubbleManager.resetData()
-            }
-            Button("Cancel", role: .cancel) { }
-        } message: {
-            Text("This will delete all words and connections. This action cannot be undone.")
-        }
-        .alert("Disconnect Nodes", isPresented: $showingDisconnectAlert) {
-            Button("Disconnect", role: .destructive) {
-                disconnectSelectedConnection()
-            }
-            Button("Cancel", role: .cancel) { }
-        } message: {
-            Text("Are you sure you want to disconnect these nodes?")
-        }
         .alert("Delete Connection?", isPresented: Binding<Bool>(
             get: { pendingDeleteConnection != nil },
             set: { if !$0 { pendingDeleteConnection = nil } }
@@ -237,6 +265,114 @@ struct BubbleWordView: View {
             }
         } message: {
             Text("Are you sure you want to delete this connection?")
+        }
+    }
+    
+    private var bubbleArea: some View {
+        ZStack {
+            // Connection lines
+            ForEach(bubbleManager.connections) { connection in
+                if let fromNode = bubbleManager.nodes.first(where: { $0.id == connection.fromNodeId }),
+                   let toNode = bubbleManager.nodes.first(where: { $0.id == connection.toNodeId }) {
+                    ZStack {
+                        // Visible line
+                        Path { path in
+                            path.move(to: fromNode.position)
+                            path.addLine(to: toNode.position)
+                        }
+                        .stroke(Color.gray.opacity(0.6), lineWidth: 2)
+                        // Invisible tappable line
+                        Path { path in
+                            path.move(to: fromNode.position)
+                            path.addLine(to: toNode.position)
+                        }
+                        .stroke(Color.clear, lineWidth: 24)
+                        .contentShape(Rectangle())
+                        .onTapGesture(count: 2) {
+                            pendingDeleteConnection = connection
+                        }
+                    }
+                }
+            }
+            // Word bubbles
+            wordNodesView
+        }
+        .scaleEffect(bubbleManager.scale)
+        .offset(bubbleManager.offset)
+        .simultaneousGesture(pinchGesture)
+    }
+
+    private var actionButtons: some View {
+        HStack {
+            Spacer()
+            VStack(spacing: 12) {
+                Button(action: {
+                    showingAddTypeSheet = true
+                }) {
+                    Image(systemName: "plus")
+                        .font(.title)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+                        .frame(width: 50, height: 50)
+                        .background(
+                            Circle()
+                                .fill(
+                                    LinearGradient(
+                                        colors: [.green, .teal],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                        )
+                        .shadow(color: .black.opacity(0.3), radius: 6, x: 0, y: 3)
+                }
+                Button(action: {
+                    bubbleManager.redo()
+                }) {
+                    Image(systemName: "arrow.uturn.forward")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+                        .frame(width: 40, height: 40)
+                        .background(
+                            Circle()
+                                .fill(
+                                    LinearGradient(
+                                        colors: [.purple, .blue],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                        )
+                        .shadow(color: .black.opacity(0.3), radius: 4, x: 0, y: 2)
+                }
+                .disabled(!bubbleManager.canRedo())
+                .opacity(bubbleManager.canRedo() ? 1.0 : 0.5)
+                Button(action: {
+                    bubbleManager.undo()
+                }) {
+                    Image(systemName: "arrow.uturn.backward")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+                        .frame(width: 40, height: 40)
+                        .background(
+                            Circle()
+                                .fill(
+                                    LinearGradient(
+                                        colors: [.orange, .red],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                        )
+                        .shadow(color: .black.opacity(0.3), radius: 4, x: 0, y: 2)
+                }
+                .disabled(!bubbleManager.canUndo())
+                .opacity(bubbleManager.canUndo() ? 1.0 : 0.5)
+            }
+            .padding(.trailing, 20)
+            .padding(.top, 12)
         }
     }
     
@@ -260,6 +396,9 @@ struct BubbleWordView: View {
             onDelete: {
                 nodeToDelete = node.id
                 deleteSelectedNode()
+            },
+            onFlip: {
+                handleNodeFlip(node)
             }
         )
         .position(node.position)
@@ -284,34 +423,118 @@ struct BubbleWordView: View {
     }
     
     private var addWordSheet: some View {
-        NoteEditSheet(
-            title: "Add New Note",
-            word: $newWord,
-            colorValue: $newNoteColorValue,
-            onCancel: {
-                showingAddWord = false
-                newWord = ""
-                newNoteColorValue = .blue
-            },
-            onSave: {
-                addNewWord()
+        VStack(spacing: 20) {
+            HStack {
+                Button("Cancel", action: {
+                    showingAddWord = false
+                    newWord = ""
+                    newNoteColorValue = .blue
+                })
+                    .foregroundColor(.blue)
+                Spacer()
+                Text("Add New Note")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                Spacer()
+                Button("Add", action: {
+                    addNewWord()
+                })
+                    .foregroundColor(.blue)
+                    .disabled(newWord.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
-        )
+            .padding(.horizontal)
+            
+            TextField("Enter note", text: $newWord)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+                .padding(.horizontal)
+            
+            ColorPicker("Pick a color", selection: $newNoteColorValue, supportsOpacity: false)
+                .padding(.horizontal)
+            
+            Spacer()
+        }
+        .frame(maxWidth: 400)
+        .padding(.top, 32)
+        .padding(.bottom, 16)
     }
     
     private var editWordSheet: some View {
-        NoteEditSheet(
-            title: "Edit Note",
-            word: $editedWord,
-            colorValue: $editedColorValue,
-            onCancel: {
-                showingEditCard = false
-                selectedNodeForEdit = nil
-            },
-            onSave: {
-                saveEditedNode()
+        VStack(spacing: 20) {
+            HStack {
+                Button("Cancel", action: {
+                    showingEditCard = false
+                    selectedNodeForEdit = nil
+                })
+                    .foregroundColor(.blue)
+                Spacer()
+                Text("Edit Bubble")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                Spacer()
+                Button("Save", action: {
+                    saveEditedNode()
+                })
+                    .foregroundColor(.blue)
+                    .disabled(editedWord.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
-        )
+            .padding(.horizontal)
+            
+            TextField("Enter text", text: $editedWord)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+                .padding(.horizontal)
+            
+            ColorPicker("Pick a color", selection: $editedColorValue, supportsOpacity: false)
+                .padding(.horizontal)
+            
+            // Action buttons for cards
+            if let node = selectedNodeForEdit, node.isCard {
+                VStack(spacing: 12) {
+                    // Flip button
+                    Button(action: {
+                        if let node = selectedNodeForEdit {
+                            bubbleManager.flipNode(node.id)
+                        }
+                        showingEditCard = false
+                        selectedNodeForEdit = nil
+                    }) {
+                        HStack {
+                            Image(systemName: selectedNodeForEdit?.isFlipped == true ? "arrow.clockwise" : "arrow.counterclockwise")
+                            Text(selectedNodeForEdit?.isFlipped == true ? "Show Word" : "Show Definition")
+                        }
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.blue)
+                        .cornerRadius(10)
+                    }
+                    
+                    // Delete button
+                    Button(action: {
+                        if let node = selectedNodeForEdit {
+                            bubbleManager.removeNode(node.id)
+                        }
+                        showingEditCard = false
+                        selectedNodeForEdit = nil
+                    }) {
+                        HStack {
+                            Image(systemName: "trash")
+                            Text("Delete Bubble")
+                        }
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.red)
+                        .cornerRadius(10)
+                    }
+                }
+                .padding(.horizontal)
+            }
+            
+            Spacer()
+        }
+        .frame(maxWidth: 400)
+        .padding(.top, 32)
+        .padding(.bottom, 16)
         .onAppear {
             if let node = selectedNodeForEdit {
                 editedWord = node.word
@@ -324,7 +547,7 @@ struct BubbleWordView: View {
         if !newWord.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             let centerPosition = getNextAvailablePosition()
             let colorHex = newNoteColorValue.toHex() ?? "0000ff"
-            bubbleManager.addNode(word: newWord.trimmingCharacters(in: .whitespacesAndNewlines), at: centerPosition, color: colorHex)
+            _ = bubbleManager.addNode(word: newWord.trimmingCharacters(in: .whitespacesAndNewlines), at: centerPosition, color: colorHex)
             newWord = ""
             newNoteColorValue = .blue
             showingAddWord = false
@@ -403,25 +626,6 @@ struct BubbleWordView: View {
         }
     }
     
-    private func showDisconnectOptions() {
-        if let selectedId = bubbleManager.selectedNodeId {
-            let connections = bubbleManager.connections.filter { 
-                $0.fromNodeId == selectedId || $0.toNodeId == selectedId 
-            }
-            if let firstConnection = connections.first {
-                selectedConnection = firstConnection
-                showingDisconnectAlert = true
-            }
-        }
-    }
-    
-    private func disconnectSelectedConnection() {
-        if let connection = selectedConnection {
-            bubbleManager.disconnectNodes(fromNodeId: connection.fromNodeId, toNodeId: connection.toNodeId)
-            selectedConnection = nil
-        }
-    }
-    
     private func resetZoom() {
         withAnimation(.easeInOut(duration: 0.5)) {
             bubbleManager.scale = 1.0
@@ -466,7 +670,7 @@ struct BubbleWordView: View {
     // Add card as bubble
     private func addCardAsBubble(_ card: FlashCard) {
         let centerPosition = getNextAvailablePosition()
-        bubbleManager.addNode(word: card.word, at: centerPosition)
+        _ = bubbleManager.addCardNode(from: card, at: centerPosition)
         showingAddExistingCard = false
     }
     
@@ -478,6 +682,41 @@ struct BubbleWordView: View {
         showingEditCard = false
         selectedNodeForEdit = nil
     }
+    
+    private func handleNodeFlip(_ node: WordNode) {
+        bubbleManager.flipNode(node.id)
+    }
+    
+    private var trailingMenu: AnyView {
+        AnyView(
+            Menu {
+                Button(action: { resetZoom() }) {
+                    Label("Center Map", systemImage: "scope")
+                }
+                Divider()
+                Button(action: { bubbleManager.setGlobalFlip(!bubbleManager.globalFlipEnabled) }) {
+                    Label(
+                        bubbleManager.globalFlipEnabled ? "Disable Global Flip" : "Enable Global Flip",
+                        systemImage: bubbleManager.globalFlipEnabled ? "eye.slash" : "eye"
+                    )
+                }
+                Button(action: { bubbleManager.flipAllCards() }) {
+                    Label("Flip All Cards", systemImage: "arrow.triangle.2.circlepath")
+                }
+                if bubbleManager.selectedNodeId != nil {
+                    Divider()
+                    Button(action: {
+                        bubbleManager.disconnectAllConnections(fromNodeId: bubbleManager.selectedNodeId!)
+                    }) {
+                        Label("Disconnect All", systemImage: "link.badge.minus")
+                    }
+                }
+            } label: {
+                Image(systemName: "ellipsis.circle")
+                    .foregroundColor(.blue)
+            }
+        )
+    }
 }
 
 struct WordBubbleView: View {
@@ -486,81 +725,59 @@ struct WordBubbleView: View {
     let onTap: () -> Void
     let onDoubleTap: () -> Void
     let onDelete: () -> Void
+    let onFlip: () -> Void
     
     var body: some View {
         VStack(spacing: 8) {
             // Word bubble
-            Text(node.word)
-                .font(.system(size: 16, weight: .medium))
-                .foregroundColor(.white)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-                .background(
-                    RoundedRectangle(cornerRadius: 20)
-                        .fill(Color(hex: node.color) ?? node.nodeColor)
-                        .shadow(color: isSelected ? (Color(hex: node.color) ?? node.nodeColor).opacity(0.6) : Color.black.opacity(0.2), radius: isSelected ? 8 : 4)
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 20)
-                        .stroke(isSelected ? Color.white : Color.clear, lineWidth: 3)
-                )
-                .scaleEffect(isSelected ? 1.1 : 1.0)
-                .animation(.easeInOut(duration: 0.2), value: isSelected)
-                .onTapGesture {
-                    onTap()
+            VStack(spacing: 4) {
+                Text(node.displayText)
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 20)
+                            .fill(Color(hex: node.color) ?? node.nodeColor)
+                            .shadow(color: isSelected ? (Color(hex: node.color) ?? node.nodeColor).opacity(0.6) : Color.black.opacity(0.2), radius: isSelected ? 8 : 4)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 20)
+                            .stroke(isSelected ? Color.white : Color.clear, lineWidth: 3)
+                    )
+                    .scaleEffect(isSelected ? 1.1 : 1.0)
+                    .animation(.easeInOut(duration: 0.2), value: isSelected)
+                    .onTapGesture {
+                        onTap()
+                    }
+                    .onTapGesture(count: 2) {
+                        onDoubleTap()
+                    }
+                
+                // Show article if available and not flipped
+                if !node.isFlipped && !node.article.isEmpty {
+                    Text(node.article)
+                        .font(.caption)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 2)
+                        .background(Color.white.opacity(0.3))
+                        .cornerRadius(8)
                 }
-                .onTapGesture(count: 2) {
-                    onDoubleTap()
+                
+                // Show example if available and flipped
+                if node.isFlipped && !node.example.isEmpty {
+                    Text(node.example)
+                        .font(.caption)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 2)
+                        .background(Color.white.opacity(0.3))
+                        .cornerRadius(8)
+                        .lineLimit(2)
                 }
-            
-            // Delete button (only show when selected)
-            if isSelected {
-                Button(action: onDelete) {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.title2)
-                        .foregroundColor(.red)
-                        .background(Color.white)
-                        .clipShape(Circle())
-                        .shadow(radius: 2)
-                }
-                .transition(.scale.combined(with: .opacity))
             }
         }
-    }
-} 
-
-struct NoteEditSheet: View {
-    let title: String
-    @Binding var word: String
-    @Binding var colorValue: Color
-    let onCancel: () -> Void
-    let onSave: () -> Void
-    
-    var body: some View {
-        VStack(spacing: 20) {
-            HStack {
-                Button("Cancel", action: onCancel)
-                    .foregroundColor(.blue)
-                Spacer()
-                Text(title)
-                    .font(.title2)
-                    .fontWeight(.bold)
-                Spacer()
-                Button("Save", action: onSave)
-                    .foregroundColor(.blue)
-                    .disabled(word.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-            }
-            .padding(.horizontal)
-            TextField("Enter note", text: $word)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .padding(.horizontal)
-            ColorPicker("Pick a color", selection: $colorValue, supportsOpacity: false)
-                .padding(.horizontal)
-            Spacer()
-        }
-        .frame(maxWidth: 400)
-        .padding(.top, 32)
-        .padding(.bottom, 16)
     }
 } 
 

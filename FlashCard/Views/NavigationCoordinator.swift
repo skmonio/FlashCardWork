@@ -186,6 +186,7 @@ enum NavigationDestination: Hashable {
     case dutchVocabulary
     case dutchGrammar
     case bubbleWord
+    case bubbleWordMapSelection
     case imageImport
     case custom(String) // For custom navigation like Lessons
 }
