@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
    LastUpgradeVersion = "1640"
-   version = "2.2">
+   version = "1.7">
    <BuildAction
       parallelizeBuildables = "YES"
       buildImplicitDependencies = "YES"
@@ -13,20 +13,11 @@
             buildForProfiling = "YES"
             buildForArchiving = "YES"
             buildForAnalyzing = "YES">
-            <AutocreatedTestPlanReference>
-            </AutocreatedTestPlanReference>
-         </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "YES"
-            buildForProfiling = "YES"
-            buildForArchiving = "YES"
-            buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "DC837CB92E21585A00F8A51E"
-               BuildableName = "Taal Trek Lite.app"
-               BlueprintName = "Taal Trek Lite"
+               BlueprintIdentifier = "0A780F9D2DF0528600F71F44"
+               BuildableName = "FlashCard.app"
+               BlueprintName = "FlashCard"
                ReferencedContainer = "container:FlashCard.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -38,6 +29,30 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES"
       shouldAutocreateTestPlan = "YES">
+      <Testables>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "0A780FAA2DF0528700F71F44"
+               BuildableName = "FlashCardTests.xctest"
+               BlueprintName = "FlashCardTests"
+               ReferencedContainer = "container:FlashCard.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "0A780FB42DF0528700F71F44"
+               BuildableName = "FlashCardUITests.xctest"
+               BlueprintName = "FlashCardUITests"
+               ReferencedContainer = "container:FlashCard.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+      </Testables>
    </TestAction>
    <LaunchAction
       buildConfiguration = "Debug"
@@ -53,9 +68,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "DC837CB92E21585A00F8A51E"
-            BuildableName = "Taal Trek Lite.app"
-            BlueprintName = "Taal Trek Lite"
+            BlueprintIdentifier = "0A780F9D2DF0528600F71F44"
+            BuildableName = "FlashCard.app"
+            BlueprintName = "FlashCard"
             ReferencedContainer = "container:FlashCard.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -70,9 +85,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "DC837CB92E21585A00F8A51E"
-            BuildableName = "Taal Trek Lite.app"
-            BlueprintName = "Taal Trek Lite"
+            BlueprintIdentifier = "0A780F9D2DF0528600F71F44"
+            BuildableName = "FlashCard.app"
+            BlueprintName = "FlashCard"
             ReferencedContainer = "container:FlashCard.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

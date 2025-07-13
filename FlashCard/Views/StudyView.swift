@@ -217,7 +217,14 @@ struct StudyView: View {
                 knownCards.removeAll()
                 unknownCards.removeAll()
                 skippedCards.removeAll()
-                cards = viewModel.sortCardsForLearning(cards) // Use intelligent ordering for new session
+                
+                // Only re-sort cards if we're not in progressive study mode (no maxQuestions limit)
+                // ProgressiveStudyView already carefully selects and orders cards for each level
+                if maxQuestions == nil {
+                    cards = viewModel.sortCardsForLearning(cards) // Use intelligent ordering for new session
+                } else {
+                    print("🎯 Progressive Study: Keeping original card order for level")
+                }
                 
                 // Clear navigation state
                 maxProgressIndex = 1

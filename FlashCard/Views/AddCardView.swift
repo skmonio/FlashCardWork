@@ -144,6 +144,9 @@ struct AddCardView: View {
                                 TextField("e.g., eten", text: $word)
                                     .onChange(of: word) { newValue in
                                         logger.debug("Word changed: \(newValue)")
+                                        if newValue.count > 50 {
+                                            word = String(newValue.prefix(50))
+                                        }
                                     }
                                 
                                 #if !LITE_VERSION
@@ -152,6 +155,9 @@ struct AddCardView: View {
                                 }
                                 #endif
                             }
+                            Text("\(word.count)/50 characters")
+                                .font(.caption)
+                                .foregroundColor(word.count > 50 ? .red : .secondary)
                             
                             // Persistent translation button - always available when word has 3+ characters
                             if !word.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && word.count >= 3 {
@@ -216,7 +222,16 @@ struct AddCardView: View {
                         TextField("e.g., to eat", text: $definition)
                             .onChange(of: definition) { newValue in
                                 logger.debug("Definition changed: \(newValue)")
+                                if newValue.count > 50 {
+                                    definition = String(newValue.prefix(50))
+                                }
                             }
+                            .onChange(of: definition) { newValue in
+                                logger.debug("Definition changed: \(newValue)")
+                            }
+                        Text("\(definition.count)/50 characters")
+                            .font(.caption)
+                            .foregroundColor(definition.count > 50 ? .red : .secondary)
                         
                         // Example field with speech controls
                         HStack(spacing: 8) {

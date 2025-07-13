@@ -9,7 +9,7 @@ struct LearningPercentageView: View {
                 Text("\(percentage)%")
                     .font(.caption)
                     .fontWeight(.medium)
-                Image(systemName: percentage == 100 ? "star.fill" : "chart.bar.fill")
+                Image(systemName: percentage >= 90 ? "star.fill" : "chart.bar.fill")
                     .font(.caption2)
             }
             .foregroundColor(colorForPercentage(percentage))
@@ -26,11 +26,11 @@ struct LearningPercentageView: View {
     
     private func colorForPercentage(_ percentage: Int) -> Color {
         switch percentage {
-        case 100:
+        case 90...100:
             return .green
-        case 80..<100:
-            return .blue
-        case 60..<80:
+        case 70..<90:
+            return .yellow
+        case 60..<70:
             return .orange
         default:
             return .red
@@ -39,11 +39,11 @@ struct LearningPercentageView: View {
     
     private func backgroundColorForPercentage(_ percentage: Int) -> Color {
         switch percentage {
-        case 100:
+        case 90...100:
             return .green.opacity(0.1)
-        case 80..<100:
-            return .blue.opacity(0.1)
-        case 60..<80:
+        case 70..<90:
+            return .yellow.opacity(0.1)
+        case 60..<70:
             return .orange.opacity(0.1)
         default:
             return .red.opacity(0.1)

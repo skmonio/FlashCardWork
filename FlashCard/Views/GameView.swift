@@ -18,7 +18,7 @@ struct Card: Identifiable {
 
 struct GameView: View {
     @ObservedObject var viewModel: FlashCardViewModel
-    let cards: [FlashCard]
+    var cards: [FlashCard] // Changed from let to var
     let difficulty: MemoryGameDifficulty
     @Environment(\.dismiss) private var dismiss
     @State private var gameCards: [Card] = []
@@ -51,6 +51,14 @@ struct GameView: View {
     
     // Session XP tracking
     @State private var sessionXP: Int = 0 // Track XP gained during current session
+    
+    // Session tracking for results view
+    @State private var currentSession: StudySession?
+    @State private var sessionStartTime = Date()
+    @State private var incorrectCards: Set<UUID> = []
+    
+    // Add managers for session tracking
+    private let statsManager = StatisticsManager.shared
     
     // Computed property to check if there's significant progress to save
     private var hasSignificantProgress: Bool {
@@ -278,6 +286,13 @@ struct GameView: View {
         SaveStateManager.shared.deleteSaveState(gameType: .memoryGame)
     }
     
+    private func resetGame() {
+        setupGame()
+        
+        // Clear any saved progress when resetting
+        clearSavedProgress()
+    }
+    
     private func saveProgressAndDismiss() {
         if hasSignificantProgress && !showingResults {
             saveCurrentProgress()
@@ -451,7 +466,12 @@ struct GameView: View {
         
         // Reset session XP to 0 for new game
         sessionXP = 0
-
+        
+        // Initialize session tracking
+        sessionStartTime = Date()
+        currentSession = statsManager.startSession(deckIds: deckIds, cardCount: cardsToUse.count)
+        incorrectCards.removeAll()
+        
         // Set up timer based on difficulty and number of cards
         let timePerCardSet = difficulty.timePerCardSet
         timeRemaining = gameCards.count * timePerCardSet
@@ -490,6 +510,25 @@ struct GameView: View {
         // Stop the timer
         stopTimer()
         
+        // Update the session with final results
+        if let session = currentSession {
+            statsManager.endSession(
+                session,
+                knownCards: score,
+                unknownCards: gameCards.count / 2 - score,
+                skippedCards: 0
+            )
+            
+            // Manually update the currentSession with final results since StudySession is a struct
+            var updatedSession = session
+            updatedSession.endTime = Date()
+            updatedSession.duration = updatedSession.endTime!.timeIntervalSince(session.startTime)
+            updatedSession.knownCards = score
+            updatedSession.unknownCards = gameCards.count / 2 - score
+            updatedSession.skippedCards = 0
+            currentSession = updatedSession
+        }
+        
         // Check if we've reached the max questions limit (for progressive study)
         if let maxQuestions = maxQuestions, score >= maxQuestions / 2 {
             print("🧠 Reached max questions limit for progressive study")
@@ -520,7 +559,7 @@ struct GameView: View {
                 
                 // Check for perfect session (100% accuracy with at least 5 pairs)
                 if gameCards.count >= 10 && score == gameCards.count / 2 {
-                    let sessionDuration = Date().timeIntervalSince(gameStartTime ?? Date())
+                    let sessionDuration = Date().timeIntervalSince(sessionStartTime)
                     StatisticsManager.shared.recordPerfectSession(
                         gameType: .game,
                         totalCards: gameCards.count / 2,
@@ -529,10 +568,8 @@ struct GameView: View {
                     )
                 }
                 
-                withAnimation {
-                    StreakManager.shared.recordGameCompletion()
-                    showingResults = true
-                }
+                StreakManager.shared.recordGameCompletion()
+                showingResults = true
             }
             return
         }
@@ -545,7 +582,7 @@ struct GameView: View {
         
         // Check for perfect session (100% accuracy with at least 5 pairs)
         if gameCards.count >= 10 && score == gameCards.count / 2 {
-            let sessionDuration = Date().timeIntervalSince(gameStartTime ?? Date())
+            let sessionDuration = Date().timeIntervalSince(sessionStartTime)
             StatisticsManager.shared.recordPerfectSession(
                 gameType: .game,
                 totalCards: gameCards.count / 2,
@@ -554,10 +591,8 @@ struct GameView: View {
             )
         }
         
-        withAnimation {
-            StreakManager.shared.recordGameCompletion()
-            showingResults = true
-        }
+        StreakManager.shared.recordGameCompletion()
+        showingResults = true
     }
     
     private func cardTapped(_ tappedCard: Card) {
@@ -628,6 +663,10 @@ struct GameView: View {
                 incorrectMatches.insert(selectedCard!.originalCard)
                 incorrectMatches.insert(tappedCard.originalCard)
                 
+                // Track incorrect cards for results view
+                incorrectCards.insert(selectedCard!.originalCard.id)
+                incorrectCards.insert(tappedCard.originalCard.id)
+                
                 // Record incorrect match
                 viewModel.recordCardShown(tappedCard.originalCard.id, isCorrect: false)
                 
@@ -660,109 +699,134 @@ struct GameView: View {
     }
     
     private var resultsView: some View {
-        VStack(spacing: 20) {
-            // Determine result type based on performance
-            let resultType = determineResultType()
-            
-            switch resultType {
-            case .victory:
-                // Victory - completed all matches with time remaining
-                Image(systemName: "trophy.fill")
-                    .font(.system(size: 60))
-                    .foregroundColor(.yellow)
-                
-                Text("Victory! 🏆")
-                    .font(.title)
-                    .fontWeight(.bold)
-                    .multilineTextAlignment(.center)
-                
-                Text("Perfect match! You completed all pairs!")
-                    .font(.title2)
-                    .foregroundColor(.secondary)
-                
-                Text("Time remaining: \(timeString)")
-                    .font(.headline)
-                    .foregroundColor(.green)
-                
-            case .almost:
-                // Almost - completed most matches but ran out of time
-                Image(systemName: "hand.thumbsup.fill")
-                    .font(.system(size: 60))
-                    .foregroundColor(.orange)
-                
-                Text("Almost There! 👍")
-                    .font(.title)
-                    .fontWeight(.bold)
-                    .multilineTextAlignment(.center)
-                
-                Text("Great effort! You matched \(score) out of \(totalPairs) pairs")
-                    .font(.title2)
-                    .foregroundColor(.secondary)
-                
-                Text("Try again to get them all!")
-                    .font(.subheadline)
-                    .foregroundColor(.orange)
-                
-            case .timeUp:
-                // Time's up - completed very few matches
-                Image(systemName: "clock.badge.exclamationmark")
-                    .font(.system(size: 60))
-                    .foregroundColor(.red)
-                
-                Text("Time's Up! ⏰")
-                    .font(.title)
-                    .fontWeight(.bold)
-                    .multilineTextAlignment(.center)
-                
-                Text("You matched \(score) out of \(totalPairs) pairs")
-                    .font(.title2)
-                    .foregroundColor(.secondary)
-                
-                Text("Keep practicing to improve!")
-                    .font(.subheadline)
-                    .foregroundColor(.red)
-            }
-            
-            // Show moves and score info
-            VStack(spacing: 8) {
-                Text("Moves: \(moves)")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                
-                if score > 0 {
-                    Text("Score: \(score) pairs")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                }
-            }
-            .padding(.top, 8)
-            
-            VStack(spacing: 16) {
-                Button(action: {
-                    // Explicitly save all ViewModel data to ensure statistics persist
-                    viewModel.saveAllData()
+        Group {
+            if let session = currentSession {
+                StudySessionResultsView(
+                    session: session,
+                    viewModel: viewModel,
+                    sessionXP: sessionXP,
+                    onStudyAgain: {
+                        resetGame()
+                    },
+                    onReviewUnknown: {
+                        // Filter cards to only incorrect ones and restart
+                        let incorrectCardObjects = cards.filter { incorrectCards.contains($0.id) }
+                        // For memory game, we need to create a new GameView with the incorrect cards
+                        // This is a bit complex since we need to reconstruct the game state
+                        // For now, just restart with the same cards
+                        resetGame()
+                    },
+                    onDone: {
+                        dismissToRoot()
+                    }
+                )
+            } else {
+                // Fallback if session is nil - use the original custom results view
+                VStack(spacing: 20) {
+                    // Determine result type based on performance
+                    let resultType = determineResultType()
                     
-                    // Force UI refresh
-                    DispatchQueue.main.async {
-                        viewModel.objectWillChange.send()
+                    switch resultType {
+                    case .victory:
+                        // Victory - completed all matches with time remaining
+                        Image(systemName: "trophy.fill")
+                            .font(.system(size: 60))
+                            .foregroundColor(.yellow)
+                        
+                        Text("Victory! 🏆")
+                            .font(.title)
+                            .fontWeight(.bold)
+                            .multilineTextAlignment(.center)
+                        
+                        Text("Perfect match! You completed all pairs!")
+                            .font(.title2)
+                            .foregroundColor(.secondary)
+                        
+                        Text("Time remaining: \(timeString)")
+                            .font(.headline)
+                            .foregroundColor(.green)
+                        
+                    case .almost:
+                        // Almost - completed most matches but ran out of time
+                        Image(systemName: "hand.thumbsup.fill")
+                            .font(.system(size: 60))
+                            .foregroundColor(.orange)
+                        
+                        Text("Almost There! 👍")
+                            .font(.title)
+                            .fontWeight(.bold)
+                            .multilineTextAlignment(.center)
+                        
+                        Text("Great effort! You matched \(score) out of \(totalPairs) pairs")
+                            .font(.title2)
+                            .foregroundColor(.secondary)
+                        
+                        Text("Try again to get them all!")
+                            .font(.subheadline)
+                            .foregroundColor(.orange)
+                        
+                    case .timeUp:
+                        // Time's up - completed very few matches
+                        Image(systemName: "clock.badge.exclamationmark")
+                            .font(.system(size: 60))
+                            .foregroundColor(.red)
+                        
+                        Text("Time's Up! ⏰")
+                            .font(.title)
+                            .fontWeight(.bold)
+                            .multilineTextAlignment(.center)
+                        
+                        Text("You matched \(score) out of \(totalPairs) pairs")
+                            .font(.title2)
+                            .foregroundColor(.secondary)
+                        
+                        Text("Keep practicing to improve!")
+                            .font(.subheadline)
+                            .foregroundColor(.red)
                     }
                     
-                    // Reset the game state and start a new game with the same cards
-                    showingResults = false
-                    setupGame()
-                }) {
-                    Text("Play Again")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.blue)
-                        .cornerRadius(10)
+                    // Show moves and score info
+                    VStack(spacing: 8) {
+                        Text("Moves: \(moves)")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        
+                        if score > 0 {
+                            Text("Score: \(score) pairs")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .padding(.top, 8)
+                    
+                    VStack(spacing: 16) {
+                        Button(action: {
+                            // Explicitly save all ViewModel data to ensure statistics persist
+                            viewModel.saveAllData()
+                            
+                            // Force UI refresh
+                            DispatchQueue.main.async {
+                                viewModel.objectWillChange.send()
+                            }
+                            
+                            // Reset the game state and start a new game with the same cards
+                            showingResults = false
+                            setupGame()
+                        }) {
+                            Text("Play Again")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color.blue)
+                                .cornerRadius(10)
+                        }
+                    }
+                    .padding(.top)
                 }
+                .padding()
             }
-            .padding(.top)
         }
-        .padding()
     }
     
     // MARK: - Result Type Enum

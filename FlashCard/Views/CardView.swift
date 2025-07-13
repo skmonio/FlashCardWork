@@ -191,7 +191,9 @@ struct CardView: View {
             // Auto-play pronunciation when card appears (front side only)
             if isShowingFront && !card.word.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    #if !LITE_VERSION
                     speakCurrentText()
+                    #endif
                 }
             }
         }
@@ -199,7 +201,9 @@ struct CardView: View {
             // Auto-play when flipping to definition side
             if !newValue && !card.definition.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    #if !LITE_VERSION
                     speakCurrentText()
+                    #endif
                 }
             }
         }
@@ -244,7 +248,9 @@ struct CardView: View {
             if isCurrentTextSpeaking {
                 speechService.stopSpeaking()
             } else {
+                #if !LITE_VERSION
                 speakCurrentText()
+                #endif
             }
             HapticManager.shared.lightImpact()
         }) {

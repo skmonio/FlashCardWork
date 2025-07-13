@@ -56,6 +56,14 @@ struct AddDeckView: View {
             Form {
                 Section(header: Text("New Deck")) {
                     TextField("Deck Name", text: $deckName)
+                        .onChange(of: deckName) { newValue in
+                            if newValue.count > 50 {
+                                deckName = String(newValue.prefix(50))
+                            }
+                        }
+                    Text("\(deckName.count)/50 characters")
+                        .font(.caption)
+                        .foregroundColor(deckName.count > 50 ? .red : .secondary)
                     
                     if !availableParentDecks.isEmpty {
                         Picker("Location", selection: $selectedParentId) {

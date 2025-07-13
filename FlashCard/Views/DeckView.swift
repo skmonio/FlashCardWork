@@ -11,7 +11,7 @@ struct DeckView: View {
     @State private var cardToDelete: FlashCard?
     @State private var showingDeleteAlert = false
     @State private var showingDeckSpecificDeleteAlert = false
-    @State private var sortOption: SortOption = .alphabetical(ascending: true)
+    @State private var sortOption: SortOption = .az(ascending: true)
     @State private var searchText = ""
     
     // Multi-select states for cards
@@ -28,17 +28,23 @@ struct DeckView: View {
     private let logger = Logger(subsystem: "com.flashcards", category: "DeckView")
     
     enum SortOption: Hashable {
-        case alphabetical(ascending: Bool)
+        case az(ascending: Bool)
+        case date(ascending: Bool)
+        case strength(ascending: Bool) // Strongest first (descending) or Weakest first (ascending)
         
         var label: String {
             switch self {
-            case .alphabetical(let ascending): return ascending ? "A-Z" : "Z-A"
+            case .az(let ascending): return ascending ? "A-Z" : "Z-A"
+            case .date(let ascending): return ascending ? "Oldest" : "Recent"
+            case .strength(let ascending): return ascending ? "Weakest" : "Strongest"
             }
         }
         
         var icon: String {
             switch self {
-            case .alphabetical(let ascending): return ascending ? "arrow.up" : "arrow.down"
+            case .az(let ascending): return ascending ? "arrow.up" : "arrow.down"
+            case .date(let ascending): return ascending ? "arrow.up" : "arrow.down"
+            case .strength(let ascending): return ascending ? "arrow.up" : "arrow.down"
             }
         }
     }
@@ -60,10 +66,27 @@ struct DeckView: View {
             
             // Apply sorting
             switch sortOption {
-            case .alphabetical(let ascending):
+            case .az(let ascending):
                 cards.sort { card1, card2 in
                     let comparison = card1.word.localizedCaseInsensitiveCompare(card2.word)
                     return ascending ? comparison == .orderedAscending : comparison == .orderedDescending
+                }
+            case .date(let ascending):
+                cards.sort { card1, card2 in
+                    let cmp = card1.dateCreated.compare(card2.dateCreated)
+                    return ascending ? (cmp == .orderedAscending) : (cmp == .orderedDescending)
+                }
+            case .strength(let ascending):
+                cards.sort { card1, card2 in
+                    let percentage1 = card1.learningPercentage ?? 0
+                    let percentage2 = card2.learningPercentage ?? 0
+                    if ascending {
+                        // Weakest first (ascending)
+                        return percentage1 < percentage2
+                    } else {
+                        // Strongest first (descending)
+                        return percentage1 > percentage2
+                    }
                 }
             }
             
@@ -162,21 +185,81 @@ struct DeckView: View {
                 // Sort and Select Options
                 HStack(spacing: 8) {
                     // Sort Options
-                    Button(action: {
-                        if case .alphabetical(let ascending) = sortOption {
-                            sortOption = .alphabetical(ascending: !ascending)
+                    ForEach([
+                        SortOption.az(ascending: true),
+                        SortOption.date(ascending: true),
+                        SortOption.strength(ascending: true)
+                    ], id: \.self) { option in
+                        Button(action: {
+                            if sortOption.label == option.label { // Compare by label for toggle
+                                // Toggle direction for all
+                                switch sortOption {
+                                case .az(let ascending):
+                                    sortOption = .az(ascending: !ascending)
+                                case .date(let ascending):
+                                    sortOption = .date(ascending: !ascending)
+                                case .strength(let ascending):
+                                    sortOption = .strength(ascending: !ascending)
+                                }
+                            } else {
+                                // Select new sort option
+                                switch option {
+                                case .az:
+                                    sortOption = .az(ascending: true)
+                                case .date:
+                                    sortOption = .date(ascending: true)
+                                case .strength:
+                                    sortOption = .strength(ascending: true)
+                                }
+                            }
+                        }) {
+                            HStack(spacing: 4) {
+                                Image(systemName: {
+                                    switch option {
+                                    case .az:
+                                        if case .az(let ascending) = sortOption { return ascending ? "arrow.up" : "arrow.down" } else { return "arrow.up" }
+                                    case .date:
+                                        if case .date(let ascending) = sortOption { return ascending ? "arrow.up" : "arrow.down" } else { return "arrow.up" }
+                                    case .strength:
+                                        if case .strength(let ascending) = sortOption { return ascending ? "arrow.up" : "arrow.down" } else { return "arrow.up" }
+                                    }
+                                }())
+                                Text({
+                                    switch option {
+                                    case .az:
+                                        if case .az(let ascending) = sortOption { return ascending ? "A-Z" : "Z-A" } else { return "A-Z" }
+                                    case .date:
+                                        return "Date"
+                                    case .strength:
+                                        return "%"
+                                    }
+                                }())
+                            }
+                            .font(.subheadline)
+                            .foregroundColor({
+                                switch option {
+                                case .az:
+                                    if case .az = sortOption { return .blue } else { return .primary }
+                                case .date:
+                                    if case .date = sortOption { return .blue } else { return .primary }
+                                case .strength:
+                                    if case .strength = sortOption { return .blue } else { return .primary }
+                                }
+                            }())
+                            .padding(.vertical, 6)
+                            .padding(.horizontal, 12)
+                            .background({
+                                switch option {
+                                case .az:
+                                    if case .az = sortOption { return Color(.systemGray5).opacity(0.2) } else { return Color.clear }
+                                case .date:
+                                    if case .date = sortOption { return Color(.systemGray5).opacity(0.2) } else { return Color.clear }
+                                case .strength:
+                                    if case .strength = sortOption { return Color(.systemGray5).opacity(0.2) } else { return Color.clear }
+                                }
+                            }())
+                            .cornerRadius(8)
                         }
-                    }) {
-                        HStack(spacing: 4) {
-                            Image(systemName: sortOption.icon)
-                            Text(sortOption.label)
-                        }
-                        .font(.subheadline)
-                        .foregroundColor(.blue)
-                        .padding(.vertical, 6)
-                        .padding(.horizontal, 12)
-                        .background(Color(.systemGray5).opacity(0.2))
-                        .cornerRadius(8)
                     }
                     
                     Spacer()

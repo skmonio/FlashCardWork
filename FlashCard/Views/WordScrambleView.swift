@@ -12,15 +12,26 @@ struct WordScrambleView: View {
     @State private var hasAnswered = false
     @State private var isCorrect: Bool? = nil
     @State private var showingCloseConfirmation = false
-    @Environment(\.dismiss) private var dismiss
+    @State private var forceRefreshID = UUID()
+    
+    // Session tracking for results view
+    @State private var currentSession: StudySession?
+    @State private var incorrectCards: Set<UUID> = []
     
     // Progressive study properties
-    private var studyMode: StudyMode?
-    private var onLevelComplete: ((LevelResult) -> Void)?
-    private var maxQuestions: Int?
+    let maxQuestions: Int?
+    let onLevelComplete: ((LevelResult) -> Void)?
+    let studyMode: StudyMode?
+    
+    @Environment(\.dismiss) private var dismiss
     
     // Add speech service for pronunciation
-    @ObservedObject private var speechService = DutchSpeechService.shared
+    #if !LITE_VERSION
+    private let speechService = DutchSpeechService()
+    #endif
+    
+    // Add managers for session tracking
+    private let statsManager = StatisticsManager.shared
     
     // Add user profile manager for XP tracking
     @StateObject private var userProfileManager = UserProfileManager.shared
@@ -62,13 +73,23 @@ struct WordScrambleView: View {
     
     // Check if current word is being spoken
     private var isCurrentWordSpeaking: Bool {
+        #if !LITE_VERSION
         return speechService.isSpeaking && speechService.currentlySpeaking == textToSpeak
+        #else
+        return false
+        #endif
     }
     
     init(viewModel: FlashCardViewModel, cards: [FlashCard], deckIds: [UUID] = [], shouldLoadSaveState: Bool = false, studyMode: StudyMode? = nil, maxQuestions: Int? = nil, onLevelComplete: ((LevelResult) -> Void)? = nil) {
         self.viewModel = viewModel
-        // Apply intelligent ordering: less-known cards first, well-known cards later
-        _cards = State(initialValue: viewModel.sortCardsForLearning(cards))
+        // Only re-sort cards if we're not in progressive study mode (no maxQuestions limit)
+        // ProgressiveStudyView already carefully selects and orders cards for each level
+        if maxQuestions == nil {
+            _cards = State(initialValue: viewModel.sortCardsForLearning(cards)) // Apply intelligent ordering: less-known cards first, well-known cards later
+        } else {
+            _cards = State(initialValue: cards) // Keep original order for progressive study
+            print("🎯 Progressive WordScramble: Keeping original card order for level")
+        }
         self.deckIds = deckIds
         self.shouldLoadSaveState = shouldLoadSaveState
         self.studyMode = studyMode
@@ -282,66 +303,88 @@ struct WordScrambleView: View {
     }
     
     private var resultsView: some View {
-        VStack(spacing: 30) {
-            Image(systemName: "trophy.fill")
-                .font(.system(size: 60))
-                .foregroundColor(.yellow)
-            
-            Text("Word Scramble Complete!")
-                .font(.largeTitle)
-                .bold()
-                .multilineTextAlignment(.center)
-            
-            VStack(spacing: 15) {
-                Text("Final Score")
-                    .font(.headline)
-                    .foregroundColor(.secondary)
-                
-                Text("\(correctAnswers) / \(totalAnswers)")
-                    .font(.system(size: 48, weight: .bold))
-                    .foregroundColor(Double(correctAnswers)/Double(totalAnswers) >= 0.7 ? .green : .orange)
-                
-                let percentage = totalAnswers > 0 ? Int((Double(correctAnswers) / Double(totalAnswers)) * 100) : 0
-                Text("\(percentage)%")
-                    .font(.title)
-                    .foregroundColor(.secondary)
-                
-                // XP Award Display
-                VStack(spacing: 8) {
-                    Text("XP Earned")
-                        .font(.headline)
-                        .foregroundColor(.secondary)
-                    
-                    let totalXP = correctAnswers * 5
-                    
-                    Text("+\(totalXP)")
-                        .font(.system(size: 36, weight: .bold))
+        Group {
+            if let session = currentSession {
+                StudySessionResultsView(
+                    session: session,
+                    viewModel: viewModel,
+                    sessionXP: sessionXP,
+                    onStudyAgain: {
+                        resetGame()
+                    },
+                    onReviewUnknown: {
+                        // Filter cards to only incorrect ones and restart
+                        cards = cards.filter { incorrectCards.contains($0.id) }
+                        resetGame()
+                    },
+                    onDone: {
+                        dismissToRoot()
+                    }
+                )
+            } else {
+                // Fallback if session is nil
+                VStack(spacing: 30) {
+                    Image(systemName: "trophy.fill")
+                        .font(.system(size: 60))
                         .foregroundColor(.yellow)
                     
-                    Text("\(totalXP) XP earned")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                    Text("Word Scramble Complete!")
+                        .font(.largeTitle)
+                        .bold()
+                        .multilineTextAlignment(.center)
+                    
+                    VStack(spacing: 15) {
+                        Text("Final Score")
+                            .font(.headline)
+                            .foregroundColor(.secondary)
+                        
+                        Text("\(correctAnswers) / \(totalAnswers)")
+                            .font(.system(size: 48, weight: .bold))
+                            .foregroundColor(Double(correctAnswers)/Double(totalAnswers) >= 0.7 ? .green : .orange)
+                        
+                        let percentage = totalAnswers > 0 ? Int((Double(correctAnswers) / Double(totalAnswers)) * 100) : 0
+                        Text("\(percentage)%")
+                            .font(.title)
+                            .foregroundColor(.secondary)
+                        
+                        // XP Award Display
+                        VStack(spacing: 8) {
+                            Text("XP Earned")
+                                .font(.headline)
+                                .foregroundColor(.secondary)
+                            
+                            let totalXP = correctAnswers * 5
+                            
+                            Text("+\(totalXP)")
+                                .font(.system(size: 36, weight: .bold))
+                                .foregroundColor(.yellow)
+                            
+                            Text("\(totalXP) XP earned")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(.top, 10)
+                    }
+                    
+                    Button("Play Again") {
+                        // Explicitly save all ViewModel data to ensure statistics persist
+                        viewModel.saveAllData()
+                        
+                        // Force UI refresh
+                        DispatchQueue.main.async {
+                            viewModel.objectWillChange.send()
+                        }
+                        
+                        resetGame()
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .font(.headline)
                 }
-                .padding(.top, 10)
-            }
-            
-            Button("Play Again") {
-                // Explicitly save all ViewModel data to ensure statistics persist
-                viewModel.saveAllData()
-                
-                // Force UI refresh
-                DispatchQueue.main.async {
-                    viewModel.objectWillChange.send()
+                .padding()
+                .onAppear {
+                    // XP is already awarded immediately for each correct answer
                 }
-                
-                resetGame()
             }
-            .buttonStyle(.borderedProminent)
-            .font(.headline)
-        }
-        .padding()
-        .onAppear {
-            // XP is already awarded immediately for each correct answer
         }
     }
     
@@ -353,6 +396,8 @@ struct WordScrambleView: View {
         totalAnswers = 0
         showingResults = false
         sessionStartTime = Date()
+        currentSession = statsManager.startSession(deckIds: deckIds, cardCount: cards.count)
+        incorrectCards.removeAll()
         cards = viewModel.sortCardsForLearning(cards)
         
         // Reset session XP to 0 for new game
@@ -494,6 +539,9 @@ struct WordScrambleView: View {
             HapticManager.shared.testWrongHaptic()
             SoundManager.shared.playTestWrongSound()
             
+            // Track incorrect cards for results view
+            incorrectCards.insert(card.id)
+            
             // Apply SRS logic for incorrect answer
             let updatedCard = srsManager.processSimpleReview(for: card, simpleQuality: .dontKnow)
             viewModel.updateCardWithSRSData(updatedCard)
@@ -508,15 +556,12 @@ struct WordScrambleView: View {
         if currentIndex % 5 == 0 && currentIndex > 0 {
             saveCurrentProgress()
         }
-        
         // Check if we've reached the max questions limit (for progressive study)
         if let maxQuestions = maxQuestions, currentIndex >= maxQuestions - 1 {
             print("🔤 Reached max questions limit for progressive study")
             HapticManager.shared.gameComplete()
-            
             // Clear saved progress since game is complete
             clearSavedProgress()
-            
             // Call level completion callback if this is a progressive study session
             if let onLevelComplete = onLevelComplete {
                 let levelNumber: Int
@@ -526,7 +571,6 @@ struct WordScrambleView: View {
                 case .adaptive: levelNumber = 3
                 default: levelNumber = 1
                 }
-                
                 let result = LevelResult(
                     level: levelNumber,
                     score: correctAnswers,
@@ -536,7 +580,23 @@ struct WordScrambleView: View {
             } else {
                 // Post notification for regular word scramble mode
                 NotificationCenter.default.post(name: .wordScrambleSessionCompleted, object: nil)
-                
+                // Update the session with final results
+                if let session = currentSession {
+                    statsManager.endSession(
+                        session,
+                        knownCards: correctAnswers,
+                        unknownCards: maxQuestions - correctAnswers,
+                        skippedCards: 0
+                    )
+                    // Manually update the currentSession with final results since StudySession is a struct
+                    var updatedSession = session
+                    updatedSession.endTime = Date()
+                    updatedSession.duration = updatedSession.endTime!.timeIntervalSince(session.startTime)
+                    updatedSession.knownCards = correctAnswers
+                    updatedSession.unknownCards = maxQuestions - correctAnswers
+                    updatedSession.skippedCards = 0
+                    currentSession = updatedSession
+                }
                 // Check for perfect session (100% accuracy with at least 5 cards)
                 if maxQuestions >= 5 && correctAnswers == maxQuestions {
                     let sessionDuration = Date().timeIntervalSince(sessionStartTime)
@@ -547,25 +607,25 @@ struct WordScrambleView: View {
                         duration: sessionDuration
                     )
                 }
-                
-                StreakManager.shared.recordGameCompletion(); showingResults = true
+                StreakManager.shared.recordGameCompletion()
+                withAnimation(.none) {
+                    showingResults = true
+                }
             }
             return
         }
-        
         if currentIndex < cards.count - 1 {
-            currentIndex += 1
+            withAnimation(.none) {
+                currentIndex += 1
+            }
             print("🔤 Moving forward to question \(currentIndex)")
-            
             // Check if we have history for this question (i.e., we've been here before)
             if let previousAnswer = answerHistory[currentIndex] {
                 print("🔤 Found existing history for index \(currentIndex), restoring state")
-                
                 // Restore the exact word chunks from history
                 if let previousChunks = wordChunksHistory[currentIndex] {
                     print("🔤 Restoring word chunks for index \(currentIndex): \(previousChunks.map { $0.text })")
                     wordChunks = previousChunks
-                    
                     // Reconstruct selected chunks using the restored chunks and saved IDs
                     selectedChunks = previousAnswer.compactMap { savedID in
                         wordChunks.first { $0.id == savedID }
@@ -576,21 +636,40 @@ struct WordScrambleView: View {
                     setupCurrentWord(resetState: false)
                     selectedChunks = []
                 }
-                
-                hasAnswered = hasAnsweredHistory[currentIndex] ?? false
-                isCorrect = isCorrectHistory[currentIndex]
+                withAnimation(.none) {
+                    hasAnswered = hasAnsweredHistory[currentIndex] ?? false
+                    isCorrect = isCorrectHistory[currentIndex]
+                }
             } else {
                 print("🔤 No history for index \(currentIndex), creating fresh state")
                 // This is a new question, reset state completely
                 selectedChunks.removeAll()
-                hasAnswered = false
-                isCorrect = nil
+                withAnimation(.none) {
+                    hasAnswered = false
+                    isCorrect = nil
+                }
                 setupCurrentWord()
             }
         } else {
             // Clear saved progress since game is complete
             clearSavedProgress()
-            
+            // Update the session with final results
+            if let session = currentSession {
+                statsManager.endSession(
+                    session,
+                    knownCards: correctAnswers,
+                    unknownCards: cards.count - correctAnswers,
+                    skippedCards: 0
+                )
+                // Manually update the currentSession with final results since StudySession is a struct
+                var updatedSession = session
+                updatedSession.endTime = Date()
+                updatedSession.duration = updatedSession.endTime!.timeIntervalSince(session.startTime)
+                updatedSession.knownCards = correctAnswers
+                updatedSession.unknownCards = cards.count - correctAnswers
+                updatedSession.skippedCards = 0
+                currentSession = updatedSession
+            }
             // Check for perfect session (100% accuracy with at least 5 cards)
             if cards.count >= 5 && correctAnswers == cards.count {
                 let sessionDuration = Date().timeIntervalSince(sessionStartTime)
@@ -601,9 +680,11 @@ struct WordScrambleView: View {
                     duration: sessionDuration
                 )
             }
-            
             HapticManager.shared.gameComplete()
-            StreakManager.shared.recordGameCompletion(); showingResults = true
+            StreakManager.shared.recordGameCompletion()
+            withAnimation(.none) {
+                showingResults = true
+            }
         }
     }
     
@@ -768,18 +849,17 @@ struct WordScrambleView: View {
     
     private func goToPreviousQuestion() {
         if currentIndex > 0 {
-            currentIndex -= 1
+            withAnimation(.none) {
+                currentIndex -= 1
+            }
             print("🔤 Going back to question \(currentIndex)")
-            
             // Restore answer state from history
             if let previousAnswer = answerHistory[currentIndex] {
                 print("🔤 Found answer history for index \(currentIndex): \(previousAnswer)")
-                
                 // Restore the exact word chunks from history
                 if let previousChunks = wordChunksHistory[currentIndex] {
                     print("🔤 Restoring word chunks for index \(currentIndex): \(previousChunks.map { $0.text })")
                     wordChunks = previousChunks
-                    
                     // Now reconstruct selected chunks using the restored chunks and saved IDs
                     selectedChunks = previousAnswer.compactMap { savedID in
                         wordChunks.first { $0.id == savedID }
@@ -791,16 +871,19 @@ struct WordScrambleView: View {
                     setupCurrentWord(resetState: false)
                     selectedChunks = []
                 }
-                
-                hasAnswered = hasAnsweredHistory[currentIndex] ?? false
-                isCorrect = isCorrectHistory[currentIndex]
+                withAnimation(.none) {
+                    hasAnswered = hasAnsweredHistory[currentIndex] ?? false
+                    isCorrect = isCorrectHistory[currentIndex]
+                }
             } else {
-                print("🔤 No answer history for index \(currentIndex), resetting state")
-                // No history for this question, reset state and create new chunks
-                selectedChunks = []
-                hasAnswered = false
-                isCorrect = nil
+                print("🔤 No answer history for index \(currentIndex), creating new state")
+                // Fallback: recreate chunks if not in history
                 setupCurrentWord(resetState: false)
+                selectedChunks = []
+                withAnimation(.none) {
+                    hasAnswered = false
+                    isCorrect = nil
+                }
             }
         }
     }

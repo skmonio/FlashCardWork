@@ -85,90 +85,143 @@ class DutchGrammarRulesDatabase {
     
     lazy var presentTenseA1 = DutchGrammarRule(
         id: "verb_present_a1",
-        title: "Tegenwoordige Tijd - Regelmatige Werkwoorden (A1)",
+        title: "Present Tense - Regular Verbs (A1)",
         type: .verbConjugation,
         level: .a1,
         explanation: """
-        In het Nederlands vervoeg je werkwoorden door uitgangen toe te voegen aan de stam van het werkwoord. De stam krijg je door -en van de infinitief (hele werkwoord) af te halen.
+        In Dutch, you conjugate verbs by adding endings to the stem of the verb. You get the stem by removing -en from the infinitive (whole verb).
         
-        Bijvoorbeeld: 'werken' → stam = 'werk'
+        For example: 'werken' (to work) → stem = 'werk'
         
-        Voor regelmatige werkwoorden in de tegenwoordige tijd gebruik je deze uitgangen:
-        • ik: stam (geen uitgang)
-        • jij/je: stam + t
-        • hij/zij/het: stam + t
-        • wij/we: hele werkwoord (infinitief)
-        • jullie: hele werkwoord (infinitief)
-        • zij: hele werkwoord (infinitief)
+        For regular verbs in the present tense, use these endings:
+        • ik: stem (no ending)
+        • jij/je: stem + t
+        • hij/zij/het: stem + t
+        • wij/we: whole verb (infinitive)
+        • jullie: whole verb (infinitive)
+        • zij: whole verb (infinitive)
+        
+        IMPORTANT: When asking questions with 'jij', the verb doesn't get an extra -t.
         """,
         keyPoints: [
-            "Stam = infinitief minus -en",
-            "Ik = alleen de stam",
-            "Jij/hij/zij = stam + t",
-            "Wij/jullie/zij = hele werkwoord",
-            "Let op: bij vragen draait 'jij' om naar 'jij' (zonder extra -t)"
+            "Stem = infinitive minus -en",
+            "Ik = stem only (no ending)",
+            "Jij/hij/zij = stem + t",
+            "Wij/jullie/zij = whole verb (infinitive)",
+            "Note: in questions, 'jij' doesn't get extra -t"
         ],
         examples: [
             GrammarExample(
                 dutch: "Ik werk in een kantoor.",
                 english: "I work in an office.",
-                breakdown: "werk (stam) - geen uitgang bij 'ik'",
+                breakdown: "werk (stem) - no ending for 'ik'",
                 audioHint: "ik vɛrk"
             ),
             GrammarExample(
                 dutch: "Jij werkt hard.",
                 english: "You work hard.",
-                breakdown: "werk (stam) + t = werkt",
+                breakdown: "werk (stem) + t = werkt",
                 audioHint: "jɛi vɛrkt"
             ),
             GrammarExample(
                 dutch: "Hij woont in Amsterdam.",
                 english: "He lives in Amsterdam.",
-                breakdown: "woon (stam) + t = woont",
+                breakdown: "woon (stem) + t = woont",
                 audioHint: "hɛi voːnt"
             ),
             GrammarExample(
                 dutch: "Wij leren Nederlands.",
                 english: "We learn Dutch.",
-                breakdown: "leren (hele werkwoord) - geen verandering",
+                breakdown: "leren (whole verb) - no change",
                 audioHint: "vɛi leːrə(n)"
             ),
             GrammarExample(
                 dutch: "Jullie spelen voetbal.",
                 english: "You (plural) play football.",
-                breakdown: "spelen (hele werkwoord) - geen verandering",
+                breakdown: "spelen (whole verb) - no change",
                 audioHint: "jɵli speːlə(n)"
             ),
             GrammarExample(
                 dutch: "Zij koken samen.",
                 english: "They cook together.",
-                breakdown: "koken (hele werkwoord) - geen verandering",
+                breakdown: "koken (whole verb) - no change",
                 audioHint: "zɛi koːkə(n)"
             )
         ],
         exercises: [
+            // Basic conjugation exercises
             GrammarExercise(
-                question: "Vervoeging van 'maken' (to make): Ik ... elke dag huiswerk.",
+                question: "Conjugation of 'maken' (to make): Ik ... elke dag huiswerk.",
                 options: ["maak", "maakt", "maken", "maakte"],
                 correctAnswer: 0,
-                explanation: "Bij 'ik' gebruik je alleen de stam: maak (maken - en = maak)",
-                hint: "Bij 'ik' gebruik je geen uitgang"
+                explanation: "For 'ik' use only the stem: maak (maken - en = maak)",
+                hint: "For 'ik' use no ending"
             ),
             GrammarExercise(
-                question: "Vervoeging van 'wonen' (to live): Hij ... in Utrecht.",
+                question: "Conjugation of 'wonen' (to live): Hij ... in Utrecht.",
                 options: ["woon", "woont", "wonen", "woonde"],
                 correctAnswer: 1,
-                explanation: "Bij 'hij' gebruik je stam + t: woon + t = woont",
-                hint: "Bij 'hij/zij' voeg je -t toe aan de stam"
+                explanation: "For 'hij' use stem + t: woon + t = woont",
+                hint: "For 'hij/zij' add -t to the stem"
             ),
             GrammarExercise(
-                question: "Vervoeging van 'studeren' (to study): Wij ... aan de universiteit.",
+                question: "Conjugation of 'studeren' (to study): Wij ... aan de universiteit.",
                 options: ["studeer", "studeert", "studeren", "studeerde"],
                 correctAnswer: 2,
-                explanation: "Bij 'wij' gebruik je het hele werkwoord: studeren",
-                hint: "Bij 'wij/jullie/zij' gebruik je de infinitief"
+                explanation: "For 'wij' use the whole verb: studeren",
+                hint: "For 'wij/jullie/zij' use the infinitive"
             ),
-            // New translation exercises
+            GrammarExercise(
+                question: "Conjugation of 'spelen' (to play): Jij ... voetbal.",
+                options: ["speel", "speelt", "spelen", "speelde"],
+                correctAnswer: 1,
+                explanation: "For 'jij' use stem + t: speel + t = speelt",
+                hint: "For 'jij' add -t to the stem"
+            ),
+            GrammarExercise(
+                question: "Conjugation of 'koken' (to cook): Zij ... elke avond.",
+                options: ["kook", "kookt", "koken", "kookte"],
+                correctAnswer: 1,
+                explanation: "For 'zij' use stem + t: kook + t = kookt",
+                hint: "For 'zij' add -t to the stem"
+            ),
+            GrammarExercise(
+                question: "Conjugation of 'leren' (to learn): Jullie ... Nederlands.",
+                options: ["leer", "leert", "leren", "leerde"],
+                correctAnswer: 2,
+                explanation: "For 'jullie' use the whole verb: leren",
+                hint: "For 'jullie' use the infinitive"
+            ),
+            GrammarExercise(
+                question: "Conjugation of 'werken' (to work): Zij ... in een kantoor.",
+                options: ["werk", "werkt", "werken", "werkten"],
+                correctAnswer: 1,
+                explanation: "For 'zij' use stem + t: werk + t = werkt",
+                hint: "For 'zij' add -t to the stem"
+            ),
+            GrammarExercise(
+                question: "Conjugation of 'lezen' (to read): Ik ... een boek.",
+                options: ["lees", "leest", "lezen", "las"],
+                correctAnswer: 0,
+                explanation: "For 'ik' use only the stem: lees (lezen - en = lees)",
+                hint: "For 'ik' use no ending"
+            ),
+            GrammarExercise(
+                question: "Conjugation of 'schrijven' (to write): Hij ... een brief.",
+                options: ["schrijf", "schrijft", "schrijven", "schreef"],
+                correctAnswer: 1,
+                explanation: "For 'hij' use stem + t: schrijf + t = schrijft",
+                hint: "For 'hij' add -t to the stem"
+            ),
+            GrammarExercise(
+                question: "Conjugation of 'luisteren' (to listen): Wij ... naar muziek.",
+                options: ["luister", "luistert", "luisteren", "luisterde"],
+                correctAnswer: 2,
+                explanation: "For 'wij' use the whole verb: luisteren",
+                hint: "For 'wij' use the infinitive"
+            ),
+            
+            // Translation exercises
             GrammarExercise(
                 question: "How do you say 'I work in Amsterdam' in Dutch?",
                 options: ["Ik werk in Amsterdam", "Ik werkt in Amsterdam", "Ik werken in Amsterdam", "Ik werkte in Amsterdam"],
@@ -186,6 +239,32 @@ class DutchGrammarRulesDatabase {
                 exerciseType: .translation
             ),
             GrammarExercise(
+                question: "How do you say 'We study Dutch' in Dutch?",
+                options: ["Wij studeer Nederlands", "Wij studeert Nederlands", "Wij studeren Nederlands", "Wij studeerde Nederlands"],
+                correctAnswer: 2,
+                explanation: "Wij studeren Nederlands - 'wij' uses the whole verb",
+                hint: "Remember: 'wij' uses the infinitive",
+                exerciseType: .translation
+            ),
+            GrammarExercise(
+                question: "How do you say 'You play football' in Dutch?",
+                options: ["Jij speel voetbal", "Jij speelt voetbal", "Jij spelen voetbal", "Jij speelde voetbal"],
+                correctAnswer: 1,
+                explanation: "Jij speelt voetbal - 'jij' adds -t to the stem",
+                hint: "Remember: 'jij' adds -t to the stem",
+                exerciseType: .translation
+            ),
+            GrammarExercise(
+                question: "How do you say 'They cook dinner' in Dutch?",
+                options: ["Zij kook avondeten", "Zij kookt avondeten", "Zij koken avondeten", "Zij kookte avondeten"],
+                correctAnswer: 1,
+                explanation: "Zij kookt avondeten - 'zij' adds -t to the stem",
+                hint: "Remember: 'zij' adds -t to the stem",
+                exerciseType: .translation
+            ),
+            
+            // Fill-in-the-blank exercises
+            GrammarExercise(
                 question: "Complete: 'Ik ___ elke dag naar school' (I go to school every day)",
                 options: ["ga", "gaat", "gaan", "ging"],
                 correctAnswer: 0,
@@ -194,153 +273,432 @@ class DutchGrammarRulesDatabase {
                 exerciseType: .fillInTheBlank
             ),
             GrammarExercise(
+                question: "Complete: 'Hij ___ een boek' (He reads a book)",
+                options: ["lees", "leest", "lezen", "las"],
+                correctAnswer: 1,
+                explanation: "Hij leest een boek - 'hij' adds -t to the stem",
+                hint: "For 'hij' add -t to the stem",
+                exerciseType: .fillInTheBlank
+            ),
+            GrammarExercise(
+                question: "Complete: 'Wij ___ Nederlands' (We learn Dutch)",
+                options: ["leer", "leert", "leren", "leerde"],
+                correctAnswer: 2,
+                explanation: "Wij leren Nederlands - 'wij' uses the whole verb",
+                hint: "For 'wij' use the infinitive",
+                exerciseType: .fillInTheBlank
+            ),
+            GrammarExercise(
+                question: "Complete: 'Jullie ___ naar muziek' (You listen to music)",
+                options: ["luister", "luistert", "luisteren", "luisterde"],
+                correctAnswer: 2,
+                explanation: "Jullie luisteren naar muziek - 'jullie' uses the whole verb",
+                hint: "For 'jullie' use the infinitive",
+                exerciseType: .fillInTheBlank
+            ),
+            GrammarExercise(
+                question: "Complete: 'Zij ___ een brief' (She writes a letter)",
+                options: ["schrijf", "schrijft", "schrijven", "schreef"],
+                correctAnswer: 1,
+                explanation: "Zij schrijft een brief - 'zij' adds -t to the stem",
+                hint: "For 'zij' add -t to the stem",
+                exerciseType: .fillInTheBlank
+            ),
+            
+            // True/False exercises
+            GrammarExercise(
                 question: "True or False: 'Hij werkt' is correct Dutch for 'He works'",
                 options: ["True", "False"],
                 correctAnswer: 0,
                 explanation: "True! 'Hij werkt' is correct - 'hij' + stem + t",
                 hint: "Think about the conjugation rule for 'hij'",
                 exerciseType: .trueFalse
+            ),
+            GrammarExercise(
+                question: "True or False: 'Ik woont' is correct Dutch for 'I live'",
+                options: ["True", "False"],
+                correctAnswer: 1,
+                explanation: "False! It should be 'Ik woon'. 'Ik' uses only the stem, no -t",
+                hint: "Remember: 'ik' uses no ending",
+                exerciseType: .trueFalse
+            ),
+            GrammarExercise(
+                question: "True or False: 'Wij studeert' is correct Dutch for 'We study'",
+                options: ["True", "False"],
+                correctAnswer: 1,
+                explanation: "False! It should be 'Wij studeren'. 'Wij' uses the whole verb",
+                hint: "Remember: 'wij' uses the infinitive",
+                exerciseType: .trueFalse
+            ),
+            GrammarExercise(
+                question: "True or False: 'Jij speelt' is correct Dutch for 'You play'",
+                options: ["True", "False"],
+                correctAnswer: 0,
+                explanation: "True! 'Jij speelt' is correct - 'jij' + stem + t",
+                hint: "Think about the conjugation rule for 'jij'",
+                exerciseType: .trueFalse
+            ),
+            GrammarExercise(
+                question: "True or False: 'Zij koken' is correct Dutch for 'They cook'",
+                options: ["True", "False"],
+                correctAnswer: 0,
+                explanation: "True! 'Zij koken' is correct - 'zij' uses the whole verb",
+                hint: "Think about the conjugation rule for 'zij' (plural)",
+                exerciseType: .trueFalse
+            ),
+            
+            // Question form exercises
+            GrammarExercise(
+                question: "How do you ask 'Do you work?' in Dutch?",
+                options: ["Werk jij?", "Werkt jij?", "Werk je?", "Werkt je?"],
+                correctAnswer: 0,
+                explanation: "Werk jij? - In questions with 'jij', the verb doesn't get an extra -t",
+                hint: "Remember the special rule for questions with 'jij'",
+                exerciseType: .translation
+            ),
+            GrammarExercise(
+                question: "How do you ask 'Do you live here?' in Dutch?",
+                options: ["Woon jij hier?", "Woon je hier?", "Woont jij hier?", "Woont je hier?"],
+                correctAnswer: 0,
+                explanation: "Woon jij hier? - In questions, 'jij' doesn't get extra -t",
+                hint: "Remember the question rule for 'jij'",
+                exerciseType: .translation
             )
         ],
         commonMistakes: [
             CommonMistake(
                 incorrect: "Ik werkt",
                 correct: "Ik werk",
-                explanation: "Bij 'ik' voeg je geen -t toe, alleen de stam"
+                explanation: "For 'ik' don't add -t, use only the stem"
             ),
             CommonMistake(
                 incorrect: "Hij werk",
                 correct: "Hij werkt",
-                explanation: "Bij 'hij/zij' moet je -t toevoegen aan de stam"
+                explanation: "For 'hij/zij' you must add -t to the stem"
             ),
             CommonMistake(
                 incorrect: "Wij werkt",
                 correct: "Wij werken",
-                explanation: "Bij 'wij/jullie/zij' gebruik je het hele werkwoord"
+                explanation: "For 'wij/jullie/zij' use the whole verb"
+            ),
+            CommonMistake(
+                incorrect: "Werkt jij?",
+                correct: "Werk jij?",
+                explanation: "In questions with 'jij', don't add extra -t"
+            ),
+            CommonMistake(
+                incorrect: "Ik studeert",
+                correct: "Ik studeer",
+                explanation: "For 'ik' use only the stem, no -t"
             )
         ],
         tips: [
-            "Oefen met de stam eerst: schrijf de infinitief op en haal -en eraf",
-            "Onthoud: ik=stam, jij/hij/zij=stam+t, wij/jullie/zij=infinitief",
-            "Bij vragen met 'jij' krijg je geen extra -t: 'Werk jij?' (niet 'Werkt jij?')",
-            "Luister naar Nederlandse gesprekken om het ritme te leren"
+            "Practice with the stem first: write the infinitive and remove -en",
+            "Remember: ik=stem, jij/hij/zij=stem+t, wij/jullie/zij=infinitive",
+            "In questions with 'jij', you don't get extra -t: 'Werk jij?' (not 'Werkt jij?')",
+            "Listen to Dutch conversations to learn the rhythm",
+            "Common verbs to practice: werken, wonen, studeren, spelen, koken, leren",
+            "Pay attention to spelling: 'kook' + t = 'kookt' (not 'kookt')"
         ],
         relatedRules: ["verb_irregular_a1", "verb_questions_a1", "verb_negation_a1"]
     )
     
     lazy var irregularVerbsA1 = DutchGrammarRule(
         id: "verb_irregular_a1",
-        title: "Onregelmatige Werkwoorden - Basis (A1)",
+        title: "Irregular Verbs - Basic (A1)",
         type: .verbConjugation,
         level: .a1,
         explanation: """
-        Sommige werkwoorden zijn onregelmatig. Dit betekent dat ze niet de normale regels volgen. De belangrijkste onregelmatige werkwoorden voor beginners zijn:
+        Some verbs in Dutch are irregular, which means they don't follow the normal conjugation rules. The most important irregular verbs for beginners are:
         
-        • zijn (to be) - heel onregelmatig
-        • hebben (to have) - kleine veranderingen
-        • gaan (to go) - kleine veranderingen
-        • doen (to do) - kleine veranderingen
-        • komen (to come) - kleine veranderingen
+        • zijn (to be) - very irregular
+        • hebben (to have) - small changes
+        • gaan (to go) - small changes
+        • doen (to do) - small changes
+        • komen (to come) - small changes
         
-        Deze werkwoorden moet je uit je hoofd leren omdat ze heel vaak gebruikt worden.
+        These verbs must be learned by heart because they are used very frequently in conversations.
+        
+        IMPORTANT IRREGULAR VERBS:
+        
+        1. ZIJN (to be):
+        • ik ben (I am)
+        • jij bent (you are) 
+        • hij/zij/het is (he/she/it is)
+        • wij/jullie/zij zijn (we/you/they are)
+        
+        2. HEBBEN (to have):
+        • ik heb (I have)
+        • jij hebt/hebt (you have)
+        • hij/zij/het heeft (he/she/it has)
+        • wij/jullie/zij hebben (we/you/they have)
+        
+        3. GAAN (to go):
+        • ik ga (I go)
+        • jij gaat (you go)
+        • hij/zij/het gaat (he/she/it goes)
+        • wij/jullie/zij gaan (we/you/they go)
         """,
         keyPoints: [
-            "Onregelmatige werkwoorden volgen niet de normale regels",
-            "'Zijn' is het meest onregelmatige werkwoord",
-            "Leer de belangrijkste onregelmatige werkwoorden uit je hoofd",
-            "Deze werkwoorden komen heel vaak voor in gesprekken"
+            "Irregular verbs don't follow normal rules",
+            "'Zijn' is the most irregular verb",
+            "Learn the most important irregular verbs by heart",
+            "These verbs appear very frequently in conversations",
+            "Pay attention to spelling differences",
+            "Practice with real sentences"
         ],
         examples: [
             GrammarExample(
                 dutch: "Ik ben student.",
                 english: "I am a student.",
-                breakdown: "zijn: ik ben (niet 'ik zij')",
+                breakdown: "zijn: ik ben (not 'ik zij')",
                 audioHint: "ik bɛn"
             ),
             GrammarExample(
                 dutch: "Jij bent aardig.",
                 english: "You are nice.",
-                breakdown: "zijn: jij bent (niet 'jij zijt')",
+                breakdown: "zijn: jij bent (not 'jij zijt')",
                 audioHint: "jɛi bɛnt"
             ),
             GrammarExample(
                 dutch: "Hij is thuis.",
                 english: "He is at home.",
-                breakdown: "zijn: hij is (niet 'hij zijt')",
+                breakdown: "zijn: hij is (not 'hij zijt')",
                 audioHint: "hɛi ɪs"
+            ),
+            GrammarExample(
+                dutch: "Wij zijn moe.",
+                english: "We are tired.",
+                breakdown: "zijn: wij zijn (plural)",
+                audioHint: "vɛi zɛin"
             ),
             GrammarExample(
                 dutch: "Ik heb een auto.",
                 english: "I have a car.",
-                breakdown: "hebben: ik heb (stam hebb → heb)",
+                breakdown: "hebben: ik heb (stem hebb → heb)",
                 audioHint: "ik hɛp"
             ),
             GrammarExample(
                 dutch: "Zij heeft een hond.",
                 english: "She has a dog.",
-                breakdown: "hebben: zij heeft (niet 'zij hebt')",
+                breakdown: "hebben: zij heeft (not 'zij hebt')",
                 audioHint: "zɛi heːft"
             ),
             GrammarExample(
-                dutch: "Wij gaan naar school.",
-                english: "We go to school.",
-                breakdown: "gaan: wij gaan (regelmatig in meervoud)",
+                dutch: "Wij hebben tijd.",
+                english: "We have time.",
+                breakdown: "hebben: wij hebben (plural)",
+                audioHint: "vɛi hɛbə(n)"
+            ),
+            GrammarExample(
+                dutch: "Ik ga naar school.",
+                english: "I go to school.",
+                breakdown: "gaan: ik ga (stem)",
+                audioHint: "ik ɣaː"
+            ),
+            GrammarExample(
+                dutch: "Hij gaat naar werk.",
+                english: "He goes to work.",
+                breakdown: "gaan: hij gaat (stem + t)",
+                audioHint: "hɛi ɣaːt"
+            ),
+            GrammarExample(
+                dutch: "Wij gaan naar huis.",
+                english: "We go home.",
+                breakdown: "gaan: wij gaan (plural)",
                 audioHint: "vɛi ɣaːn"
             )
         ],
         exercises: [
+            // ZIJN exercises
             GrammarExercise(
-                question: "Vervoeging van 'zijn': Ik ... moe.",
+                question: "Conjugation of 'zijn': Ik ... student.",
                 options: ["zij", "ben", "bent", "is"],
                 correctAnswer: 1,
-                explanation: "'Zijn' bij 'ik' wordt 'ben'",
-                hint: "Het werkwoord 'zijn' is heel onregelmatig"
+                explanation: "'Zijn' with 'ik' becomes 'ben'",
+                hint: "The verb 'zijn' is very irregular"
             ),
             GrammarExercise(
-                question: "Vervoeging van 'hebben': Hij ... honger.",
+                question: "Conjugation of 'zijn': Jij ... moe.",
+                options: ["zij", "ben", "bent", "is"],
+                correctAnswer: 2,
+                explanation: "'Zijn' with 'jij' becomes 'bent'",
+                hint: "Remember the irregular form for 'jij'"
+            ),
+            GrammarExercise(
+                question: "Conjugation of 'zijn': Hij ... thuis.",
+                options: ["zij", "ben", "bent", "is"],
+                correctAnswer: 3,
+                explanation: "'Zijn' with 'hij' becomes 'is'",
+                hint: "Remember the irregular form for 'hij'"
+            ),
+            GrammarExercise(
+                question: "Conjugation of 'zijn': Wij ... in Nederland.",
+                options: ["zij", "ben", "bent", "is", "zijn"],
+                correctAnswer: 4,
+                explanation: "'Zijn' with 'wij' becomes 'zijn'",
+                hint: "Plural forms are more regular"
+            ),
+            
+            // HEBBEN exercises
+            GrammarExercise(
+                question: "Conjugation of 'hebben': Ik ... honger.",
+                options: ["heb", "hebt", "heeft", "hebben"],
+                correctAnswer: 0,
+                explanation: "'Hebben' with 'ik' becomes 'heb'",
+                hint: "Remember the irregular form for 'ik'"
+            ),
+            GrammarExercise(
+                question: "Conjugation of 'hebben': Jij ... een auto.",
+                options: ["heb", "hebt", "heeft", "hebben"],
+                correctAnswer: 1,
+                explanation: "'Hebben' with 'jij' becomes 'hebt'",
+                hint: "Remember the irregular form for 'jij'"
+            ),
+            GrammarExercise(
+                question: "Conjugation of 'hebben': Zij ... een hond.",
                 options: ["heb", "hebt", "heeft", "hebben"],
                 correctAnswer: 2,
-                explanation: "'Hebben' bij 'hij' wordt 'heeft'",
-                hint: "Bij 'hij/zij' van 'hebben' gebruik je 'heeft'"
+                explanation: "'Hebben' with 'zij' becomes 'heeft'",
+                hint: "Remember the irregular form for 'zij'"
             ),
             GrammarExercise(
-                question: "Vervoeging van 'gaan': Wij ... winkelen.",
+                question: "Conjugation of 'hebben': Wij ... tijd.",
+                options: ["heb", "hebt", "heeft", "hebben"],
+                correctAnswer: 3,
+                explanation: "'Hebben' with 'wij' becomes 'hebben'",
+                hint: "Plural forms are more regular"
+            ),
+            
+            // GAAN exercises
+            GrammarExercise(
+                question: "Conjugation of 'gaan': Ik ... naar school.",
+                options: ["ga", "gaat", "gaan", "ging"],
+                correctAnswer: 0,
+                explanation: "'Gaan' with 'ik' becomes 'ga'",
+                hint: "Remember the irregular form for 'ik'"
+            ),
+            GrammarExercise(
+                question: "Conjugation of 'gaan': Jij ... naar werk.",
+                options: ["ga", "gaat", "gaan", "ging"],
+                correctAnswer: 1,
+                explanation: "'Gaan' with 'jij' becomes 'gaat'",
+                hint: "Remember the irregular form for 'jij'"
+            ),
+            GrammarExercise(
+                question: "Conjugation of 'gaan': Hij ... naar huis.",
+                options: ["ga", "gaat", "gaan", "ging"],
+                correctAnswer: 1,
+                explanation: "'Gaan' with 'hij' becomes 'gaat'",
+                hint: "Remember the irregular form for 'hij'"
+            ),
+            GrammarExercise(
+                question: "Conjugation of 'gaan': Wij ... naar de winkel.",
                 options: ["ga", "gaat", "gaan", "ging"],
                 correctAnswer: 2,
-                explanation: "Bij 'wij' gebruik je de infinitief 'gaan'",
-                hint: "Bij 'wij/jullie/zij' blijft het werkwoord hetzelfde"
+                explanation: "'Gaan' with 'wij' becomes 'gaan'",
+                hint: "Plural forms are more regular"
             ),
-            // New translation exercises
+            
+            // Translation exercises
             GrammarExercise(
                 question: "How do you say 'I am tired' in Dutch?",
                 options: ["Ik zij moe", "Ik ben moe", "Ik bent moe", "Ik is moe"],
                 correctAnswer: 1,
-                explanation: "Ik ben moe - 'zijn' becomes 'ben' for 'ik'",
-                hint: "Remember: 'ik' uses 'ben' with 'zijn'",
+                explanation: "Ik ben moe - 'zijn' with 'ik' becomes 'ben'",
+                hint: "Remember the irregular form for 'ik'",
                 exerciseType: .translation
             ),
             GrammarExercise(
-                question: "How do you say 'She has a car' in Dutch?",
-                options: ["Zij heb een auto", "Zij hebt een auto", "Zij heeft een auto", "Zij hebben een auto"],
+                question: "How do you say 'You are nice' in Dutch?",
+                options: ["Jij zij aardig", "Jij ben aardig", "Jij bent aardig", "Jij is aardig"],
                 correctAnswer: 2,
-                explanation: "Zij heeft een auto - 'hebben' becomes 'heeft' for 'hij/zij'",
-                hint: "Remember: 'hij/zij' uses 'heeft' with 'hebben'",
+                explanation: "Jij bent aardig - 'zijn' with 'jij' becomes 'bent'",
+                hint: "Remember the irregular form for 'jij'",
                 exerciseType: .translation
             ),
             GrammarExercise(
-                question: "Complete: 'Wij ___ naar de winkel' (We go to the store)",
-                options: ["ga", "gaat", "gaan", "ging"],
+                question: "How do you say 'He has a car' in Dutch?",
+                options: ["Hij heb een auto", "Hij hebt een auto", "Hij heeft een auto", "Hij hebben een auto"],
                 correctAnswer: 2,
-                explanation: "Wij gaan naar de winkel - 'gaan' stays the same for 'wij'",
-                hint: "For 'wij', use the infinitive form",
+                explanation: "Hij heeft een auto - 'hebben' with 'hij' becomes 'heeft'",
+                hint: "Remember the irregular form for 'hij'",
+                exerciseType: .translation
+            ),
+            GrammarExercise(
+                question: "How do you say 'We go to school' in Dutch?",
+                options: ["Wij ga naar school", "Wij gaat naar school", "Wij gaan naar school", "Wij ging naar school"],
+                correctAnswer: 2,
+                explanation: "Wij gaan naar school - 'gaan' with 'wij' becomes 'gaan'",
+                hint: "Plural forms are more regular",
+                exerciseType: .translation
+            ),
+            
+            // Fill-in-the-blank exercises
+            GrammarExercise(
+                question: "Complete: 'Ik ___ student' (I am a student)",
+                options: ["zij", "ben", "bent", "is"],
+                correctAnswer: 1,
+                explanation: "Ik ben student - 'zijn' with 'ik' becomes 'ben'",
+                hint: "Remember the irregular form for 'ik'",
                 exerciseType: .fillInTheBlank
             ),
             GrammarExercise(
-                question: "True or False: 'Jij bent' is correct Dutch for 'You are'",
+                question: "Complete: 'Hij ___ een hond' (He has a dog)",
+                options: ["heb", "hebt", "heeft", "hebben"],
+                correctAnswer: 2,
+                explanation: "Hij heeft een hond - 'hebben' with 'hij' becomes 'heeft'",
+                hint: "Remember the irregular form for 'hij'",
+                exerciseType: .fillInTheBlank
+            ),
+            GrammarExercise(
+                question: "Complete: 'Jij ___ naar huis' (You go home)",
+                options: ["ga", "gaat", "gaan", "ging"],
+                correctAnswer: 1,
+                explanation: "Jij gaat naar huis - 'gaan' with 'jij' becomes 'gaat'",
+                hint: "Remember the irregular form for 'jij'",
+                exerciseType: .fillInTheBlank
+            ),
+            GrammarExercise(
+                question: "Complete: 'Wij ___ tijd' (We have time)",
+                options: ["heb", "hebt", "heeft", "hebben"],
+                correctAnswer: 3,
+                explanation: "Wij hebben tijd - 'hebben' with 'wij' becomes 'hebben'",
+                hint: "Plural forms are more regular",
+                exerciseType: .fillInTheBlank
+            ),
+            
+            // True/False exercises
+            GrammarExercise(
+                question: "True or False: 'Ik ben' is correct Dutch for 'I am'",
                 options: ["True", "False"],
                 correctAnswer: 0,
-                explanation: "True! 'Jij bent' is correct - 'zijn' becomes 'bent' for 'jij'",
-                hint: "Think about the conjugation of 'zijn'",
+                explanation: "True! 'Ik ben' is correct - 'zijn' with 'ik' becomes 'ben'",
+                hint: "Think about the irregular form for 'ik'",
+                exerciseType: .trueFalse
+            ),
+            GrammarExercise(
+                question: "True or False: 'Hij heb' is correct Dutch for 'He has'",
+                options: ["True", "False"],
+                correctAnswer: 1,
+                explanation: "False! It should be 'Hij heeft'. 'Hebben' with 'hij' becomes 'heeft'",
+                hint: "Remember the irregular form for 'hij'",
+                exerciseType: .trueFalse
+            ),
+            GrammarExercise(
+                question: "True or False: 'Jij gaat' is correct Dutch for 'You go'",
+                options: ["True", "False"],
+                correctAnswer: 0,
+                explanation: "True! 'Jij gaat' is correct - 'gaan' with 'jij' becomes 'gaat'",
+                hint: "Think about the irregular form for 'jij'",
+                exerciseType: .trueFalse
+            ),
+            GrammarExercise(
+                question: "True or False: 'Wij zijn' is correct Dutch for 'We are'",
+                options: ["True", "False"],
+                correctAnswer: 0,
+                explanation: "True! 'Wij zijn' is correct - 'zijn' with 'wij' becomes 'zijn'",
+                hint: "Think about the irregular form for 'wij'",
                 exerciseType: .trueFalse
             )
         ],
@@ -348,26 +706,40 @@ class DutchGrammarRulesDatabase {
             CommonMistake(
                 incorrect: "Ik zij",
                 correct: "Ik ben",
-                explanation: "'Zijn' bij 'ik' wordt altijd 'ben'"
+                explanation: "'Zijn' with 'ik' becomes 'ben', not 'zij'"
             ),
             CommonMistake(
-                incorrect: "Hij hebt",
+                incorrect: "Hij heb",
                 correct: "Hij heeft",
-                explanation: "'Hebben' bij 'hij/zij' wordt 'heeft' (niet 'hebt')"
+                explanation: "'Hebben' with 'hij' becomes 'heeft', not 'heb'"
             ),
             CommonMistake(
-                incorrect: "Jij bent niet → Jij ben niet",
-                correct: "Jij bent niet",
-                explanation: "In negatieve zinnen blijft 'bent' gewoon 'bent'"
+                incorrect: "Jij is",
+                correct: "Jij bent",
+                explanation: "'Zijn' with 'jij' becomes 'bent', not 'is'"
+            ),
+            CommonMistake(
+                incorrect: "Ik gaat",
+                correct: "Ik ga",
+                explanation: "'Gaan' with 'ik' becomes 'ga', not 'gaat'"
+            ),
+            CommonMistake(
+                incorrect: "Zij hebt",
+                correct: "Zij heeft",
+                explanation: "'Hebben' with 'zij' becomes 'heeft', not 'hebt'"
             )
         ],
         tips: [
-            "Leer 'zijn' eerst: ik ben, jij bent, hij/zij is, wij/jullie/zij zijn",
-            "Oefen deze werkwoorden elke dag - ze komen heel vaak voor",
-            "Maak zinnen met deze werkwoorden om ze te onthouden",
-            "Let op: 'hebben' heeft een f-klank bij hij/zij: 'heeft'"
+            "Learn irregular verbs by heart - they don't follow rules",
+            "Practice 'zijn' (to be) first - it's the most irregular",
+            "Pay attention to spelling: 'heb' vs 'heeft'",
+            "Remember: 'ik ben', 'jij bent', 'hij is'",
+            "Remember: 'ik heb', 'jij hebt', 'hij heeft'",
+            "Remember: 'ik ga', 'jij gaat', 'hij gaat'",
+            "Use these verbs in real sentences to practice",
+            "Listen to Dutch conversations to hear them used naturally"
         ],
-        relatedRules: ["verb_present_a1", "verb_negation_a1", "verb_questions_a1"]
+        relatedRules: ["verb_present_a1", "verb_questions_a1", "verb_negation_a1"]
     )
     
     // MARK: - A2 Level Verb Conjugation Rules
@@ -506,8 +878,8 @@ class DutchGrammarRulesDatabase {
         keyPoints: [
             "Regelmatige werkwoorden volgen 't kofschip regel",
             "Onregelmatige werkwoorden hebben speciale vormen",
-            "Gaan → ging/gingen (onregelmatig)",
-            "Zijn → was/waren (onregelmatig)",
+            "Gaan → ging/gingen (onregelmatig werkwoord)",
+            "Zijn → was/waren (onregelmatig werkwoord)",
             "Meervoud krijgt altijd -n erbij",
             "Let op de spelling van de stam"
         ],
@@ -567,2743 +939,256 @@ class DutchGrammarRulesDatabase {
                 audioHint: "zɛi mɛldə zɛix voːr də kɵrsɵs"
             ),
             GrammarExample(
-                dutch: "Wij twijfelden aan zijn verhaal.",
-                english: "We doubted his story.",
-                breakdown: "twijfel + den (l is zacht + meervoud)",
-                audioHint: "vɛi tvɛivəldə(n) aːn zɛin vərhaːl"
+                dutch: "Ik werk in een kantoor.",
+                english: "I work in an office.",
+                breakdown: "werk (stem) - no ending for 'ik'",
+                audioHint: "ik vɛrk"
             ),
             GrammarExample(
-                dutch: "Hij belde zijn moeder op.",
-                english: "He called his mother.",
-                breakdown: "bel + de (l is zacht)",
-                audioHint: "hɛi bɛldə zɛin mudər ɔp"
+                dutch: "Jij werkt hard.",
+                english: "You work hard.",
+                breakdown: "werk (stem) + t = werkt",
+                audioHint: "jɛi vɛrkt"
             ),
             GrammarExample(
-                dutch: "Jullie reisden naar het buitenland.",
-                english: "You traveled abroad.",
-                breakdown: "reis + den (s is hard + meervoud)",
-                audioHint: "jɵli rɛisdə(n) naːr hət bɵtənlɑnt"
+                dutch: "Hij woont in Amsterdam.",
+                english: "He lives in Amsterdam.",
+                breakdown: "woon (stem) + t = woont",
+                audioHint: "hɛi voːnt"
             ),
             GrammarExample(
-                dutch: "Ik betaalde de rekening.",
-                english: "I paid the bill.",
-                breakdown: "betaal + de (l is zacht)",
-                audioHint: "ɪk bətaːldə də rəkənɪŋ"
+                dutch: "Wij leren Nederlands.",
+                english: "We learn Dutch.",
+                breakdown: "leren (whole verb) - no change",
+                audioHint: "vɛi leːrə(n)"
             ),
             GrammarExample(
-                dutch: "Zij luisterden naar muziek.",
-                english: "They listened to music.",
-                breakdown: "luister + den (r is zacht + meervoud)",
-                audioHint: "zɛi lɵistərdə(n) naːr myzik"
+                dutch: "Jullie spelen voetbal.",
+                english: "You (plural) play football.",
+                breakdown: "spelen (whole verb) - no change",
+                audioHint: "jɵli speːlə(n)"
             ),
             GrammarExample(
-                dutch: "Hij antwoordde op de vraag.",
-                english: "He answered the question.",
-                breakdown: "antwoord + de (d is zacht)",
-                audioHint: "hɛi ɑntvoːrdə ɔp də vraːx"
-            ),
-            GrammarExample(
-                dutch: "Wij praatten over het weer.",
-                english: "We talked about the weather.",
-                breakdown: "praat + ten (t is hard + meervoud)",
-                audioHint: "vɛi praːtə(n) ovər hət veːr"
-            ),
-            GrammarExample(
-                dutch: "Jullie kochten een nieuwe auto.",
-                english: "You bought a new car.",
-                breakdown: "koop + ten (p is hard + meervoud)",
-                audioHint: "jɵli kɔxtə(n) ən nyvə ɑuto"
+                dutch: "Zij koken samen.",
+                english: "They cook together.",
+                breakdown: "koken (whole verb) - no change",
+                audioHint: "zɛi koːkə(n)"
             )
         ],
         exercises: [
-            // Gaan exercises
+            // Basic conjugation exercises
             GrammarExercise(
-                question: "Verleden tijd van 'gaan': Gisteren ___ ik naar school.",
-                options: ["ga", "gaat", "ging", "gingen"],
-                correctAnswer: 2,
-                explanation: "Gaan is onregelmatig: gaan → ging (enkelvoud)",
-                hint: "Gaan is een onregelmatig werkwoord"
+                question: "Conjugation of 'maken' (to make): Ik ... elke dag huiswerk.",
+                options: ["maak", "maakt", "maken", "maakte"],
+                correctAnswer: 0,
+                explanation: "For 'ik' use only the stem: maak (maken - en = maak)",
+                hint: "For 'ik' use no ending"
             ),
             GrammarExercise(
-                question: "Verleden tijd van 'gaan': Vorige week ___ wij naar Amsterdam.",
-                options: ["ga", "gaat", "ging", "gingen"],
-                correctAnswer: 3,
-                explanation: "Gaan is onregelmatig: gaan → gingen (meervoud)",
-                hint: "Dit is meervoud (wij)"
-            ),
-            GrammarExercise(
-                question: "Complete: 'Hij ___ naar de dokter' (He went to the doctor)",
-                options: ["ga", "gaat", "ging", "gingen"],
-                correctAnswer: 2,
-                explanation: "Hij ging naar de dokter - gaan → ging",
-                hint: "Gaan is onregelmatig in de verleden tijd",
-                exerciseType: .fillInTheBlank
-            ),
-            
-            // Zijn exercises
-            GrammarExercise(
-                question: "Verleden tijd van 'zijn': Ik ___ gisteren thuis.",
-                options: ["ben", "bent", "was", "waren"],
-                correctAnswer: 2,
-                explanation: "Zijn is onregelmatig: zijn → was (enkelvoud)",
-                hint: "Zijn is een onregelmatig werkwoord"
-            ),
-            GrammarExercise(
-                question: "Verleden tijd van 'zijn': Jullie ___ laat op het feest.",
-                options: ["zijn", "bent", "was", "waren"],
-                correctAnswer: 3,
-                explanation: "Zijn is onregelmatig: zijn → waren (meervoud)",
-                hint: "Dit is meervoud (jullie)"
-            ),
-            GrammarExercise(
-                question: "Complete: 'Zij ___ erg moe' (She was very tired)",
-                options: ["is", "bent", "was", "waren"],
-                correctAnswer: 2,
-                explanation: "Zij was erg moe - zijn → was",
-                hint: "Zijn is onregelmatig in de verleden tijd",
-                exerciseType: .fillInTheBlank
-            ),
-            
-            // Combineren exercises
-            GrammarExercise(
-                question: "Verleden tijd van 'combineren': Hij ___ de ingrediënten.",
-                options: ["combineer", "combineert", "combineerde", "combineerden"],
-                correctAnswer: 2,
-                explanation: "Combineer + de (r is zacht, niet in 't kofschip)",
-                hint: "Is de r hard of zacht? Denk aan 't kofschip"
-            ),
-            GrammarExercise(
-                question: "Verleden tijd van 'combineren': Wij ___ verschillende stijlen.",
-                options: ["combineer", "combineert", "combineerde", "combineerden"],
-                correctAnswer: 3,
-                explanation: "Combineer + den (r is zacht + meervoud krijgt -n)",
-                hint: "Meervoud krijgt extra -n"
-            ),
-            GrammarExercise(
-                question: "Complete: 'Ze ___ de kleuren perfect' (She combined the colors perfectly)",
-                options: ["combineer", "combineert", "combineerde", "combineerden"],
-                correctAnswer: 2,
-                explanation: "Ze combineerde de kleuren perfect - combineer + de",
-                hint: "R is een zachte medeklinker",
-                exerciseType: .fillInTheBlank
-            ),
-            
-            // Besparen exercises
-            GrammarExercise(
-                question: "Verleden tijd van 'besparen': Ik ___ veel geld.",
-                options: ["bespaar", "bespaart", "bespaarde", "bespaarden"],
-                correctAnswer: 2,
-                explanation: "Bespaar + de (r is zacht, niet in 't kofschip)",
-                hint: "Is de r hard of zacht?"
-            ),
-            GrammarExercise(
-                question: "Verleden tijd van 'besparen': Jullie ___ op energie.",
-                options: ["bespaar", "bespaart", "bespaarde", "bespaarden"],
-                correctAnswer: 3,
-                explanation: "Bespaar + den (r is zacht + meervoud krijgt -n)",
-                hint: "Meervoud krijgt extra -n"
-            ),
-            GrammarExercise(
-                question: "Complete: 'Hij ___ op zijn uitgaven' (He saved on his expenses)",
-                options: ["bespaar", "bespaart", "bespaarde", "bespaarden"],
-                correctAnswer: 2,
-                explanation: "Hij bespaarde op zijn uitgaven - bespaar + de",
-                hint: "R is een zachte medeklinker",
-                exerciseType: .fillInTheBlank
-            ),
-            
-            // Vertrouwen exercises
-            GrammarExercise(
-                question: "Verleden tijd van 'vertrouwen': Ik ___ op hem.",
-                options: ["vertrouw", "vertrouwt", "vertrouwde", "vertrouwden"],
-                correctAnswer: 2,
-                explanation: "Vertrouw + de (w is zacht, niet in 't kofschip)",
-                hint: "Is de w hard of zacht?"
-            ),
-            GrammarExercise(
-                question: "Verleden tijd van 'vertrouwen': Zij ___ elkaar volledig.",
-                options: ["vertrouw", "vertrouwt", "vertrouwde", "vertrouwden"],
-                correctAnswer: 3,
-                explanation: "Vertrouw + den (w is zacht + meervoud krijgt -n)",
-                hint: "Meervoud krijgt extra -n"
-            ),
-            GrammarExercise(
-                question: "Complete: 'We ___ op elkaar' (We trusted each other)",
-                options: ["vertrouw", "vertrouwt", "vertrouwde", "vertrouwden"],
-                correctAnswer: 3,
-                explanation: "We vertrouwden op elkaar - vertrouw + den (meervoud)",
-                hint: "Dit is meervoud (we)",
-                exerciseType: .fillInTheBlank
-            ),
-            
-            // Logeren exercises
-            GrammarExercise(
-                question: "Verleden tijd van 'logeren': Ik ___ bij mijn ouders.",
-                options: ["logeer", "logeert", "logeerde", "logeerden"],
-                correctAnswer: 2,
-                explanation: "Logeer + de (r is zacht, niet in 't kofschip)",
-                hint: "Is de r hard of zacht?"
-            ),
-            GrammarExercise(
-                question: "Verleden tijd van 'logeren': Wij ___ in een hotel.",
-                options: ["logeer", "logeert", "logeerde", "logeerden"],
-                correctAnswer: 3,
-                explanation: "Logeer + den (r is zacht + meervoud krijgt -n)",
-                hint: "Meervoud krijgt extra -n"
-            ),
-            GrammarExercise(
-                question: "Complete: 'Ze ___ bij vrienden' (She stayed with friends)",
-                options: ["logeer", "logeert", "logeerde", "logeerden"],
-                correctAnswer: 2,
-                explanation: "Ze logeerde bij vrienden - logeer + de",
-                hint: "R is een zachte medeklinker",
-                exerciseType: .fillInTheBlank
-            ),
-            
-            // Verwennen exercises
-            GrammarExercise(
-                question: "Verleden tijd van 'verwennen': Ik ___ mijn kinderen.",
-                options: ["verwen", "verwent", "verwende", "verwenden"],
-                correctAnswer: 2,
-                explanation: "Verwen + de (n is zacht, niet in 't kofschip)",
-                hint: "Is de n hard of zacht?"
-            ),
-            GrammarExercise(
-                question: "Verleden tijd van 'verwennen': Zij ___ zichzelf.",
-                options: ["verwen", "verwent", "verwende", "verwenden"],
-                correctAnswer: 2,
-                explanation: "Verwen + de (n is zacht, niet in 't kofschip)",
-                hint: "Is de n hard of zacht?"
-            ),
-            GrammarExercise(
-                question: "Complete: 'Hij ___ zijn vrouw' (He spoiled his wife)",
-                options: ["verwen", "verwent", "verwende", "verwenden"],
-                correctAnswer: 2,
-                explanation: "Hij verwende zijn vrouw - verwen + de",
-                hint: "N is een zachte medeklinker",
-                exerciseType: .fillInTheBlank
-            ),
-            
-            // Melden exercises
-            GrammarExercise(
-                question: "Verleden tijd van 'melden': Ik ___ me voor de cursus.",
-                options: ["meld", "meldt", "meldde", "meldden"],
-                correctAnswer: 2,
-                explanation: "Meld + de (d is zacht, niet in 't kofschip)",
-                hint: "Is de d hard of zacht? Denk aan 't kofschip"
-            ),
-            GrammarExercise(
-                question: "Verleden tijd van 'melden': Zij ___ zich voor het examen.",
-                options: ["meld", "meldt", "meldde", "meldden"],
-                correctAnswer: 2,
-                explanation: "Meld + de (d is zacht, niet in 't kofschip)",
-                hint: "D is een zachte medeklinker"
-            ),
-            GrammarExercise(
-                question: "Complete: 'Hij ___ zich voor de wedstrijd' (He registered for the competition)",
-                options: ["meld", "meldt", "meldde", "meldden"],
-                correctAnswer: 2,
-                explanation: "Hij meldde zich voor de wedstrijd - meld + de",
-                hint: "D is een zachte medeklinker",
-                exerciseType: .fillInTheBlank
-            ),
-            
-            // Twijfelen exercises
-            GrammarExercise(
-                question: "Verleden tijd van 'twijfelen': Ik ___ aan zijn verhaal.",
-                options: ["twijfel", "twijfelt", "twijfelde", "twijfelden"],
-                correctAnswer: 2,
-                explanation: "Twijfel + de (l is zacht, niet in 't kofschip)",
-                hint: "Is de l hard of zacht?"
-            ),
-            GrammarExercise(
-                question: "Verleden tijd van 'twijfelen': Wij ___ aan de beslissing.",
-                options: ["twijfel", "twijfelt", "twijfelde", "twijfelden"],
-                correctAnswer: 3,
-                explanation: "Twijfel + den (l is zacht + meervoud krijgt -n)",
-                hint: "Meervoud krijgt extra -n"
-            ),
-            GrammarExercise(
-                question: "Complete: 'Ze ___ aan zijn woorden' (She doubted his words)",
-                options: ["twijfel", "twijfelt", "twijfelde", "twijfelden"],
-                correctAnswer: 2,
-                explanation: "Ze twijfelde aan zijn woorden - twijfel + de",
-                hint: "L is een zachte medeklinker",
-                exerciseType: .fillInTheBlank
-            ),
-            
-            // Bellen exercises
-            GrammarExercise(
-                question: "Verleden tijd van 'bellen': Ik ___ mijn moeder.",
-                options: ["bel", "belt", "belde", "belden"],
-                correctAnswer: 2,
-                explanation: "Bel + de (l is zacht, niet in 't kofschip)",
-                hint: "Is de l hard of zacht?"
-            ),
-            GrammarExercise(
-                question: "Verleden tijd van 'bellen': Zij ___ haar vriendin.",
-                options: ["bel", "belt", "belde", "belden"],
-                correctAnswer: 2,
-                explanation: "Bel + de (l is zacht, niet in 't kofschip)",
-                hint: "L is een zachte medeklinker"
-            ),
-            GrammarExercise(
-                question: "Complete: 'Hij ___ zijn vader' (He called his father)",
-                options: ["bel", "belt", "belde", "belden"],
-                correctAnswer: 2,
-                explanation: "Hij belde zijn vader - bel + de",
-                hint: "L is een zachte medeklinker",
-                exerciseType: .fillInTheBlank
-            ),
-            
-            // Reizen exercises
-            GrammarExercise(
-                question: "Verleden tijd van 'reizen': Ik ___ naar Amsterdam.",
-                options: ["reis", "reist", "reisde", "reisden"],
-                correctAnswer: 2,
-                explanation: "Reis + de (s is hard, maar reizen is een uitzondering)",
-                hint: "Reizen krijgt -de ondanks harde s"
-            ),
-            GrammarExercise(
-                question: "Verleden tijd van 'reizen': Wij ___ naar het buitenland.",
-                options: ["reis", "reist", "reisde", "reisden"],
-                correctAnswer: 3,
-                explanation: "Reis + den (meervoud krijgt -n)",
-                hint: "Meervoud krijgt extra -n"
-            ),
-            GrammarExercise(
-                question: "Complete: 'Ze ___ naar Parijs' (She traveled to Paris)",
-                options: ["reis", "reist", "reisde", "reisden"],
-                correctAnswer: 2,
-                explanation: "Ze reisde naar Parijs - reis + de",
-                hint: "Reizen is een uitzondering op 't kofschip regel",
-                exerciseType: .fillInTheBlank
-            ),
-            
-            // Betalen exercises
-            GrammarExercise(
-                question: "Verleden tijd van 'betalen': Ik ___ de rekening.",
-                options: ["betaal", "betaalt", "betaalde", "betaalden"],
-                correctAnswer: 2,
-                explanation: "Betaal + de (l is zacht, niet in 't kofschip)",
-                hint: "Is de l hard of zacht?"
-            ),
-            GrammarExercise(
-                question: "Verleden tijd van 'betalen': Zij ___ met pinpas.",
-                options: ["betaal", "betaalt", "betaalde", "betaalden"],
-                correctAnswer: 2,
-                explanation: "Betaal + de (l is zacht, niet in 't kofschip)",
-                hint: "L is een zachte medeklinker"
-            ),
-            GrammarExercise(
-                question: "Complete: 'Hij ___ de factuur' (He paid the invoice)",
-                options: ["betaal", "betaalt", "betaalde", "betaalden"],
-                correctAnswer: 2,
-                explanation: "Hij betaalde de factuur - betaal + de",
-                hint: "L is een zachte medeklinker",
-                exerciseType: .fillInTheBlank
-            ),
-            
-            // Luisteren exercises
-            GrammarExercise(
-                question: "Verleden tijd van 'luisteren': Ik ___ naar muziek.",
-                options: ["luister", "luistert", "luisterde", "luisterden"],
-                correctAnswer: 2,
-                explanation: "Luister + de (r is zacht, niet in 't kofschip)",
-                hint: "Is de r hard of zacht?"
-            ),
-            GrammarExercise(
-                question: "Verleden tijd van 'luisteren': Zij ___ naar de radio.",
-                options: ["luister", "luistert", "luisterde", "luisterden"],
-                correctAnswer: 2,
-                explanation: "Luister + de (r is zacht, niet in 't kofschip)",
-                hint: "R is een zachte medeklinker"
-            ),
-            GrammarExercise(
-                question: "Complete: 'We ___ naar het nieuws' (We listened to the news)",
-                options: ["luister", "luistert", "luisterde", "luisterden"],
-                correctAnswer: 3,
-                explanation: "We luisterden naar het nieuws - luister + den (meervoud)",
-                hint: "Dit is meervoud (we) dus -den",
-                exerciseType: .fillInTheBlank
-            ),
-            
-            // Antwoorden exercises
-            GrammarExercise(
-                question: "Verleden tijd van 'antwoorden': Ik ___ op de vraag.",
-                options: ["antwoord", "antwoordt", "antwoordde", "antwoordden"],
-                correctAnswer: 2,
-                explanation: "Antwoord + de (d is zacht, niet in 't kofschip)",
-                hint: "Is de d hard of zacht?"
-            ),
-            GrammarExercise(
-                question: "Verleden tijd van 'antwoorden': Zij ___ niet op mijn bericht.",
-                options: ["antwoord", "antwoordt", "antwoordde", "antwoordden"],
-                correctAnswer: 2,
-                explanation: "Antwoord + de (d is zacht, niet in 't kofschip)",
-                hint: "D is een zachte medeklinker"
-            ),
-            GrammarExercise(
-                question: "Complete: 'Hij ___ op de brief' (He answered the letter)",
-                options: ["antwoord", "antwoordt", "antwoordde", "antwoordden"],
-                correctAnswer: 2,
-                explanation: "Hij antwoordde op de brief - antwoord + de",
-                hint: "D is een zachte medeklinker",
-                exerciseType: .fillInTheBlank
-            ),
-            
-            // Praten exercises
-            GrammarExercise(
-                question: "Verleden tijd van 'praten': Ik ___ met mijn vriend.",
-                options: ["praat", "praatt", "praatte", "praatten"],
-                correctAnswer: 2,
-                explanation: "Praat + te (t is hard, 't kofschip)",
-                hint: "Is de t hard of zacht? Denk aan 't kofschip"
-            ),
-            GrammarExercise(
-                question: "Verleden tijd van 'praten': Wij ___ over het weer.",
-                options: ["praat", "praatt", "praatte", "praatten"],
-                correctAnswer: 3,
-                explanation: "Praat + ten (t is hard + meervoud krijgt -n)",
-                hint: "Meervoud krijgt extra -n"
-            ),
-            GrammarExercise(
-                question: "Complete: 'Ze ___ over de film' (She talked about the movie)",
-                options: ["praat", "praatt", "praatte", "praatten"],
-                correctAnswer: 2,
-                explanation: "Ze praatte over de film - praat + te",
-                hint: "T is een harde medeklinker",
-                exerciseType: .fillInTheBlank
-            ),
-            
-            // Kopen exercises
-            GrammarExercise(
-                question: "Verleden tijd van 'kopen': Ik ___ een nieuwe auto.",
-                options: ["koop", "koopt", "kochte", "kochten"],
-                correctAnswer: 2,
-                explanation: "Koop → kocht (onregelmatig werkwoord)",
-                hint: "Kopen is onregelmatig in de verleden tijd"
-            ),
-            GrammarExercise(
-                question: "Verleden tijd van 'kopen': Wij ___ een huis.",
-                options: ["koop", "koopt", "kochte", "kochten"],
-                correctAnswer: 3,
-                explanation: "Koop → kochten (onregelmatig, meervoud)",
-                hint: "Kopen is onregelmatig en dit is meervoud"
-            ),
-            GrammarExercise(
-                question: "Complete: 'Hij ___ een cadeau' (He bought a gift)",
-                options: ["koop", "koopt", "kochte", "kochten"],
-                correctAnswer: 2,
-                explanation: "Hij kocht een cadeau - kopen → kocht",
-                hint: "Kopen is onregelmatig in de verleden tijd",
-                exerciseType: .fillInTheBlank
-            ),
-            
-            // Mixed exercises
-            GrammarExercise(
-                question: "How do you say 'I went to the store' in Dutch?",
-                options: ["Ik ga naar de winkel", "Ik ging naar de winkel", "Ik gaat naar de winkel", "Ik gingen naar de winkel"],
+                question: "Conjugation of 'wonen' (to live): Hij ... in Utrecht.",
+                options: ["woon", "woont", "wonen", "woonde"],
                 correctAnswer: 1,
-                explanation: "Ik ging naar de winkel - gaan is onregelmatig: gaan → ging",
-                hint: "Gaan is an irregular verb in the past tense",
+                explanation: "For 'hij' use stem + t: woon + t = woont",
+                hint: "For 'hij/zij' add -t to the stem"
+            ),
+            GrammarExercise(
+                question: "Conjugation of 'studeren' (to study): Wij ... aan de universiteit.",
+                options: ["studeer", "studeert", "studeren", "studeerde"],
+                correctAnswer: 2,
+                explanation: "For 'wij' use the whole verb: studeren",
+                hint: "For 'wij/jullie/zij' use the infinitive"
+            ),
+            GrammarExercise(
+                question: "Conjugation of 'spelen' (to play): Jij ... voetbal.",
+                options: ["speel", "speelt", "spelen", "speelde"],
+                correctAnswer: 1,
+                explanation: "For 'jij' use stem + t: speel + t = speelt",
+                hint: "For 'jij' add -t to the stem"
+            ),
+            GrammarExercise(
+                question: "Conjugation of 'koken' (to cook): Zij ... elke avond.",
+                options: ["kook", "kookt", "koken", "kookte"],
+                correctAnswer: 1,
+                explanation: "For 'zij' use stem + t: kook + t = kookt",
+                hint: "For 'zij' add -t to the stem"
+            ),
+            GrammarExercise(
+                question: "Conjugation of 'leren' (to learn): Jullie ... Nederlands.",
+                options: ["leer", "leert", "leren", "leerde"],
+                correctAnswer: 2,
+                explanation: "For 'jullie' use the whole verb: leren",
+                hint: "For 'jullie' use the infinitive"
+            ),
+            GrammarExercise(
+                question: "Conjugation of 'werken' (to work): Zij ... in een kantoor.",
+                options: ["werk", "werkt", "werken", "werkten"],
+                correctAnswer: 1,
+                explanation: "For 'zij' use stem + t: werk + t = werkt",
+                hint: "For 'zij' add -t to the stem"
+            ),
+            GrammarExercise(
+                question: "Conjugation of 'lezen' (to read): Ik ... een boek.",
+                options: ["lees", "leest", "lezen", "las"],
+                correctAnswer: 0,
+                explanation: "For 'ik' use only the stem: lees (lezen - en = lees)",
+                hint: "For 'ik' use no ending"
+            ),
+            GrammarExercise(
+                question: "Conjugation of 'schrijven' (to write): Hij ... een brief.",
+                options: ["schrijf", "schrijft", "schrijven", "schreef"],
+                correctAnswer: 1,
+                explanation: "For 'hij' use stem + t: schrijf + t = schrijft",
+                hint: "For 'hij' add -t to the stem"
+            ),
+            GrammarExercise(
+                question: "Conjugation of 'luisteren' (to listen): Wij ... naar muziek.",
+                options: ["luister", "luistert", "luisteren", "luisterde"],
+                correctAnswer: 2,
+                explanation: "For 'wij' use the whole verb: luisteren",
+                hint: "For 'wij' use the infinitive"
+            ),
+            
+            // Translation exercises
+            GrammarExercise(
+                question: "How do you say 'I work in Amsterdam' in Dutch?",
+                options: ["Ik werk in Amsterdam", "Ik werkt in Amsterdam", "Ik werken in Amsterdam", "Ik werkte in Amsterdam"],
+                correctAnswer: 0,
+                explanation: "Ik werk in Amsterdam - 'werk' is the stem form for 'ik'",
+                hint: "Remember: 'ik' uses the stem without any ending",
                 exerciseType: .translation
             ),
             GrammarExercise(
-                question: "How do you say 'We were tired' in Dutch?",
-                options: ["Wij zijn moe", "Wij waren moe", "Wij was moe", "Wij bent moe"],
+                question: "How do you say 'She lives in Utrecht' in Dutch?",
+                options: ["Zij woon in Utrecht", "Zij woont in Utrecht", "Zij wonen in Utrecht", "Zij woonde in Utrecht"],
                 correctAnswer: 1,
-                explanation: "Wij waren moe - zijn is onregelmatig: zijn → waren (plural)",
-                hint: "Zijn is irregular and this is plural",
+                explanation: "Zij woont in Utrecht - 'woont' adds -t for 'hij/zij'",
+                hint: "Remember: 'hij/zij' adds -t to the stem",
                 exerciseType: .translation
             ),
             GrammarExercise(
-                question: "Complete: 'Hij ___ veel geld' (He saved a lot of money)",
-                options: ["bespaar", "bespaart", "bespaarde", "bespaarden"],
+                question: "How do you say 'We study Dutch' in Dutch?",
+                options: ["Wij studeer Nederlands", "Wij studeert Nederlands", "Wij studeren Nederlands", "Wij studeerde Nederlands"],
                 correctAnswer: 2,
-                explanation: "Hij bespaarde veel geld - bespaar + de (r is soft)",
-                hint: "R is a soft consonant, not in 't kofschip",
+                explanation: "Wij studeren Nederlands - 'wij' uses the whole verb",
+                hint: "Remember: 'wij' uses the infinitive",
+                exerciseType: .translation
+            ),
+            GrammarExercise(
+                question: "How do you say 'You play football' in Dutch?",
+                options: ["Jij speel voetbal", "Jij speelt voetbal", "Jij spelen voetbal", "Jij speelde voetbal"],
+                correctAnswer: 1,
+                explanation: "Jij speelt voetbal - 'jij' adds -t to the stem",
+                hint: "Remember: 'jij' adds -t to the stem",
+                exerciseType: .translation
+            ),
+            GrammarExercise(
+                question: "How do you say 'They cook dinner' in Dutch?",
+                options: ["Zij kook avondeten", "Zij kookt avondeten", "Zij koken avondeten", "Zij kookte avondeten"],
+                correctAnswer: 1,
+                explanation: "Zij kookt avondeten - 'zij' adds -t to the stem",
+                hint: "Remember: 'zij' adds -t to the stem",
+                exerciseType: .translation
+            ),
+            
+            // Fill-in-the-blank exercises
+            GrammarExercise(
+                question: "Complete: 'Ik ___ elke dag naar school' (I go to school every day)",
+                options: ["ga", "gaat", "gaan", "ging"],
+                correctAnswer: 0,
+                explanation: "Ik ga elke dag naar school - 'ga' is the stem form for 'ik'",
+                hint: "This is the present tense, and 'ik' uses the stem",
                 exerciseType: .fillInTheBlank
             ),
             GrammarExercise(
-                question: "True or False: 'Gaan' is a regular verb in the past tense",
+                question: "Complete: 'Hij ___ een boek' (He reads a book)",
+                options: ["lees", "leest", "lezen", "las"],
+                correctAnswer: 1,
+                explanation: "Hij leest een boek - 'hij' adds -t to the stem",
+                hint: "For 'hij' add -t to the stem",
+                exerciseType: .fillInTheBlank
+            ),
+            GrammarExercise(
+                question: "Complete: 'Wij ___ Nederlands' (We learn Dutch)",
+                options: ["leer", "leert", "leren", "leerde"],
+                correctAnswer: 2,
+                explanation: "Wij leren Nederlands - 'wij' uses the whole verb",
+                hint: "For 'wij' use the infinitive",
+                exerciseType: .fillInTheBlank
+            ),
+            GrammarExercise(
+                question: "Complete: 'Jullie ___ naar muziek' (You listen to music)",
+                options: ["luister", "luistert", "luisteren", "luisterde"],
+                correctAnswer: 2,
+                explanation: "Jullie luisteren naar muziek - 'jullie' uses the whole verb",
+                hint: "For 'jullie' use the infinitive",
+                exerciseType: .fillInTheBlank
+            ),
+            GrammarExercise(
+                question: "Complete: 'Zij ___ een brief' (She writes a letter)",
+                options: ["schrijf", "schrijft", "schrijven", "schreef"],
+                correctAnswer: 1,
+                explanation: "Zij schrijft een brief - 'zij' adds -t to the stem",
+                hint: "For 'zij' add -t to the stem",
+                exerciseType: .fillInTheBlank
+            ),
+            
+            // True/False exercises
+            GrammarExercise(
+                question: "True or False: 'Hij werkt' is correct Dutch for 'He works'",
                 options: ["True", "False"],
-                correctAnswer: 1,
-                explanation: "False! 'Gaan' is irregular: gaan → ging/gingen",
-                hint: "Think about the past tense form of 'gaan'",
+                correctAnswer: 0,
+                explanation: "True! 'Hij werkt' is correct - 'hij' + stem + t",
+                hint: "Think about the conjugation rule for 'hij'",
                 exerciseType: .trueFalse
             ),
             GrammarExercise(
-                question: "True or False: All verbs ending in -en follow the same past tense pattern",
+                question: "True or False: 'Ik woont' is correct Dutch for 'I live'",
                 options: ["True", "False"],
                 correctAnswer: 1,
-                explanation: "False! Some verbs like 'gaan' and 'zijn' are irregular and don't follow the regular -de/-te pattern.",
-                hint: "Think about irregular verbs",
+                explanation: "False! It should be 'Ik woon'. 'Ik' uses only the stem, no -t",
+                hint: "Remember: 'ik' uses no ending",
                 exerciseType: .trueFalse
             ),
             GrammarExercise(
-                question: "Complete: 'Vorig jaar ___ wij in Nederland' (Last year we were in the Netherlands)",
-                options: ["zijn", "bent", "was", "waren"],
-                correctAnswer: 3,
-                explanation: "Vorig jaar waren wij in Nederland - zijn → waren (plural)",
-                hint: "This is plural (wij) and 'zijn' is irregular",
-                exerciseType: .fillInTheBlank
-            ),
-            GrammarExercise(
-                question: "Complete: 'Ze ___ de ingrediënten goed' (She combined the ingredients well)",
-                options: ["combineer", "combineert", "combineerde", "combineerden"],
-                correctAnswer: 2,
-                explanation: "Ze combineerde de ingrediënten goed - combineer + de",
-                hint: "R is a soft consonant",
-                exerciseType: .fillInTheBlank
-            ),
-            GrammarExercise(
-                question: "Complete: 'Jullie ___ op elkaar' (You trusted each other)",
-                options: ["vertrouw", "vertrouwt", "vertrouwde", "vertrouwden"],
-                correctAnswer: 3,
-                explanation: "Jullie vertrouwden op elkaar - vertrouw + den (plural)",
-                hint: "This is plural (jullie) so add -n",
-                exerciseType: .fillInTheBlank
-            ),
-            GrammarExercise(
-                question: "Complete: 'Wij ___ in een hotel' (We stayed in a hotel)",
-                options: ["logeer", "logeert", "logeerde", "logeerden"],
-                correctAnswer: 3,
-                explanation: "Wij logeerden in een hotel - logeer + den (plural)",
-                hint: "This is plural (wij) so add -n",
-                exerciseType: .fillInTheBlank
-            ),
-            GrammarExercise(
-                question: "Complete: 'Hij ___ zijn kinderen' (He spoiled his children)",
-                options: ["verwen", "verwent", "verwende", "verwenden"],
-                correctAnswer: 2,
-                explanation: "Hij verwende zijn kinderen - verwen + de",
-                hint: "N is a soft consonant",
-                exerciseType: .fillInTheBlank
-            ),
-            GrammarExercise(
-                question: "How do you say 'They combined the colors' in Dutch?",
-                options: ["Ze combineer de kleuren", "Ze combineerde de kleuren", "Ze combineerden de kleuren", "Ze combineert de kleuren"],
-                correctAnswer: 2,
-                explanation: "Ze combineerden de kleuren - combineer + den (plural)",
-                hint: "This is plural (ze) so add -n",
-                exerciseType: .translation
-            )
-        ],
-        commonMistakes: [
-            CommonMistake(
-                incorrect: "Ik ga gisteren",
-                correct: "Ik ging gisteren",
-                explanation: "Gaan is onregelmatig: gaan → ging (niet ga)"
-            ),
-            CommonMistake(
-                incorrect: "Wij was moe",
-                correct: "Wij waren moe",
-                explanation: "Zijn is onregelmatig: zijn → waren (meervoud, niet was)"
-            ),
-            CommonMistake(
-                incorrect: "Hij combineerde → Hij combineerde",
-                correct: "Hij combineerde",
-                explanation: "R is zacht, dus -de, niet -te"
-            ),
-            CommonMistake(
-                incorrect: "Wij bespaarde",
-                correct: "Wij bespaarden",
-                explanation: "Meervoud krijgt altijd -n erbij: -den of -ten"
-            ),
-            CommonMistake(
-                incorrect: "Ik vertrouwde → Ik vertrouwde",
-                correct: "Ik vertrouwde",
-                explanation: "W is zacht, dus -de, niet -te"
-            ),
-            CommonMistake(
-                incorrect: "Ze logeerde → Ze logeerde",
-                correct: "Ze logeerde",
-                explanation: "R is zacht, dus -de, niet -te"
-            ),
-            CommonMistake(
-                incorrect: "Hij verwende → Hij verwende",
-                correct: "Hij verwende",
-                explanation: "N is zacht, dus -de, niet -te"
-            ),
-            CommonMistake(
-                incorrect: "Ik meldte",
-                correct: "Ik meldde",
-                explanation: "D is zacht (niet in 't kofschip) dus gebruik -de, niet -te"
-            ),
-            CommonMistake(
-                incorrect: "Hij twijfelte",
-                correct: "Hij twijfelde",
-                explanation: "L is zacht (niet in 't kofschip) dus gebruik -de, niet -te"
-            ),
-            CommonMistake(
-                incorrect: "Ik belte",
-                correct: "Ik belde",
-                explanation: "L is zacht (niet in 't kofschip) dus gebruik -de, niet -te"
-            ),
-            CommonMistake(
-                incorrect: "Ik reiste",
-                correct: "Ik reisde",
-                explanation: "Reizen is een uitzondering op 't kofschip regel"
-            ),
-            CommonMistake(
-                incorrect: "Hij betaalte",
-                correct: "Hij betaalde",
-                explanation: "L is zacht (niet in 't kofschip) dus gebruik -de, niet -te"
-            ),
-            CommonMistake(
-                incorrect: "Ik koopte",
-                correct: "Ik kocht",
-                explanation: "Kopen is onregelmatig: kopen → kocht/kochten"
-            )
-        ],
-        tips: [
-            "Leer de onregelmatige werkwoorden uit je hoofd: gaan → ging/gingen, zijn → was/waren, kopen → kocht/kochten",
-            "Denk aan 't kofschip voor harde medeklinkers: t-k-o-f-s-ch-i-p",
-            "Zachte letters (niet in 't kofschip) krijgen -de",
-            "Harde letters ('t kofschip) krijgen -te",
-            "Meervoud krijgt altijd een extra -n",
-            "Oefen eerst met de stam: haal -en eraf",
-            "Let op spelling: combineer (niet combiner), bespaar (niet bespar)",
-            "Onregelmatige werkwoorden moet je gewoon leren",
-            "Uitzonderingen: reizen krijgt -de ondanks harde s",
-            "Veel voorkomende zachte medeklinkers: l, m, n, r, d, v, z",
-            "Veel voorkomende harde medeklinkers: p, t, k, f, s, ch"
-        ],
-        relatedRules: ["verb_past_a2", "verb_irregular_past_a2", "verb_perfect_a2"]
-    )
-    
-    lazy var perfectTenseB1 = DutchGrammarRule(
-        id: "verb_perfect_b1",
-        title: "Voltooid Tegenwoordige Tijd (Perfectum) - B1",
-        type: .verbConjugation,
-        level: .b1,
-        explanation: """
-        De voltooid tegenwoordige tijd (perfectum) gebruik je om te vertellen over iets dat in het verleden gebeurde maar nog effect heeft op nu, of om ervaringen te beschrijven.
-        
-        Vorm: hebben/zijn + voltooid deelwoord (past participle)
-        
-        Voltooid deelwoord vorming:
-        • Regelmatige werkwoorden: ge- + stam + -d/-t (volgens 't kofschip regel)
-        • Onregelmatige werkwoorden: speciale vormen (moet je leren)
-        
-        Hulpwerkwoord kiezen:
-        • HEBBEN: de meeste werkwoorden
-        • ZIJN: beweging, verandering van toestand, zijn/blijven/worden
-        """,
-        keyPoints: [
-            "Perfectum = hebben/zijn + voltooid deelwoord",
-            "Voltooid deelwoord: ge- + stam + d/t",
-            "'t kofschip regel geldt ook hier",
-            "ZIJN voor beweging en verandering",
-            "HEBBEN voor alle andere werkwoorden",
-            "Onregelmatige werkwoorden hebben speciale vormen"
-        ],
-        examples: [
-            GrammarExample(
-                dutch: "Ik heb gewerkt.",
-                english: "I have worked.",
-                breakdown: "hebben + ge-werk-t (k is hard)",
-                audioHint: "ik hɛp ɣəvɛrkt"
-            ),
-            GrammarExample(
-                dutch: "Zij heeft gekookt.",
-                english: "She has cooked.",
-                breakdown: "hebben + ge-kook-t (k is hard)",
-                audioHint: "zɛi heːft ɣəkoːkt"
-            ),
-            GrammarExample(
-                dutch: "Wij zijn gegaan.",
-                english: "We have gone.",
-                breakdown: "zijn + gegaan (beweging + onregelmatig)",
-                audioHint: "vɛi zɛin ɣəɣaːn"
-            ),
-            GrammarExample(
-                dutch: "Hij is gevallen.",
-                english: "He has fallen.",
-                breakdown: "zijn + gevallen (beweging/verandering)",
-                audioHint: "hɛi ɪs ɣəvɑlə(n)"
-            ),
-            GrammarExample(
-                dutch: "Jullie hebben geleerd.",
-                english: "You have learned.",
-                breakdown: "hebben + ge-leer-d (r is zacht)",
-                audioHint: "jɵli hɛbə(n) ɣəleːrt"
-            ),
-            GrammarExample(
-                dutch: "Ik ben geweest.",
-                english: "I have been.",
-                breakdown: "zijn + geweest (zijn is onregelmatig)",
-                audioHint: "ik bɛn ɣəveːst"
-            )
-        ],
-        exercises: [
-            GrammarExercise(
-                question: "What is the plural of 'het huis' (house)?",
-                options: ["de huiss", "de huizen", "de huisen", "het huizen"],
-                correctAnswer: 1,
-                explanation: "Huis becomes huizen with vowel change (ui → ui) and -EN ending. Remember: all plurals use DE.",
-                hint: "Think about vowel changes and which article plurals use"
-            ),
-            GrammarExercise(
-                question: "What is the plural of 'de computer'?",
-                options: ["de computeren", "de computers", "de computeres", "het computers"],
-                correctAnswer: 1,
-                explanation: "Foreign words like 'computer' typically add -S to form the plural.",
-                hint: "Computer is a foreign/borrowed word"
-            ),
-            GrammarExercise(
-                question: "What is the plural of 'de man' (man)?",
-                options: ["de mans", "de mannen", "de manen", "het mannen"],
-                correctAnswer: 1,
-                explanation: "Man becomes mannen (double n + -EN). This is a common pattern for words ending in a single consonant.",
-                hint: "Single consonants often double before -EN"
-            ),
-            GrammarExercise(
-                question: "What is the plural of 'idee'?",
-                options: ["idees", "ideeen", "ideeën", "ideëns"],
-                correctAnswer: 2,
-                explanation: "The correct plural is 'ideeën' (with trema).",
-                hint: "Watch for the trema (¨) in Dutch plurals."
-            ),
-            GrammarExercise(
-                question: "What is the plural of 'zee'?",
-                options: ["zeeën", "zees", "zeeen", "zeeën"],
-                correctAnswer: 0,
-                explanation: "The correct plural is 'zeeën'.",
-                hint: "Double e and trema."
-            ),
-            GrammarExercise(
-                question: "What is the plural of 'vrijheid'?",
-                options: ["vrijheden", "vrijheids", "vrijheiden", "vrijheeds"],
-                correctAnswer: 0,
-                explanation: "The correct plural is 'vrijheden'.",
-                hint: "Words ending in -heid get -heden."
-            ),
-            GrammarExercise(
-                question: "What is the plural of 'mogelijkheid'?",
-                options: ["mogelijkheden", "mogelijks", "mogelijkheidens", "mogelijkheid"],
-                correctAnswer: 0,
-                explanation: "The correct plural is 'mogelijkheden'.",
-                hint: "Words ending in -heid get -heden."
-            ),
-            GrammarExercise(
-                question: "What is the plural of 'monteur'?",
-                options: ["monteurs", "monteuren", "monteueren", "monteuurs"],
-                correctAnswer: 0,
-                explanation: "The correct plural is 'monteurs'.",
-                hint: "Professions ending in -eur get -s."
-            ),
-            GrammarExercise(
-                question: "What is the plural of 'regisseur'?",
-                options: ["regisseurs", "regisseuren", "regisseus", "regisseuren"],
-                correctAnswer: 0,
-                explanation: "The correct plural is 'regisseurs'.",
-                hint: "Professions ending in -eur get -s."
-            ),
-            GrammarExercise(
-                question: "What is the plural of 'dak'?",
-                options: ["daken", "daks", "dakenen", "dakkes"],
-                correctAnswer: 0,
-                explanation: "The correct plural is 'daken'.",
-                hint: "Short vowel, just add -en."
-            ),
-            GrammarExercise(
-                question: "What is the plural of 'glas'?",
-                options: ["glazen", "glassen", "glass", "glazens"],
-                correctAnswer: 0,
-                explanation: "The correct plural is 'glazen'.",
-                hint: "Irregular: vowel change."
-            ),
-            GrammarExercise(
-                question: "What is the plural of 'bedrag'?",
-                options: ["bedragen", "bedragenen", "bedraags", "bedraggen"],
-                correctAnswer: 0,
-                explanation: "The correct plural is 'bedragen'.",
-                hint: "Just add -en."
-            ),
-            GrammarExercise(
-                question: "What is the plural of 'verslag'?",
-                options: ["verslagen", "verslags", "verslaggen", "verslaggen"],
-                correctAnswer: 0,
-                explanation: "The correct plural is 'verslagen'.",
-                hint: "Just add -en."
-            ),
-            GrammarExercise(
-                question: "What is the plural of 'weg'?",
-                options: ["wegen", "wegs", "weggen", "weegen"],
-                correctAnswer: 0,
-                explanation: "The correct plural is 'wegen'.",
-                hint: "Just add -en."
-            ),
-            GrammarExercise(
-                question: "What is the plural of 'pad'?",
-                options: ["paden", "pads", "padden", "padenen"],
-                correctAnswer: 0,
-                explanation: "The correct plural is 'paden'.",
-                hint: "Just add -en."
-            ),
-            GrammarExercise(
-                question: "What is the plural of 'slot'?",
-                options: ["sloten", "slots", "slotten", "sloten"],
-                correctAnswer: 0,
-                explanation: "The correct plural is 'sloten'.",
-                hint: "Just add -en."
-            ),
-            GrammarExercise(
-                question: "What is the plural of 'blad' (leaf)?",
-                options: ["bladeren", "blads", "bladden", "bladens"],
-                correctAnswer: 0,
-                explanation: "The correct plural is 'bladeren'.",
-                hint: "Irregular plural."
-            ),
-            GrammarExercise(
-                question: "What is the plural of 'ei'?",
-                options: ["eieren", "eis", "eien", "eier"],
-                correctAnswer: 0,
-                explanation: "The correct plural is 'eieren'.",
-                hint: "Irregular plural."
-            ),
-            GrammarExercise(
-                question: "What is the plural of 'kind'?",
-                options: ["kinderen", "kinds", "kinden", "kinderen"],
-                correctAnswer: 0,
-                explanation: "The correct plural is 'kinderen'.",
-                hint: "Irregular plural."
-            ),
-            GrammarExercise(
-                question: "What is the plural of 'lied'?",
-                options: ["liederen", "lieds", "lieds", "liederenen"],
-                correctAnswer: 0,
-                explanation: "The correct plural is 'liederen'.",
-                hint: "Irregular plural."
-            ),
-            GrammarExercise(
-                question: "What is the plural of 'broer'?",
-                options: ["broers", "broeren", "broeren", "broerss"],
-                correctAnswer: 0,
-                explanation: "The correct plural is 'broers'.",
-                hint: "Just add -s."
-            ),
-            GrammarExercise(
-                question: "What is the plural of 'cadeau'?",
-                options: ["cadeaus", "cadeau's", "cadeauen", "cadeaunen"],
-                correctAnswer: 0,
-                explanation: "The correct plural is 'cadeaus'.",
-                hint: "Foreign word, add -s."
-            ),
-            GrammarExercise(
-                question: "What is the plural of 'café'?",
-                options: ["cafés", "cafees", "cafe's", "cafes"],
-                correctAnswer: 0,
-                explanation: "The correct plural is 'cafés'.",
-                hint: "Foreign word, add -s."
-            ),
-            GrammarExercise(
-                question: "What is the plural of 'datum'?",
-                options: ["datums", "datumen", "datumsen", "datum's"],
-                correctAnswer: 0,
-                explanation: "The correct plural is 'datums'.",
-                hint: "Foreign word, add -s."
-            ),
-            GrammarExercise(
-                question: "What is the plural of 'e-mail'?",
-                options: ["e-mails", "e-mailen", "e-mailes", "e-mail's"],
-                correctAnswer: 0,
-                explanation: "The correct plural is 'e-mails'.",
-                hint: "Foreign word, add -s."
-            ),
-            GrammarExercise(
-                question: "What is the plural of 'koe'?",
-                options: ["koeien", "koes", "koeen", "koeën"],
-                correctAnswer: 0,
-                explanation: "The correct plural is 'koeien'.",
-                hint: "Irregular plural."
-            ),
-            GrammarExercise(
-                question: "What is the plural of 'restaurant'?",
-                options: ["restaurants", "restauranten", "restaurant's", "restaurantenen"],
-                correctAnswer: 0,
-                explanation: "The correct plural is 'restaurants'.",
-                hint: "Foreign word, add -s."
-            ),
-            GrammarExercise(
-                question: "What is the plural of 'stad'?",
-                options: ["steden", "stads", "staden", "stadden"],
-                correctAnswer: 0,
-                explanation: "The correct plural is 'steden'.",
-                hint: "Vowel change."
-            ),
-            GrammarExercise(
-                question: "What is the plural of 'oom'?",
-                options: ["ooms", "oomen", "oomens", "oomes"],
-                correctAnswer: 0,
-                explanation: "The correct plural is 'ooms'.",
-                hint: "Just add -s."
-            ),
-            GrammarExercise(
-                question: "What is the plural of 'museum'?",
-                options: ["museums", "musea", "museumsen", "museumen"],
-                correctAnswer: 1,
-                explanation: "The correct plural is 'musea'.",
-                hint: "Irregular plural."
-            ),
-            GrammarExercise(
-                question: "What is the plural of 'lid'?",
-                options: ["leden", "lidden", "lids", "lidderen"],
-                correctAnswer: 0,
-                explanation: "The correct plural is 'leden'.",
-                hint: "Irregular plural."
-            ),
-            // Fill in the blank exercises
-            GrammarExercise(
-                question: "het kind → ___ (the children)",
-                options: ["kinderen", "kinds", "kinders", "kindes"],
-                correctAnswer: 0,
-                explanation: "The plural of 'het kind' is 'kinderen'.",
-                hint: "Irregular plural."
-            ),
-            GrammarExercise(
-                question: "het ei → ___ (the eggs)",
-                options: ["eieren", "eis", "eien", "eiers"],
-                correctAnswer: 0,
-                explanation: "The plural of 'het ei' is 'eieren'.",
-                hint: "Irregular plural."
-            ),
-            GrammarExercise(
-                question: "het blad → ___ (the leaves)",
-                options: ["bladeren", "blads", "bladden", "blades"],
-                correctAnswer: 0,
-                explanation: "The plural of 'het blad' is 'bladeren'.",
-                hint: "Irregular plural."
-            ),
-            GrammarExercise(
-                question: "de broer → ___ (the brothers)",
-                options: ["broers", "broeren", "broeders", "broersen"],
-                correctAnswer: 0,
-                explanation: "The plural of 'de broer' is 'broers'.",
-                hint: "Just add -s."
-            ),
-            GrammarExercise(
-                question: "de datum → ___ (the dates)",
-                options: ["datums", "datumen", "datumsen", "datum's"],
-                correctAnswer: 0,
-                explanation: "The plural of 'de datum' is 'datums'.",
-                hint: "Foreign word, add -s."
-            ),
-            GrammarExercise(
-                question: "het café → ___ (the cafés)",
-                options: ["cafés", "cafees", "cafe's", "cafesen"],
-                correctAnswer: 0,
-                explanation: "The plural of 'het café' is 'cafés'.",
-                hint: "Foreign word, add -s."
-            ),
-            GrammarExercise(
-                question: "de koe → ___ (the cows)",
-                options: ["koeien", "koes", "koeen", "koeën"],
-                correctAnswer: 0,
-                explanation: "The plural of 'de koe' is 'koeien'.",
-                hint: "Irregular plural."
-            ),
-            GrammarExercise(
-                question: "het restaurant → ___ (the restaurants)",
-                options: ["restaurants", "restauranten", "restaurant's", "restaurantes"],
-                correctAnswer: 0,
-                explanation: "The plural of 'het restaurant' is 'restaurants'.",
-                hint: "Foreign word, add -s."
-            ),
-            GrammarExercise(
-                question: "de stad → ___ (the cities)",
-                options: ["steden", "stads", "staden", "stadden"],
-                correctAnswer: 0,
-                explanation: "The plural of 'de stad' is 'steden'.",
-                hint: "Vowel change."
-            ),
-            GrammarExercise(
-                question: "het lid → ___ (the members)",
-                options: ["leden", "lids", "lidderen", "lidsen"],
-                correctAnswer: 0,
-                explanation: "The plural of 'het lid' is 'leden'.",
-                hint: "Irregular plural."
-            ),
-            GrammarExercise(
-                question: "het museum → ___ (the museums)",
-                options: ["musea", "museums", "museumen", "museumsen"],
-                correctAnswer: 0,
-                explanation: "The plural of 'het museum' is 'musea'.",
-                hint: "Irregular plural."
-            ),
-            GrammarExercise(
-                question: "de e-mail → ___ (the emails)",
-                options: ["e-mails", "e-mailen", "e-mailes", "e-mail's"],
-                correctAnswer: 0,
-                explanation: "The plural of 'de e-mail' is 'e-mails'.",
-                hint: "Foreign word, add -s."
-            ),
-            GrammarExercise(
-                question: "het slot → ___ (the locks)",
-                options: ["sloten", "slots", "slotten", "slotenen"],
-                correctAnswer: 0,
-                explanation: "The plural of 'het slot' is 'sloten'.",
-                hint: "Just add -en."
-            ),
-            GrammarExercise(
-                question: "het glas → ___ (the glasses)",
-                options: ["glazen", "glassen", "glass", "glasen"],
-                correctAnswer: 0,
-                explanation: "The plural of 'het glas' is 'glazen'.",
-                hint: "Irregular: vowel change."
-            ),
-            GrammarExercise(
-                question: "het pad → ___ (the paths)",
-                options: ["paden", "pads", "padden", "padenen"],
-                correctAnswer: 0,
-                explanation: "The plural of 'het pad' is 'paden'.",
-                hint: "Just add -en."
-            ),
-            GrammarExercise(
-                question: "de weg → ___ (the roads)",
-                options: ["wegen", "wegs", "weggen", "weegen"],
-                correctAnswer: 0,
-                explanation: "The plural of 'de weg' is 'wegen'.",
-                hint: "Just add -en."
-            ),
-            GrammarExercise(
-                question: "het verslag → ___ (the reports)",
-                options: ["verslagen", "verslags", "verslaggen", "verslagenen"],
-                correctAnswer: 0,
-                explanation: "The plural of 'het verslag' is 'verslagen'.",
-                hint: "Just add -en."
-            ),
-            GrammarExercise(
-                question: "het bedrag → ___ (the amounts)",
-                options: ["bedragen", "bedrags", "bedraggen", "bedragenen"],
-                correctAnswer: 0,
-                explanation: "The plural of 'het bedrag' is 'bedragen'.",
-                hint: "Just add -en."
-            ),
-            GrammarExercise(
-                question: "het dak → ___ (the roofs)",
-                options: ["daken", "daks", "dakken", "dakenen"],
-                correctAnswer: 0,
-                explanation: "The plural of 'het dak' is 'daken'.",
-                hint: "Just add -en."
-            ),
-            GrammarExercise(
-                question: "de vrijheid → ___ (the freedoms)",
-                options: ["vrijheden", "vrijheids", "vrijheidens", "vrijhedens"],
-                correctAnswer: 0,
-                explanation: "The plural of 'de vrijheid' is 'vrijheden'.",
-                hint: "Words ending in -heid get -heden."
-            ),
-            // --- END: Added pluralization exercises ---
-        ],
-        commonMistakes: [
-            CommonMistake(
-                incorrect: "het boeken (plural)",
-                correct: "de boeken",
-                explanation: "All plurals use DE, never HET"
-            ),
-            CommonMistake(
-                incorrect: "de huiss",
-                correct: "de huizen",
-                explanation: "Don't just add -S to everything - many words need -EN with vowel changes"
-            ),
-            CommonMistake(
-                incorrect: "de kinds",
-                correct: "de kinderen",
-                explanation: "Some words have completely irregular plurals that must be memorized"
-            )
-        ],
-        tips: [
-            "Learn common irregular plurals: kind→kinderen, ei→eieren, blad→bladeren, glas→glazen",
-            "Words ending in -HEID always become -HEDEN: vrijheid→vrijheden, mogelijkheid→mogelijkheden",
-            "Use apostrophe + S (-'s) for words ending in vowels: auto→auto's, café→café's, taxi→taxi's",
-            "Words ending in -je (diminutives) always add -s: meisje→meisjes, boekje→boekjes",
-            "Words ending in -f often change to -v: brief→brieven, wolf→wolven",
-            "Practice saying plurals out loud to remember vowel changes",
-            "When in doubt with Dutch words, try -EN first",
-            "Remember: ALL plurals use DE as the article"
-        ],
-        relatedRules: ["articles_a1", "adjectives_a2", "demonstratives_a2"]
-    )
-    
-    lazy var adjectivesA2 = DutchGrammarRule(
-        id: "adjectives_a2",
-        title: "Adjective Endings in Dutch (A2)",
-        type: .adjectives,
-        level: .a2,
-        explanation: """
-        Dutch adjectives change their form depending on the noun they describe. This is one of the trickier aspects of Dutch grammar, but there are clear rules.
-        
-        Basic rule: Adjectives get an -E ending EXCEPT:
-        • Before HET-words that are singular and indefinite (een + het-word)
-        • When the adjective already ends in -en
-        
-        Examples:
-        • de grote hond (the big dog) - DE word gets -E
-        • een grote hond (a big dog) - DE word gets -E  
-        • het grote huis (the big house) - HET word + definite gets -E
-        • een groot huis (a big house) - HET word + indefinite gets NO -E
-        
-        This system helps distinguish between DE and HET words!
-        """,
-        keyPoints: [
-            "Adjectives usually add -E when describing nouns",
-            "Exception: HET-words with EEN (indefinite) get no -E",
-            "DE-words always get -E on their adjectives",
-            "Definite HET-words (het grote huis) get -E",
-            "This rule helps you identify DE vs HET words",
-            "Adjectives ending in -en don't change"
-        ],
-        examples: [
-            GrammarExample(
-                dutch: "de kleine kat",
-                english: "the small cat",
-                breakdown: "DE-word: adjective gets -E (klein → kleine)",
-                audioHint: "də klɛinə kɑt"
-            ),
-            GrammarExample(
-                dutch: "een kleine kat",
-                english: "a small cat",
-                breakdown: "DE-word with EEN: adjective still gets -E",
-                audioHint: "ən klɛinə kɑt"
-            ),
-            GrammarExample(
-                dutch: "het kleine kind",
-                english: "the small child",
-                breakdown: "HET-word with definite article: adjective gets -E",
-                audioHint: "ət klɛinə kɪnt"
-            ),
-            GrammarExample(
-                dutch: "een klein kind",
-                english: "a small child",
-                breakdown: "HET-word with EEN: adjective gets NO -E",
-                audioHint: "ən klɛin kɪnt"
-            ),
-            GrammarExample(
-                dutch: "de mooie bloemen",
-                english: "the beautiful flowers",
-                breakdown: "Plural (always DE): adjective gets -E",
-                audioHint: "də moiə blumə(n)"
-            ),
-            GrammarExample(
-                dutch: "een duur boek vs het dure boek",
-                english: "an expensive book vs the expensive book",
-                breakdown: "Shows the difference: EEN+HET=no E, HET+definite=E",
-                audioHint: "ən dyr buk vs ət dyrə buk"
-            ),
-            GrammarExample(
-                dutch: "de gebroken raam",
-                english: "the broken window",
-                breakdown: "Adjective ending in -EN doesn't change",
-                audioHint: "də ɣəbrokə(n) raːm"
-            ),
-            GrammarExample(
-                dutch: "een open deur",
-                english: "an open door",
-                breakdown: "OPEN ends in -EN, so no change needed",
-                audioHint: "ən opə(n) dør"
-            )
-        ],
-        exercises: [
-            GrammarExercise(
-                question: "Choose the correct form: 'een ___ huis' (big house)",
-                options: ["grote", "groot", "groten", "groote"],
-                correctAnswer: 1,
-                explanation: "Huis is a HET-word. With EEN (indefinite), the adjective gets no -E: een groot huis.",
-                hint: "Is 'huis' a DE or HET word? Is it definite or indefinite?"
-            ),
-            GrammarExercise(
-                question: "Choose the correct form: 'de ___ auto' (red car)",
-                options: ["rood", "rode", "roden", "roode"],
-                correctAnswer: 1,
-                explanation: "Auto is a DE-word. DE-words always get -E on their adjectives: de rode auto.",
-                hint: "DE-words always get -E on adjectives"
-            ),
-            GrammarExercise(
-                question: "Choose the correct form: 'het ___ meisje' (sweet girl)",
-                options: ["lief", "lieve", "lieven", "liefe"],
-                correctAnswer: 1,
-                explanation: "With definite article HET, the adjective gets -E: het lieve meisje.",
-                hint: "This is definite (het), not indefinite (een)"
-            )
-        ],
-        commonMistakes: [
-            CommonMistake(
-                incorrect: "een grote huis",
-                correct: "een groot huis",
-                explanation: "HET-words with EEN don't get -E on the adjective"
-            ),
-            CommonMistake(
-                incorrect: "de groot auto",
-                correct: "de grote auto",
-                explanation: "DE-words always get -E on their adjectives"
-            ),
-            CommonMistake(
-                incorrect: "het groot kind",
-                correct: "het grote kind",
-                explanation: "Definite HET-words (het + adjective + noun) get -E"
-            )
-        ],
-        tips: [
-            "Use this rule to test if a word is DE or HET: if 'een + adjective + noun' needs -E, it's a DE-word",
-            "Practice with color adjectives: een rood huis, de rode auto",
-            "Remember: definite = -E, indefinite HET-word = no -E",
-            "Adjectives ending in -en (open, gebroken) never change",
-            "When in doubt, listen to how Dutch speakers emphasize the adjective"
-        ],
-        relatedRules: ["articles_a1", "pluralization_a2", "demonstratives_a2"]
-    )
-    
-    // MARK: - Additional B1 Level Rules
-    
-    lazy var modalVerbsB1 = DutchGrammarRule(
-        id: "modal_verbs_b1",
-        title: "Modal Verbs: Can, Must, Want, May (B1)",
-        type: .verbConjugation,
-        level: .b1,
-        explanation: """
-        Modal verbs express ability, necessity, permission, or desire. They are followed by an infinitive verb at the end of the sentence. Dutch modal verbs are irregular and must be memorized.
-        
-        Main modal verbs:
-        • KUNNEN (can/to be able to) - ability or possibility
-        • MOETEN (must/to have to) - necessity or obligation  
-        • WILLEN (want/to want to) - desire or intention
-        • MOGEN (may/to be allowed to) - permission
-        • ZULLEN (will/shall) - future tense helper
-        
-        Structure: Subject + modal verb + ... + infinitive (at the end)
-        Example: Ik kan goed zwemmen (I can swim well)
-        
-        In questions and subordinate clauses, word order changes but the infinitive stays at the end.
-        """,
-        keyPoints: [
-            "Modal verbs are irregular and must be memorized",
-            "Always followed by infinitive at the end of sentence",
-            "KUNNEN = can/able, MOETEN = must, WILLEN = want",
-            "MOGEN = may/allowed, ZULLEN = will/future",
-            "Word order: modal verb + middle + infinitive",
-            "Modal verbs change the meaning of the main verb"
-        ],
-        examples: [
-            GrammarExample(
-                dutch: "Ik kan Nederlands spreken.",
-                english: "I can speak Dutch.",
-                breakdown: "kan (modal) + Nederlands (object) + spreken (infinitive)",
-                audioHint: "ik kɑn neːdərlɑnts spreːkə(n)"
-            ),
-            GrammarExample(
-                dutch: "Zij moet morgen werken.",
-                english: "She must work tomorrow.",
-                breakdown: "moet (modal) + morgen (time) + werken (infinitive)",
-                audioHint: "zɛi mut mɔrɣə(n) vɛrkə(n)"
-            ),
-            GrammarExample(
-                dutch: "Wij willen een huis kopen.",
-                english: "We want to buy a house.",
-                breakdown: "willen (modal) + een huis (object) + kopen (infinitive)",
-                audioHint: "vɛi vɪlə(n) ən hœys kopə(n)"
-            ),
-            GrammarExample(
-                dutch: "Mag ik hier roken?",
-                english: "May I smoke here?",
-                breakdown: "Question: mag (modal) + ik (subject) + hier + roken (infinitive)",
-                audioHint: "mɑx ik hir rokə(n)"
-            ),
-            GrammarExample(
-                dutch: "Jullie zullen het begrijpen.",
-                english: "You will understand it.",
-                breakdown: "zullen (future modal) + het (object) + begrijpen (infinitive)",
-                audioHint: "jɵli zɵlə(n) ət bəɣrɛipə(n)"
-            ),
-            GrammarExample(
-                dutch: "Ik denk dat hij kan komen.",
-                english: "I think that he can come.",
-                breakdown: "Subordinate clause: hij (subject) + kan (modal) + komen (infinitive)",
-                audioHint: "ik dɛŋk dɑt hɛi kɑn komə(n)"
-            ),
-            GrammarExample(
-                dutch: "Kunnen jullie me helpen?",
-                english: "Can you help me?",
-                breakdown: "Question with modal: kunnen + jullie + me + helpen",
-                audioHint: "kɵnə(n) jɵli mə hɛlpə(n)"
-            ),
-            GrammarExample(
-                dutch: "Zij wil niet mee gaan.",
-                english: "She doesn't want to come along.",
-                breakdown: "wil (modal) + niet (negation) + mee gaan (separable verb)",
-                audioHint: "zɛi vɪl nit meː ɣaːn"
-            )
-        ],
-        exercises: [
-            GrammarExercise(
-                question: "Complete: 'Ik ___ morgen niet werken' (I don't have to work tomorrow)",
-                options: ["kan", "moet", "hoef", "wil"],
-                correctAnswer: 2,
-                explanation: "For 'don't have to', Dutch uses 'hoef niet' rather than 'moet niet'. 'Moet niet' means 'must not' (forbidden).",
-                hint: "Think about the difference between 'don't have to' and 'must not'"
-            ),
-            GrammarExercise(
-                question: "Word order: 'Hij / kan / goed / zwemmen' - arrange correctly",
-                options: ["Hij zwemmen kan goed", "Hij kan goed zwemmen", "Hij goed kan zwemmen", "Kan hij goed zwemmen"],
-                correctAnswer: 1,
-                explanation: "Correct order: Hij (subject) + kan (modal) + goed (adverb) + zwemmen (infinitive at end).",
-                hint: "Modal verb comes early, infinitive comes at the end"
-            ),
-            GrammarExercise(
-                question: "Choose the correct modal: 'Jij ___ hier niet parkeren' (You're not allowed to park here)",
-                options: ["kunt", "moet", "mag", "wilt"],
-                correctAnswer: 2,
-                explanation: "'Mag niet' means 'not allowed to'. This is about permission, so we use MOGEN.",
-                hint: "This is about permission/rules"
-            )
-        ],
-        commonMistakes: [
-            CommonMistake(
-                incorrect: "Ik moet niet werken (I must not work)",
-                correct: "Ik hoef niet te werken (I don't have to work)",
-                explanation: "'Moet niet' means forbidden, 'hoef niet' means not necessary"
-            ),
-            CommonMistake(
-                incorrect: "Ik kan spreken Nederlands",
-                correct: "Ik kan Nederlands spreken",
-                explanation: "The infinitive (spreken) must come at the end of the sentence"
-            ),
-            CommonMistake(
-                incorrect: "Wil jij komt morgen?",
-                correct: "Wil jij morgen komen?",
-                explanation: "Use infinitive (komen) not conjugated form (komt) after modal verbs"
-            )
-        ],
-        tips: [
-            "Practice modal verb conjugations: ik kan, jij kunt, hij kan, wij kunnen...",
-            "Remember: infinitive always goes to the end",
-            "MOET NIET = forbidden, HOEF NIET = not necessary",
-            "MAG = permission, KAN = ability, WIL = desire",
-            "In subordinate clauses, modal and infinitive can cluster at the end"
-        ],
-        relatedRules: ["word_order_complex_b1", "verb_perfect_b1", "negation_b1"]
-    )
-    
-    lazy var separableVerbsB1 = DutchGrammarRule(
-        id: "separable_verbs_b1",
-        title: "Separable Verbs: Splitting and Combining (B1)",
-        type: .verbConjugation,
-        level: .b1,
-        explanation: """
-        Dutch has many separable verbs - verbs that split into two parts in certain situations. The prefix separates from the main verb and moves to the end of the sentence.
-        
-        Common separable verbs:
-        • MEEKOMEN (come along) → Kom je mee? (Are you coming along?)
-        • UITSTAPPEN (get off/out) → Ik stap uit (I get off)
-        • AANKOMEN (arrive) → De trein komt aan (The train arrives)
-        • OPBELLEN (call up) → Ik bel je op (I'll call you)
-        
-        When they separate:
-        - In main clauses (present/past tense)
-        - In questions and commands
-        
-        When they stay together:
-        - With modal verbs (infinitive form)
-        - In subordinate clauses
-        - In perfect tense (past participle)
-        """,
-        keyPoints: [
-            "Separable verbs split in main clauses",
-            "Prefix goes to the end of the sentence",
-            "Stay together with modal verbs",
-            "Stay together in subordinate clauses",
-            "Past participle keeps prefix: meegenomen",
-            "Very common in everyday Dutch"
-        ],
-        examples: [
-            GrammarExample(
-                dutch: "Ik kom morgen mee.",
-                english: "I'm coming along tomorrow.",
-                breakdown: "meekomen splits: kom (verb) + mee (prefix at end)",
-                audioHint: "ik kɔm mɔrɣə(n) meː"
-            ),
-            GrammarExample(
-                dutch: "Stap je hier uit?",
-                english: "Are you getting off here?",
-                breakdown: "uitstappen splits: stap (verb) + uit (prefix at end)",
-                audioHint: "stɑp jə hir œyt"
-            ),
-            GrammarExample(
-                dutch: "Ik wil meekomen.",
-                english: "I want to come along.",
-                breakdown: "With modal 'wil': stays together as infinitive 'meekomen'",
-                audioHint: "ik vɪl meːkomə(n)"
-            ),
-            GrammarExample(
-                dutch: "Hij belt zijn moeder op.",
-                english: "He calls his mother.",
-                breakdown: "opbellen splits: belt (verb) + op (prefix after object)",
-                audioHint: "hɛi bɛlt zɛin mudər ɔp"
-            ),
-            GrammarExample(
-                dutch: "Ik denk dat hij meekomt.",
-                english: "I think that he's coming along.",
-                breakdown: "In subordinate clause: stays together 'meekomt'",
-                audioHint: "ik dɛŋk dɑt hɛi meːkɔmt"
-            ),
-            GrammarExample(
-                dutch: "Zij is gisteren aangekomen.",
-                english: "She arrived yesterday.",
-                breakdown: "Perfect tense: aangekomen (prefix stays with past participle)",
-                audioHint: "zɛi ɪs ɣɪstərə(n) aːŋəkomə(n)"
-            ),
-            GrammarExample(
-                dutch: "Doe je jas aan!",
-                english: "Put on your coat!",
-                breakdown: "aandoen (put on) splits in command: doe + aan",
-                audioHint: "du jə jɑs aːn"
-            ),
-            GrammarExample(
-                dutch: "De winkel gaat om 9 uur open.",
-                english: "The store opens at 9 o'clock.",
-                breakdown: "opengaan splits: gaat + open (at the end)",
-                audioHint: "də vɪŋkəl ɣaːt ɔm neːɣən yr opə(n)"
-            )
-        ],
-        exercises: [
-            GrammarExercise(
-                question: "How do you say 'I'm calling you' with 'opbellen'?",
-                options: ["Ik opbel je", "Ik bel je op", "Ik bel op je", "Ik opbellen je"],
-                correctAnswer: 1,
-                explanation: "Separable verb splits: 'Ik bel je op' (I call you up). The prefix 'op' goes to the end.",
-                hint: "The prefix separates and goes to the end"
-            ),
-            GrammarExercise(
-                question: "Complete with 'meegaan': 'Ik wil graag ___'",
-                options: ["mee gaan", "meegaan", "gaan mee", "mee ga"],
-                correctAnswer: 1,
-                explanation: "With modal verbs, separable verbs stay together as infinitive: 'Ik wil graag meegaan'.",
-                hint: "After modal verbs, use the infinitive form"
-            ),
-            GrammarExercise(
-                question: "Past participle of 'uitstappen' (get off): 'Ik ben ___'",
-                options: ["gestappen uit", "uitgestappen", "gestappt uit", "uit gestappen"],
-                correctAnswer: 1,
-                explanation: "Past participle keeps the prefix: 'uitgestappen'. 'Ik ben uitgestappen' (I have gotten off).",
-                hint: "Past participles keep their prefixes attached"
-            )
-        ],
-        commonMistakes: [
-            CommonMistake(
-                incorrect: "Ik meekom morgen",
-                correct: "Ik kom morgen mee",
-                explanation: "In main clauses, separable verbs must split with prefix at the end"
-            ),
-            CommonMistake(
-                incorrect: "Ik wil mee komen",
-                correct: "Ik wil meekomen",
-                explanation: "With modal verbs, keep separable verbs together as infinitive"
-            ),
-            CommonMistake(
-                incorrect: "Hij heeft op gebeld",
-                correct: "Hij heeft opgebeld",
-                explanation: "Past participles keep the prefix attached to the main verb"
-            )
-        ],
-        tips: [
-            "Learn common separable verbs: aankomen, meegaan, uitstappen, opbellen",
-            "Practice splitting: 'Ik ga mee' vs 'Ik wil meegaan'",
-            "Listen for the stress: separable prefixes are usually stressed",
-            "In dictionaries, separable verbs are shown with • : mee•komen",
-            "Think of the prefix as 'jumping' to the end of the sentence"
-        ],
-        relatedRules: ["modal_verbs_b1", "word_order_complex_b1", "verb_perfect_b1"]
-    )
-    
-    lazy var negationA2 = DutchGrammarRule(
-        id: "negation_a2",
-        title: "Negation: Niet, Geen, and No (A2)",
-        type: .negation,
-        level: .a2,
-        explanation: """
-        Dutch has two main ways to make sentences negative: NIET and GEEN. The choice depends on what you're negating.
-        
-        Use NIET:
-        • To negate verbs, adjectives, and adverbs
-        • With definite articles (de/het)
-        • With possessive pronouns (mijn, jouw, etc.)
-        • Generally placed after the main verb
-        
-        Use GEEN:
-        • Instead of EEN (indefinite article)
-        • With plural nouns that have no article
-        • GEEN = not a/not any
-        
-        Word order matters: NIET usually comes late in the sentence, but there are specific rules for its placement.
-        """,
-        keyPoints: [
-            "NIET = not (for verbs, adjectives, definite nouns)",
-            "GEEN = not a/not any (replaces EEN or no article)",
-            "NIET usually comes after the main verb",
-            "GEEN directly replaces EEN in the sentence",
-            "Never use NIET + EEN together",
-            "Word order is crucial for NIET placement"
-        ],
-        examples: [
-            GrammarExample(
-                dutch: "Ik heb een auto → Ik heb geen auto",
-                english: "I have a car → I don't have a car",
-                breakdown: "GEEN replaces EEN (indefinite article)",
-                audioHint: "ik hɛp ən ɔto → ik hɛp ɣeːn ɔto"
-            ),
-            GrammarExample(
-                dutch: "Ik zie de auto → Ik zie de auto niet",
-                english: "I see the car → I don't see the car",
-                breakdown: "NIET negates verb, comes at end with definite article",
-                audioHint: "ik zi də ɔto → ik zi də ɔto nit"
-            ),
-            GrammarExample(
-                dutch: "Hij werkt → Hij werkt niet",
-                english: "He works → He doesn't work",
-                breakdown: "NIET negates the verb, placed at the end",
-                audioHint: "hɛi vɛrkt → hɛi vɛrkt nit"
-            ),
-            GrammarExample(
-                dutch: "Wij hebben kinderen → Wij hebben geen kinderen",
-                english: "We have children → We don't have children",
-                breakdown: "GEEN with plural noun (no article)",
-                audioHint: "vɛi hɛbə(n) kɪndərə(n) → vɛi hɛbə(n) ɣeːn kɪndərə(n)"
-            ),
-            GrammarExample(
-                dutch: "Het is mooi → Het is niet mooi",
-                english: "It's beautiful → It's not beautiful",
-                breakdown: "NIET negates adjective",
-                audioHint: "ət ɪs moːi → ət ɪs nit moːi"
-            ),
-            GrammarExample(
-                dutch: "Ik ga naar huis → Ik ga niet naar huis",
-                english: "I'm going home → I'm not going home",
-                breakdown: "NIET comes before prepositional phrase",
-                audioHint: "ik ɣaː naːr hœys → ik ɣaː nit naːr hœys"
-            ),
-            GrammarExample(
-                dutch: "Dit is mijn boek → Dit is niet mijn boek",
-                english: "This is my book → This is not my book",
-                breakdown: "NIET with possessive pronoun",
-                audioHint: "dɪt ɪs mɛin buk → dɪt ɪs nit mɛin buk"
-            ),
-            GrammarExample(
-                dutch: "Ik kan zwemmen → Ik kan niet zwemmen",
-                english: "I can swim → I can't swim",
-                breakdown: "NIET comes before infinitive with modal verbs",
-                audioHint: "ik kɑn zvɛmə(n) → ik kɑn nit zvɛmə(n)"
-            )
-        ],
-        exercises: [
-            GrammarExercise(
-                question: "Make negative: 'Ik heb een hond' (I have a dog)",
-                options: ["Ik heb niet een hond", "Ik heb geen hond", "Ik heb de hond niet", "Ik niet heb een hond"],
-                correctAnswer: 1,
-                explanation: "GEEN replaces EEN: 'Ik heb geen hond' (I don't have a dog). Never use 'niet een' together.",
-                hint: "What article needs to be replaced?"
-            ),
-            GrammarExercise(
-                question: "Make negative: 'Hij is thuis' (He is at home)",
-                options: ["Hij is geen thuis", "Hij niet is thuis", "Hij is niet thuis", "Hij is thuis geen"],
-                correctAnswer: 2,
-                explanation: "NIET negates the verb 'is': 'Hij is niet thuis' (He is not at home).",
-                hint: "You're negating the verb 'is'"
-            ),
-            GrammarExercise(
-                question: "Make negative: 'Wij eten brood' (We eat bread)",
-                options: ["Wij eten niet brood", "Wij eten geen brood", "Wij niet eten brood", "Wij eten brood niet"],
-                correctAnswer: 1,
-                explanation: "'Brood' has no article, so use GEEN: 'Wij eten geen brood' (We don't eat bread).",
-                hint: "Is there an article with 'brood'?"
-            )
-        ],
-        commonMistakes: [
-            CommonMistake(
-                incorrect: "Ik heb niet een auto",
-                correct: "Ik heb geen auto",
-                explanation: "Never combine NIET with EEN - use GEEN instead"
-            ),
-            CommonMistake(
-                incorrect: "Hij werkt geen",
-                correct: "Hij werkt niet",
-                explanation: "GEEN can't be used alone - it must be followed by a noun"
-            ),
-            CommonMistake(
-                incorrect: "Ik niet kan komen",
-                correct: "Ik kan niet komen",
-                explanation: "NIET comes after the modal verb, before the infinitive"
-            )
-        ],
-        tips: [
-            "Think: EEN → GEEN, everything else → NIET",
-            "NIET usually comes at the end, but before infinitives and prepositional phrases",
-            "Practice: 'Ik heb een...' → 'Ik heb geen...'",
-            "GEEN always needs a noun after it",
-            "Listen to where Dutch speakers place NIET - it varies by sentence type"
-        ],
-        relatedRules: ["articles_a1", "modal_verbs_b1", "word_order_basic_a1"]
-    )
-    
-    lazy var possessivesA2 = DutchGrammarRule(
-        id: "possessives_a2",
-        title: "Possessive Pronouns: My, Your, His, Her (A2)",
-        type: .adjectives,
-        level: .a2,
-        explanation: """
-        Dutch possessive pronouns show ownership and must agree with the noun they modify, not the owner. They follow the same adjective ending rules as other adjectives.
-        
-        Possessive pronouns:
-        • MIJN (my) - always stays the same
-        • JOUW/JE (your, informal) - jouw is stressed, je is unstressed
-        • UW (your, formal) - always stays the same
-        • ZIJN (his) - always stays the same
-        • HAAR (her) - always stays the same
-        • ONS/ONZE (our) - ONS before HET-words, ONZE before DE-words
-        • JULLIE (your, plural) - always stays the same
-        • HUN (their) - always stays the same
-        
-        Only ONS/ONZE changes based on the noun's gender!
-        """,
-        keyPoints: [
-            "Most possessives don't change: mijn, jouw, zijn, haar, jullie, hun",
-            "UW is formal 'your', JOUW/JE is informal 'your'",
-            "Only ONS/ONZE changes: ONS + HET-words, ONZE + DE-words",
-            "Possessives replace articles (don't use de/het with them)",
-            "JE is unstressed version of JOUW",
-            "Agreement is with the noun, not the owner"
-        ],
-        examples: [
-            GrammarExample(
-                dutch: "mijn huis, mijn auto, mijn kinderen",
-                english: "my house, my car, my children",
-                breakdown: "MIJN never changes regardless of the noun",
-                audioHint: "mɛin hœys, mɛin ɔto, mɛin kɪndərə(n)"
-            ),
-            GrammarExample(
-                dutch: "jouw boek vs je boek",
-                english: "your book vs your book",
-                breakdown: "JOUW is stressed (emphasis), JE is unstressed (normal)",
-                audioHint: "jɑu buk vs jə buk"
-            ),
-            GrammarExample(
-                dutch: "zijn vader, haar moeder",
-                english: "his father, her mother",
-                breakdown: "ZIJN and HAAR never change",
-                audioHint: "zɛin vaːdər, haːr mudər"
-            ),
-            GrammarExample(
-                dutch: "ons huis, onze auto",
-                english: "our house, our car",
-                breakdown: "ONS with HET-word (huis), ONZE with DE-word (auto)",
-                audioHint: "ɔns hœys, ɔnzə ɔto"
-            ),
-            GrammarExample(
-                dutch: "jullie hond, hun kat",
-                english: "your dog (plural you), their cat",
-                breakdown: "JULLIE and HUN never change",
-                audioHint: "jɵli hɔnt, hɵn kɑt"
-            ),
-            GrammarExample(
-                dutch: "Meneer, uw tas is hier",
-                english: "Sir, your bag is here",
-                breakdown: "UW is formal 'your' - used with strangers/older people",
-                audioHint: "məneːr, yu tɑs ɪs hir"
-            ),
-            GrammarExample(
-                dutch: "onze kinderen vs ons kind",
-                english: "our children vs our child",
-                breakdown: "ONZE with plural (always DE), ONS with singular HET-word",
-                audioHint: "ɔnzə kɪndərə(n) vs ɔns kɪnt"
-            ),
-            GrammarExample(
-                dutch: "Is dit jouw fiets of haar fiets?",
-                english: "Is this your bike or her bike?",
-                breakdown: "JOUW (stressed - contrasting), HAAR (her)",
-                audioHint: "ɪs dɪt jɑu fits ɔf haːr fits"
-            )
-        ],
-        exercises: [
-            GrammarExercise(
-                question: "Choose the correct form: '___ huis is groot' (our house is big)",
-                options: ["Ons", "Onze", "Onzes", "Onsen"],
-                correctAnswer: 0,
-                explanation: "HUIS is a HET-word, so use ONS: 'Ons huis is groot'.",
-                hint: "Is 'huis' a DE-word or HET-word?"
-            ),
-            GrammarExercise(
-                question: "Choose the correct form: '___ kinderen spelen' (their children play)",
-                options: ["Hun", "Hunne", "Huns", "Hune"],
-                correctAnswer: 0,
-                explanation: "HUN never changes: 'Hun kinderen spelen' (Their children play).",
-                hint: "Does HUN change like ONS/ONZE?"
-            ),
-            GrammarExercise(
-                question: "Formal vs informal: How do you say 'your book' to your teacher?",
-                options: ["jouw boek", "je boek", "uw boek", "jullie boek"],
-                correctAnswer: 2,
-                explanation: "Use UW for formal situations: 'uw boek' when speaking to teachers, strangers, older people.",
-                hint: "Teachers require formal language"
-            )
-        ],
-        commonMistakes: [
-            CommonMistake(
-                incorrect: "de mijn auto",
-                correct: "mijn auto",
-                explanation: "Don't use articles (de/het) with possessive pronouns"
-            ),
-            CommonMistake(
-                incorrect: "onze huis",
-                correct: "ons huis",
-                explanation: "HUIS is a HET-word, so use ONS, not ONZE"
-            ),
-            CommonMistake(
-                incorrect: "mijne boek",
-                correct: "mijn boek",
-                explanation: "MIJN never changes - don't add endings to it"
-            )
-        ],
-        tips: [
-            "Only ONS/ONZE changes - all others stay the same",
-            "Practice the ONS/ONZE rule with common words: ons huis, onze auto",
-            "JE is more common than JOUW in everyday speech",
-            "Use UW with anyone you'd call 'meneer' or 'mevrouw'",
-            "Remember: possessives replace articles, don't add to them"
-        ],
-        relatedRules: ["articles_a1", "adjectives_a2", "formal_informal_b1"]
-    )
-    
-    lazy var demonstrativesA2 = DutchGrammarRule(
-        id: "demonstratives_a2",
-        title: "Demonstratives: This, That, These, Those (A2)",
-        type: .adjectives,
-        level: .a2,
-        explanation: """
-        Dutch demonstratives (this, that, these, those) change based on distance and the gender/number of the noun. They're more complex than English because they must agree with Dutch articles.
-        
-        Close to speaker (this/these):
-        • DEZE + DE-words (singular and plural)
-        • DIT + HET-words (singular only)
-        
-        Far from speaker (that/those):
-        • DIE + all nouns (DE-words and HET-words, singular and plural)
-        
-        As pronouns (standing alone):
-        • DIT/DAT for things
-        • DEZE/DIE for people and things
-        
-        The key is knowing whether a noun uses DE or HET!
-        """,
-        keyPoints: [
-            "DEZE = this/these (with DE-words)",
-            "DIT = this (with HET-words only)",
-            "DIE = that/those (with all words)",
-            "Must know if noun is DE or HET word",
-            "Plural always uses DEZE (close) or DIE (far)",
-            "Can be used as pronouns (standing alone)"
-        ],
-        examples: [
-            GrammarExample(
-                dutch: "deze man, deze mannen",
-                english: "this man, these men",
-                breakdown: "DE-word uses DEZE for both singular and plural",
-                audioHint: "deːzə mɑn, deːzə mɑnə(n)"
-            ),
-            GrammarExample(
-                dutch: "dit huis, deze huizen",
-                english: "this house, these houses",
-                breakdown: "HET-word: DIT (singular), DEZE (plural - all plurals use DE)",
-                audioHint: "dɪt hœys, deːzə hœyzə(n)"
-            ),
-            GrammarExample(
-                dutch: "die auto, die auto's",
-                english: "that car, those cars",
-                breakdown: "DIE works with all nouns for 'that/those'",
-                audioHint: "di ɔto, di ɔtos"
-            ),
-            GrammarExample(
-                dutch: "Wat is dit? Dit is een boek.",
-                english: "What is this? This is a book.",
-                breakdown: "DIT as pronoun (standing alone)",
-                audioHint: "vɑt ɪs dɪt? dɪt ɪs ən buk"
-            ),
-            GrammarExample(
-                dutch: "Wie is dat? Dat is mijn vader.",
-                english: "Who is that? That is my father.",
-                breakdown: "DAT as pronoun for people at distance",
-                audioHint: "vi ɪs dɑt? dɑt ɪs mɛin vaːdər"
-            ),
-            GrammarExample(
-                dutch: "Deze vrouw is aardig, maar die man niet.",
-                english: "This woman is nice, but that man isn't.",
-                breakdown: "Contrasting DEZE (close) with DIE (far/other)",
-                audioHint: "deːzə vrɑu ɪs aːrdəx, maːr di mɑn nit"
-            ),
-            GrammarExample(
-                dutch: "dit kleine kind vs deze kleine kinderen",
-                english: "this small child vs these small children",
-                breakdown: "Adjectives still follow normal rules with demonstratives",
-                audioHint: "dɪt klɛinə kɪnt vs deːzə klɛinə kɪndərə(n)"
-            ),
-            GrammarExample(
-                dutch: "Ik wil die boeken, niet deze.",
-                english: "I want those books, not these.",
-                breakdown: "DEZE used as pronoun (these ones)",
-                audioHint: "ik vɪl di bukə(n), nit deːzə"
-            )
-        ],
-        exercises: [
-            GrammarExercise(
-                question: "Choose the correct form: '___ huis is mooi' (this house is beautiful)",
-                options: ["Deze", "Dit", "Die", "Dat"],
-                correctAnswer: 1,
-                explanation: "HUIS is a HET-word, so use DIT for 'this': 'Dit huis is mooi'.",
-                hint: "Is 'huis' a DE-word or HET-word?"
-            ),
-            GrammarExercise(
-                question: "Choose the correct form: '___ boeken zijn duur' (these books are expensive)",
-                options: ["Dit", "Deze", "Die", "Dat"],
-                correctAnswer: 1,
-                explanation: "BOEKEN is plural, so use DEZE for 'these': 'Deze boeken zijn duur'.",
-                hint: "All plurals work like DE-words"
-            ),
-            GrammarExercise(
-                question: "Choose the correct form: 'Ik hou niet van ___ muziek' (I don't like that music)",
-                options: ["deze", "dit", "die", "dat"],
-                correctAnswer: 2,
-                explanation: "MUZIEK is a DE-word, and we want 'that' (far), so use DIE: 'die muziek'.",
-                hint: "Is this close or far? Is muziek DE or HET?"
-            )
-        ],
-        commonMistakes: [
-            CommonMistake(
-                incorrect: "dit auto",
-                correct: "deze auto",
-                explanation: "AUTO is a DE-word, so use DEZE, not DIT"
-            ),
-            CommonMistake(
-                incorrect: "deze huis",
-                correct: "dit huis",
-                explanation: "HUIS is a HET-word, so use DIT for 'this'"
-            ),
-            CommonMistake(
-                incorrect: "dat kinderen",
-                correct: "die kinderen",
-                explanation: "DAT is only for pronouns; with nouns use DIE for 'those'"
-            )
-        ],
-        tips: [
-            "Learn the pattern: DEZE/DIT (this), DIE (that/those)",
-            "Remember: DIT only with HET-words, DEZE with everything else close by",
-            "DIE is the easiest - it works for all 'that/those'",
-            "Practice with common words: dit huis, deze auto, die man",
-            "When in doubt about distance, DIE is often the safe choice"
-        ],
-        relatedRules: ["articles_a1", "adjectives_a2", "pluralization_a2"]
-    )
-    
-    lazy var comparativeAdjectivesB1 = DutchGrammarRule(
-        id: "comparative_adjectives_b1",
-        title: "Comparative and Superlative Adjectives (B1)",
-        type: .adjectives,
-        level: .b1,
-        explanation: """
-        Dutch forms comparatives and superlatives similarly to English, but with different patterns and some irregular forms.
-        
-        Regular pattern:
-        • Comparative: adjective + -ER (bigger, more beautiful)
-        • Superlative: HET + adjective + -ST (biggest, most beautiful)
-        
-        With 'dan' (than): Hij is groter dan ik (He is taller than me)
-        With 'als' (as...as): Zij is zo groot als hij (She is as tall as he is)
-        
-        Irregular forms:
-        • GOED → BETER → BEST (good → better → best)
-        • VEEL → MEER → MEEST (much → more → most)
-        • WEINIG → MINDER → MINST (little → less → least)
-        
-        Spelling changes often occur when adding -ER and -ST.
-        """,
-        keyPoints: [
-            "Comparative: add -ER (groter, mooier)",
-            "Superlative: HET + adjective + -ST (het grootst, het mooist)",
-            "Use DAN for 'than' comparisons",
-            "Use ALS for 'as...as' comparisons",
-            "Many spelling changes with -ER/-ST",
-            "Several important irregular forms"
-        ],
-        examples: [
-            GrammarExample(
-                dutch: "groot → groter → het grootst",
-                english: "big → bigger → the biggest",
-                breakdown: "Regular pattern: add -ER and -ST",
-                audioHint: "ɣrot → ɣrotər → ət ɣrotst"
-            ),
-            GrammarExample(
-                dutch: "Hij is groter dan zijn broer.",
-                english: "He is taller than his brother.",
-                breakdown: "Comparative with DAN (than)",
-                audioHint: "hɛi ɪs ɣrotər dɑn zɛin brur"
-            ),
-            GrammarExample(
-                dutch: "Dit is het mooiste huis.",
-                english: "This is the most beautiful house.",
-                breakdown: "Superlative: HET + adjective + -ST + noun",
-                audioHint: "dɪt ɪs ət moistə hœys"
-            ),
-            GrammarExample(
-                dutch: "Zij is zo slim als haar zus.",
-                english: "She is as smart as her sister.",
-                breakdown: "Equal comparison: ZO + adjective + ALS",
-                audioHint: "zɛi ɪs zo slɪm ɑls haːr zɵs"
-            ),
-            GrammarExample(
-                dutch: "goed → beter → het best",
-                english: "good → better → the best",
-                breakdown: "Irregular: completely different forms",
-                audioHint: "ɣut → beːtər → ət bɛst"
-            ),
-            GrammarExample(
-                dutch: "veel → meer → het meest",
-                english: "much/many → more → the most",
-                breakdown: "Irregular: VEEL changes to MEER",
-                audioHint: "veːl → meːr → ət meːst"
-            ),
-            GrammarExample(
-                dutch: "mooi → mooier → het mooist",
-                english: "beautiful → more beautiful → most beautiful",
-                breakdown: "Spelling: double vowel becomes single + -ER/-ST",
-                audioHint: "moːi → moiər → ət moist"
-            ),
-            GrammarExample(
-                dutch: "Ik heb minder geld dan jij.",
-                english: "I have less money than you.",
-                breakdown: "MINDER (less) - irregular comparative of WEINIG",
-                audioHint: "ik hɛp mɪndər ɣɛlt dɑn jɛi"
-            )
-        ],
-        exercises: [
-            GrammarExercise(
-                question: "What is the comparative of 'klein' (small)?",
-                options: ["kleiner", "kleinere", "kleinst", "het kleinst"],
-                correctAnswer: 0,
-                explanation: "Comparative adds -ER: klein → kleiner (smaller).",
-                hint: "Comparatives end in -ER"
-            ),
-            GrammarExercise(
-                question: "Complete: 'Dit boek is ___ interessant ___ dat boek' (more interesting than)",
-                options: ["meer... dan", "meer... als", "interessanter... dan", "interessanter... als"],
-                correctAnswer: 2,
-                explanation: "Long adjectives can add -ER: interessant → interessanter dan (more interesting than).",
-                hint: "Use DAN for 'than' comparisons"
-            ),
-            GrammarExercise(
-                question: "What is the superlative of 'goed' (good)?",
-                options: ["het goedst", "het beste", "het best", "het beter"],
-                correctAnswer: 2,
-                explanation: "GOED is irregular: het best (the best). Note: no -E ending when used predicatively.",
-                hint: "GOED has an irregular superlative"
-            )
-        ],
-        commonMistakes: [
-            CommonMistake(
-                incorrect: "meer groot dan",
-                correct: "groter dan",
-                explanation: "Don't use MEER with short adjectives - add -ER directly"
-            ),
-            CommonMistake(
-                incorrect: "zo groot dan",
-                correct: "zo groot als",
-                explanation: "Use ALS with 'zo...als' (as...as), DAN with comparatives"
-            ),
-            CommonMistake(
-                incorrect: "het beste huis (attributive)",
-                correct: "het beste huis",
-                explanation: "Actually this is correct - superlatives before nouns do get -E"
-            )
-        ],
-        tips: [
-            "Learn the big three irregulars: goed→beter→best, veel→meer→meest, weinig→minder→minst",
-            "DAN = than, ALS = as (in comparisons)",
-            "Double vowels often become single: mooi→mooier, groot→groter",
-            "Practice common comparisons: groter dan, zo groot als",
-            "Superlatives often need HET, even when English doesn't use 'the'"
-        ],
-        relatedRules: ["adjectives_a2", "spelling_patterns_b1", "word_order_complex_b1"]
-    )
-    
-    lazy var verbsWithFixedPrepositionsB1 = DutchGrammarRule(
-        id: "verbs_fixed_prepositions_b1",
-        title: "Werkwoorden met Vaste Voorzetsels (B1)",
-        type: .prepositions,
-        level: .b1,
-        explanation: """
-        Many Dutch verbs have a fixed preposition that always goes with them. This preposition cannot be omitted or replaced with another preposition. These combinations must be memorized because they are often different from English.
-        
-        Important patterns:
-        • Verb + fixed preposition + object: "Ik denk aan jou" (I think about you)
-        • The preposition is fixed and cannot be changed
-        • Often different from English: "denken aan" ≠ "think about"
-        • In questions, the preposition often moves to the front: "Waar denk je aan?" (What are you thinking about?)
-        
-        These verb-preposition combinations are extremely common in daily Dutch conversations and are essential for fluent Dutch.
-        
-        Common patterns by preposition:
-        • AAN: denken aan, ergeren aan, wennen aan, herinneren aan
-        • VAN: houden van, dromen van, genieten van, schrikken van
-        • OP: wachten op, letten op, rekenen op, vertrouwen op
-        • VOOR: zorgen voor, kiezen voor, bedanken voor, bang zijn voor
-        • NAAR: luisteren naar, kijken naar, verlangen naar, informeren naar
-        • OVER: praten over, discussiëren over, nadenken over, klagen over
-        • IN: geïnteresseerd zijn in, goed zijn in, geloven in, slagen in
-        • MET: beginnen met, stoppen met, trouwen met, kennismaken met
-        """,
-        keyPoints: [
-            "Fixed prepositions cannot be omitted or replaced",
-            "Combinations are often different from English",
-            "Must be memorized - there's no logical rule",
-            "Preposition stays with the verb, even in questions",
-            "Essential for natural-sounding Dutch",
-            "Extremely common in daily conversations"
-        ],
-        examples: [
-            GrammarExample(
-                dutch: "Ik denk aan mijn familie.",
-                english: "I think about my family.",
-                breakdown: "denken + AAN (fixed preposition) - not 'over' like English",
-                audioHint: "ik dɛŋk aːn mɛin faːmili"
-            )
-        ],
-                        exercises: [
-            // Category 1: Thinking and Emotions (denken, voelen)
-            GrammarExercise(
-                question: "Complete: 'Ik denk ___ mijn vakantie' (I think about my vacation)",
-                options: ["over", "aan", "van", "voor"],
-                correctAnswer: 1,
-                explanation: "Dutch uses 'denken AAN' (think of/about). Unlike English 'think about', Dutch connects thoughts with 'aan'.",
-                hint: "This verb uses a different preposition than English"
-            ),
-            GrammarExercise(
-                question: "Complete: 'Hij houdt ___ voetbal' (He loves football)",
-                options: ["aan", "van", "voor", "met"],
-                correctAnswer: 1,
-                explanation: "'Houden VAN' means love/like. 'Van' shows the source of your feelings - you get pleasure FROM it.",
-                hint: "This preposition shows affection"
-            ),
-            GrammarExercise(
-                question: "Complete: 'Zij is bang ___ honden' (She is afraid of dogs)",
-                options: ["voor", "van", "aan", "over"],
-                correctAnswer: 0,
-                explanation: "'Bang VOOR' means afraid OF something. 'Voor' shows what threatens you or causes fear.",
-                hint: "Think about what you use for danger or threat"
-            ),
-            
-            // Category 2: Communication and Senses (luisteren, kijken, praten)
-            GrammarExercise(
-                question: "Complete: 'Wij luisteren ___ muziek' (We listen to music)",
-                options: ["naar", "aan", "voor", "bij"],
-                correctAnswer: 0,
-                explanation: "'Luisteren NAAR' means listen TO. 'Naar' shows direction - your attention goes toward the sound.",
-                hint: "This preposition shows direction"
-            ),
-            GrammarExercise(
-                question: "Complete: 'Hij kijkt ___ televisie' (He watches television)",
-                options: ["naar", "aan", "op", "voor"],
-                correctAnswer: 0,
-                explanation: "'Kijken NAAR' means look/watch AT. 'Naar' shows direction - your eyes go TOWARD what you're watching.",
-                hint: "Think about directing your eyes"
-            ),
-            GrammarExercise(
-                question: "Complete: 'Zij praat ___ politiek' (She talks about politics)",
-                options: ["over", "aan", "van", "met"],
-                correctAnswer: 0,
-                explanation: "'Praten OVER' means talk ABOUT a topic. 'Over' shows the subject spans OVER your conversation.",
-                hint: "Think about discussing a subject"
-            ),
-            
-            // Category 3: Actions and Activities (wachten, zorgen, beginnen)
-            GrammarExercise(
-                question: "Complete: 'Ik wacht ___ de bus' (I wait for the bus)",
-                options: ["op", "voor", "aan", "naar"],
-                correctAnswer: 0,
-                explanation: "'Wachten OP' means wait FOR. 'Op' shows expectation - you're waiting ON something to happen.",
-                hint: "Think about expecting something"
-            ),
-            GrammarExercise(
-                question: "Complete: 'Hij zorgt ___ zijn kinderen' (He takes care of his children)",
-                options: ["voor", "van", "aan", "over"],
-                correctAnswer: 0,
-                explanation: "'Zorgen VOOR' means care FOR. 'Voor' shows benefit - you do things FOR someone's wellbeing.",
-                hint: "Think about providing care"
-            ),
-            GrammarExercise(
-                question: "Complete: 'Wij beginnen ___ de les' (We start with the lesson)",
-                options: ["met", "aan", "van", "op"],
-                correctAnswer: 0,
-                explanation: "'Beginnen MET' means start WITH. 'Met' shows accompaniment - you start together WITH something.",
-                hint: "Think about starting together with something"
-            ),
-            
-            // Category 4: Question Formation with Prepositions
-            GrammarExercise(
-                question: "How do you ask 'What are you thinking about?' in Dutch?",
-                options: ["Wat denk je over?", "Waar denk je aan?", "Waarover denk je?", "Waarvoor denk je?"],
-                correctAnswer: 1,
-                explanation: "'Waar...aan' is used for 'denken aan'. The preposition 'aan' splits: 'Waar denk je aan?'",
-                hint: "The preposition splits in questions"
-            ),
-            
-            // Category 5: Multiple Choice Context
-            GrammarExercise(
-                question: "Which sentence is correct?",
-                options: [
-                    "Ik ben geïnteresseerd voor fotografie",
-                    "Ik ben geïnteresseerd in fotografie", 
-                    "Ik ben geïnteresseerd aan fotografie",
-                    "Ik ben geïnteresseerd van fotografie"
-                ],
-                correctAnswer: 1,
-                explanation: "'Geïnteresseerd IN' means interested IN. Same as English - your interest goes INTO the subject.",
-                hint: "Same preposition as in English"
-            ),
-            
-            // Category 6: Common Mistakes
-            GrammarExercise(
-                question: "Choose the correct preposition: 'Ik ben trots ___ mijn zoon'",
-                options: ["van", "op", "aan", "voor"],
-                correctAnswer: 1,
-                explanation: "'Trots OP' means proud OF. 'Op' shows the target of your pride - your feelings rest ON that person.",
-                hint: "Think about feeling proud"
-            ),
-            
-            // NEW: Translation Exercises
-            GrammarExercise(
-                question: "How do you say 'I'm thinking about my family' in Dutch?",
-                options: ["Ik denk aan mijn familie", "Ik denk over mijn familie", "Ik denk van mijn familie", "Ik denk voor mijn familie"],
-                correctAnswer: 0,
-                explanation: "Ik denk aan mijn familie - 'denken aan' means think about/of",
-                hint: "Remember: denken uses 'aan', not 'over' like English",
-                exerciseType: .translation
-            ),
-            GrammarExercise(
-                question: "How do you say 'She is waiting for the train' in Dutch?",
-                options: ["Zij wacht op de trein", "Zij wacht voor de trein", "Zij wacht aan de trein", "Zij wacht naar de trein"],
-                correctAnswer: 0,
-                explanation: "Zij wacht op de trein - 'wachten op' means wait for",
-                hint: "Remember: wachten uses 'op', not 'voor'",
-                exerciseType: .translation
-            ),
-            GrammarExercise(
-                question: "How do you say 'We are talking about the weather' in Dutch?",
-                options: ["Wij praten over het weer", "Wij praten aan het weer", "Wij praten van het weer", "Wij praten voor het weer"],
-                correctAnswer: 0,
-                explanation: "Wij praten over het weer - 'praten over' means talk about",
-                hint: "Remember: praten uses 'over' like English 'about'",
-                exerciseType: .translation
-            ),
-            
-            // NEW: Fill-in-the-Blank Exercises
-            GrammarExercise(
-                question: "Complete: 'Ik ben bang ___ spinnen' (I'm afraid of spiders)",
-                options: ["voor", "van", "aan", "over"],
-                correctAnswer: 0,
-                explanation: "Ik ben bang voor spinnen - 'bang voor' means afraid of",
-                hint: "Think about what causes fear",
-                exerciseType: .fillInTheBlank
-            ),
-            GrammarExercise(
-                question: "Complete: 'Hij luistert ___ de radio' (He listens to the radio)",
-                options: ["naar", "aan", "voor", "op"],
-                correctAnswer: 0,
-                explanation: "Hij luistert naar de radio - 'luisteren naar' means listen to",
-                hint: "Think about directing attention",
-                exerciseType: .fillInTheBlank
-            ),
-            GrammarExercise(
-                question: "Complete: 'Zij zorgt ___ haar moeder' (She takes care of her mother)",
-                options: ["voor", "van", "aan", "over"],
-                correctAnswer: 0,
-                explanation: "Zij zorgt voor haar moeder - 'zorgen voor' means take care of",
-                hint: "Think about providing care",
-                exerciseType: .fillInTheBlank
-            ),
-            
-            // NEW: True/False Exercises
-            GrammarExercise(
-                question: "True or False: 'Ik denk over jou' is correct Dutch for 'I'm thinking about you'",
+                question: "True or False: 'Wij studeert' is correct Dutch for 'We study'",
                 options: ["True", "False"],
                 correctAnswer: 1,
-                explanation: "False! It should be 'Ik denk aan jou'. Dutch uses 'denken aan', not 'denken over'.",
-                hint: "Remember the fixed preposition for denken",
+                explanation: "False! It should be 'Wij studeren'. 'Wij' uses the whole verb",
+                hint: "Remember: 'wij' uses the infinitive",
                 exerciseType: .trueFalse
             ),
             GrammarExercise(
-                question: "True or False: 'Hij wacht voor de bus' is correct Dutch for 'He waits for the bus'",
+                question: "True or False: 'Jij speelt' is correct Dutch for 'You play'",
                 options: ["True", "False"],
-                correctAnswer: 1,
-                explanation: "False! It should be 'Hij wacht op de bus'. Dutch uses 'wachten op', not 'wachten voor'.",
-                hint: "Remember the fixed preposition for wachten",
+                correctAnswer: 0,
+                explanation: "True! 'Jij speelt' is correct - 'jij' + stem + t",
+                hint: "Think about the conjugation rule for 'jij'",
                 exerciseType: .trueFalse
             ),
             GrammarExercise(
-                question: "True or False: 'Zij kijkt naar de film' is correct Dutch for 'She watches the film'",
+                question: "True or False: 'Zij koken' is correct Dutch for 'They cook'",
                 options: ["True", "False"],
                 correctAnswer: 0,
-                explanation: "True! 'Kijken naar' is correct Dutch for 'look at/watch'.",
-                hint: "This one follows the expected pattern",
+                explanation: "True! 'Zij koken' is correct - 'zij' uses the whole verb",
+                hint: "Think about the conjugation rule for 'zij' (plural)",
                 exerciseType: .trueFalse
             ),
             
-            // NEW: Context-Based Questions
+            // Question form exercises
             GrammarExercise(
-                question: "In a restaurant, how do you say 'I'm interested in the menu'?",
-                options: ["Ik ben geïnteresseerd voor het menu", "Ik ben geïnteresseerd in het menu", "Ik ben geïnteresseerd aan het menu", "Ik ben geïnteresseerd van het menu"],
-                correctAnswer: 1,
-                explanation: "Ik ben geïnteresseerd in het menu - 'geïnteresseerd in' means interested in",
-                hint: "Think about the fixed preposition for 'geïnteresseerd'",
-                exerciseType: .translation
-            ),
-            GrammarExercise(
-                question: "When asking about someone's health, how do you say 'How are you feeling?'",
-                options: ["Hoe voel je je?", "Hoe voel je aan je?", "Hoe voel je van je?", "Hoe voel je voor je?"],
+                question: "How do you ask 'Do you work?' in Dutch?",
+                options: ["Werk jij?", "Werkt jij?", "Werk je?", "Werkt je?"],
                 correctAnswer: 0,
-                explanation: "Hoe voel je je? - 'zich voelen' doesn't need a preposition in this context",
-                hint: "This is a reflexive verb construction",
+                explanation: "Werk jij? - In questions with 'jij', the verb doesn't get an extra -t",
+                hint: "Remember the special rule for questions with 'jij'",
                 exerciseType: .translation
-            )
-        ],
-        commonMistakes: [
-            CommonMistake(
-                incorrect: "Ik denk over jou",
-                correct: "Ik denk aan jou",
-                explanation: "Dutch verbs have their own fixed prepositions. 'Denken' uses 'aan', not 'over' like English."
-            ),
-            CommonMistake(
-                incorrect: "Hij luistert aan muziek",
-                correct: "Hij luistert naar muziek",
-                explanation: "'Luisteren' always uses 'naar'. Don't confuse with 'horen aan' (recognize by sound)."
-            ),
-            CommonMistake(
-                incorrect: "Ik ben geïnteresseerd voor kunst",
-                correct: "Ik ben geïnteresseerd in kunst",
-                explanation: "'Geïnteresseerd' uses 'in', not 'voor'. 'Voor' is used with 'zorgen voor' or 'kiezen voor'."
-            ),
-            CommonMistake(
-                incorrect: "Wat denk je over? (question)",
-                correct: "Waar denk je aan?",
-                explanation: "In questions, keep the fixed preposition. 'Denken aan' becomes 'Waar denk je aan?'."
-            ),
-            CommonMistake(
-                incorrect: "Hij wacht voor de trein",
-                correct: "Hij wacht op de trein",
-                explanation: "'Wachten' uses 'op' for what you expect. 'Voor' is used for location: 'Hij staat voor het station'."
-            ),
-            CommonMistake(
-                incorrect: "Ik hou aan muziek",
-                correct: "Ik hou van muziek",
-                explanation: "'Houden van' means 'to love/like'. Don't confuse with 'houden aan' (stick to rules)."
-            )
-        ],
-        tips: [
-            "Always learn verbs with their fixed preposition: 'denken aan', 'houden van'",
-            "Make sentences with these combinations to remember them",
-            "Note: Dutch prepositions are often different from English",
-            "In questions: combine question words with prepositions (waar + van = waarvan)",
-            "Practice with daily situations: 'Waar ben je bang voor?', 'Waar denk je aan?'",
-            "Listen to Dutch conversations - these combinations are extremely common"
-        ],
-        relatedRules: ["prepositions_a2", "reflexive_verbs_b1", "question_formation_a2", "word_order_complex_b1"]
-    )
-    
-    lazy var infinitiveConstructionsB1 = DutchGrammarRule(
-        id: "infinitive_constructions_b1",
-        title: "Infinitiefconstructies met 'te' en 'om...te' (B1)",
-        type: .verbConjugation,
-        level: .b1,
-        explanation: """
-        Dutch uses infinitive constructions with "te" and "om...te" to express purpose, intention, and necessity. These constructions are essential for fluent Dutch and appear constantly in everyday conversation.
-        
-        TE + INFINITIVE:
-        Used after certain verbs, adjectives, and expressions to connect actions:
-        • After modal-like verbs: proberen te, vergeten te, beloven te
-        • After adjectives: moeilijk te, makkelijk te, belangrijk te
-        • After expressions: het is tijd om te, ik heb zin om te
-        
-        OM + TE + INFINITIVE:
-        Used to express purpose (in order to), reason, or goal:
-        • Purpose: "Ik ga naar de winkel om boodschappen te doen" (I go to the store in order to do shopping)
-        • After certain verbs: proberen om te, vergeten om te, besluiten om te
-        • After adjectives expressing difficulty/ease: te moeilijk om te, te duur om te
-        
-        KEY DIFFERENCES:
-        • TE alone: direct connection between verbs/adjectives
-        • OM...TE: expresses purpose, reason, or goal
-        • Some verbs can use both, sometimes with slightly different meanings
-        
-        WORD ORDER:
-        The infinitive with "te" always goes to the end of the sentence or clause.
-        """,
-        keyPoints: [
-            "TE connects actions directly after certain verbs and adjectives",
-            "OM...TE expresses purpose, reason, or goal ('in order to')",
-            "Infinitive with TE always goes to the end",
-            "Some verbs require TE, others require OM...TE, some allow both",
-            "Essential for expressing complex ideas and intentions",
-            "Very common in daily Dutch conversation"
-        ],
-        examples: [
-            GrammarExample(
-                dutch: "Ik probeer Nederlands te leren.",
-                english: "I try to learn Dutch.",
-                breakdown: "proberen + te + infinitive (direct connection)",
-                audioHint: "ik probeːr neːdərlɑnts tə leːrə(n)"
-            )
-        ],
-                        exercises: [
-            // Category 1: Purpose Expressions (om...te)
-            GrammarExercise(
-                question: "Complete: 'Ik ga naar de winkel ___ boodschappen ___ doen' (I go to the store to do shopping)",
-                options: ["te, te", "om, te", "om, om", "te, om"],
-                correctAnswer: 1,
-                explanation: "'Om...te' expresses purpose - you go to the store IN ORDER TO do shopping. This shows the goal of your action.",
-                hint: "This expresses purpose - why you're going"
             ),
             GrammarExercise(
-                question: "Complete: 'Hij stopt met roken ___ gezonder ___ worden' (He stops smoking to become healthier)",
-                options: ["om, te", "te, te", "om, om", "te, om"],
+                question: "How do you ask 'Do you live here?' in Dutch?",
+                options: ["Woon jij hier?", "Woon je hier?", "Woont jij hier?", "Woont je hier?"],
                 correctAnswer: 0,
-                explanation: "'Om...te' expresses the purpose or goal - he stops smoking IN ORDER TO become healthier.",
-                hint: "This shows the purpose or goal of stopping"
-            ),
-            
-            // Category 2: Direct Connections (te only)
-            GrammarExercise(
-                question: "Complete: 'Ik vergeet altijd mijn sleutels ___ meenemen' (I always forget to take my keys)",
-                options: ["om te", "te", "om", "aan te"],
-                correctAnswer: 1,
-                explanation: "'Vergeten' uses 'te' directly: 'vergeten te doen'. This is a direct connection between the verbs.",
-                hint: "Vergeten connects directly with te"
-            ),
-            GrammarExercise(
-                question: "Complete: 'Het boek is te duur ___ kopen' (The book is too expensive to buy)",
-                options: ["te", "om te", "om", "voor te"],
-                correctAnswer: 1,
-                explanation: "After 'te + adjective', use 'om te': 'te duur om te kopen'. This shows something is TOO [adjective] TO do.",
-                hint: "After 'te + adjective', use om te"
-            ),
-            GrammarExercise(
-                question: "Complete: 'Het is belangrijk ___ sporten' (It's important to exercise)",
-                options: ["om te", "te", "om", "voor te"],
-                correctAnswer: 0,
-                explanation: "After 'belangrijk' (important), use 'om te': 'belangrijk om te sporten'. This shows importance OF doing something.",
-                hint: "After adjectives expressing importance, use om te"
-            ),
-            
-            // Category 4: Time and Planning Expressions
-            GrammarExercise(
-                question: "Complete: 'Ik heb geen tijd ___ koken' (I don't have time to cook)",
-                options: ["om te", "te", "voor te", "aan te"],
-                correctAnswer: 0,
-                explanation: "'Tijd hebben om te' - having time FOR doing something. 'Om te' shows the purpose of the time.",
-                hint: "Think about having time FOR doing something"
-            ),
-            GrammarExercise(
-                question: "Complete: 'Ik ben van plan ___ verhuizen' (I plan to move)",
-                options: ["om te", "te", "om", "naar te"],
-                correctAnswer: 0,
-                explanation: "'Van plan zijn om te' - planning TO do something. This expression always uses 'om te'.",
-                hint: "Van plan zijn uses om te"
-            ),
-            
-            // Category 5: Mixed Patterns (verbs that can use both)
-            GrammarExercise(
-                question: "Complete: 'Ik probeer ___ vroeg ___ zijn' (I try to be early)",
-                options: ["te, te", "om, te", "om, om", "te, om"],
-                correctAnswer: 1,
-                explanation: "'Proberen' can use both, but 'om te' is more common: 'proberen om te zijn'. This shows effort TOWARD a goal.",
-                hint: "Proberen often uses om te for efforts toward goals"
-            ),
-            
-            // NEW: Translation Exercises
-            GrammarExercise(
-                question: "How do you say 'I want to learn Dutch' in Dutch?",
-                options: ["Ik wil om Nederlands te leren", "Ik wil Nederlands te leren", "Ik wil leren Nederlands", "Ik wil Nederlands leren"],
-                correctAnswer: 3,
-                explanation: "Ik wil Nederlands leren - 'willen' is a modal verb, so no 'te' needed",
-                hint: "Remember: modal verbs don't use 'te'",
-                exerciseType: .translation
-            ),
-            GrammarExercise(
-                question: "How do you say 'It's easy to understand' in Dutch?",
-                options: ["Het is makkelijk te begrijpen", "Het is makkelijk om te begrijpen", "Het is makkelijk begrijpen", "Het is makkelijk voor te begrijpen"],
-                correctAnswer: 1,
-                explanation: "Het is makkelijk om te begrijpen - after adjectives, use 'om te'",
-                hint: "Think about the pattern after adjectives",
-                exerciseType: .translation
-            ),
-            GrammarExercise(
-                question: "How do you say 'I forgot to call you' in Dutch?",
-                options: ["Ik vergat om je te bellen", "Ik vergat je te bellen", "Ik vergat bellen je", "Ik vergat je bellen"],
-                correctAnswer: 0,
-                explanation: "Ik vergat om je te bellen - 'vergeten' uses 'te' directly",
-                hint: "Remember: vergeten connects directly with te",
-                exerciseType: .translation
-            ),
-            
-            // NEW: Fill-in-the-Blank Exercises
-            GrammarExercise(
-                question: "Complete: 'Ik heb geen zin ___ werken' (I don't feel like working)",
-                options: ["om te", "te", "om", "voor te"],
-                correctAnswer: 0,
-                explanation: "Ik heb geen zin om te werken - 'zin hebben om te' means feel like doing",
-                hint: "Think about expressing desire or willingness",
-                exerciseType: .fillInTheBlank
-            ),
-            GrammarExercise(
-                question: "Complete: 'Het is te laat ___ naar huis ___ gaan' (It's too late to go home)",
-                options: ["te, te", "om, te", "om, om", "te, om"],
-                correctAnswer: 1,
-                explanation: "Het is te laat om naar huis te gaan - after 'te + adjective', use 'om te'",
-                hint: "Remember the 'te + adjective + om te' pattern",
-                exerciseType: .fillInTheBlank
-            ),
-            GrammarExercise(
-                question: "Complete: 'Zij besloot ___ een nieuwe baan ___ zoeken' (She decided to look for a new job)",
-                options: ["te, te", "om, te", "om, om", "te, om"],
-                correctAnswer: 1,
-                explanation: "Zij besloot om een nieuwe baan te zoeken - 'besluiten' uses 'om te'",
-                hint: "Think about decision-making verbs",
-                exerciseType: .fillInTheBlank
-            ),
-            
-            // NEW: True/False Exercises
-            GrammarExercise(
-                question: "True or False: 'Ik probeer te om Nederlands leren' is correct Dutch",
-                options: ["True", "False"],
-                correctAnswer: 1,
-                explanation: "False! It should be 'Ik probeer om Nederlands te leren' or 'Ik probeer Nederlands te leren'. Don't combine 'te' and 'om te'.",
-                hint: "Don't mix the two patterns",
-                exerciseType: .trueFalse
-            ),
-            GrammarExercise(
-                question: "True or False: 'Het is moeilijk te begrijpen' is correct Dutch",
-                options: ["True", "False"],
-                correctAnswer: 1,
-                explanation: "False! It should be 'Het is moeilijk om te begrijpen'. After adjectives, use 'om te'.",
-                hint: "Remember the adjective pattern",
-                exerciseType: .trueFalse
-            ),
-            GrammarExercise(
-                question: "True or False: 'Ik beloof om te komen' is correct Dutch",
-                options: ["True", "False"],
-                correctAnswer: 0,
-                explanation: "True! 'Beloven' can use both 'te' and 'om te', though 'te' is more common.",
-                hint: "Beloven is flexible with its pattern",
-                exerciseType: .trueFalse
-            ),
-            
-            // NEW: Context-Based Questions
-            GrammarExercise(
-                question: "When making plans, how do you say 'I'm planning to visit Amsterdam'?",
-                options: ["Ik ben van plan Amsterdam te bezoeken", "Ik ben van plan om Amsterdam te bezoeken", "Ik ben van plan bezoeken Amsterdam", "Ik ben van plan te bezoeken Amsterdam"],
-                correctAnswer: 1,
-                explanation: "Ik ben van plan om Amsterdam te bezoeken - 'van plan zijn' always uses 'om te'",
-                hint: "Think about the fixed expression for planning",
-                exerciseType: .translation
-            ),
-            GrammarExercise(
-                question: "When expressing difficulty, how do you say 'It's hard to explain'?",
-                options: ["Het is moeilijk te uitleggen", "Het is moeilijk om te uitleggen", "Het is moeilijk uitleggen", "Het is moeilijk voor te uitleggen"],
-                correctAnswer: 1,
-                explanation: "Het is moeilijk om te uitleggen - after 'moeilijk', use 'om te'",
-                hint: "Remember the adjective pattern",
-                exerciseType: .translation
-            )
-        ],
-        commonMistakes: [
-            CommonMistake(
-                incorrect: "Ik ga winkel te kopen brood",
-                correct: "Ik ga naar de winkel om brood te kopen",
-                explanation: "For purpose (why you go), use 'om...te'. Also need 'naar de' for direction."
-            ),
-            CommonMistake(
-                incorrect: "Het is moeilijk te Nederlands spreken",
-                correct: "Het is moeilijk om Nederlands te spreken",
-                explanation: "After adjectives expressing difficulty/ease, use 'om...te', not just 'te'."
-            ),
-            CommonMistake(
-                incorrect: "Ik vergeet om mijn huiswerk te maken",
-                correct: "Ik vergeet mijn huiswerk te maken",
-                explanation: "'Vergeten' uses 'te' directly, not 'om te'. Only some verbs use 'om te'."
-            ),
-            CommonMistake(
-                incorrect: "Hij probeert te om Nederlands leren",
-                correct: "Hij probeert om Nederlands te leren",
-                explanation: "Don't combine 'te' and 'om te'. Choose one pattern and stick to it."
-            ),
-            CommonMistake(
-                incorrect: "Ik heb tijd te koken",
-                correct: "Ik heb tijd om te koken",
-                explanation: "'Tijd hebben' uses 'om te' - you have time FOR doing something."
-            ),
-            CommonMistake(
-                incorrect: "Het is te moeilijk te begrijpen",
-                correct: "Het is te moeilijk om te begrijpen",
-                explanation: "After 'te + adjective', always use 'om te': too [adjective] TO do."
-            )
-        ],
-        tips: [
-            "Learn which verbs use 'te' vs 'om te' - make lists and practice",
-            "Remember: 'om te' often expresses purpose (in order to)",
-            "After adjectives, usually use 'om te': moeilijk om te, belangrijk om te",
-            "Practice the 'te + adjective + om te' pattern: te duur om te kopen",
-            "Listen for these patterns in Dutch conversations - they're everywhere!"
-        ],
-        relatedRules: ["modal_verbs_b1", "word_order_complex_b1", "separable_verbs_b1"]
-    )
-    
-    lazy var auxiliaryVerbsB1 = DutchGrammarRule(
-        id: "auxiliary_verbs_b1",
-        title: "Hulpwerkwoorden: 'hebben' of 'zijn' in Voltooide Tijden (B1)",
-        type: .verbConjugation,
-        level: .b1,
-        explanation: """
-        In Dutch perfect tenses (present perfect, past perfect), you must choose between "hebben" and "zijn" as auxiliary verbs. This choice depends on the type of verb and the action it describes.
-        
-        USE ZIJN WITH:
-        1. MOVEMENT VERBS: gaan, komen, lopen, rijden, vliegen, etc.
-           • "Ik ben naar huis gegaan" (I have gone home)
-        
-        2. CHANGE OF STATE: worden, sterven, groeien, vallen, etc.
-           • "Hij is groot geworden" (He has become big)
-        
-        3. SPECIFIC VERBS: zijn, blijven, gebeuren, lukken, mislukken
-           • "Dat is gisteren gebeurd" (That happened yesterday)
-        
-        USE HEBBEN WITH:
-        1. MOST OTHER VERBS: werken, eten, slapen, lezen, kopen, etc.
-           • "Ik heb hard gewerkt" (I have worked hard)
-        
-        2. TRANSITIVE VERBS (with direct object): maken, kopen, zien, horen
-           • "Zij heeft een boek gekocht" (She has bought a book)
-        
-        3. VERBS OF THINKING/FEELING: denken, voelen, houden van, etc.
-           • "Wij hebben erover gedacht" (We have thought about it)
-        
-        MEMORY TRICKS:
-        • ZIJN = movement + change + being
-        • HEBBEN = everything else (majority of verbs)
-        • When in doubt, try HEBBEN first (it's more common)
-        
-        IMPORTANT: Some verbs can use both, depending on meaning:
-        • "Ik heb gereden" (I have driven - general activity)
-        • "Ik ben naar werk gereden" (I have driven to work - movement to destination)
-        """,
-        keyPoints: [
-            "ZIJN: movement, change of state, and specific verbs (zijn, blijven, gebeuren)",
-            "HEBBEN: most other verbs, transitive verbs, thinking/feeling verbs",
-            "Movement TO a destination usually uses ZIJN",
-            "General activities without destination usually use HEBBEN",
-            "Some verbs can use both depending on context",
-            "When uncertain, HEBBEN is often the safer choice"
-        ],
-        examples: [
-            GrammarExample(
-                dutch: "Ik ben naar Amsterdam gereden.",
-                english: "I have driven to Amsterdam.",
-                breakdown: "Movement to destination → ZIJN + past participle",
-                audioHint: "ik bɛn naːr ɑmstərdɑm ɣərɛːdə(n)"
-            )
-        ],
-                exercises: [
-            // Category 1: Movement Verbs (ZIJN)
-            GrammarExercise(
-                question: "Complete: 'Ik ___ gisteren naar de winkel gegaan' (I went to the store yesterday)",
-                options: ["heb", "ben", "had", "was"],
-                correctAnswer: 1,
-                explanation: "'Gaan' (go) is a movement verb, so use ZIJN: 'Ik ben gegaan'. Movement verbs always use ZIJN.",
-                hint: "Gaan is movement - use ZIJN"
-            ),
-            GrammarExercise(
-                question: "Complete: 'De trein ___ om 3 uur aangekomen' (The train arrived at 3 o'clock)",
-                options: ["heeft", "is", "had", "waren"],
-                correctAnswer: 1,
-                explanation: "'Aankomen' (arrive) is movement/arrival, so use ZIJN: 'De trein is aangekomen'.",
-                hint: "Arriving is movement - use ZIJN"
-            ),
-            GrammarExercise(
-                question: "Complete: 'Hij ___ naar de bakker gelopen' (He walked to the bakery)",
-                options: ["heeft", "is", "had", "waren"],
-                correctAnswer: 1,
-                explanation: "'Lopen' (walk) to destination uses ZIJN: 'Hij is naar de bakker gelopen'.",
-                hint: "Walking to destination - use ZIJN"
-            ),
-            
-            // Category 2: Change of State Verbs (ZIJN)
-            GrammarExercise(
-                question: "Complete: 'Het kind ___ snel gegroeid' (The child grew quickly)",
-                options: ["heeft", "is", "had", "was"],
-                correctAnswer: 1,
-                explanation: "'Groeien' (grow) shows change of state, so use ZIJN: 'Het kind is gegroeid'.",
-                hint: "Growing is change of state - use ZIJN"
-            ),
-            GrammarExercise(
-                question: "Complete: 'Hij ___ erg ziek geworden' (He became very sick)",
-                options: ["heeft", "is", "had", "waren"],
-                correctAnswer: 1,
-                explanation: "'Worden' (become) shows change of state, so use ZIJN: 'Hij is geworden'.",
-                hint: "Becoming is change of state - use ZIJN"
-            ),
-            GrammarExercise(
-                question: "Complete: 'Mijn oma ___ vorig jaar gestorven' (My grandmother died last year)",
-                options: ["heeft", "is", "had", "waren"],
-                correctAnswer: 1,
-                explanation: "'Sterven' (die) shows change of state, so use ZIJN: 'Mijn oma is gestorven'.",
-                hint: "Dying is change of state - use ZIJN"
-            ),
-            
-            // Category 3: Specific ZIJN Verbs
-            GrammarExercise(
-                question: "Complete: 'Wij ___ lang in de tuin gebleven' (We stayed long in the garden)",
-                options: ["hebben", "zijn", "had", "was"],
-                correctAnswer: 1,
-                explanation: "'Blijven' (stay) is one of the specific verbs that uses ZIJN: 'Wij zijn gebleven'.",
-                hint: "Blijven is a specific ZIJN verb"
-            ),
-            GrammarExercise(
-                question: "Complete: 'Het ongeluk ___ gisteren gebeurd' (The accident happened yesterday)",
-                options: ["heeft", "is", "had", "waren"],
-                correctAnswer: 1,
-                explanation: "'Gebeuren' (happen) is one of the specific verbs that uses ZIJN: 'Het is gebeurd'.",
-                hint: "Gebeuren is a specific ZIJN verb"
-            ),
-            
-            // Category 4: Transitive Verbs (HEBBEN)
-            GrammarExercise(
-                question: "Complete: 'Zij ___ een mooie jurk gekocht' (She bought a beautiful dress)",
-                options: ["is", "ben", "heeft", "had"],
-                correctAnswer: 2,
-                explanation: "'Kopen' (buy) is a transitive verb with direct object, so use HEBBEN: 'Zij heeft gekocht'.",
-                hint: "Kopen is transitive - use HEBBEN"
-            ),
-            GrammarExercise(
-                question: "Complete: 'Ik ___ een interessant boek gelezen' (I read an interesting book)",
-                options: ["ben", "is", "heb", "had"],
-                correctAnswer: 2,
-                explanation: "'Lezen' (read) is a general activity with object, so use HEBBEN: 'Ik heb gelezen'.",
-                hint: "Reading is general activity - use HEBBEN"
-            ),
-            
-            // Category 5: General Activity Verbs (HEBBEN)
-            GrammarExercise(
-                question: "Complete: 'Wij ___ de hele dag gewerkt' (We worked all day)",
-                options: ["zijn", "ben", "hebben", "had"],
-                correctAnswer: 2,
-                explanation: "'Werken' (work) is a general activity verb, so use HEBBEN: 'Wij hebben gewerkt'.",
-                hint: "Working is general activity - use HEBBEN"
-            ),
-            GrammarExercise(
-                question: "Complete: 'Ik ___ de hele nacht geslapen' (I slept all night)",
-                options: ["ben", "is", "heb", "had"],
-                correctAnswer: 2,
-                explanation: "'Slapen' (sleep) is a general activity, so use HEBBEN: 'Ik heb geslapen'.",
-                hint: "Sleeping is general activity - use HEBBEN"
-            ),
-            
-            // NEW: Translation Exercises
-            GrammarExercise(
-                question: "How do you say 'I have gone to Amsterdam' in Dutch?",
-                options: ["Ik heb naar Amsterdam gegaan", "Ik ben naar Amsterdam gegaan", "Ik had naar Amsterdam gegaan", "Ik was naar Amsterdam gegaan"],
-                correctAnswer: 1,
-                explanation: "Ik ben naar Amsterdam gegaan - 'gaan' is movement, so use ZIJN",
-                hint: "Remember: movement verbs use ZIJN",
-                exerciseType: .translation
-            ),
-            GrammarExercise(
-                question: "How do you say 'She has bought a car' in Dutch?",
-                options: ["Zij is een auto gekocht", "Zij heeft een auto gekocht", "Zij had een auto gekocht", "Zij was een auto gekocht"],
-                correctAnswer: 1,
-                explanation: "Zij heeft een auto gekocht - 'kopen' is transitive, so use HEBBEN",
-                hint: "Remember: transitive verbs use HEBBEN",
-                exerciseType: .translation
-            ),
-            GrammarExercise(
-                question: "How do you say 'The child has grown' in Dutch?",
-                options: ["Het kind heeft gegroeid", "Het kind is gegroeid", "Het kind had gegroeid", "Het kind was gegroeid"],
-                correctAnswer: 1,
-                explanation: "Het kind is gegroeid - 'groeien' shows change of state, so use ZIJN",
-                hint: "Remember: change of state uses ZIJN",
-                exerciseType: .translation
-            ),
-            
-            // NEW: Fill-in-the-Blank Exercises
-            GrammarExercise(
-                question: "Complete: 'De trein ___ om 9 uur vertrokken' (The train departed at 9 o'clock)",
-                options: ["heeft", "is", "had", "waren"],
-                correctAnswer: 1,
-                explanation: "De trein is om 9 uur vertrokken - 'vertrekken' is movement, so use ZIJN",
-                hint: "Think about what type of action this is",
-                exerciseType: .fillInTheBlank
-            ),
-            GrammarExercise(
-                question: "Complete: 'Wij ___ de hele dag gestudeerd' (We studied all day)",
-                options: ["zijn", "ben", "hebben", "had"],
-                correctAnswer: 2,
-                explanation: "Wij hebben de hele dag gestudeerd - 'studeren' is general activity, so use HEBBEN",
-                hint: "Think about what type of activity this is",
-                exerciseType: .fillInTheBlank
-            ),
-            GrammarExercise(
-                question: "Complete: 'Hij ___ erg veranderd sinds vorig jaar' (He has changed a lot since last year)",
-                options: ["heeft", "is", "had", "waren"],
-                correctAnswer: 1,
-                explanation: "Hij is erg veranderd sinds vorig jaar - 'veranderen' shows change of state, so use ZIJN",
-                hint: "Think about what type of change this is",
-                exerciseType: .fillInTheBlank
-            ),
-            
-            // NEW: True/False Exercises
-            GrammarExercise(
-                question: "True or False: 'Ik heb naar huis gegaan' is correct Dutch",
-                options: ["True", "False"],
-                correctAnswer: 1,
-                explanation: "False! It should be 'Ik ben naar huis gegaan'. 'Gaan' is movement, so use ZIJN, not HEBBEN.",
-                hint: "Remember the movement verb rule",
-                exerciseType: .trueFalse
-            ),
-            GrammarExercise(
-                question: "True or False: 'Zij is een boek gekocht' is correct Dutch",
-                options: ["True", "False"],
-                correctAnswer: 1,
-                explanation: "False! It should be 'Zij heeft een boek gekocht'. 'Kopen' is transitive, so use HEBBEN, not ZIJN.",
-                hint: "Remember the transitive verb rule",
-                exerciseType: .trueFalse
-            ),
-            GrammarExercise(
-                question: "True or False: 'Het kind is gegroeid' is correct Dutch",
-                options: ["True", "False"],
-                correctAnswer: 0,
-                explanation: "True! 'Groeien' shows change of state, so ZIJN is correct.",
-                hint: "This follows the change of state rule",
-                exerciseType: .trueFalse
-            ),
-            
-            // NEW: Context-Based Questions
-            GrammarExercise(
-                question: "When talking about travel, how do you say 'I have been to Paris'?",
-                options: ["Ik heb in Parijs geweest", "Ik ben in Parijs geweest", "Ik had in Parijs geweest", "Ik was in Parijs geweest"],
-                correctAnswer: 1,
-                explanation: "Ik ben in Parijs geweest - 'zijn' (be) is a specific ZIJN verb",
-                hint: "Think about the verb 'zijn' (to be)",
-                exerciseType: .translation
-            ),
-            GrammarExercise(
-                question: "When talking about work, how do you say 'I have worked hard'?",
-                options: ["Ik ben hard gewerkt", "Ik heb hard gewerkt", "Ik had hard gewerkt", "Ik was hard gewerkt"],
-                correctAnswer: 1,
-                explanation: "Ik heb hard gewerkt - 'werken' is general activity, so use HEBBEN",
-                hint: "Think about what type of activity working is",
+                explanation: "Woon jij hier? - In questions, 'jij' doesn't get extra -t",
+                hint: "Remember the question rule for 'jij'",
                 exerciseType: .translation
             )
         ],
@@ -3352,7 +1237,7 @@ class DutchGrammarRulesDatabase {
     
     lazy var fixedWordCombinationsB1 = DutchGrammarRule(
         id: "fixed_word_combinations_b1",
-        title: "Fixed Word Combinations (B1)",
+        title: "Fixed Word Combinations (Vaste Woordcombinaties) - B1",
         type: .verbConjugation,
         level: .b1,
         explanation: """
@@ -3611,6 +1496,259 @@ class DutchGrammarRulesDatabase {
                 explanation: "Ik heb gelijk - 'gelijk hebben' means to be right",
                 hint: "Think about possessing the rightness",
                 exerciseType: .translation
+            ),
+            
+            // ADDITIONAL EXERCISES - DOUBLING THE AMOUNT
+            
+            // More HEBBEN expressions
+            GrammarExercise(
+                question: "Complete: 'Ik ___ geen tijd om te praten' (I don't have time to talk)",
+                options: ["ben", "heb", "krijg", "word"],
+                correctAnswer: 1,
+                explanation: "Ik heb geen tijd - 'tijd hebben' means to have time",
+                hint: "Think about possessing time"
+            ),
+            GrammarExercise(
+                question: "Complete: 'Zij ___ een hekel aan kou' (She dislikes the cold)",
+                options: ["is", "heeft", "krijgt", "wordt"],
+                correctAnswer: 1,
+                explanation: "Zij heeft een hekel aan kou - 'een hekel hebben aan' means to dislike",
+                hint: "Think about possessing the dislike"
+            ),
+            GrammarExercise(
+                question: "Complete: 'Wij ___ geen geld meer' (We don't have money anymore)",
+                options: ["zijn", "hebben", "krijgen", "worden"],
+                correctAnswer: 1,
+                explanation: "Wij hebben geen geld meer - 'geld hebben' means to have money",
+                hint: "Think about possessing money"
+            ),
+            GrammarExercise(
+                question: "Complete: 'Hij ___ een vraag voor je' (He has a question for you)",
+                options: ["is", "heeft", "krijgt", "wordt"],
+                correctAnswer: 1,
+                explanation: "Hij heeft een vraag voor je - 'een vraag hebben' means to have a question",
+                hint: "Think about possessing the question"
+            ),
+            
+            // More KRIJGEN expressions
+            GrammarExercise(
+                question: "Complete: 'Ik ___ een cadeau van mijn ouders' (I get a gift from my parents)",
+                options: ["ben", "heb", "krijg", "word"],
+                correctAnswer: 2,
+                explanation: "Ik krijg een cadeau - 'een cadeau krijgen' means to receive a gift",
+                hint: "Think about receiving something"
+            ),
+            GrammarExercise(
+                question: "Complete: 'Zij ___ een ongeluk op de snelweg' (She has an accident on the highway)",
+                options: ["is", "heeft", "krijgt", "wordt"],
+                correctAnswer: 2,
+                explanation: "Zij krijgt een ongeluk - 'een ongeluk krijgen' means to have an accident",
+                hint: "Think about experiencing an accident"
+            ),
+            GrammarExercise(
+                question: "Complete: 'Wij ___ een telefoontje van de dokter' (We get a call from the doctor)",
+                options: ["zijn", "hebben", "krijgen", "worden"],
+                correctAnswer: 2,
+                explanation: "Wij krijgen een telefoontje - 'een telefoontje krijgen' means to receive a call",
+                hint: "Think about receiving a phone call"
+            ),
+            
+            // More MAKEN expressions
+            GrammarExercise(
+                question: "Complete: 'Hij ___ een grap over de situatie' (He makes a joke about the situation)",
+                options: ["is", "heeft", "maakt", "doet"],
+                correctAnswer: 2,
+                explanation: "Hij maakt een grap - 'een grap maken' means to make a joke",
+                hint: "Think about creating a joke"
+            ),
+            GrammarExercise(
+                question: "Complete: 'Zij ___ een foto van de kinderen' (She takes a photo of the children)",
+                options: ["is", "heeft", "maakt", "doet"],
+                correctAnswer: 2,
+                explanation: "Zij maakt een foto - 'een foto maken' means to take a photo",
+                hint: "Think about creating a photo"
+            ),
+            GrammarExercise(
+                question: "Complete: 'Wij ___ een wandeling in het park' (We take a walk in the park)",
+                options: ["zijn", "hebben", "maken", "doen"],
+                correctAnswer: 2,
+                explanation: "Wij maken een wandeling - 'een wandeling maken' means to take a walk",
+                hint: "Think about creating the walk"
+            ),
+            
+            // More NEMEN expressions
+            GrammarExercise(
+                question: "Complete: 'Ik ___ een douche na het sporten' (I take a shower after sports)",
+                options: ["ben", "heb", "maak", "neem"],
+                correctAnswer: 3,
+                explanation: "Ik neem een douche - 'een douche nemen' means to take a shower",
+                hint: "Think about taking the shower"
+            ),
+            GrammarExercise(
+                question: "Complete: 'Hij ___ een pauze van het werk' (He takes a break from work)",
+                options: ["is", "heeft", "maakt", "neemt"],
+                correctAnswer: 3,
+                explanation: "Hij neemt een pauze - 'een pauze nemen' means to take a break",
+                hint: "Think about taking the break"
+            ),
+            GrammarExercise(
+                question: "Complete: 'Zij ___ de tijd om na te denken' (She takes time to think)",
+                options: ["is", "heeft", "maakt", "neemt"],
+                correctAnswer: 3,
+                explanation: "Zij neemt de tijd - 'de tijd nemen' means to take time",
+                hint: "Think about taking the time"
+            ),
+            
+            // More ZIJN expressions
+            GrammarExercise(
+                question: "Complete: 'Ik ___ klaar met mijn huiswerk' (I'm finished with my homework)",
+                options: ["ben", "heb", "word", "doe"],
+                correctAnswer: 0,
+                explanation: "Ik ben klaar - 'klaar zijn' means to be finished",
+                hint: "Think about the state of being finished"
+            ),
+            GrammarExercise(
+                question: "Complete: 'Hij ___ verbaasd over het nieuws' (He's surprised about the news)",
+                options: ["is", "heeft", "wordt", "doet"],
+                correctAnswer: 0,
+                explanation: "Hij is verbaasd - 'verbaasd zijn' means to be surprised",
+                hint: "Think about the state of being surprised"
+            ),
+            GrammarExercise(
+                question: "Complete: 'Wij ___ tevreden met het resultaat' (We're satisfied with the result)",
+                options: ["zijn", "hebben", "worden", "doen"],
+                correctAnswer: 0,
+                explanation: "Wij zijn tevreden - 'tevreden zijn' means to be satisfied",
+                hint: "Think about the state of being satisfied"
+            ),
+            
+            // More GAAN expressions
+            GrammarExercise(
+                question: "Complete: 'Ik ___ naar bed om tien uur' (I go to bed at ten o'clock)",
+                options: ["ben", "heb", "ga", "doe"],
+                correctAnswer: 2,
+                explanation: "Ik ga naar bed - 'naar bed gaan' means to go to bed",
+                hint: "Think about the direction of going"
+            ),
+            GrammarExercise(
+                question: "Complete: 'Zij ___ op vakantie naar Spanje' (She goes on vacation to Spain)",
+                options: ["is", "heeft", "gaat", "doet"],
+                correctAnswer: 2,
+                explanation: "Zij gaat op vakantie - 'op vakantie gaan' means to go on vacation",
+                hint: "Think about the activity of going"
+            ),
+            GrammarExercise(
+                question: "Complete: 'Wij ___ uit eten vanavond' (We go out to eat tonight)",
+                options: ["zijn", "hebben", "gaan", "doen"],
+                correctAnswer: 2,
+                explanation: "Wij gaan uit eten - 'uit eten gaan' means to go out to eat",
+                hint: "Think about the activity of going out"
+            ),
+            
+            // More GEVEN expressions
+            GrammarExercise(
+                question: "Complete: 'Ik ___ je een voorbeeld' (I give you an example)",
+                options: ["ben", "heb", "geef", "doe"],
+                correctAnswer: 2,
+                explanation: "Ik geef je een voorbeeld - 'een voorbeeld geven' means to give an example",
+                hint: "Think about providing an example"
+            ),
+            GrammarExercise(
+                question: "Complete: 'Hij ___ een presentatie over het project' (He gives a presentation about the project)",
+                options: ["is", "heeft", "geeft", "doet"],
+                correctAnswer: 2,
+                explanation: "Hij geeft een presentatie - 'een presentatie geven' means to give a presentation",
+                hint: "Think about providing the presentation"
+            ),
+            GrammarExercise(
+                question: "Complete: 'Zij ___ les aan de universiteit' (She teaches at the university)",
+                options: ["is", "heeft", "geeft", "doet"],
+                correctAnswer: 2,
+                explanation: "Zij geeft les - 'les geven' means to teach",
+                hint: "Think about providing the lesson"
+            ),
+            
+            // More complex scenarios
+            GrammarExercise(
+                question: "Complete: 'Ik ___ een afspraak met de dokter omdat ik ___ hoofdpijn' (I make an appointment with the doctor because I have a headache)",
+                options: ["maak, heb", "neem, ben", "heb, maak", "ben, neem"],
+                correctAnswer: 0,
+                explanation: "Ik maak een afspraak omdat ik hoofdpijn heb - 'afspraak maken' and 'hoofdpijn hebben'",
+                hint: "Think about creating appointment and possessing pain"
+            ),
+            GrammarExercise(
+                question: "Complete: 'Hij ___ een beslissing nadat hij ___ tijd om na te denken' (He makes a decision after he takes time to think)",
+                options: ["maakt, neemt", "neemt, neemt", "heeft, heeft", "doet, doet"],
+                correctAnswer: 1,
+                explanation: "Hij neemt een beslissing nadat hij de tijd neemt - 'beslissing nemen' and 'tijd nemen'",
+                hint: "Think about taking both the decision and the time"
+            ),
+            GrammarExercise(
+                question: "Complete: 'Wij ___ lid van de club en ___ stage bij een bedrijf' (We are members of the club and do an internship at a company)",
+                options: ["zijn, lopen", "hebben, doen", "worden, maken", "gaan, nemen"],
+                correctAnswer: 0,
+                explanation: "Wij zijn lid van de club en lopen stage - 'lid zijn van' and 'stage lopen'",
+                hint: "Think about being a member and doing the internship"
+            ),
+            
+            // Translation exercises with context
+            GrammarExercise(
+                question: "How do you say 'I'm going home' in Dutch?",
+                options: ["Ik ben thuis", "Ik ga naar huis", "Ik heb thuis", "Ik word thuis"],
+                correctAnswer: 1,
+                explanation: "Ik ga naar huis - 'naar huis gaan' means to go home",
+                hint: "Think about the direction of going",
+                exerciseType: .translation
+            ),
+            GrammarExercise(
+                question: "How do you say 'She's taking a break' in Dutch?",
+                options: ["Zij is een pauze", "Zij heeft een pauze", "Zij neemt een pauze", "Zij maakt een pauze"],
+                correctAnswer: 2,
+                explanation: "Zij neemt een pauze - 'een pauze nemen' means to take a break",
+                hint: "Think about taking the break",
+                exerciseType: .translation
+            ),
+            GrammarExercise(
+                question: "How do you say 'We're making progress' in Dutch?",
+                options: ["Wij zijn vooruitgang", "Wij hebben vooruitgang", "Wij maken vooruitgang", "Wij doen vooruitgang"],
+                correctAnswer: 2,
+                explanation: "Wij maken vooruitgang - 'vooruitgang maken' means to make progress",
+                hint: "Think about creating progress",
+                exerciseType: .translation
+            ),
+            
+            // True/False exercises with explanations
+            GrammarExercise(
+                question: "True or False: 'Ik ben een afspraak' is correct Dutch",
+                options: ["True", "False"],
+                correctAnswer: 1,
+                explanation: "False! It should be 'Ik maak een afspraak'. Dutch uses 'een afspraak maken', not 'zijn'.",
+                hint: "Remember the MAKEN pattern for appointments",
+                exerciseType: .trueFalse
+            ),
+            GrammarExercise(
+                question: "True or False: 'Hij heeft een beslissing' is correct Dutch",
+                options: ["True", "False"],
+                correctAnswer: 1,
+                explanation: "False! It should be 'Hij neemt een beslissing'. Dutch uses 'een beslissing nemen', not 'hebben'.",
+                hint: "Remember the NEMEN pattern for decisions",
+                exerciseType: .trueFalse
+            ),
+            GrammarExercise(
+                question: "True or False: 'Zij doet stage' is correct Dutch",
+                options: ["True", "False"],
+                correctAnswer: 1,
+                explanation: "False! It should be 'Zij loopt stage'. Dutch uses 'stage lopen', not 'doen'.",
+                hint: "Remember the LOPEN pattern for internships",
+                exerciseType: .trueFalse
+            ),
+            GrammarExercise(
+                question: "True or False: 'Wij zijn een wandeling' is correct Dutch",
+                options: ["True", "False"],
+                correctAnswer: 1,
+                explanation: "False! It should be 'Wij maken een wandeling'. Dutch uses 'een wandeling maken', not 'zijn'.",
+                hint: "Remember the MAKEN pattern for walks",
+                exerciseType: .trueFalse
             )
         ],
         commonMistakes: [
@@ -4996,36 +3134,36 @@ class DutchGrammarRulesDatabase {
     
     lazy var dutchNounsAndArticlesA1 = DutchGrammarRule(
         id: "dutch_articles_a1",
-        title: "Zelfstandige Naamwoorden en Lidwoorden (Nouns and Articles) - A1",
+        title: "Nouns and Articles (A1)",
         type: .pluralization,
         level: .a1,
         explanation: """
-        In het Nederlands hebben alle zelfstandige naamwoorden (nouns) een geslacht: mannelijk, vrouwelijk of onzijdig. Dit bepaalt welk lidwoord (article) je gebruikt: 'de' of 'het'.
+        In Dutch, all nouns have a gender: masculine, feminine, or neuter. This determines which article you use: 'de' or 'het'.
         
-        Er zijn twee soorten lidwoorden:
-        • DE-woorden: mannelijke en vrouwelijke woorden (de man, de vrouw, de auto)
-        • HET-woorden: onzijdige woorden (het huis, het boek, het kind)
+        There are two types of articles:
+        • DE-words: masculine and feminine words (de man, de vrouw, de auto)
+        • HET-words: neuter words (het huis, het boek, het kind)
         
-        Belangrijke regels:
-        • Alle meervouden krijgen 'de' (de mannen, de huizen)
-        • Verkleinwoorden krijgen altijd 'het' (het mannetje, het huisje)
-        • Woorden die eindigen op -heid, -nis, -ing, -st zijn meestal DE-woorden
-        • Woorden die eindigen op -je, -tje zijn altijd HET-woorden
-        • Veel woorden moet je gewoon leren (geen duidelijke regel)
+        Important rules:
+        • All plurals get 'de' (de mannen, de huizen)
+        • Diminutives always get 'het' (het mannetje, het huisje)
+        • Words ending in -heid, -nis, -ing, -st are usually DE-words
+        • Words ending in -je, -tje are always HET-words
+        • Many words you just have to learn (no clear rule)
         
-        Meervoud vorming:
-        • Meestal: enkelvoud + -en (de man → de mannen)
-        • Soms: enkelvoud + -s (de auto → de auto's)
-        • Speciale gevallen: kind → kinderen, stad → steden
+        Plural formation:
+        • Usually: singular + -en (de man → de mannen)
+        • Sometimes: singular + -s (de auto → de auto's)
+        • Special cases: kind → kinderen, stad → steden
         """,
         keyPoints: [
-            "Alle zelfstandige naamwoorden hebben een geslacht",
-            "DE voor mannelijke/vrouwelijke woorden",
-            "HET voor onzijdige woorden",
-            "Alle meervouden krijgen DE",
-            "Verkleinwoorden krijgen altijd HET",
-            "Meervoud meestal: + -en, soms + -s",
-            "Veel woorden moet je gewoon leren"
+            "All nouns have a gender",
+            "DE for masculine/feminine words",
+            "HET for neuter words",
+            "All plurals get DE",
+            "Diminutives always get HET",
+            "Plural usually: + -en, sometimes + -s",
+            "Many words you just have to learn"
         ],
         examples: [
             GrammarExample(
@@ -5327,7 +3465,7 @@ class DutchGrammarRulesDatabase {
                 question: "How do you say 'The man reads a book' in Dutch?",
                 options: ["De man leest een boek", "Het man leest een boek", "De man leest een boek", "Het man leest een boek"],
                 correctAnswer: 0,
-                explanation: "De man leest een boek - 'man' is mannelijk, dus 'de'",
+                explanation: "De man leest een boek - 'man' is masculine, so 'de'",
                 hint: "Man is a masculine word",
                 exerciseType: .translation
             ),
@@ -5335,7 +3473,7 @@ class DutchGrammarRulesDatabase {
                 question: "How do you say 'The house is big' in Dutch?",
                 options: ["De huis is groot", "Het huis is groot", "De huis is groot", "Het huis is groot"],
                 correctAnswer: 1,
-                explanation: "Het huis is groot - 'huis' is neuter, dus 'het'",
+                explanation: "Het huis is groot - 'huis' is neuter, so 'het'",
                 hint: "Huis is a neuter word",
                 exerciseType: .translation
             ),
@@ -5343,7 +3481,7 @@ class DutchGrammarRulesDatabase {
                 question: "Complete: '___ hond blaft' (The dog barks)",
                 options: ["De", "Het", "Een", "Geen"],
                 correctAnswer: 0,
-                explanation: "De hond blaft - 'hond' is mannelijk",
+                explanation: "De hond blaft - 'hond' is masculine",
                 hint: "Hond is a masculine word",
                 exerciseType: .fillInTheBlank
             ),
@@ -5380,68 +3518,1248 @@ class DutchGrammarRulesDatabase {
                 explanation: "True! Words ending in -heid are always feminine and therefore use 'de'.",
                 hint: "Think about the pattern for -heid words",
                 exerciseType: .trueFalse
+            ),
+            
+            // More article exercises
+            GrammarExercise(
+                question: "Which article do you use for 'vrouw' (woman)?",
+                options: ["de", "het", "een", "geen"],
+                correctAnswer: 0,
+                explanation: "'Vrouw' is a feminine word, so use 'de'",
+                hint: "Feminine words get 'de'"
+            ),
+            GrammarExercise(
+                question: "Which article do you use for 'tafel' (table)?",
+                options: ["de", "het", "een", "geen"],
+                correctAnswer: 0,
+                explanation: "'Tafel' is a feminine word, so use 'de'",
+                hint: "Feminine words get 'de'"
+            ),
+            GrammarExercise(
+                question: "Which article do you use for 'water' (water)?",
+                options: ["de", "het", "een", "geen"],
+                correctAnswer: 1,
+                explanation: "'Water' is a neuter word, so use 'het'",
+                hint: "Neuter words get 'het'"
+            ),
+            GrammarExercise(
+                question: "Which article do you use for 'brood' (bread)?",
+                options: ["de", "het", "een", "geen"],
+                correctAnswer: 1,
+                explanation: "'Brood' is a neuter word, so use 'het'",
+                hint: "Neuter words get 'het'"
+            ),
+            
+            // More plural exercises
+            GrammarExercise(
+                question: "What is the plural of 'vrouw' (woman)?",
+                options: ["vrouwen", "vrouws", "vrouwen", "vrouwes"],
+                correctAnswer: 0,
+                explanation: "The plural of 'vrouw' is 'vrouwen' (vrouw + en)",
+                hint: "Usually add -en"
+            ),
+            GrammarExercise(
+                question: "What is the plural of 'tafel' (table)?",
+                options: ["tafels", "tafelen", "tafels", "tafelen"],
+                correctAnswer: 0,
+                explanation: "The plural of 'tafel' is 'tafels' (tafel + s)",
+                hint: "Some words get -s"
+            ),
+            GrammarExercise(
+                question: "What is the plural of 'stad' (city)?",
+                options: ["stads", "steden", "staden", "stadden"],
+                correctAnswer: 1,
+                explanation: "The plural of 'stad' is 'steden' (irregular)",
+                hint: "This is an irregular plural"
+            ),
+            
+            // More translation exercises
+            GrammarExercise(
+                question: "How do you say 'The women work' in Dutch?",
+                options: ["De vrouw werken", "De vrouwen werken", "Het vrouwen werken", "De vrouw werken"],
+                correctAnswer: 1,
+                explanation: "De vrouwen werken - 'vrouwen' is plural, so 'de'",
+                hint: "Plurals always get 'de'",
+                exerciseType: .translation
+            ),
+            GrammarExercise(
+                question: "How do you say 'The little dog barks' in Dutch?",
+                options: ["De hondje blaft", "Het hondje blaft", "De hondje blaft", "Het hondje blaft"],
+                correctAnswer: 1,
+                explanation: "Het hondje blaft - 'hondje' is a diminutive, so 'het'",
+                hint: "Diminutives always get 'het'",
+                exerciseType: .translation
+            ),
+            
+            // Pattern recognition exercises
+            GrammarExercise(
+                question: "Which article do you use for 'moeilijkheid' (difficulty)?",
+                options: ["de", "het", "een", "geen"],
+                correctAnswer: 0,
+                explanation: "Words ending in -heid get 'de'",
+                hint: "Look at the ending of the word"
+            ),
+            GrammarExercise(
+                question: "Which article do you use for 'herinnering' (memory)?",
+                options: ["de", "het", "een", "geen"],
+                correctAnswer: 0,
+                explanation: "Words ending in -ing get 'de'",
+                hint: "Look at the ending of the word"
+            ),
+            GrammarExercise(
+                question: "Which article do you use for 'begrip' (understanding)?",
+                options: ["de", "het", "een", "geen"],
+                correctAnswer: 1,
+                explanation: "'Begrip' is a neuter word, so use 'het'",
+                hint: "This word doesn't follow a clear pattern"
             )
         ],
         commonMistakes: [
             CommonMistake(
                 incorrect: "het man",
                 correct: "de man",
-                explanation: "'Man' is mannelijk, dus gebruik 'de', niet 'het'"
+                explanation: "'Man' is masculine, so use 'de', not 'het'"
             ),
             CommonMistake(
                 incorrect: "de huis",
                 correct: "het huis",
-                explanation: "'Huis' is onzijdig, dus gebruik 'het', niet 'de'"
+                explanation: "'Huis' is neuter, so use 'het', not 'de'"
             ),
             CommonMistake(
                 incorrect: "het mannen",
                 correct: "de mannen",
-                explanation: "Alle meervouden krijgen 'de', niet 'het'"
+                explanation: "All plurals get 'de', not 'het'"
             ),
             CommonMistake(
                 incorrect: "de huisje",
                 correct: "het huisje",
-                explanation: "Verkleinwoorden krijgen altijd 'het', niet 'de'"
+                explanation: "Diminutives always get 'het', not 'de'"
             ),
             CommonMistake(
                 incorrect: "mans",
                 correct: "mannen",
-                explanation: "Het meervoud van 'man' is 'mannen' (man + en), niet 'mans'"
+                explanation: "The plural of 'man' is 'mannen' (man + en), not 'mans'"
             ),
             CommonMistake(
                 incorrect: "autos",
                 correct: "auto's",
-                explanation: "Het meervoud van 'auto' is 'auto's' (met apostrof), niet 'autos'"
+                explanation: "The plural of 'auto' is 'auto's' (with apostrophe), not 'autos'"
             ),
             CommonMistake(
                 incorrect: "kinds",
                 correct: "kinderen",
-                explanation: "Het meervoud van 'kind' is 'kinderen' (onregelmatig), niet 'kinds'"
+                explanation: "The plural of 'kind' is 'kinderen' (irregular), not 'kinds'"
             ),
             CommonMistake(
                 incorrect: "de vrijheid",
                 correct: "de vrijheid",
-                explanation: "Dit is eigenlijk correct - woorden op -heid krijgen 'de'"
+                explanation: "This is actually correct - words ending in -heid get 'de'"
             ),
             CommonMistake(
                 incorrect: "het vergadering",
                 correct: "de vergadering",
-                explanation: "Woorden die eindigen op -ing krijgen 'de', niet 'het'"
+                explanation: "Words ending in -ing get 'de', not 'het'"
             )
         ],
         tips: [
-            "Leer eerst de meest voorkomende woorden uit je hoofd",
-            "Onthoud: alle meervouden krijgen 'de'",
-            "Verkleinwoorden krijgen altijd 'het'",
-            "Kijk naar de uitgang van het woord voor hints",
-            "Woorden op -heid, -nis, -ing, -st zijn meestal 'de' woorden",
-            "Woorden op -je, -tje zijn altijd 'het' woorden",
-            "Veel woorden moet je gewoon leren (geen duidelijke regel)",
-            "Oefen met echte zinnen, niet alleen losse woorden",
-            "Let op bij vertalingen: Engels 'the' ≠ Nederlands 'de'",
-            "Gebruik een woordenboek om het geslacht te controleren"
+            "Learn the most common words by heart first",
+            "Remember: all plurals get 'de'",
+            "Diminutives always get 'het'",
+            "Look at the ending of the word for hints",
+            "Words ending in -heid, -nis, -ing, -st are usually 'de' words",
+            "Words ending in -je, -tje are always 'het' words",
+            "Many words you just have to learn (no clear rule)",
+            "Practice with real sentences, not just individual words",
+            "Watch out with translations: English 'the' ≠ Dutch 'de'",
+            "Use a dictionary to check the gender"
         ],
         relatedRules: ["verb_present_a1", "adjectives_a2", "possessives_a2", "demonstratives_a2"]
+    )
+    
+    lazy var demonstrativesA2 = DutchGrammarRule(
+        id: "demonstratives_a2",
+        title: "Demonstrative Pronouns - Deze and Die (A2)",
+        type: .wordOrder,
+        level: .a2,
+        explanation: """
+        Dutch demonstrative pronouns point to specific people, things, or places. They agree with the noun they describe.
+        
+        **Demonstrative Pronouns:**
+        • deze (this/these - near)
+        • die (that/those - far)
+        
+        **Agreement Rules:**
+        • deze/die: no ending with 'het' words, -e with 'de' words
+        • deze/die: always -e with plural nouns
+        
+        **Usage:**
+        • deze: points to something near (this/these)
+        • die: points to something far (that/those)
+        • Can be used alone (without noun)
+        • Can be used as subject or object
+        
+        **Position:**
+        • Before the noun when used as determiner
+        • Can replace the noun when used as pronoun
+        """,
+        keyPoints: [
+            "Deze = this/these (near)",
+            "Die = that/those (far)",
+            "Het words: no ending",
+            "De words: add -e",
+            "Plural: always -e",
+            "Can be used alone",
+            "Agree with noun gender/number"
+        ],
+        examples: [
+            GrammarExample(
+                dutch: "Dit boek",
+                english: "This book",
+                breakdown: "dit (no ending, het word, near)",
+                audioHint: "dɪt buk"
+            ),
+            GrammarExample(
+                dutch: "Deze auto",
+                english: "This car",
+                breakdown: "deze (de word, near)",
+                audioHint: "dezə ɵtoː"
+            ),
+            GrammarExample(
+                dutch: "Dat huis",
+                english: "That house",
+                breakdown: "dat (no ending, het word, far)",
+                audioHint: "dɑt hœys"
+            ),
+            GrammarExample(
+                dutch: "Die hond",
+                english: "That dog",
+                breakdown: "die (de word, far)",
+                audioHint: "di hɔnt"
+            ),
+            GrammarExample(
+                dutch: "Deze boeken",
+                english: "These books",
+                breakdown: "deze (plural, near)",
+                audioHint: "dezə bukə(n)"
+            )
+        ],
+        exercises: [
+            GrammarExercise(
+                question: "Complete: '___ boek' (This book)",
+                options: ["dit", "deze", "dat", "die"],
+                correctAnswer: 0,
+                explanation: "Dit boek - 'boek' is a 'het' word, near",
+                hint: "Het words use dit/dat"
+            ),
+            GrammarExercise(
+                question: "Complete: '___ auto' (This car)",
+                options: ["dit", "deze", "dat", "die"],
+                correctAnswer: 1,
+                explanation: "Deze auto - 'auto' is a 'de' word, near",
+                hint: "De words use deze/die"
+            ),
+            GrammarExercise(
+                question: "Complete: '___ huis' (That house)",
+                options: ["dit", "deze", "dat", "die"],
+                correctAnswer: 2,
+                explanation: "Dat huis - 'huis' is a 'het' word, far",
+                hint: "Het words use dit/dat"
+            ),
+            GrammarExercise(
+                question: "Complete: '___ hond' (That dog)",
+                options: ["dit", "deze", "dat", "die"],
+                correctAnswer: 3,
+                explanation: "Die hond - 'hond' is a 'de' word, far",
+                hint: "De words use deze/die"
+            ),
+            GrammarExercise(
+                question: "Complete: '___ boeken' (These books)",
+                options: ["dit", "deze", "dat", "die"],
+                correctAnswer: 1,
+                explanation: "Deze boeken - plural, near",
+                hint: "Plural uses deze/die"
+            )
+        ],
+        commonMistakes: [
+            CommonMistake(
+                incorrect: "Deze boek",
+                correct: "Dit boek",
+                explanation: "Het words use dit/dat, not deze/die"
+            ),
+            CommonMistake(
+                incorrect: "Dit auto",
+                correct: "Deze auto",
+                explanation: "De words use deze/die, not dit/dat"
+            ),
+            CommonMistake(
+                incorrect: "Deze is mijn boek",
+                correct: "Dit is mijn boek",
+                explanation: "Agree with the noun being referred to"
+            )
+        ],
+        tips: [
+            "Learn the gender of common nouns",
+            "Dit/dat for het words",
+            "Deze/die for de words",
+            "Deze/dit = near",
+            "Die/dat = far",
+            "Plural always uses deze/die",
+            "Can be used alone",
+            "Practice with real sentences"
+        ],
+        relatedRules: ["dutch_nouns_articles_a1", "adjectives_a2"]
+    )
+    
+    // MARK: - Missing B1 Grammar Rules (Restored)
+    
+    lazy var auxiliaryVerbsB1 = DutchGrammarRule(
+        id: "auxiliary_verbs_b1",
+        title: "Auxiliary Verbs (Hulpwerkwoorden) - B1",
+        type: .verbConjugation,
+        level: .b1,
+        explanation: """
+        Auxiliary verbs (hulpwerkwoorden) are verbs that help form compound tenses and passive voice. The main auxiliary verbs in Dutch are 'hebben', 'zijn', and 'worden'.
+        
+        **Hebben (to have):**
+        • Used for most perfect tenses
+        • Ik heb gewerkt (I have worked)
+        • Zij heeft gegeten (She has eaten)
+        
+        **Zijn (to be):**
+        • Used for movement verbs and state changes
+        • Ik ben naar huis gegaan (I have gone home)
+        • Het is koud geworden (It has become cold)
+        
+        **Worden (to become):**
+        • Used for passive voice
+        • Het huis wordt gebouwd (The house is being built)
+        • De brief werd geschreven (The letter was written)
+        
+        **Key Patterns:**
+        • Perfect tense: hebben/zijn + past participle
+        • Passive voice: worden + past participle
+        • Future perfect: zullen + hebben/zijn + past participle
+        """,
+        keyPoints: [
+            "Hebben = most perfect tenses",
+            "Zijn = movement and state changes",
+            "Worden = passive voice",
+            "Past participle always at the end",
+            "Auxiliary verb conjugates, main verb doesn't",
+            "Learn which verbs use 'zijn' vs 'hebben'",
+            "Passive voice uses 'worden'",
+            "Essential for advanced Dutch"
+        ],
+        examples: [
+            GrammarExample(
+                dutch: "Ik heb de krant gelezen.",
+                english: "I have read the newspaper.",
+                breakdown: "Subject + hebben + object + past participle",
+                audioHint: "ik hɛp də krɑnt ɣəleːzə(n)"
+            ),
+            GrammarExample(
+                dutch: "Zij is naar Amsterdam gereisd.",
+                english: "She has traveled to Amsterdam.",
+                breakdown: "Subject + zijn + direction + past participle",
+                audioHint: "zɛi ɪs naːr ɑmstərdɑm ɣərɛist"
+            ),
+            GrammarExample(
+                dutch: "Het huis wordt gebouwd.",
+                english: "The house is being built.",
+                breakdown: "Subject + worden + past participle",
+                audioHint: "hət hɵis ʋɔrt ɣəbɵt"
+            ),
+            GrammarExample(
+                dutch: "Wij hebben al gegeten.",
+                english: "We have already eaten.",
+                breakdown: "Subject + hebben + adverb + past participle",
+                audioHint: "ʋɛi hɛbə(n) ɑl ɣəɣeːtə(n)"
+            ),
+            GrammarExample(
+                dutch: "De trein is vertraagd.",
+                english: "The train has been delayed.",
+                breakdown: "Subject + zijn + past participle (passive)",
+                audioHint: "də trɛin ɪs vərtrɑxt"
+            )
+        ],
+        exercises: [
+            GrammarExercise(
+                question: "Complete: 'Ik ___ de film gezien' (I have seen the film)",
+                options: ["heb", "ben", "word", "heeft"],
+                correctAnswer: 0,
+                explanation: "Ik heb de film gezien - 'zien' uses 'hebben'",
+                hint: "Most verbs use 'hebben'",
+                exerciseType: .fillInTheBlank
+            ),
+            GrammarExercise(
+                question: "Complete: 'Zij ___ naar huis gegaan' (She has gone home)",
+                options: ["heeft", "is", "wordt", "zijn"],
+                correctAnswer: 1,
+                explanation: "Zij is naar huis gegaan - 'gaan' is a movement verb, so 'zijn'",
+                hint: "Movement verbs use 'zijn'",
+                exerciseType: .fillInTheBlank
+            ),
+            GrammarExercise(
+                question: "Complete: 'Het boek ___ gelezen' (The book has been read)",
+                options: ["heeft", "is", "wordt", "worden"],
+                correctAnswer: 2,
+                explanation: "Het boek wordt gelezen - passive voice uses 'worden'",
+                hint: "Passive voice = worden",
+                exerciseType: .fillInTheBlank
+            ),
+            GrammarExercise(
+                question: "Which auxiliary verb for 'werken' (to work)?",
+                options: ["hebben", "zijn", "worden", "zullen"],
+                correctAnswer: 0,
+                explanation: "'Werken' uses 'hebben' - it's not a movement verb",
+                hint: "Most regular verbs use 'hebben'",
+                exerciseType: .multipleChoice
+            ),
+            GrammarExercise(
+                question: "Which auxiliary verb for 'komen' (to come)?",
+                options: ["hebben", "zijn", "worden", "zullen"],
+                correctAnswer: 1,
+                explanation: "'Komen' uses 'zijn' - it's a movement verb",
+                hint: "Movement verbs use 'zijn'",
+                exerciseType: .multipleChoice
+            ),
+            GrammarExercise(
+                question: "Complete: 'Wij ___ al gegeten' (We have already eaten)",
+                options: ["hebben", "zijn", "worden", "zullen"],
+                correctAnswer: 0,
+                explanation: "Wij hebben al gegeten - 'eten' uses 'hebben'",
+                hint: "Most verbs use 'hebben'",
+                exerciseType: .fillInTheBlank
+            ),
+            GrammarExercise(
+                question: "Complete: 'De brief ___ geschreven' (The letter was written)",
+                options: ["heeft", "is", "wordt", "worden"],
+                correctAnswer: 2,
+                explanation: "De brief wordt geschreven - passive voice",
+                hint: "Passive voice uses 'worden'",
+                exerciseType: .fillInTheBlank
+            ),
+            GrammarExercise(
+                question: "Which auxiliary verb for 'blijven' (to stay)?",
+                options: ["hebben", "zijn", "worden", "zullen"],
+                correctAnswer: 1,
+                explanation: "'Blijven' uses 'zijn' - it's a state verb",
+                hint: "State and movement verbs use 'zijn'",
+                exerciseType: .multipleChoice
+            ),
+            GrammarExercise(
+                question: "Complete: 'Hij ___ de krant gelezen' (He has read the newspaper)",
+                options: ["heeft", "is", "wordt", "zijn"],
+                correctAnswer: 0,
+                explanation: "Hij heeft de krant gelezen - 'lezen' uses 'hebben'",
+                hint: "Most verbs use 'hebben'",
+                exerciseType: .fillInTheBlank
+            ),
+            GrammarExercise(
+                question: "Complete: 'Het is koud ___' (It has become cold)",
+                options: ["geworden", "gekomen", "gebleven", "gegaan"],
+                correctAnswer: 0,
+                explanation: "Het is koud geworden - 'worden' uses 'zijn'",
+                hint: "'Worden' (to become) uses 'zijn'",
+                exerciseType: .fillInTheBlank
+            )
+        ],
+        commonMistakes: [
+            CommonMistake(
+                incorrect: "Ik ben gewerkt",
+                correct: "Ik heb gewerkt",
+                explanation: "'Werken' uses 'hebben', not 'zijn'"
+            ),
+            CommonMistake(
+                incorrect: "Zij heeft gekomen",
+                correct: "Zij is gekomen",
+                explanation: "'Komen' is a movement verb, so use 'zijn'"
+            ),
+            CommonMistake(
+                incorrect: "Het huis is gebouwd",
+                correct: "Het huis wordt gebouwd",
+                explanation: "Passive voice uses 'worden', not 'zijn'"
+            )
+        ],
+        tips: [
+            "Learn which verbs use 'zijn' (movement, state changes)",
+            "Most verbs use 'hebben'",
+            "Passive voice always uses 'worden'",
+            "Past participle goes at the end",
+            "Practice with real sentences",
+            "Watch out for irregular past participles",
+            "Remember: hebben/zijn + past participle = perfect tense",
+            "Worden + past participle = passive voice"
+        ],
+        relatedRules: ["verb_present_a1", "verb_past_a2", "verb_perfect_b1", "fixed_word_combinations_b1"]
+    )
+    
+    lazy var verbPerfectB1 = DutchGrammarRule(
+        id: "verb_perfect_b1",
+        title: "Perfect Tense (Voltooid Tegenwoordige Tijd) - B1",
+        type: .tenses,
+        level: .b1,
+        explanation: """
+        The perfect tense (voltooid tegenwoordige tijd) describes completed actions in the past. It's formed with an auxiliary verb (hebben/zijn) + past participle.
+        
+        **Formation:**
+        • Hebben/zijn + past participle
+        • Past participle always at the end of the sentence
+        
+        **Regular Past Participles:**
+        • -en verbs: ge + stem + t/d
+        • -en verbs: ge + stem + en
+        • 't kofschip rule applies
+        
+        **Irregular Past Participles:**
+        • zijn → geweest
+        • hebben → gehad
+        • gaan → gegaan
+        • komen → gekomen
+        • doen → gedaan
+        
+        **Usage:**
+        • Completed actions in the past
+        • Actions that have relevance to the present
+        • News and recent events
+        • Life experiences
+        """,
+        keyPoints: [
+            "Perfect = hebben/zijn + past participle",
+            "Past participle at the end",
+            "Regular: ge + stem + t/d/en",
+            "Learn irregular past participles",
+            "Used for completed past actions",
+            "Common in spoken Dutch",
+            "Essential for storytelling",
+            "Practice with real conversations"
+        ],
+        examples: [
+            GrammarExample(
+                dutch: "Ik heb gisteren gewerkt.",
+                english: "I worked yesterday.",
+                breakdown: "Subject + hebben + time + past participle",
+                audioHint: "ik hɛp ɣɪstərə(n) ʋɛrkt"
+            ),
+            GrammarExample(
+                dutch: "Zij is naar de winkel geweest.",
+                english: "She has been to the shop.",
+                breakdown: "Subject + zijn + direction + past participle",
+                audioHint: "zɛi ɪs naːr də ʋɪŋəl ɣəʋeːst"
+            ),
+            GrammarExample(
+                dutch: "Wij hebben al gegeten.",
+                english: "We have already eaten.",
+                breakdown: "Subject + hebben + adverb + past participle",
+                audioHint: "ʋɛi hɛbə(n) ɑl ɣəɣeːtə(n)"
+            ),
+            GrammarExample(
+                dutch: "Het heeft gisteren geregend.",
+                english: "It rained yesterday.",
+                breakdown: "Subject + hebben + time + past participle",
+                audioHint: "hət hɛft ɣɪstərə(n) ɣərɛɣənt"
+            ),
+            GrammarExample(
+                dutch: "Hij heeft de film gezien.",
+                english: "He has seen the film.",
+                breakdown: "Subject + hebben + object + past participle",
+                audioHint: "hɛi hɛft də fɪlm ɣəzin"
+            )
+        ],
+        exercises: [
+            GrammarExercise(
+                question: "Complete: 'Ik ___ gisteren gewerkt' (I worked yesterday)",
+                options: ["heb", "ben", "word", "heeft"],
+                correctAnswer: 0,
+                explanation: "Ik heb gisteren gewerkt - 'werken' uses 'hebben'",
+                hint: "Most verbs use 'hebben'",
+                exerciseType: .fillInTheBlank
+            ),
+            GrammarExercise(
+                question: "Complete: 'Zij ___ naar huis gegaan' (She has gone home)",
+                options: ["heeft", "is", "wordt", "zijn"],
+                correctAnswer: 1,
+                explanation: "Zij is naar huis gegaan - 'gaan' uses 'zijn'",
+                hint: "Movement verbs use 'zijn'",
+                exerciseType: .fillInTheBlank
+            ),
+            GrammarExercise(
+                question: "What is the past participle of 'werken'?",
+                options: ["gewerkt", "gewerken", "werkte", "werkten"],
+                correctAnswer: 0,
+                explanation: "The past participle of 'werken' is 'gewerkt'",
+                hint: "Regular -en verb: ge + stem + t",
+                exerciseType: .multipleChoice
+            ),
+            GrammarExercise(
+                question: "What is the past participle of 'zijn'?",
+                options: ["geweest", "gezijn", "was", "waren"],
+                correctAnswer: 0,
+                explanation: "The past participle of 'zijn' is 'geweest'",
+                hint: "This is irregular",
+                exerciseType: .multipleChoice
+            ),
+            GrammarExercise(
+                question: "Complete: 'Wij ___ al gegeten' (We have already eaten)",
+                options: ["hebben", "zijn", "worden", "zullen"],
+                correctAnswer: 0,
+                explanation: "Wij hebben al gegeten - 'eten' uses 'hebben'",
+                hint: "Most verbs use 'hebben'",
+                exerciseType: .fillInTheBlank
+            ),
+            GrammarExercise(
+                question: "What is the past participle of 'doen'?",
+                options: ["gedaan", "gedoet", "deed", "deden"],
+                correctAnswer: 0,
+                explanation: "The past participle of 'doen' is 'gedaan'",
+                hint: "This is irregular",
+                exerciseType: .multipleChoice
+            ),
+            GrammarExercise(
+                question: "Complete: 'Het ___ gisteren geregend' (It rained yesterday)",
+                options: ["heeft", "is", "wordt", "zijn"],
+                correctAnswer: 0,
+                explanation: "Het heeft gisteren geregend - 'regenen' uses 'hebben'",
+                hint: "Most verbs use 'hebben'",
+                exerciseType: .fillInTheBlank
+            ),
+            GrammarExercise(
+                question: "What is the past participle of 'komen'?",
+                options: ["gekomen", "gekamt", "kwam", "kwamen"],
+                correctAnswer: 0,
+                explanation: "The past participle of 'komen' is 'gekomen'",
+                hint: "This is irregular",
+                exerciseType: .multipleChoice
+            ),
+            GrammarExercise(
+                question: "Complete: 'Hij ___ de film gezien' (He has seen the film)",
+                options: ["heeft", "is", "wordt", "zijn"],
+                correctAnswer: 0,
+                explanation: "Hij heeft de film gezien - 'zien' uses 'hebben'",
+                hint: "Most verbs use 'hebben'",
+                exerciseType: .fillInTheBlank
+            ),
+            GrammarExercise(
+                question: "What is the past participle of 'hebben'?",
+                options: ["gehad", "gehebt", "had", "hadden"],
+                correctAnswer: 0,
+                explanation: "The past participle of 'hebben' is 'gehad'",
+                hint: "This is irregular",
+                exerciseType: .multipleChoice
+            )
+        ],
+        commonMistakes: [
+            CommonMistake(
+                incorrect: "Ik ben gewerkt",
+                correct: "Ik heb gewerkt",
+                explanation: "'Werken' uses 'hebben', not 'zijn'"
+            ),
+            CommonMistake(
+                incorrect: "gewerken",
+                correct: "gewerkt",
+                explanation: "Regular -en verb: ge + stem + t"
+            ),
+            CommonMistake(
+                incorrect: "Ik heb naar huis gegaan",
+                correct: "Ik ben naar huis gegaan",
+                explanation: "'Gaan' is a movement verb, so use 'zijn'"
+            )
+        ],
+        tips: [
+            "Learn irregular past participles by heart",
+            "Most verbs use 'hebben'",
+            "Movement verbs use 'zijn'",
+            "Past participle always at the end",
+            "Practice with real conversations",
+            "Watch out for 't kofschip rule",
+            "Perfect tense is very common in Dutch",
+            "Use for completed actions"
+        ],
+        relatedRules: ["verb_present_a1", "verb_past_a2", "auxiliary_verbs_b1", "t_kofschip_rule_b1"]
+    )
+    
+    lazy var verbsWithFixedPrepositionsB1 = DutchGrammarRule(
+        id: "verbs_fixed_prepositions_b1",
+        title: "Verbs with Fixed Prepositions - B1",
+        type: .verbConjugation,
+        level: .b1,
+        explanation: """
+        Many Dutch verbs are used with specific prepositions that cannot be changed. These combinations must be learned by heart as they don't always translate literally.
+        
+        **Common Patterns:**
+        
+        **Verbs + Aan:**
+        • denken aan (think about)
+        • werken aan (work on)
+        • geloven aan (believe in)
+        
+        **Verbs + Van:**
+        • houden van (love/like)
+        • dromen van (dream of)
+        • genieten van (enjoy)
+        
+        **Verbs + Met:**
+        • spelen met (play with)
+        • praten met (talk with)
+        • beginnen met (start with)
+        
+        **Verbs + Voor:**
+        • zorgen voor (take care of)
+        • betalen voor (pay for)
+        • kiezen voor (choose)
+        
+        **Verbs + Over:**
+        • praten over (talk about)
+        • denken over (think about)
+        • twijfelen over (doubt about)
+        """,
+        keyPoints: [
+            "Learn verb + preposition combinations",
+            "Don't translate literally",
+            "Prepositions are fixed",
+            "Practice with real sentences",
+            "Common in everyday Dutch",
+            "Essential for fluency",
+            "Watch out for English translations",
+            "Use in context"
+        ],
+        examples: [
+            GrammarExample(
+                dutch: "Ik denk aan mijn familie.",
+                english: "I think about my family.",
+                breakdown: "Subject + denken + aan + object",
+                audioHint: "ik dɛŋk aːn mɛin fɑmili"
+            ),
+            GrammarExample(
+                dutch: "Zij houdt van koffie.",
+                english: "She likes coffee.",
+                breakdown: "Subject + houden + van + object",
+                audioHint: "zɛi hɵt vɑn kɔfi"
+            ),
+            GrammarExample(
+                dutch: "Wij praten over het weer.",
+                english: "We talk about the weather.",
+                breakdown: "Subject + praten + over + object",
+                audioHint: "ʋɛi prɑtə(n) oːvər hət ʋeːr"
+            ),
+            GrammarExample(
+                dutch: "Hij werkt aan een project.",
+                english: "He works on a project.",
+                breakdown: "Subject + werken + aan + object",
+                audioHint: "hɛi ʋɛrkt aːn ən projɛkt"
+            ),
+            GrammarExample(
+                dutch: "Zij zorgt voor de kinderen.",
+                english: "She takes care of the children.",
+                breakdown: "Subject + zorgen + voor + object",
+                audioHint: "zɛi zɔrxt voːr də kɪndərə(n)"
+            )
+        ],
+        exercises: [
+            GrammarExercise(
+                question: "Complete: 'Ik denk ___ mijn werk' (I think about my work)",
+                options: ["aan", "van", "met", "voor"],
+                correctAnswer: 0,
+                explanation: "Ik denk aan mijn werk - 'denken' uses 'aan'",
+                hint: "Denken + aan",
+                exerciseType: .fillInTheBlank
+            ),
+            GrammarExercise(
+                question: "Complete: 'Zij houdt ___ muziek' (She likes music)",
+                options: ["aan", "van", "met", "voor"],
+                correctAnswer: 1,
+                explanation: "Zij houdt van muziek - 'houden' uses 'van'",
+                hint: "Houden + van",
+                exerciseType: .fillInTheBlank
+            ),
+            GrammarExercise(
+                question: "Complete: 'Wij praten ___ het nieuws' (We talk about the news)",
+                options: ["aan", "van", "over", "voor"],
+                correctAnswer: 2,
+                explanation: "Wij praten over het nieuws - 'praten' uses 'over'",
+                hint: "Praten + over",
+                exerciseType: .fillInTheBlank
+            ),
+            GrammarExercise(
+                question: "Complete: 'Hij werkt ___ een oplossing' (He works on a solution)",
+                options: ["aan", "van", "met", "voor"],
+                correctAnswer: 0,
+                explanation: "Hij werkt aan een oplossing - 'werken' uses 'aan'",
+                hint: "Werken + aan",
+                exerciseType: .fillInTheBlank
+            ),
+            GrammarExercise(
+                question: "Complete: 'Zij zorgt ___ de patiënten' (She takes care of the patients)",
+                options: ["aan", "van", "met", "voor"],
+                correctAnswer: 3,
+                explanation: "Zij zorgt voor de patiënten - 'zorgen' uses 'voor'",
+                hint: "Zorgen + voor",
+                exerciseType: .fillInTheBlank
+            ),
+            GrammarExercise(
+                question: "Complete: 'Ik droom ___ vakantie' (I dream of vacation)",
+                options: ["aan", "van", "over", "voor"],
+                correctAnswer: 1,
+                explanation: "Ik droom van vakantie - 'dromen' uses 'van'",
+                hint: "Dromen + van",
+                exerciseType: .fillInTheBlank
+            ),
+            GrammarExercise(
+                question: "Complete: 'Wij spelen ___ de bal' (We play with the ball)",
+                options: ["aan", "van", "met", "voor"],
+                correctAnswer: 2,
+                explanation: "Wij spelen met de bal - 'spelen' uses 'met'",
+                hint: "Spelen + met",
+                exerciseType: .fillInTheBlank
+            ),
+            GrammarExercise(
+                question: "Complete: 'Hij betaalt ___ de rekening' (He pays for the bill)",
+                options: ["aan", "van", "met", "voor"],
+                correctAnswer: 3,
+                explanation: "Hij betaalt voor de rekening - 'betalen' uses 'voor'",
+                hint: "Betalen + voor",
+                exerciseType: .fillInTheBlank
+            ),
+            GrammarExercise(
+                question: "Complete: 'Zij twijfelt ___ de beslissing' (She doubts the decision)",
+                options: ["aan", "van", "over", "voor"],
+                correctAnswer: 2,
+                explanation: "Zij twijfelt over de beslissing - 'twijfelen' uses 'over'",
+                hint: "Twijfelen + over",
+                exerciseType: .fillInTheBlank
+            ),
+            GrammarExercise(
+                question: "Complete: 'Wij genieten ___ het eten' (We enjoy the food)",
+                options: ["aan", "van", "over", "voor"],
+                correctAnswer: 1,
+                explanation: "Wij genieten van het eten - 'genieten' uses 'van'",
+                hint: "Genieten + van",
+                exerciseType: .fillInTheBlank
+            )
+        ],
+        commonMistakes: [
+            CommonMistake(
+                incorrect: "Ik denk van mijn werk",
+                correct: "Ik denk aan mijn werk",
+                explanation: "'Denken' uses 'aan', not 'van'"
+            ),
+            CommonMistake(
+                incorrect: "Zij houdt aan koffie",
+                correct: "Zij houdt van koffie",
+                explanation: "'Houden' uses 'van', not 'aan'"
+            ),
+            CommonMistake(
+                incorrect: "Wij praten van het weer",
+                correct: "Wij praten over het weer",
+                explanation: "'Praten' uses 'over', not 'van'"
+            )
+        ],
+        tips: [
+            "Learn verb + preposition combinations by heart",
+            "Don't translate literally from English",
+            "Practice with real sentences",
+            "Common combinations: denken aan, houden van, praten over",
+            "Watch out for false friends",
+            "Use in context to remember",
+            "Listen to native speakers",
+            "Practice regularly"
+        ],
+        relatedRules: ["verb_present_a1", "fixed_word_combinations_b1", "auxiliary_verbs_b1"]
+    )
+    
+    // MARK: - A2 Level Additional Rules
+    
+    lazy var adjectivesA2 = DutchGrammarRule(
+        id: "adjectives_a2",
+        title: "Adjectives - Agreement and Position (A2)",
+        type: .adjectives,
+        level: .a2,
+        explanation: """
+        In Dutch, adjectives change their form depending on the gender and number of the noun they describe. They also have different positions in the sentence.
+        
+        **Adjective Agreement:**
+        • With 'de' words (masculine/feminine): add -e
+        • With 'het' words (neuter): no ending in indefinite, -e in definite
+        • With plural nouns: always add -e
+        
+        **Position:**
+        • Before the noun: attributive position (add endings)
+        • After the noun: predicative position (no endings)
+        • After 'zijn', 'worden', 'blijven': predicative position
+        """,
+        keyPoints: [
+            "De words: adjective + -e",
+            "Het words: no ending (indefinite), -e (definite)",
+            "Plural: always -e",
+            "Before noun: attributive (with endings)",
+            "After noun: predicative (no endings)",
+            "After zijn/worden/blijven: predicative"
+        ],
+        examples: [
+            GrammarExample(
+                dutch: "De grote hond",
+                english: "The big dog",
+                breakdown: "groot + -e (de word)",
+                audioHint: "də xroːtə hɔnt"
+            ),
+            GrammarExample(
+                dutch: "Het kleine huis",
+                english: "The small house",
+                breakdown: "klein + -e (het word, definite)",
+                audioHint: "ət klɛinə hœys"
+            ),
+            GrammarExample(
+                dutch: "Een klein huis",
+                english: "A small house",
+                breakdown: "klein (no ending, het word, indefinite)",
+                audioHint: "ən klɛin hœys"
+            ),
+            GrammarExample(
+                dutch: "De hond is groot",
+                english: "The dog is big",
+                breakdown: "groot (predicative, no ending)",
+                audioHint: "də hɔnt ɪs xroːt"
+            ),
+            GrammarExample(
+                dutch: "Grote huizen",
+                english: "Big houses",
+                breakdown: "groot + -e (plural)",
+                audioHint: "xroːtə hœyzə(n)"
+            )
+        ],
+        exercises: [
+            GrammarExercise(
+                question: "Complete: 'De ___ auto' (The new car)",
+                options: ["nieuw", "nieuwe", "nieuws", "nieuwen"],
+                correctAnswer: 1,
+                explanation: "De nieuwe auto - 'auto' is a 'de' word, so add -e",
+                hint: "De words get -e ending"
+            ),
+            GrammarExercise(
+                question: "Complete: 'Het ___ boek' (The old book)",
+                options: ["oud", "oude", "ouds", "ouden"],
+                correctAnswer: 1,
+                explanation: "Het oude boek - 'boek' is a 'het' word, definite, so add -e",
+                hint: "Het words get -e when definite"
+            ),
+            GrammarExercise(
+                question: "Complete: 'Een ___ huis' (A beautiful house)",
+                options: ["mooi", "mooie", "moois", "mooien"],
+                correctAnswer: 0,
+                explanation: "Een mooi huis - 'huis' is a 'het' word, indefinite, no ending",
+                hint: "Het words get no ending when indefinite"
+            ),
+            GrammarExercise(
+                question: "Complete: 'De hond is ___' (The dog is happy)",
+                options: ["blij", "blije", "blijs", "blijen"],
+                correctAnswer: 0,
+                explanation: "De hond is blij - predicative position, no ending",
+                hint: "After 'is' use predicative form"
+            ),
+            GrammarExercise(
+                question: "Complete: '___ kinderen' (Young children)",
+                options: ["jong", "jonge", "jongs", "jongen"],
+                correctAnswer: 1,
+                explanation: "Jonge kinderen - plural, always add -e",
+                hint: "Plural nouns always get -e"
+            )
+        ],
+        commonMistakes: [
+            CommonMistake(
+                incorrect: "Een mooie huis",
+                correct: "Een mooi huis",
+                explanation: "Het words don't get -e when indefinite"
+            ),
+            CommonMistake(
+                incorrect: "De hond is grote",
+                correct: "De hond is groot",
+                explanation: "Predicative adjectives don't get endings"
+            ),
+            CommonMistake(
+                incorrect: "Het kleine boek is nieuw",
+                correct: "Het kleine boek is nieuw",
+                explanation: "Predicative position doesn't get endings"
+            )
+        ],
+        tips: [
+            "Learn the gender of common nouns",
+            "Practice with both definite and indefinite articles",
+            "Remember: predicative = no endings",
+            "Plural always gets -e",
+            "Het words are tricky - check if definite or indefinite",
+            "Use flashcards to memorize gender",
+            "Practice with real sentences",
+            "Listen to native speakers"
+        ],
+        relatedRules: ["verb_present_a1", "dutch_nouns_articles_a1"]
+    )
+    
+    lazy var negationA2 = DutchGrammarRule(
+        id: "negation_a2",
+        title: "Negation - Niet and Geen (A2)",
+        type: .negation,
+        level: .a2,
+        explanation: """
+        Dutch has two main ways to make sentences negative: 'niet' and 'geen'.
+        
+        **Niet (not):**
+        • Used to negate verbs, adjectives, adverbs
+        • Position: after the verb in simple tenses
+        • Position: after the auxiliary verb in compound tenses
+        • Position: at the end of the sentence
+        
+        **Geen (no/not any):**
+        • Used to negate nouns (replaces 'een' or 'no article')
+        • Used with uncountable nouns
+        • Position: before the noun
+        • Cannot be used with 'de' or 'het'
+        
+        **Word Order:**
+        • Subject + verb + niet + rest of sentence
+        • Subject + verb + geen + noun
+        • In questions: verb + subject + niet/geen
+        """,
+        keyPoints: [
+            "Niet = not (verbs, adjectives, adverbs)",
+            "Geen = no/not any (nouns)",
+            "Niet after verb in simple tenses",
+            "Geen before noun",
+            "Geen replaces een",
+            "Cannot use geen with de/het",
+            "Word order: subject + verb + niet/geen"
+        ],
+        examples: [
+            GrammarExample(
+                dutch: "Ik werk niet vandaag.",
+                english: "I don't work today.",
+                breakdown: "Subject + verb + niet + time",
+                audioHint: "ɪk ʋɛrk nɪt vɑndaːx"
+            ),
+            GrammarExample(
+                dutch: "Ik heb geen tijd.",
+                english: "I don't have time.",
+                breakdown: "Subject + verb + geen + noun",
+                audioHint: "ɪk hɛp xən tɛit"
+            ),
+            GrammarExample(
+                dutch: "Het is niet koud.",
+                english: "It's not cold.",
+                breakdown: "Subject + verb + niet + adjective",
+                audioHint: "ət ɪs nɪt kɵt"
+            ),
+            GrammarExample(
+                dutch: "Wij hebben geen auto.",
+                english: "We don't have a car.",
+                breakdown: "Subject + verb + geen + noun",
+                audioHint: "ʋɛi hɛbə(n) xən ɵtoː"
+            ),
+            GrammarExample(
+                dutch: "Zij spreekt niet snel.",
+                english: "She doesn't speak quickly.",
+                breakdown: "Subject + verb + niet + adverb",
+                audioHint: "zɛi spreːkt nɪt snɛl"
+            )
+        ],
+        exercises: [
+            GrammarExercise(
+                question: "Complete: 'Ik ___ vandaag' (I don't work today)",
+                options: ["werk niet", "niet werk", "geen werk", "werk geen"],
+                correctAnswer: 0,
+                explanation: "Ik werk niet vandaag - niet after verb",
+                hint: "Niet goes after the verb"
+            ),
+            GrammarExercise(
+                question: "Complete: 'Ik heb ___ tijd' (I don't have time)",
+                options: ["niet", "geen", "niet een", "geen een"],
+                correctAnswer: 1,
+                explanation: "Ik heb geen tijd - geen replaces een",
+                hint: "Use geen with nouns"
+            ),
+            GrammarExercise(
+                question: "Complete: 'Het is ___ warm' (It's not warm)",
+                options: ["niet", "geen", "niet een", "geen een"],
+                correctAnswer: 0,
+                explanation: "Het is niet warm - niet with adjective",
+                hint: "Use niet with adjectives"
+            ),
+            GrammarExercise(
+                question: "Complete: 'Wij hebben ___ auto' (We don't have a car)",
+                options: ["niet", "geen", "niet een", "geen een"],
+                correctAnswer: 1,
+                explanation: "Wij hebben geen auto - geen replaces een",
+                hint: "Geen replaces een"
+            ),
+            GrammarExercise(
+                question: "Complete: 'Zij spreekt ___ Nederlands' (She doesn't speak Dutch)",
+                options: ["niet", "geen", "niet een", "geen een"],
+                correctAnswer: 0,
+                explanation: "Zij spreekt niet Nederlands - niet with language",
+                hint: "Use niet with languages"
+            )
+        ],
+        commonMistakes: [
+            CommonMistake(
+                incorrect: "Ik heb niet tijd",
+                correct: "Ik heb geen tijd",
+                explanation: "Use geen with nouns, niet with verbs/adjectives"
+            ),
+            CommonMistake(
+                incorrect: "Het is geen warm",
+                correct: "Het is niet warm",
+                explanation: "Use niet with adjectives, geen with nouns"
+            ),
+            CommonMistake(
+                incorrect: "Ik werk geen vandaag",
+                correct: "Ik werk niet vandaag",
+                explanation: "Use niet with time expressions, geen with nouns"
+            )
+        ],
+        tips: [
+            "Niet = not (verbs, adjectives, adverbs)",
+            "Geen = no/not any (nouns)",
+            "Geen replaces een",
+            "Cannot use geen with de/het",
+            "Practice with both types",
+            "Learn common patterns",
+            "Pay attention to word order",
+            "Listen to native speakers"
+        ],
+        relatedRules: ["verb_present_a1", "dutch_nouns_articles_a1"]
+    )
+    
+    lazy var possessivesA2 = DutchGrammarRule(
+        id: "possessives_a2",
+        title: "Possessive Pronouns (A2)",
+        type: .wordOrder,
+        level: .a2,
+        explanation: """
+        Dutch possessive pronouns show ownership and agree with the noun they describe, not the owner.
+        
+        **Possessive Pronouns:**
+        • mijn (my)
+        • jouw/je (your - informal)
+        • zijn (his/its)
+        • haar (her)
+        • ons/onze (our)
+        • jullie (your - plural)
+        • hun (their)
+        
+        **Agreement Rules:**
+        • mijn, jouw, zijn, haar, ons: no ending with 'het' words, -e with 'de' words
+        • onze: always -e (used with 'de' words)
+        • jullie, hun: always -e
+        
+        **Position:**
+        • Always before the noun
+        • Cannot be used alone (need a noun)
+        • Can be emphasized with 'eigen' (own)
+        """,
+        keyPoints: [
+            "Agree with noun, not owner",
+            "Mijn/jouw/zijn/haar/ons: no ending with het, -e with de",
+            "Onze: always -e (de words only)",
+            "Jullie/hun: always -e",
+            "Always before noun",
+            "Cannot be used alone",
+            "Can add 'eigen' for emphasis"
+        ],
+        examples: [
+            GrammarExample(
+                dutch: "Mijn boek",
+                english: "My book",
+                breakdown: "mijn (no ending, het word)",
+                audioHint: "mɛin buk"
+            ),
+            GrammarExample(
+                dutch: "Mijn auto",
+                english: "My car",
+                breakdown: "mijn + -e (de word)",
+                audioHint: "mɛin ɵtoː"
+            ),
+            GrammarExample(
+                dutch: "Ons huis",
+                english: "Our house",
+                breakdown: "ons (no ending, het word)",
+                audioHint: "ɔns hœys"
+            ),
+            GrammarExample(
+                dutch: "Onze auto",
+                english: "Our car",
+                breakdown: "onze (always -e, de word)",
+                audioHint: "ɔnzə ɵtoː"
+            ),
+            GrammarExample(
+                dutch: "Jullie boeken",
+                english: "Your books",
+                breakdown: "jullie (always -e, plural)",
+                audioHint: "jɵli bukə(n)"
+            )
+        ],
+        exercises: [
+            GrammarExercise(
+                question: "Complete: '___ boek' (My book)",
+                options: ["mijn", "mijne", "mijns", "mijnen"],
+                correctAnswer: 0,
+                explanation: "Mijn boek - 'boek' is a 'het' word, no ending",
+                hint: "Het words get no ending"
+            ),
+            GrammarExercise(
+                question: "Complete: '___ auto' (My car)",
+                options: ["mijn", "mijne", "mijns", "mijnen"],
+                correctAnswer: 1,
+                explanation: "Mijne auto - 'auto' is a 'de' word, add -e",
+                hint: "De words get -e ending"
+            ),
+            GrammarExercise(
+                question: "Complete: '___ huis' (Our house)",
+                options: ["ons", "onze", "onss", "onsen"],
+                correctAnswer: 0,
+                explanation: "Ons huis - 'huis' is a 'het' word, no ending",
+                hint: "Het words get no ending"
+            ),
+            GrammarExercise(
+                question: "Complete: '___ auto' (Our car)",
+                options: ["ons", "onze", "onss", "onsen"],
+                correctAnswer: 1,
+                explanation: "Onze auto - 'auto' is a 'de' word, use onze",
+                hint: "De words use onze"
+            ),
+            GrammarExercise(
+                question: "Complete: '___ boeken' (Your books)",
+                options: ["jullie", "jullies", "jullie's", "jullien"],
+                correctAnswer: 0,
+                explanation: "Jullie boeken - jullie always has -e",
+                hint: "Jullie always has -e"
+            )
+        ],
+        commonMistakes: [
+            CommonMistake(
+                incorrect: "Mijne boek",
+                correct: "Mijn boek",
+                explanation: "Het words don't get -e ending"
+            ),
+            CommonMistake(
+                incorrect: "Mijn auto",
+                correct: "Mijne auto",
+                explanation: "De words get -e ending"
+            ),
+            CommonMistake(
+                incorrect: "Ons auto",
+                correct: "Onze auto",
+                explanation: "Use onze with de words"
+            )
+        ],
+        tips: [
+            "Learn the gender of common nouns",
+            "Remember: agree with noun, not owner",
+            "Het words: no ending",
+            "De words: add -e",
+            "Onze: always -e (de words only)",
+            "Jullie/hun: always -e",
+            "Practice with real sentences",
+            "Use flashcards to memorize"
+        ],
+        relatedRules: ["dutch_nouns_articles_a1", "adjectives_a2"]
     )
     
     // MARK: - All Grammar Rules Array
@@ -5455,20 +4773,22 @@ class DutchGrammarRulesDatabase {
         // A2 Level  
         pastTenseA2,
         verledenTijdA2,
+        dutchInformalContractionsA2,
+        contractionsCliticsA2,
+        wordClassificationSentenceAnalysisA2,
+        
+        // B1 Level
+        auxiliaryVerbsB1,
+        verbPerfectB1,
+        verbsWithFixedPrepositionsB1,
+        fixedWordCombinationsB1,
+        tKofschipRuleB1,
+        
+        // A2 Level Additional Rules
         adjectivesA2,
         negationA2,
         possessivesA2,
-        demonstrativesA2,
-        dutchInformalContractionsA2,
-        
-        // B1 Level
-        verbsWithFixedPrepositionsB1,
-        infinitiveConstructionsB1,
-        auxiliaryVerbsB1,
-        fixedWordCombinationsB1,
-        tKofschipRuleB1,
-        contractionsCliticsA2,
-        wordClassificationSentenceAnalysisA2
+        demonstrativesA2
     ]
     
     // MARK: - Helper Methods
@@ -5490,4 +4810,5 @@ class DutchGrammarRulesDatabase {
         return rule.relatedRules.compactMap { getRuleById($0) }
     }
 } 
+
 

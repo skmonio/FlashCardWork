@@ -23,6 +23,7 @@ struct DutchGrammarRulesView: View {
     @State private var shuffledOptions: [[String]] = [] // Store shuffled options for each exercise
     @State private var correctAnswerMapping: [Int: Int] = [:] // Map original correct answer to shuffled position
     @State private var allQuestionsAnswered = false // Track if all questions have been answered
+    @State private var isReviewMode = false
     
     private let grammarDB = DutchGrammarRulesDatabase.shared
     
@@ -67,6 +68,9 @@ struct DutchGrammarRulesView: View {
             if showingEndScreen {
                 // End Screen Content
                 endScreenContent
+            } else if isReviewMode {
+                // Review Mode Content
+                reviewContent
             } else if showingExercises {
                 // Exercise Content
                 exerciseContent
@@ -428,9 +432,13 @@ struct DutchGrammarRulesView: View {
                 .cornerRadius(12)
                 .buttonStyle(PlainButtonStyle())
                 
-                Button("Review Rules") {
+                Button("Review Questions") {
+                    showingExercises = true
                     showingEndScreen = false
-                    showingExercises = false
+                    // Restore the last question state for review
+                    currentExerciseIndex = totalQuestions - 1
+                    selectedAnswer = questionAnswers[currentExerciseIndex]
+                    showingAnswer = true
                 }
                 .foregroundColor(.blue)
                 .frame(maxWidth: .infinity)
@@ -442,6 +450,12 @@ struct DutchGrammarRulesView: View {
         }
         .padding()
         }
+    }
+    
+    // MARK: - Review Content
+    
+    private var reviewContent: some View {
+        EmptyView()
     }
     
     // MARK: - Rule Detail View

@@ -3,6 +3,7 @@ import PhotosUI
 
 struct UserProfileView: View {
     @Environment(\.dismiss) private var dismiss
+    @ObservedObject var viewModel: FlashCardViewModel
     @StateObject private var userProfile = UserProfileManager.shared
     @StateObject private var statsManager = StatisticsManager.shared
     @State private var showingEditProfile = false
@@ -207,79 +208,94 @@ struct UserProfileView: View {
     }
     
     private var statsTab: some View {
-        VStack(spacing: 20) {
-            // Study Statistics
+        // Access all cards for stats
+        let allCards: [FlashCard] = viewModel.flashCards
+        let averageLearningPercent = allCards.isEmpty ? 0 : Int((allCards.compactMap { $0.learningPercentage ?? 0 }.reduce(0, +)) / max(1, allCards.count))
+        let currentStreak = StreakManager.shared.currentStreak
+        let xpToNextLevel = max(0, userProfile.xpForLevel(userProfile.level + 1) - userProfile.xp)
+
+        return VStack(spacing: 20) {
+            // Study Statistics (just 3 cards, no carousel)
             VStack(alignment: .leading, spacing: 16) {
                 Text("Study Statistics")
                     .font(.headline)
                     .padding(.horizontal)
-                
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 16) {
-                    StatCard(
-                        icon: "book.fill",
-                        title: "Total Sessions",
-                        value: "\(statsManager.studySessions.count)",
-                        color: .blue
-                    )
-                    
-                    StatCard(
-                        icon: "clock.fill",
-                        title: "Total Time",
-                        value: formatTotalTime(),
-                        color: .green
-                    )
-                    
-                    StatCard(
-                        icon: "target",
-                        title: "Accuracy",
-                        value: "\(Int(statsManager.getOverallAccuracy() * 100))%",
-                        color: .orange
-                    )
-                    
+
+                HStack(spacing: 16) {
                     StatCard(
                         icon: "flame.fill",
                         title: "Current Streak",
-                        value: "\(StreakManager.shared.currentStreak) days",
+                        value: "\(currentStreak) days",
                         color: .red
                     )
+                    StatCard(
+                        icon: "percent",
+                        title: "Average Learning %",
+                        value: "\(averageLearningPercent)%",
+                        color: .purple
+                    )
+                    StatCard(
+                        icon: "arrow.up.circle.fill",
+                        title: "XP to Next Level",
+                        value: "\(xpToNextLevel) XP",
+                        color: .indigo
+                    )
                 }
+                .padding(.horizontal)
             }
-            
-            // Recent Activity
-            VStack(alignment: .leading, spacing: 16) {
-                Text("Recent Activity")
+
+            // Deck Progress Bar Chart Section (unchanged)
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Deck Progress")
                     .font(.headline)
-                    .padding(.horizontal)
-                
-                if statsManager.studySessions.isEmpty {
-                    VStack(spacing: 12) {
-                        Image(systemName: "book.closed")
-                            .font(.system(size: 40))
-                            .foregroundColor(.secondary)
-                        
-                        Text("No study sessions yet")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                        
-                        Text("Start studying to see your progress!")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color(.secondarySystemGroupedBackground))
-                    .cornerRadius(12)
+                    .padding(.top, 8)
+                if viewModel.decks.isEmpty {
+                    Text("No decks yet. Add some decks to start tracking your progress!")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .padding(.vertical, 4)
                 } else {
-                    LazyVStack(spacing: 12) {
-                        ForEach(Array(statsManager.studySessions.prefix(5)), id: \.id) { session in
-                            SessionRowView(session: session)
+                    ForEach(viewModel.decks.filter { !$0.cards.isEmpty }, id: \.id) { deck in
+                        let mastered = deck.cards.filter { ($0.learningPercentage ?? 0) >= 90 }.count
+                        let learnt = deck.cards.filter { ($0.learningPercentage ?? 0) >= 70 && ($0.learningPercentage ?? 0) < 90 }.count
+                        let notLearnt = deck.cards.filter { ($0.learningPercentage ?? 0) < 70 }.count
+                        let total = deck.cards.count
+                        HStack(alignment: .center, spacing: 8) {
+                            Text(deck.name)
+                                .font(.subheadline)
+                                .frame(width: 110, alignment: .leading)
+                            GeometryReader { geometry in
+                                let barWidth = geometry.size.width
+                                let masteredWidth = barWidth * CGFloat(mastered) / CGFloat(max(1, total))
+                                let learntWidth = barWidth * CGFloat(learnt) / CGFloat(max(1, total))
+                                let notLearntWidth = barWidth * CGFloat(notLearnt) / CGFloat(max(1, total))
+                                HStack(spacing: 0) {
+                                    Rectangle()
+                                        .fill(Color.green)
+                                        .frame(width: masteredWidth, height: 16)
+                                    Rectangle()
+                                        .fill(Color.yellow)
+                                        .frame(width: learntWidth, height: 16)
+                                    Rectangle()
+                                        .fill(Color.gray.opacity(0.3))
+                                        .frame(width: notLearntWidth, height: 16)
+                                }
+                                .cornerRadius(6)
+                            }
+                            .frame(height: 16)
+                            .padding(.horizontal, 4)
+                            Text("\(mastered)/\(total) mastered")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
                         }
+                        .frame(height: 24)
+                        .padding(.vertical, 2)
                     }
                 }
             }
         }
     }
-    
+
     private var achievementsTab: some View {
         VStack(spacing: 20) {
             // Achievement Summary
@@ -553,6 +569,6 @@ struct EditProfileView: View {
 
 struct UserProfileView_Previews: PreviewProvider {
     static var previews: some View {
-        UserProfileView()
+        UserProfileView(viewModel: FlashCardViewModel())
     }
 } 

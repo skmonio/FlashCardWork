@@ -105,12 +105,19 @@ struct TrueFalseView: View {
         self.maxQuestions = maxQuestions
         self.onLevelComplete = onLevelComplete
         
-        // Apply intelligent ordering based on study mode
+        // Only re-sort cards if we're not in progressive study mode (no maxQuestions limit)
+        // ProgressiveStudyView already carefully selects and orders cards for each level
         let sortedCards: [FlashCard]
-        if let studyMode = studyMode {
-            sortedCards = SmartStudyManager.shared.sortCardsForStudyMode(cards, mode: studyMode)
+        if maxQuestions == nil {
+            // Apply intelligent ordering based on study mode for regular sessions
+            if let studyMode = studyMode {
+                sortedCards = SmartStudyManager.shared.sortCardsForStudyMode(cards, mode: studyMode)
+            } else {
+                sortedCards = viewModel.sortCardsForLearning(cards)
+            }
         } else {
-            sortedCards = viewModel.sortCardsForLearning(cards)
+            sortedCards = cards // Keep original order for progressive study
+            print("🎯 Progressive TrueFalse: Keeping original card order for level")
         }
         
         self._cards = State(initialValue: sortedCards)

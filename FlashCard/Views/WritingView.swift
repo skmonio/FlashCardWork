@@ -32,8 +32,13 @@ struct WritingView: View {
     // Session XP tracking
     @State private var sessionXP: Int = 0 // Track XP gained during current session
     
-    // Session tracking
-    @State private var sessionStartTime: Date = Date()
+    // Session tracking for results view
+    @State private var currentSession: StudySession?
+    @State private var sessionStartTime = Date()
+    @State private var incorrectCards: Set<UUID> = []
+    
+    // Add managers for session tracking
+    private let statsManager = StatisticsManager.shared
     
     // Save state properties
     private var deckIds: [UUID]
@@ -97,8 +102,14 @@ struct WritingView: View {
     
     init(viewModel: FlashCardViewModel, cards: [FlashCard], deckIds: [UUID] = [], shouldLoadSaveState: Bool = false, studyMode: StudyMode? = nil, maxQuestions: Int? = nil, onLevelComplete: ((LevelResult) -> Void)? = nil) {
         self.viewModel = viewModel
-        // Apply intelligent ordering: less-known cards first, well-known cards later
-        _cards = State(initialValue: viewModel.sortCardsForLearning(cards))
+        // Only re-sort cards if we're not in progressive study mode (no maxQuestions limit)
+        // ProgressiveStudyView already carefully selects and orders cards for each level
+        if maxQuestions == nil {
+            _cards = State(initialValue: viewModel.sortCardsForLearning(cards)) // Apply intelligent ordering: less-known cards first, well-known cards later
+        } else {
+            _cards = State(initialValue: cards) // Keep original order for progressive study
+            print("🎯 Progressive Writing: Keeping original card order for level")
+        }
         self.deckIds = deckIds
         self.shouldLoadSaveState = shouldLoadSaveState
         self.studyMode = studyMode
@@ -132,6 +143,8 @@ struct WritingView: View {
             } else {
                 // Initialize normally - reset to first card and prepare for input
                 sessionStartTime = Date()
+                currentSession = statsManager.startSession(deckIds: deckIds, cardCount: cards.count)
+                incorrectCards.removeAll()
                 resetForNextCard()
             }
         }
@@ -196,13 +209,8 @@ struct WritingView: View {
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
                     
-                    // Use shared card component with vibrant borders - show the translation instead of the word
-                    SharedGameCardView(
-                        card: card,
-                        title: "",
-                        content: card.definition,
-                        showArticle: false
-                    )
+                    // Custom smaller card view
+                    smallerCardView(for: card)
                     
                     // Word display with placeholders
                     if !hasAnswered {
@@ -218,11 +226,35 @@ struct WritingView: View {
                                 .cornerRadius(12)
                                 .onTapGesture {
                                     isKeyboardFocused = true
-                    }
-                    
+                                }
+                            
+                            // Guessed letters row - only show incorrect guesses
+                            let incorrectGuesses = guessedLetters.filter { !letterIsInWord($0) }
+                            if !incorrectGuesses.isEmpty {
+                                VStack(spacing: 8) {
+                                    Text("Wrong letters:")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    
+                                    HStack(spacing: 8) {
+                                        ForEach(Array(incorrectGuesses).sorted(), id: \.self) { letter in
+                                            Text(String(letter).uppercased())
+                                                .font(.system(size: 16, weight: .bold))
+                                                .foregroundColor(.white)
+                                                .frame(width: 30, height: 30)
+                                                .background(
+                                                    Circle()
+                                                        .fill(Color.red)
+                                                )
+                                        }
+                                    }
+                                }
+                                .padding(.horizontal)
+                            }
+                            
                             // Hidden text field for keyboard input
                             TextField("", text: $userInput)
-                            .focused($isKeyboardFocused)
+                                .focused($isKeyboardFocused)
                                 .opacity(0)
                                 .onChange(of: userInput) { newValue in
                                     // Process each character typed
@@ -235,7 +267,7 @@ struct WritingView: View {
                                     // Clear input after processing
                                     userInput = ""
                                 }
-                            }
+                        }
                     }
                     
                     // Answer feedback
@@ -253,6 +285,80 @@ struct WritingView: View {
         }
     }
     
+    // Custom smaller card view
+    private func smallerCardView(for card: FlashCard) -> some View {
+        // Vibrant colors inspired by the Taal Trek theme
+        let vibrantColors: [Color] = [
+            Color(red: 1.0, green: 0.4, blue: 0.2),    // Coral/Orange-Red
+            Color(red: 1.0, green: 0.6, blue: 0.0),    // Bright Orange
+            Color(red: 1.0, green: 0.8, blue: 0.0),    // Golden Yellow
+            Color(red: 0.2, green: 0.8, blue: 0.6),    // Teal/Turquoise
+            Color(red: 0.0, green: 0.7, blue: 0.8),    // Cyan Blue
+            Color(red: 0.6, green: 0.4, blue: 1.0),    // Purple
+            Color(red: 1.0, green: 0.3, blue: 0.6),    // Pink
+            Color(red: 0.4, green: 0.9, blue: 0.3),    // Lime Green
+        ]
+        
+        // Generate consistent color based on card content
+        let cardBorderColor: Color = {
+            guard !card.word.isEmpty && !card.definition.isEmpty else {
+                return vibrantColors[0] // Default to first color if card has empty content
+            }
+            let hash = abs(card.word.hashValue &+ card.definition.hashValue)
+            let index = hash % vibrantColors.count
+            return vibrantColors[index]
+        }()
+        
+        return VStack(spacing: 16) {
+            // Card container with vibrant border - smaller size
+            VStack(spacing: 16) {
+                // Content
+                VStack(spacing: 8) {
+                    Text(card.definition)
+                        .font(.title3)
+                        .bold()
+                        .multilineTextAlignment(.center)
+                        .foregroundColor(.primary)
+                }
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(Color(.secondarySystemGroupedBackground))
+                .cornerRadius(12)
+            }
+            .padding()
+            .frame(maxWidth: .infinity)
+            .frame(height: 140) // Smaller height (was 200)
+            .background(
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(Color(.secondarySystemGroupedBackground))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 20)
+                            .stroke(
+                                LinearGradient(
+                                    gradient: Gradient(colors: [
+                                        cardBorderColor,
+                                        cardBorderColor.opacity(0.7)
+                                    ]),
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                lineWidth: 5
+                            )
+                    )
+                    .shadow(color: cardBorderColor.opacity(0.3), radius: 12, x: 0, y: 6)
+                    .shadow(color: .black.opacity(0.15), radius: 20, x: 0, y: 10)
+            )
+            .padding(.horizontal, 20)
+        }
+    }
+    
+    // Helper function to check if a letter is in the word
+    private func letterIsInWord(_ letter: Character) -> Bool {
+        guard let card = currentCard else { return false }
+        let wordLetters = Set(card.word.lowercased().filter { $0.isLetter }.map { $0 })
+        return wordLetters.contains(letter)
+    }
+    
     private func answerFeedbackView(for card: FlashCard) -> some View {
         VStack(spacing: 16) {
             // Feedback section
@@ -263,45 +369,45 @@ struct WritingView: View {
                             .foregroundColor(isCorrect ? .green : .red)
                             .font(.title2)
                         
-                        Text(isCorrect ? "Correct!" : "Incorrect")
-                            .font(.title3)
-                            .bold()
-                            .foregroundColor(isCorrect ? .green : .red)
+                        if isCorrect {
+                            Text("Correct! The translation is \(card.word)")
+                                .font(.title3)
+                                .bold()
+                                .foregroundColor(.green)
+                        } else {
+                            Text("Incorrect! The translation is \(card.word)")
+                                .font(.title3)
+                                .bold()
+                                .foregroundColor(.red)
+                        }
                     }
                     
                     if !isCorrect {
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack {
-                                Text("Correct answer:")
-                                    .foregroundColor(.secondary)
-                                Spacer()
-                                
-                                HStack(spacing: 8) {
-                                        Text(card.word)
-                                            .foregroundColor(.green)
-                                            .bold()
-                                    
-                                    // Pronunciation button for correct answer
-                                    Button(action: {
-                                        if isCurrentWordSpeaking {
-                                            speechService.stopSpeaking()
-                                        } else {
-                                            #if !LITE_VERSION
-                                            speakCurrentWord()
-                                            #endif
-                                        }
-                                        HapticManager.shared.lightImpact()
-                                    }) {
-                                        Image(systemName: isCurrentWordSpeaking ? "speaker.wave.2.fill" : "speaker.wave.2")
-                                            .font(.callout)
-                                            .foregroundColor(.blue)
-                                    }
+                        // Pronunciation button for correct answer
+                        HStack {
+                            Spacer()
+                            Button(action: {
+                                if isCurrentWordSpeaking {
+                                    speechService.stopSpeaking()
+                                } else {
+                                    #if !LITE_VERSION
+                                    speakCurrentWord()
+                                    #endif
+                                }
+                                HapticManager.shared.lightImpact()
+                            }) {
+                                HStack(spacing: 4) {
+                                    Image(systemName: isCurrentWordSpeaking ? "speaker.wave.2.fill" : "speaker.wave.2")
+                                        .font(.callout)
+                                        .foregroundColor(.blue)
+                                    Text("Listen")
+                                        .font(.caption)
+                                        .foregroundColor(.blue)
                                 }
                             }
+                            Spacer()
                         }
-                        .padding()
-                        .background(Color(.systemGray6))
-                        .cornerRadius(8)
+                        .padding(.top, 8)
                     }
                 }
             }
@@ -322,65 +428,90 @@ struct WritingView: View {
     }
     
     private var resultsView: some View {
-        VStack(spacing: 30) {
-            Image(systemName: "trophy.fill")
-                .font(.system(size: 60))
-                .foregroundColor(.yellow)
-            
-            Text("Writing Practice Complete!")
-                .font(.largeTitle)
-                .bold()
-                .multilineTextAlignment(.center)
-            
-            VStack(spacing: 15) {
-                Text("Final Score")
-                    .font(.headline)
-                    .foregroundColor(.secondary)
-                
-                Text("\(correctAnswers) / \(totalAnswers)")
-                    .font(.system(size: 48, weight: .bold))
-                    .foregroundColor(Double(correctAnswers)/Double(totalAnswers) >= 0.7 ? .green : .orange)
-                
-                let percentage = totalAnswers > 0 ? Int((Double(correctAnswers) / Double(totalAnswers)) * 100) : 0
-                Text("\(percentage)%")
-                    .font(.title)
-                    .foregroundColor(.secondary)
-                
-                // XP Award Display
-                VStack(spacing: 8) {
-                    Text("XP Earned")
-                        .font(.headline)
-                        .foregroundColor(.secondary)
-                    
-                    let totalXP = correctAnswers * 5
-                    
-                    Text("+\(totalXP)")
-                        .font(.system(size: 36, weight: .bold))
+        Group {
+            if let session = currentSession {
+                StudySessionResultsView(
+                    session: session,
+                    viewModel: viewModel,
+                    sessionXP: sessionXP,
+                    onStudyAgain: {
+                        resetGame()
+                    },
+                    onReviewUnknown: {
+                        // Filter cards to only incorrect ones and restart
+                        let incorrectCardObjects = cards.filter { incorrectCards.contains($0.id) }
+                        // For writing game, we need to create a new WritingView with the incorrect cards
+                        // This is a bit complex since we need to reconstruct the game state
+                        // For now, just restart with the same cards
+                        resetGame()
+                    },
+                    onDone: {
+                        dismissToRoot()
+                    }
+                )
+            } else {
+                // Fallback if session is nil - use the original custom results view
+                VStack(spacing: 30) {
+                    Image(systemName: "trophy.fill")
+                        .font(.system(size: 60))
                         .foregroundColor(.yellow)
                     
-                    Text("\(totalXP) XP earned")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                    Text("Writing Practice Complete!")
+                        .font(.largeTitle)
+                        .bold()
+                        .multilineTextAlignment(.center)
+                    
+                    VStack(spacing: 15) {
+                        Text("Final Score")
+                            .font(.headline)
+                            .foregroundColor(.secondary)
+                        
+                        Text("\(correctAnswers) / \(totalAnswers)")
+                            .font(.system(size: 48, weight: .bold))
+                            .foregroundColor(Double(correctAnswers)/Double(totalAnswers) >= 0.7 ? .green : .orange)
+                        
+                        let percentage = totalAnswers > 0 ? Int((Double(correctAnswers) / Double(totalAnswers)) * 100) : 0
+                        Text("\(percentage)%")
+                            .font(.title)
+                            .foregroundColor(.secondary)
+                        
+                        // XP Award Display
+                        VStack(spacing: 8) {
+                            Text("XP Earned")
+                                .font(.headline)
+                                .foregroundColor(.secondary)
+                            
+                            let totalXP = correctAnswers * 5
+                            
+                            Text("+\(totalXP)")
+                                .font(.system(size: 36, weight: .bold))
+                                .foregroundColor(.yellow)
+                            
+                            Text("\(totalXP) XP earned")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(.top, 10)
+                    }
+                    
+                    Button("Practice Again") {
+                        // Explicitly save all ViewModel data to ensure statistics persist
+                        viewModel.saveAllData()
+                        
+                        // Force UI refresh
+                        DispatchQueue.main.async {
+                            viewModel.objectWillChange.send()
+                        }
+                        
+                        resetGame()
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .font(.headline)
                 }
-                .padding(.top, 10)
-            }
-            
-            Button("Practice Again") {
-                // Explicitly save all ViewModel data to ensure statistics persist
-                viewModel.saveAllData()
-                
-                // Force UI refresh
-                DispatchQueue.main.async {
-                    viewModel.objectWillChange.send()
+                .onAppear {
+                    // XP is already awarded immediately for each correct answer
                 }
-                
-                resetGame()
             }
-            .buttonStyle(.borderedProminent)
-            .font(.headline)
-        }
-        .onAppear {
-            // XP is already awarded immediately for each correct answer
         }
     }
     
@@ -424,6 +555,9 @@ struct WritingView: View {
             HapticManager.shared.testWrongHaptic()
             SoundManager.shared.playTestWrongSound()
             
+            // Track incorrect cards for results view
+            incorrectCards.insert(card.id)
+            
             // Apply SRS logic for incorrect answer
             let updatedCard = srsManager.processSimpleReview(for: card, simpleQuality: .dontKnow)
             viewModel.updateCardWithSRSData(updatedCard)
@@ -443,6 +577,25 @@ struct WritingView: View {
         if let maxQuestions = maxQuestions, currentIndex >= maxQuestions - 1 {
             print("✏️ Reached max questions limit for progressive study")
             HapticManager.shared.gameComplete()
+            
+            // Update the session with final results
+            if let session = currentSession {
+                statsManager.endSession(
+                    session,
+                    knownCards: correctAnswers,
+                    unknownCards: maxQuestions - correctAnswers,
+                    skippedCards: 0
+                )
+                
+                // Manually update the currentSession with final results since StudySession is a struct
+                var updatedSession = session
+                updatedSession.endTime = Date()
+                updatedSession.duration = updatedSession.endTime!.timeIntervalSince(session.startTime)
+                updatedSession.knownCards = correctAnswers
+                updatedSession.unknownCards = maxQuestions - correctAnswers
+                updatedSession.skippedCards = 0
+                currentSession = updatedSession
+            }
             
             // Clear saved progress since game is complete
             clearSavedProgress()
@@ -478,7 +631,8 @@ struct WritingView: View {
                     )
                 }
                 
-                StreakManager.shared.recordGameCompletion(); showingResults = true
+                StreakManager.shared.recordGameCompletion()
+                showingResults = true
             }
             return
         }
@@ -487,6 +641,25 @@ struct WritingView: View {
             currentIndex += 1
             resetForNextCard()
         } else {
+            // Update the session with final results
+            if let session = currentSession {
+                statsManager.endSession(
+                    session,
+                    knownCards: correctAnswers,
+                    unknownCards: cards.count - correctAnswers,
+                    skippedCards: 0
+                )
+                
+                // Manually update the currentSession with final results since StudySession is a struct
+                var updatedSession = session
+                updatedSession.endTime = Date()
+                updatedSession.duration = updatedSession.endTime!.timeIntervalSince(session.startTime)
+                updatedSession.knownCards = correctAnswers
+                updatedSession.unknownCards = cards.count - correctAnswers
+                updatedSession.skippedCards = 0
+                currentSession = updatedSession
+            }
+            
             // Clear saved progress since game is complete
             clearSavedProgress()
             
@@ -502,7 +675,8 @@ struct WritingView: View {
             }
             
             HapticManager.shared.gameComplete()
-            StreakManager.shared.recordGameCompletion(); showingResults = true
+            StreakManager.shared.recordGameCompletion()
+            showingResults = true
         }
     }
     
@@ -525,6 +699,14 @@ struct WritingView: View {
         
         // Reset session XP to 0 for new game
         sessionXP = 0
+        
+        // Reset session tracking
+        sessionStartTime = Date()
+        currentSession = statsManager.startSession(deckIds: deckIds, cardCount: cards.count)
+        incorrectCards.removeAll()
+        
+        // Hide results view
+        showingResults = false
     }
     
     private func handleBackButton() {

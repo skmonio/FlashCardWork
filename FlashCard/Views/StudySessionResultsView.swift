@@ -31,14 +31,44 @@ struct StudySessionResultsView: View {
                 VStack(spacing: 24) {
                     // Header
                     VStack(spacing: 8) {
-                        Image(systemName: "trophy.fill")
-                            .font(.system(size: 50))
-                            .foregroundColor(.yellow)
-                        
-                        Text("Great job! You've made progress on your learning journey.")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
+                        if session.knownCards == 0 && session.totalCards > 0 {
+                            // All wrong - show encouraging message
+                            Image(systemName: "lightbulb.fill")
+                                .font(.system(size: 50))
+                                .foregroundColor(.orange)
+                            
+                            VStack(spacing: 4) {
+                                Text("Keep Practicing!")
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.secondary)
+                                
+                                Text("Every Mistake is a learning opportunity.")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                            }
                             .multilineTextAlignment(.center)
+                        } else if session.knownCards == session.totalCards && session.totalCards > 0 {
+                            // Perfect score
+                            Image(systemName: "trophy.fill")
+                                .font(.system(size: 50))
+                                .foregroundColor(.yellow)
+                            
+                            Text("Perfect! You've mastered these cards!")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                                .multilineTextAlignment(.center)
+                        } else {
+                            // Mixed results
+                            Image(systemName: "trophy.fill")
+                                .font(.system(size: 50))
+                                .foregroundColor(.yellow)
+                            
+                            Text("Great job! You've made progress on your learning journey.")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                                .multilineTextAlignment(.center)
+                        }
                     }
                     
                     // XP Gain Section

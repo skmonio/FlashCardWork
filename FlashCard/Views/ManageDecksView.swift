@@ -272,15 +272,6 @@ struct ManageDecksView: View {
                                         }
                                         
                                         Button {
-                                            deckToMove = deck
-                                            showingMoveDeckSheet = true
-                                            HapticManager.shared.lightImpact()
-                                        } label: {
-                                            Image(systemName: "folder")
-                                        }
-                                        .tint(.orange)
-                                        
-                                        Button {
                                             deckToRename = deck
                                             newDeckName = deck.name
                                             showingRenameDeckAlert = true
@@ -358,15 +349,6 @@ struct ManageDecksView: View {
                                     } label: {
                                         Image(systemName: "trash")
                                     }
-                                    
-                                    Button {
-                                        deckToMove = deck
-                                        showingMoveDeckSheet = true
-                                        HapticManager.shared.lightImpact()
-                                    } label: {
-                                        Image(systemName: "folder")
-                                    }
-                                    .tint(.orange)
                                     
                                     Button {
                                         deckToRename = deck

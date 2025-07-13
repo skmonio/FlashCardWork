@@ -4,11 +4,6 @@
 <dict>
 	<key>SchemeUserState</key>
 	<dict>
-		<key>FlashCard copy.xcscheme_^#shared#^_</key>
-		<dict>
-			<key>orderHint</key>
-			<integer>0</integer>
-		</dict>
 		<key>FlashCard.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
@@ -22,6 +17,21 @@
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
 	<dict>
+		<key>0A780F9D2DF0528600F71F44</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>0A780FAA2DF0528700F71F44</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>0A780FB42DF0528700F71F44</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
 		<key>DC837CB92E21585A00F8A51E</key>
 		<dict>
 			<key>primary</key>

@@ -72,8 +72,14 @@ struct TestView: View {
     
     init(viewModel: FlashCardViewModel, cards: [FlashCard], deckIds: [UUID] = [], shouldLoadSaveState: Bool = false, studyMode: StudyMode? = nil, maxQuestions: Int? = nil, onLevelComplete: ((LevelResult) -> Void)? = nil, startFlipped: Bool = false) {
         self.viewModel = viewModel
-        // Apply intelligent ordering: less-known cards first, well-known cards later
-        self.cards = viewModel.sortCardsForLearning(cards)
+        // Only re-sort cards if we're not in progressive study mode (no maxQuestions limit)
+        // ProgressiveStudyView already carefully selects and orders cards for each level
+        if maxQuestions == nil {
+            self.cards = viewModel.sortCardsForLearning(cards) // Apply intelligent ordering: less-known cards first, well-known cards later
+        } else {
+            self.cards = cards // Keep original order for progressive study
+            print("🎯 Progressive Test: Keeping original card order for level")
+        }
         self.deckIds = deckIds
         self.shouldLoadSaveState = shouldLoadSaveState
         self.studyMode = studyMode
@@ -114,6 +120,9 @@ struct TestView: View {
                 .map { startFlipped ? $0.word : $0.definition }
             poolOfOptions.formUnion(otherOptions)
         }
+        
+        // Remove the correct answer from the pool to prevent duplicates
+        poolOfOptions.remove(correctAnswer)
         
         // Add random options until we have 4 total options
         let additionalOptions = Array(poolOfOptions)

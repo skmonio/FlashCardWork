@@ -383,6 +383,11 @@ struct DeckSelectionView: View {
                 shouldContinueGame = false
                 shouldStartGame = true
             }
+            Button("Continue from saved game") {
+                HapticManager.shared.lightImpact()
+                shouldContinueGame = true
+                shouldStartGame = true
+            }
             Button("Cancel", role: .cancel) { }
         } message: {
             Text("Starting a new game will overwrite your current saved progress. Are you sure you want to continue?")
@@ -421,52 +426,169 @@ struct DeckSelectionView: View {
     private var destinationView: some View {
         let deckIdArray = Array(selectedDeckIds)
         
-        switch mode {
-        case .study:
-            StudyViewWithSaveState(
-                viewModel: viewModel, 
-                cards: availableCards,
-                deckIds: deckIdArray,
-                shouldContinue: shouldContinueGame,
-                selectedStudyMode: selectedStudyMode,
-                startFlipped: startFlipped
-            )
-        case .test:
-            TestViewWithSaveState(
-                viewModel: viewModel, 
-                cards: availableCards,
-                deckIds: deckIdArray,
-                shouldContinue: shouldContinueGame
-            )
-        case .game:
-            GameViewWithSaveState(
-                viewModel: viewModel, 
-                cards: availableCards,
-                deckIds: deckIdArray,
-                shouldContinue: shouldContinueGame,
-                difficulty: selectedDifficulty
-            )
-        case .truefalse:
-            TrueFalseViewWithSaveState(
-                viewModel: viewModel, 
-                cards: availableCards,
-                deckIds: deckIdArray,
-                shouldContinue: shouldContinueGame
-            )
-        case .writing:
-            WritingViewWithSaveState(
-                viewModel: viewModel, 
-                cards: availableCards,
-                deckIds: deckIdArray,
-                shouldContinue: shouldContinueGame
-            )
-        case .wordScramble:
-            WordScrambleViewWithSaveState(
-                viewModel: viewModel, 
-                cards: availableCards,
-                deckIds: deckIdArray,
-                shouldContinue: shouldContinueGame
-            )
+        if shouldContinueGame {
+            // Load saved state for continue game
+            switch mode {
+            case .study:
+                if let savedState = SaveStateManager.shared.loadGameState(gameType: .study, as: StudyGameState.self) {
+                    StudyView(
+                        viewModel: viewModel,
+                        cards: savedState.cards,
+                        deckIds: deckIdArray,
+                        shouldLoadSaveState: true,
+                        startFlipped: startFlipped
+                    )
+                } else {
+                    // Fallback if no save state found
+                    StudyView(
+                        viewModel: viewModel,
+                        cards: availableCards,
+                        deckIds: deckIdArray,
+                        shouldLoadSaveState: false,
+                        startFlipped: startFlipped
+                    )
+                }
+            case .test:
+                if let savedState = SaveStateManager.shared.loadGameState(gameType: .test, as: TestGameState.self) {
+                    TestView(
+                        viewModel: viewModel,
+                        cards: savedState.cards,
+                        deckIds: deckIdArray,
+                        shouldLoadSaveState: true
+                    )
+                } else {
+                    // Fallback if no save state found
+                    TestView(
+                        viewModel: viewModel,
+                        cards: availableCards,
+                        deckIds: deckIdArray,
+                        shouldLoadSaveState: false
+                    )
+                }
+            case .game:
+                if let savedState = SaveStateManager.shared.loadGameState(gameType: .memoryGame, as: MemoryGameState.self) {
+                    // For memory game, we need to reconstruct the cards from the saved state
+                    let allCards = savedState.gameCards.compactMap { savedCard in
+                        // Find the original card in the viewModel
+                        viewModel.flashCards.first { $0.id == savedCard.originalCardId }
+                    }
+                    GameView(
+                        viewModel: viewModel,
+                        cards: allCards,
+                        difficulty: selectedDifficulty,
+                        deckIds: deckIdArray,
+                        shouldLoadSaveState: true
+                    )
+                } else {
+                    // Fallback if no save state found
+                    GameView(
+                        viewModel: viewModel,
+                        cards: availableCards,
+                        difficulty: selectedDifficulty,
+                        deckIds: deckIdArray,
+                        shouldLoadSaveState: false
+                    )
+                }
+            case .truefalse:
+                if let savedState = SaveStateManager.shared.loadGameState(gameType: .trueFalse, as: TrueFalseGameState.self) {
+                    TrueFalseView(
+                        viewModel: viewModel,
+                        cards: savedState.cards,
+                        deckIds: deckIdArray,
+                        shouldLoadSaveState: true
+                    )
+                } else {
+                    // Fallback if no save state found
+                    TrueFalseView(
+                        viewModel: viewModel,
+                        cards: availableCards,
+                        deckIds: deckIdArray,
+                        shouldLoadSaveState: false
+                    )
+                }
+            case .writing:
+                if let savedState = SaveStateManager.shared.loadGameState(gameType: .writing, as: WritingGameState.self) {
+                    WritingView(
+                        viewModel: viewModel,
+                        cards: savedState.cards,
+                        deckIds: deckIdArray,
+                        shouldLoadSaveState: true
+                    )
+                } else {
+                    // Fallback if no save state found
+                    WritingView(
+                        viewModel: viewModel,
+                        cards: availableCards,
+                        deckIds: deckIdArray,
+                        shouldLoadSaveState: false
+                    )
+                }
+            case .wordScramble:
+                if let savedState = SaveStateManager.shared.loadGameState(gameType: .wordScramble, as: WordScrambleGameState.self) {
+                    WordScrambleView(
+                        viewModel: viewModel,
+                        cards: savedState.cards,
+                        deckIds: deckIdArray,
+                        shouldLoadSaveState: true
+                    )
+                } else {
+                    // Fallback if no save state found
+                    WordScrambleView(
+                        viewModel: viewModel,
+                        cards: availableCards,
+                        deckIds: deckIdArray,
+                        shouldLoadSaveState: false
+                    )
+                }
+            }
+        } else {
+            // Normal new game logic
+            switch mode {
+            case .study:
+                StudyView(
+                    viewModel: viewModel,
+                    cards: availableCards,
+                    deckIds: deckIdArray,
+                    shouldLoadSaveState: false,
+                    startFlipped: startFlipped
+                )
+            case .test:
+                TestView(
+                    viewModel: viewModel,
+                    cards: availableCards,
+                    deckIds: deckIdArray,
+                    shouldLoadSaveState: false
+                )
+            case .game:
+                GameView(
+                    viewModel: viewModel,
+                    cards: availableCards,
+                    difficulty: selectedDifficulty,
+                    deckIds: deckIdArray,
+                    shouldLoadSaveState: false
+                )
+            case .truefalse:
+                TrueFalseView(
+                    viewModel: viewModel,
+                    cards: availableCards,
+                    deckIds: deckIdArray,
+                    shouldLoadSaveState: false
+                )
+            case .writing:
+                WritingView(
+                    viewModel: viewModel,
+                    cards: availableCards,
+                    deckIds: deckIdArray,
+                    shouldLoadSaveState: false
+                )
+            case .wordScramble:
+                WordScrambleView(
+                    viewModel: viewModel,
+                    cards: availableCards,
+                    deckIds: deckIdArray,
+                    shouldLoadSaveState: false
+                )
+            }
         }
     }
     

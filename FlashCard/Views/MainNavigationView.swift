@@ -475,7 +475,7 @@ struct MainNavigationView: View {
         case .dutchGrammarInfo:
             DutchGrammarInfoView()
         case .userProfile:
-            UserProfileView()
+            UserProfileView(viewModel: viewModel)
         }
     }
     

@@ -137,7 +137,9 @@ struct GameCardView: View {
             .onTapGesture(count: 1) {
                 // Single tap to play audio
                 HapticManager.shared.lightImpact()
+                #if !LITE_VERSION
                 speakCurrentText()
+                #endif
             }
         }
     }
