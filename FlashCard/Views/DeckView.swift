@@ -666,11 +666,11 @@ struct MoveCardsSheet: View {
     
     private func applyMove() {
         for cardId in selectedCardIds {
-            guard let card = viewModel.flashCards.first(where: { $0.id == cardId }) else { continue }
+            guard let _ = viewModel.flashCards.first(where: { $0.id == cardId }) else { continue }
             
             // Update the card's deck associations
             if let cardIndex = viewModel.flashCards.firstIndex(where: { $0.id == cardId }) {
-                var updatedCard = card
+                var updatedCard = viewModel.flashCards[cardIndex]
                 
                 if moveOption == .move {
                     // Remove from current deck

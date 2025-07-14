@@ -439,7 +439,7 @@ struct WritingView: View {
                     },
                     onReviewUnknown: {
                         // Filter cards to only incorrect ones and restart
-                        let incorrectCardObjects = cards.filter { incorrectCards.contains($0.id) }
+                        _ = cards.filter { incorrectCards.contains($0.id) }
                         // For writing game, we need to create a new WritingView with the incorrect cards
                         // This is a bit complex since we need to reconstruct the game state
                         // For now, just restart with the same cards

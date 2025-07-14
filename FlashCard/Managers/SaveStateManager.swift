@@ -26,6 +26,7 @@ struct GameSaveState: Codable {
         case wordScramble
         case multipleChoice
         case lesson
+        case dutchGrammar
         
         var displayName: String {
             switch self {
@@ -38,6 +39,7 @@ struct GameSaveState: Codable {
             case .wordScramble: return "Word Scramble"
             case .multipleChoice: return "Multiple Choice"
             case .lesson: return "Dutch Lesson"
+            case .dutchGrammar: return "Dutch Grammar"
             }
         }
         
@@ -52,6 +54,7 @@ struct GameSaveState: Codable {
             case .wordScramble: return "textformat.abc"
             case .multipleChoice: return "list.bullet.circle.fill"
             case .lesson: return "graduationcap.fill"
+            case .dutchGrammar: return "textformat.abc"
             }
         }
     }
@@ -148,6 +151,30 @@ struct LessonGameState: Codable {
         let correctAnswer: String
         let explanation: String
         let vocabularyReference: String?
+    }
+}
+
+struct DutchGrammarGameState: Codable {
+    let ruleId: String
+    let ruleTitle: String
+    let currentExerciseIndex: Int
+    let exerciseScore: Int
+    let questionAnswers: [Int: Int]
+    let questionScores: [Int: Bool]
+    let shuffledExercises: [SavedGrammarExercise]
+    let exerciseStartTime: Date?
+    
+    var hasSignificantProgress: Bool {
+        return currentExerciseIndex > 0 || exerciseScore > 0
+    }
+    
+    struct SavedGrammarExercise: Codable {
+        let question: String
+        let options: [String]
+        let correctAnswer: Int
+        let explanation: String
+        let hint: String?
+        let exerciseType: String
     }
 }
 

@@ -38,6 +38,7 @@ class FlashCardViewModel: ObservableObject {
         }
     }
     
+    @MainActor
     private let cloudKitManager = CloudKitManager.shared
     private var syncTimer: Timer?
     private var lastSyncTime: Date = .distantPast

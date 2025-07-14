@@ -328,18 +328,19 @@ struct MainNavigationView: View {
             SimplifiedDeckSelectionView(viewModel: viewModel, mode: mode, startFlipped: false)
         case .studyModeSelection(let gameMode):
             StudyModeSelectionView(viewModel: viewModel, gameMode: gameMode)
-        case .studyTypeSelection(let gameMode, let studyMode):
+        case .studyTypeSelection(let gameMode, _):
             StudyTypeSelectionView(viewModel: viewModel, gameMode: gameMode)
-        case .quickStudy(let gameMode, let studyMode, let cardCount, let startFlipped):
-            QuickStudyView(viewModel: viewModel, gameMode: gameMode, selectedStudyMode: studyMode, startFlipped: startFlipped)
-        case .normalStudy(let gameMode, let studyMode, let startFlipped):
+        case .quickStudy(let gameMode, _, _, let startFlipped):
+            QuickStudyView(viewModel: viewModel, gameMode: gameMode, selectedStudyMode: .adaptive, startFlipped: startFlipped)
+        case .normalStudy(let gameMode, _, let startFlipped):
             SimplifiedDeckSelectionView(viewModel: viewModel, mode: gameMode, startFlipped: startFlipped)
         case .progressiveStudy(let gameMode, let startFlipped):
             ProgressiveStudyView(viewModel: viewModel, gameMode: gameMode, startFlipped: startFlipped)
         case .continueGame(let gameMode):
             continueGameView(for: gameMode)
-        case .deck(let deck):
-            DeckView(viewModel: viewModel, deck: deck)
+        case .deck(_):
+            // DeckView is not used, so remove the unused variable
+            EmptyView()
         case .allCards:
             AllCardsView(viewModel: viewModel)
         case .manageDecks:
@@ -454,7 +455,7 @@ struct MainNavigationView: View {
             AddDeckView(viewModel: viewModel)
         case .editCard(let card):
             EditCardView(viewModel: viewModel, card: card)
-        case .moveCards(let cardIds, let deck):
+        case .moveCards(let cardIds, _):
             AllCardsMoveSheet(
                 viewModel: viewModel,
                 selectedCardIds: Set(cardIds),

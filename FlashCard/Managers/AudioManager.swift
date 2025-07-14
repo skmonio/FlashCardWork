@@ -12,18 +12,9 @@ class AudioManager: NSObject, ObservableObject {
         if let instance = _shared {
             return instance
         }
-        
-        do {
-            let instance = AudioManager()
-            _shared = instance
-            return instance
-        } catch {
-            print("AudioManager: Failed to initialize - creating disabled instance")
-            let disabledInstance = AudioManager()
-            disabledInstance.isDisabled = true
-            _shared = disabledInstance
-            return disabledInstance
-        }
+        let instance = AudioManager()
+        _shared = instance
+        return instance
     }
     
     private var audioRecorder: AVAudioRecorder?

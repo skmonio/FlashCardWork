@@ -1,5 +1,4 @@
 import SwiftUI
-import SpriteKit
 import os
 
 struct TrueFalseQuestion: Hashable {
@@ -42,14 +41,10 @@ struct TrueFalseView: View {
     @State private var showingCloseConfirmation = false
     @State private var isShowingExample = false
     
-    // SpriteKit for confetti celebration (unused, remove if not needed elsewhere)
     @State private var hasAnswered = false
     @State private var selectedAnswer: Bool? = nil
     @State private var showingFeedback = false
     @State private var userAnswer: Bool? = nil
-    
-    // SpriteKit scene for effects
-    @State private var gameScene = GameScene()
     
     // Save state properties
     private var deckIds: [UUID]
@@ -98,6 +93,9 @@ struct TrueFalseView: View {
     
     @State private var selectedCardForEdit: FlashCard? = nil
     @State private var forceRefreshID = UUID()
+    
+    // SpriteKit scene for particle effects
+    @State private var gameScene = GameScene()
     
     init(viewModel: FlashCardViewModel, cards: [FlashCard], deckIds: [UUID] = [], shouldLoadSaveState: Bool = false, studyMode: StudyMode? = nil, maxQuestions: Int? = nil, onLevelComplete: ((LevelResult) -> Void)? = nil) {
         self.viewModel = viewModel

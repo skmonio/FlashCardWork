@@ -214,7 +214,7 @@ struct CardView: View {
         VStack {
             HStack {
                 // Back button on the left
-                if let onGoBack = onGoBack {
+                if let _ = onGoBack {
                     backButton
                         .padding(.leading, 20)
                         .padding(.top, 20)

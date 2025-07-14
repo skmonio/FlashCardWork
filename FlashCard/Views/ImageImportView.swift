@@ -427,11 +427,16 @@ struct ImageImportView: View {
         var importedCount = 0
         for word in selectedWords {
             if !word.suggestedTranslation.isEmpty {
-                let _ = viewModel.addCard(
+                _ = viewModel.addCard(
                     word: word.text,
                     definition: word.suggestedTranslation,
                     example: "",
-                    deckIds: selectedDeckIds
+                    deckIds: selectedDeckIds,
+                    article: "",
+                    plural: "",
+                    pastTense: "",
+                    futureTense: "",
+                    pastParticiple: ""
                 )
                 importedCount += 1
             }

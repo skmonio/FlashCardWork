@@ -98,373 +98,321 @@ extension DutchGrammarRulesDatabase {
                 )
             ],
             exercises: [
-                // Fill-in-the-blank (conjugation)
+                // Sentence Building Exercises
                 GrammarExercise(
-                    question: "Complete: 'Ik ___ morgen naar school gaan' (I will go to school tomorrow)",
-                    options: ["zal", "zullen", "zult"],
+                    question: "Build the sentence: 'I will work tomorrow'",
+                    options: ["Ik", "zal", "morgen", "werken"],
                     correctAnswer: 0,
-                    explanation: "Ik zal morgen naar school gaan - 'ik' uses 'zal'",
-                    hint: "Remember: ik = zal",
-                    exerciseType: .fillInTheBlank
+                    explanation: "Ik zal morgen werken means 'I will work tomorrow'",
+                    hint: "Start with 'Ik' (I)",
+                    exerciseType: .sentenceBuilding,
+                    correctSentence: "Ik zal morgen werken"
                 ),
                 GrammarExercise(
-                    question: "Complete: 'Wij ___ volgende week verhuizen' (We will move next week)",
-                    options: ["zal", "zullen", "zult"],
-                    correctAnswer: 1,
-                    explanation: "Wij zullen volgende week verhuizen - 'wij' uses 'zullen'",
-                    hint: "Remember: wij = zullen",
-                    exerciseType: .fillInTheBlank
+                    question: "Build the sentence: 'We will go to school'",
+                    options: ["Wij", "zullen", "naar", "school", "gaan"],
+                    correctAnswer: 0,
+                    explanation: "Wij zullen naar school gaan means 'We will go to school'",
+                    hint: "Start with 'Wij' (We)",
+                    exerciseType: .sentenceBuilding,
+                    correctSentence: "Wij zullen naar school gaan"
                 ),
                 GrammarExercise(
-                    question: "Complete: 'Hij ___ je bellen' (He will call you)",
-                    options: ["zal", "zullen", "zult"],
+                    question: "Build the sentence: 'She will write a letter'",
+                    options: ["Zij", "zal", "een", "brief", "schrijven"],
                     correctAnswer: 0,
-                    explanation: "Hij zal je bellen - 'hij' uses 'zal'",
-                    hint: "Remember: hij = zal",
-                    exerciseType: .fillInTheBlank
-                ),
-                // Word order multiple choice
-                GrammarExercise(
-                    question: "Choose the correct word order: 'I will go to school tomorrow' (Ik / zal / morgen / naar school / gaan)",
-                    options: [
-                        "Ik zal morgen naar school gaan",
-                        "Zal ik morgen naar school gaan",
-                        "Morgen zal ik naar school gaan"
-                    ],
-                    correctAnswer: 0,
-                    explanation: "Ik zal morgen naar school gaan is the correct word order for a statement.",
-                    hint: "Subject + zal + time + place + infinitive",
-                    exerciseType: .multipleChoice
+                    explanation: "Zij zal een brief schrijven means 'She will write a letter'",
+                    hint: "Start with 'Zij' (She)",
+                    exerciseType: .sentenceBuilding,
+                    correctSentence: "Zij zal een brief schrijven"
                 ),
                 GrammarExercise(
-                    question: "Choose the correct word order: 'We will solve the problem' (Wij / zullen / het probleem / oplossen)",
-                    options: [
-                        "Wij zullen het probleem oplossen",
-                        "Zullen wij het probleem oplossen",
-                        "Het probleem zullen wij oplossen"
-                    ],
+                    question: "Build the sentence: 'They will arrive tomorrow'",
+                    options: ["Zij", "zullen", "morgen", "aankomen"],
                     correctAnswer: 0,
-                    explanation: "Wij zullen het probleem oplossen is the correct word order for a statement.",
-                    hint: "Subject + zullen + object + infinitive",
-                    exerciseType: .multipleChoice
+                    explanation: "Zij zullen morgen aankomen means 'They will arrive tomorrow'",
+                    hint: "Start with 'Zij' (They)",
+                    exerciseType: .sentenceBuilding,
+                    correctSentence: "Zij zullen morgen aankomen"
                 ),
                 GrammarExercise(
-                    question: "Choose the correct word order: 'Will you help me?' (Zal / je / me / helpen)",
-                    options: [
-                        "Zal je me helpen?",
-                        "Je zal me helpen?",
-                        "Me zal je helpen?"
-                    ],
+                    question: "Build the sentence: 'He will call you later'",
+                    options: ["Hij", "zal", "je", "later", "bellen"],
                     correctAnswer: 0,
-                    explanation: "Zal je me helpen? is the correct word order for a yes/no question.",
-                    hint: "Zal/zullen + subject + object + infinitive",
-                    exerciseType: .multipleChoice
+                    explanation: "Hij zal je later bellen means 'He will call you later'",
+                    hint: "Start with 'Hij' (He)",
+                    exerciseType: .sentenceBuilding,
+                    correctSentence: "Hij zal je later bellen"
                 ),
                 GrammarExercise(
-                    question: "Choose the correct word order: 'They will arrive tomorrow' (Zij / zullen / morgen / aankomen)",
-                    options: [
-                        "Zij zullen morgen aankomen",
-                        "Zullen zij morgen aankomen",
-                        "Morgen zullen zij aankomen"
-                    ],
+                    question: "Build the sentence: 'Will you help me?'",
+                    options: ["Zal", "je", "me", "helpen"],
                     correctAnswer: 0,
-                    explanation: "Zij zullen morgen aankomen is the correct word order for a statement.",
-                    hint: "Subject + zullen + time + infinitive",
-                    exerciseType: .multipleChoice
+                    explanation: "Zal je me helpen? means 'Will you help me?'",
+                    hint: "Questions start with 'Zal'",
+                    exerciseType: .sentenceBuilding,
+                    correctSentence: "Zal je me helpen?"
                 ),
                 GrammarExercise(
-                    question: "Choose the correct word order: 'Shall I open the window?' (Zal / ik / het raam / openen)",
-                    options: [
-                        "Zal ik het raam openen?",
-                        "Ik zal het raam openen?",
-                        "Het raam zal ik openen?"
-                    ],
+                    question: "Build the sentence: 'We will solve the problem'",
+                    options: ["Wij", "zullen", "het", "probleem", "oplossen"],
                     correctAnswer: 0,
-                    explanation: "Zal ik het raam openen? is the correct word order for a yes/no question.",
-                    hint: "Zal/zullen + subject + object + infinitive",
-                    exerciseType: .multipleChoice
-                ),
-                
-                // SENTENCE ORDERING EXERCISES - More challenging
-                GrammarExercise(
-                    question: "Arrange the words in correct Dutch word order: 'I will study Dutch tomorrow'",
-                    options: ["Ik zal morgen Nederlands studeren", "Morgen zal ik Nederlands studeren", "Ik zal Nederlands morgen studeren", "Nederlands zal ik morgen studeren"],
-                    correctAnswer: 0,
-                    explanation: "Ik zal morgen Nederlands studeren - Subject + zal + time + object + infinitive",
-                    hint: "Remember: Subject + zal + time + object + infinitive",
-                    exerciseType: .sentenceOrder
+                    explanation: "Wij zullen het probleem oplossen means 'We will solve the problem'",
+                    hint: "Start with 'Wij' (We)",
+                    exerciseType: .sentenceBuilding,
+                    correctSentence: "Wij zullen het probleem oplossen"
                 ),
                 GrammarExercise(
-                    question: "Arrange the words in correct Dutch word order: 'We will visit our grandparents next week'",
-                    options: ["Wij zullen volgende week onze grootouders bezoeken", "Volgende week zullen wij onze grootouders bezoeken", "Wij zullen onze grootouders volgende week bezoeken", "Onze grootouders zullen wij volgende week bezoeken"],
+                    question: "Build the sentence: 'It will rain tomorrow'",
+                    options: ["Het", "zal", "morgen", "regenen"],
                     correctAnswer: 0,
-                    explanation: "Wij zullen volgende week onze grootouders bezoeken - Subject + zullen + time + object + infinitive",
-                    hint: "Remember: Subject + zullen + time + object + infinitive",
-                    exerciseType: .sentenceOrder
+                    explanation: "Het zal morgen regenen means 'It will rain tomorrow'",
+                    hint: "Start with 'Het' (It)",
+                    exerciseType: .sentenceBuilding,
+                    correctSentence: "Het zal morgen regenen"
                 ),
                 GrammarExercise(
-                    question: "Arrange the words in correct Dutch word order: 'Will you come to the party?'",
-                    options: ["Zal je naar het feest komen?", "Je zal naar het feest komen?", "Naar het feest zal je komen?", "Komen zal je naar het feest?"],
+                    question: "Build the sentence: 'Will they come to the party?'",
+                    options: ["Zullen", "zij", "naar", "het", "feest", "komen"],
                     correctAnswer: 0,
-                    explanation: "Zal je naar het feest komen? - Question: zal + subject + prepositional phrase + infinitive",
-                    hint: "Questions start with zal/zullen + subject",
-                    exerciseType: .sentenceOrder
+                    explanation: "Zullen zij naar het feest komen? means 'Will they come to the party?'",
+                    hint: "Questions start with 'Zullen'",
+                    exerciseType: .sentenceBuilding,
+                    correctSentence: "Zullen zij naar het feest komen?"
                 ),
                 GrammarExercise(
-                    question: "Arrange the words in correct Dutch word order: 'She will buy a new car next month'",
-                    options: ["Zij zal volgende maand een nieuwe auto kopen", "Volgende maand zal zij een nieuwe auto kopen", "Zij zal een nieuwe auto volgende maand kopen", "Een nieuwe auto zal zij volgende maand kopen"],
+                    question: "Build the sentence: 'I will study Dutch next week'",
+                    options: ["Ik", "zal", "volgende", "week", "Nederlands", "studeren"],
                     correctAnswer: 0,
-                    explanation: "Zij zal volgende maand een nieuwe auto kopen - Subject + zal + time + object + infinitive",
-                    hint: "Remember: Subject + zal + time + object + infinitive",
-                    exerciseType: .sentenceOrder
+                    explanation: "Ik zal volgende week Nederlands studeren means 'I will study Dutch next week'",
+                    hint: "Start with 'Ik' (I)",
+                    exerciseType: .sentenceBuilding,
+                    correctSentence: "Ik zal volgende week Nederlands studeren"
                 ),
                 GrammarExercise(
-                    question: "Arrange the words in correct Dutch word order: 'They will finish the project on time'",
-                    options: ["Zij zullen het project op tijd afmaken", "Het project zullen zij op tijd afmaken", "Zij zullen op tijd het project afmaken", "Op tijd zullen zij het project afmaken"],
+                    question: "Build the sentence: 'She will buy a new car'",
+                    options: ["Zij", "zal", "een", "nieuwe", "auto", "kopen"],
                     correctAnswer: 0,
-                    explanation: "Zij zullen het project op tijd afmaken - Subject + zullen + object + time + infinitive",
-                    hint: "Remember: Subject + zullen + object + time + infinitive",
-                    exerciseType: .sentenceOrder
+                    explanation: "Zij zal een nieuwe auto kopen means 'She will buy a new car'",
+                    hint: "Start with 'Zij' (She)",
+                    exerciseType: .sentenceBuilding,
+                    correctSentence: "Zij zal een nieuwe auto kopen"
                 ),
                 GrammarExercise(
-                    question: "Arrange the words in correct Dutch word order: 'Shall I help you with your homework?'",
-                    options: ["Zal ik je helpen met je huiswerk?", "Ik zal je helpen met je huiswerk?", "Je zal ik helpen met je huiswerk?", "Helpen zal ik je met je huiswerk?"],
+                    question: "Build the sentence: 'Will you bring the books?'",
+                    options: ["Zal", "je", "de", "boeken", "meenemen"],
                     correctAnswer: 0,
-                    explanation: "Zal ik je helpen met je huiswerk? - Question: zal + subject + object + infinitive + prepositional phrase",
-                    hint: "Questions start with zal/zullen + subject",
-                    exerciseType: .sentenceOrder
+                    explanation: "Zal je de boeken meenemen? means 'Will you bring the books?'",
+                    hint: "Questions start with 'Zal'",
+                    exerciseType: .sentenceBuilding,
+                    correctSentence: "Zal je de boeken meenemen?"
                 ),
                 GrammarExercise(
-                    question: "Arrange the words in correct Dutch word order: 'It will rain tomorrow afternoon'",
-                    options: ["Het zal morgenmiddag regenen", "Morgenmiddag zal het regenen", "Het zal regenen morgenmiddag", "Regenen zal het morgenmiddag"],
+                    question: "Build the sentence: 'They will build a new house'",
+                    options: ["Zij", "zullen", "een", "nieuw", "huis", "bouwen"],
                     correctAnswer: 0,
-                    explanation: "Het zal morgenmiddag regenen - Subject + zal + time + infinitive",
-                    hint: "Remember: Subject + zal + time + infinitive",
-                    exerciseType: .sentenceOrder
+                    explanation: "Zij zullen een nieuw huis bouwen means 'They will build a new house'",
+                    hint: "Start with 'Zij' (They)",
+                    exerciseType: .sentenceBuilding,
+                    correctSentence: "Zij zullen een nieuw huis bouwen"
                 ),
                 GrammarExercise(
-                    question: "Arrange the words in correct Dutch word order: 'We will have dinner at eight o'clock'",
-                    options: ["Wij zullen om acht uur eten", "Om acht uur zullen wij eten", "Wij zullen eten om acht uur", "Eten zullen wij om acht uur"],
+                    question: "Build the sentence: 'He will give you the money'",
+                    options: ["Hij", "zal", "je", "het", "geld", "geven"],
                     correctAnswer: 0,
-                    explanation: "Wij zullen om acht uur eten - Subject + zullen + time + infinitive",
-                    hint: "Remember: Subject + zullen + time + infinitive",
-                    exerciseType: .sentenceOrder
+                    explanation: "Hij zal je het geld geven means 'He will give you the money'",
+                    hint: "Start with 'Hij' (He)",
+                    exerciseType: .sentenceBuilding,
+                    correctSentence: "Hij zal je het geld geven"
                 ),
                 GrammarExercise(
-                    question: "Arrange the words in correct Dutch word order: 'Will they arrive at the station?'",
-                    options: ["Zullen zij op het station aankomen?", "Zij zullen op het station aankomen?", "Op het station zullen zij aankomen?", "Aankomen zullen zij op het station?"],
+                    question: "Build the sentence: 'Will we see each other next week?'",
+                    options: ["Zullen", "wij", "elkaar", "volgende", "week", "zien"],
                     correctAnswer: 0,
-                    explanation: "Zullen zij op het station aankomen? - Question: zullen + subject + prepositional phrase + infinitive",
-                    hint: "Questions start with zal/zullen + subject",
-                    exerciseType: .sentenceOrder
+                    explanation: "Zullen wij elkaar volgende week zien? means 'Will we see each other next week?'",
+                    hint: "Questions start with 'Zullen'",
+                    exerciseType: .sentenceBuilding,
+                    correctSentence: "Zullen wij elkaar volgende week zien?"
                 ),
                 GrammarExercise(
-                    question: "Arrange the words in correct Dutch word order: 'I will call you later'",
-                    options: ["Ik zal je later bellen", "Later zal ik je bellen", "Ik zal bellen je later", "Bellen zal ik je later"],
+                    question: "Build the sentence: 'The train will arrive at 3 PM'",
+                    options: ["De", "trein", "zal", "om", "3", "uur", "aankomen"],
                     correctAnswer: 0,
-                    explanation: "Ik zal je later bellen - Subject + zal + object + time + infinitive",
-                    hint: "Remember: Subject + zal + object + time + infinitive",
-                    exerciseType: .sentenceOrder
+                    explanation: "De trein zal om 3 uur aankomen means 'The train will arrive at 3 PM'",
+                    hint: "Start with 'De trein' (The train)",
+                    exerciseType: .sentenceBuilding,
+                    correctSentence: "De trein zal om 3 uur aankomen"
                 ),
                 GrammarExercise(
-                    question: "Arrange the words in correct Dutch word order: 'She will send you an email'",
-                    options: ["Zij zal je een email sturen", "Je zal zij een email sturen", "Een email zal zij je sturen", "Sturen zal zij je een email"],
+                    question: "Build the sentence: 'I will try to help you'",
+                    options: ["Ik", "zal", "proberen", "je", "te", "helpen"],
                     correctAnswer: 0,
-                    explanation: "Zij zal je een email sturen - Subject + zal + indirect object + direct object + infinitive",
-                    hint: "Remember: Subject + zal + indirect object + direct object + infinitive",
-                    exerciseType: .sentenceOrder
+                    explanation: "Ik zal proberen je te helpen means 'I will try to help you'",
+                    hint: "Start with 'Ik' (I)",
+                    exerciseType: .sentenceBuilding,
+                    correctSentence: "Ik zal proberen je te helpen"
                 ),
                 GrammarExercise(
-                    question: "Arrange the words in correct Dutch word order: 'Will you bring the books to school?'",
-                    options: ["Zal je de boeken naar school meenemen?", "Je zal de boeken naar school meenemen?", "De boeken zal je naar school meenemen?", "Meenemen zal je de boeken naar school?"],
+                    question: "Build the sentence: 'Will you tell me the truth?'",
+                    options: ["Zal", "je", "me", "de", "waarheid", "vertellen"],
                     correctAnswer: 0,
-                    explanation: "Zal je de boeken naar school meenemen? - Question: zal + subject + object + prepositional phrase + infinitive",
-                    hint: "Questions start with zal/zullen + subject",
-                    exerciseType: .sentenceOrder
+                    explanation: "Zal je me de waarheid vertellen? means 'Will you tell me the truth?'",
+                    hint: "Questions start with 'Zal'",
+                    exerciseType: .sentenceBuilding,
+                    correctSentence: "Zal je me de waarheid vertellen?"
                 ),
                 GrammarExercise(
-                    question: "Arrange the words in correct Dutch word order: 'They will build a new house'",
-                    options: ["Zij zullen een nieuw huis bouwen", "Een nieuw huis zullen zij bouwen", "Zij zullen bouwen een nieuw huis", "Bouwen zullen zij een nieuw huis"],
+                    question: "Build the sentence: 'She will make dinner for us'",
+                    options: ["Zij", "zal", "voor", "ons", "eten", "maken"],
                     correctAnswer: 0,
-                    explanation: "Zij zullen een nieuw huis bouwen - Subject + zullen + object + infinitive",
-                    hint: "Remember: Subject + zullen + object + infinitive",
-                    exerciseType: .sentenceOrder
+                    explanation: "Zij zal voor ons eten maken means 'She will make dinner for us'",
+                    hint: "Start with 'Zij' (She)",
+                    exerciseType: .sentenceBuilding,
+                    correctSentence: "Zij zal voor ons eten maken"
                 ),
                 GrammarExercise(
-                    question: "Arrange the words in correct Dutch word order: 'He will give you the money tomorrow'",
-                    options: ["Hij zal je morgen het geld geven", "Morgen zal hij je het geld geven", "Hij zal het geld je morgen geven", "Geven zal hij je morgen het geld"],
+                    question: "Build the sentence: 'They will wait for you at the station'",
+                    options: ["Zij", "zullen", "op", "je", "wachten", "op", "het", "station"],
                     correctAnswer: 0,
-                    explanation: "Hij zal je morgen het geld geven - Subject + zal + indirect object + time + direct object + infinitive",
-                    hint: "Remember: Subject + zal + indirect object + time + direct object + infinitive",
-                    exerciseType: .sentenceOrder
+                    explanation: "Zij zullen op je wachten op het station means 'They will wait for you at the station'",
+                    hint: "Start with 'Zij' (They)",
+                    exerciseType: .sentenceBuilding,
+                    correctSentence: "Zij zullen op je wachten op het station"
                 ),
                 GrammarExercise(
-                    question: "Arrange the words in correct Dutch word order: 'Will we see each other next week?'",
-                    options: ["Zullen wij elkaar volgende week zien?", "Wij zullen elkaar volgende week zien?", "Elkaar zullen wij volgende week zien?", "Zien zullen wij elkaar volgende week?"],
+                    question: "Build the sentence: 'Will he remember our appointment?'",
+                    options: ["Zal", "hij", "onze", "afspraak", "onthouden"],
                     correctAnswer: 0,
-                    explanation: "Zullen wij elkaar volgende week zien? - Question: zullen + subject + object + time + infinitive",
-                    hint: "Questions start with zal/zullen + subject",
-                    exerciseType: .sentenceOrder
+                    explanation: "Zal hij onze afspraak onthouden? means 'Will he remember our appointment?'",
+                    hint: "Questions start with 'Zal'",
+                    exerciseType: .sentenceBuilding,
+                    correctSentence: "Zal hij onze afspraak onthouden?"
                 ),
                 GrammarExercise(
-                    question: "Arrange the words in correct Dutch word order: 'The train will arrive at 3 PM'",
-                    options: ["De trein zal om 3 uur aankomen", "Om 3 uur zal de trein aankomen", "De trein zal aankomen om 3 uur", "Aankomen zal de trein om 3 uur"],
+                    question: "Build the sentence: 'We will start the meeting at 2 PM'",
+                    options: ["Wij", "zullen", "de", "vergadering", "om", "2", "uur", "beginnen"],
                     correctAnswer: 0,
-                    explanation: "De trein zal om 3 uur aankomen - Subject + zal + time + infinitive",
-                    hint: "Remember: Subject + zal + time + infinitive",
-                    exerciseType: .sentenceOrder
+                    explanation: "Wij zullen de vergadering om 2 uur beginnen means 'We will start the meeting at 2 PM'",
+                    hint: "Start with 'Wij' (We)",
+                    exerciseType: .sentenceBuilding,
+                    correctSentence: "Wij zullen de vergadering om 2 uur beginnen"
                 ),
                 GrammarExercise(
-                    question: "Arrange the words in correct Dutch word order: 'I will try to help you'",
-                    options: ["Ik zal proberen je te helpen", "Proberen zal ik je te helpen", "Ik zal je proberen te helpen", "Je zal ik proberen te helpen"],
+                    question: "Build the sentence: 'I will explain everything to you'",
+                    options: ["Ik", "zal", "je", "alles", "uitleggen"],
                     correctAnswer: 0,
-                    explanation: "Ik zal proberen je te helpen - Subject + zal + infinitive + object + te + infinitive",
-                    hint: "Remember: Subject + zal + infinitive + object + te + infinitive",
-                    exerciseType: .sentenceOrder
+                    explanation: "Ik zal je alles uitleggen means 'I will explain everything to you'",
+                    hint: "Start with 'Ik' (I)",
+                    exerciseType: .sentenceBuilding,
+                    correctSentence: "Ik zal je alles uitleggen"
                 ),
                 GrammarExercise(
-                    question: "Arrange the words in correct Dutch word order: 'Will you tell me the truth?'",
-                    options: ["Zal je me de waarheid vertellen?", "Je zal me de waarheid vertellen?", "De waarheid zal je me vertellen?", "Vertellen zal je me de waarheid?"],
+                    question: "Build the sentence: 'Will they understand the problem?'",
+                    options: ["Zullen", "zij", "het", "probleem", "begrijpen"],
                     correctAnswer: 0,
-                    explanation: "Zal je me de waarheid vertellen? - Question: zal + subject + indirect object + direct object + infinitive",
-                    hint: "Questions start with zal/zullen + subject",
-                    exerciseType: .sentenceOrder
+                    explanation: "Zullen zij het probleem begrijpen? means 'Will they understand the problem?'",
+                    hint: "Questions start with 'Zullen'",
+                    exerciseType: .sentenceBuilding,
+                    correctSentence: "Zullen zij het probleem begrijpen?"
                 ),
                 GrammarExercise(
-                    question: "Arrange the words in correct Dutch word order: 'She will make dinner for us'",
-                    options: ["Zij zal voor ons eten maken", "Voor ons zal zij eten maken", "Zij zal eten voor ons maken", "Maken zal zij voor ons eten"],
+                    question: "Build the sentence: 'The weather will be nice tomorrow'",
+                    options: ["Het", "weer", "zal", "morgen", "mooi", "zijn"],
                     correctAnswer: 0,
-                    explanation: "Zij zal voor ons eten maken - Subject + zal + prepositional phrase + object + infinitive",
-                    hint: "Remember: Subject + zal + prepositional phrase + object + infinitive",
-                    exerciseType: .sentenceOrder
+                    explanation: "Het weer zal morgen mooi zijn means 'The weather will be nice tomorrow'",
+                    hint: "Start with 'Het weer' (The weather)",
+                    exerciseType: .sentenceBuilding,
+                    correctSentence: "Het weer zal morgen mooi zijn"
                 ),
                 GrammarExercise(
-                    question: "Arrange the words in correct Dutch word order: 'They will wait for you at the station'",
-                    options: ["Zij zullen op je wachten op het station", "Op het station zullen zij op je wachten", "Zij zullen op het station op je wachten", "Wachten zullen zij op je op het station"],
+                    question: "Build the sentence: 'She will become a doctor'",
+                    options: ["Zij", "zal", "dokter", "worden"],
                     correctAnswer: 0,
-                    explanation: "Zij zullen op je wachten op het station - Subject + zullen + prepositional phrase + infinitive + location",
-                    hint: "Remember: Subject + zullen + prepositional phrase + infinitive + location",
-                    exerciseType: .sentenceOrder
+                    explanation: "Zij zal dokter worden means 'She will become a doctor'",
+                    hint: "Start with 'Zij' (She)",
+                    exerciseType: .sentenceBuilding,
+                    correctSentence: "Zij zal dokter worden"
                 ),
                 GrammarExercise(
-                    question: "Arrange the words in correct Dutch word order: 'Will he remember our appointment?'",
-                    options: ["Zal hij onze afspraak onthouden?", "Hij zal onze afspraak onthouden?", "Onze afspraak zal hij onthouden?", "Onthouden zal hij onze afspraak?"],
+                    question: "Build the sentence: 'Will you be ready on time?'",
+                    options: ["Zal", "je", "op", "tijd", "klaar", "zijn"],
                     correctAnswer: 0,
-                    explanation: "Zal hij onze afspraak onthouden? - Question: zal + subject + object + infinitive",
-                    hint: "Questions start with zal/zullen + subject",
-                    exerciseType: .sentenceOrder
+                    explanation: "Zal je op tijd klaar zijn? means 'Will you be ready on time?'",
+                    hint: "Questions start with 'Zal'",
+                    exerciseType: .sentenceBuilding,
+                    correctSentence: "Zal je op tijd klaar zijn?"
                 ),
                 GrammarExercise(
-                    question: "Arrange the words in correct Dutch word order: 'We will start the meeting at 2 PM'",
-                    options: ["Wij zullen de vergadering om 2 uur beginnen", "Om 2 uur zullen wij de vergadering beginnen", "De vergadering zullen wij om 2 uur beginnen", "Beginnen zullen wij de vergadering om 2 uur"],
+                    question: "Build the sentence: 'They will stay here for a week'",
+                    options: ["Zij", "zullen", "hier", "een", "week", "blijven"],
                     correctAnswer: 0,
-                    explanation: "Wij zullen de vergadering om 2 uur beginnen - Subject + zullen + object + time + infinitive",
-                    hint: "Remember: Subject + zullen + object + time + infinitive",
-                    exerciseType: .sentenceOrder
+                    explanation: "Zij zullen hier een week blijven means 'They will stay here for a week'",
+                    hint: "Start with 'Zij' (They)",
+                    exerciseType: .sentenceBuilding,
+                    correctSentence: "Zij zullen hier een week blijven"
                 ),
                 GrammarExercise(
-                    question: "Arrange the words in correct Dutch word order: 'I will explain everything to you'",
-                    options: ["Ik zal je alles uitleggen", "Je zal ik alles uitleggen", "Alles zal ik je uitleggen", "Uitleggen zal ik je alles"],
+                    question: "Build the sentence: 'I will find a solution to this problem'",
+                    options: ["Ik", "zal", "een", "oplossing", "voor", "dit", "probleem", "vinden"],
                     correctAnswer: 0,
-                    explanation: "Ik zal je alles uitleggen - Subject + zal + indirect object + direct object + infinitive",
-                    hint: "Remember: Subject + zal + indirect object + direct object + infinitive",
-                    exerciseType: .sentenceOrder
+                    explanation: "Ik zal een oplossing voor dit probleem vinden means 'I will find a solution to this problem'",
+                    hint: "Start with 'Ik' (I)",
+                    exerciseType: .sentenceBuilding,
+                    correctSentence: "Ik zal een oplossing voor dit probleem vinden"
                 ),
                 GrammarExercise(
-                    question: "Arrange the words in correct Dutch word order: 'Will they understand the problem?'",
-                    options: ["Zullen zij het probleem begrijpen?", "Zij zullen het probleem begrijpen?", "Het probleem zullen zij begrijpen?", "Begrijpen zullen zij het probleem?"],
+                    question: "Build the sentence: 'Will he agree with our plan?'",
+                    options: ["Zal", "hij", "akkoord", "gaan", "met", "ons", "plan"],
                     correctAnswer: 0,
-                    explanation: "Zullen zij het probleem begrijpen? - Question: zullen + subject + object + infinitive",
-                    hint: "Questions start with zal/zullen + subject",
-                    exerciseType: .sentenceOrder
+                    explanation: "Zal hij akkoord gaan met ons plan? means 'Will he agree with our plan?'",
+                    hint: "Questions start with 'Zal'",
+                    exerciseType: .sentenceBuilding,
+                    correctSentence: "Zal hij akkoord gaan met ons plan?"
                 ),
                 GrammarExercise(
-                    question: "Arrange the words in correct Dutch word order: 'The weather will be nice tomorrow'",
-                    options: ["Het weer zal morgen mooi zijn", "Morgen zal het weer mooi zijn", "Het weer zal mooi morgen zijn", "Zijn zal het weer morgen mooi"],
+                    question: "Build the sentence: 'We will need more time for this project'",
+                    options: ["Wij", "zullen", "meer", "tijd", "nodig", "hebben", "voor", "dit", "project"],
                     correctAnswer: 0,
-                    explanation: "Het weer zal morgen mooi zijn - Subject + zal + time + adjective + zijn",
-                    hint: "Remember: Subject + zal + time + adjective + zijn",
-                    exerciseType: .sentenceOrder
+                    explanation: "Wij zullen meer tijd nodig hebben voor dit project means 'We will need more time for this project'",
+                    hint: "Start with 'Wij' (We)",
+                    exerciseType: .sentenceBuilding,
+                    correctSentence: "Wij zullen meer tijd nodig hebben voor dit project"
                 ),
                 GrammarExercise(
-                    question: "Arrange the words in correct Dutch word order: 'She will become a doctor'",
-                    options: ["Zij zal dokter worden", "Dokter zal zij worden", "Zij zal worden dokter", "Worden zal zij dokter"],
+                    question: "Build the sentence: 'Will she be able to come to the meeting?'",
+                    options: ["Zal", "zij", "naar", "de", "vergadering", "kunnen", "komen"],
                     correctAnswer: 0,
-                    explanation: "Zij zal dokter worden - Subject + zal + profession + worden",
-                    hint: "Remember: Subject + zal + profession + worden",
-                    exerciseType: .sentenceOrder
+                    explanation: "Zal zij naar de vergadering kunnen komen? means 'Will she be able to come to the meeting?'",
+                    hint: "Questions start with 'Zal'",
+                    exerciseType: .sentenceBuilding,
+                    correctSentence: "Zal zij naar de vergadering kunnen komen?"
                 ),
                 GrammarExercise(
-                    question: "Arrange the words in correct Dutch word order: 'Will you be ready on time?'",
-                    options: ["Zal je op tijd klaar zijn?", "Je zal op tijd klaar zijn?", "Op tijd zal je klaar zijn?", "Zijn zal je op tijd klaar?"],
+                    question: "Build the sentence: 'The children will play in the garden'",
+                    options: ["De", "kinderen", "zullen", "in", "de", "tuin", "spelen"],
                     correctAnswer: 0,
-                    explanation: "Zal je op tijd klaar zijn? - Question: zal + subject + time + adjective + zijn",
-                    hint: "Questions start with zal/zullen + subject",
-                    exerciseType: .sentenceOrder
+                    explanation: "De kinderen zullen in de tuin spelen means 'The children will play in the garden'",
+                    hint: "Start with 'De kinderen' (The children)",
+                    exerciseType: .sentenceBuilding,
+                    correctSentence: "De kinderen zullen in de tuin spelen"
                 ),
                 GrammarExercise(
-                    question: "Arrange the words in correct Dutch word order: 'They will stay here for a week'",
-                    options: ["Zij zullen hier een week blijven", "Hier zullen zij een week blijven", "Een week zullen zij hier blijven", "Blijven zullen zij hier een week"],
+                    question: "Build the sentence: 'I will think about your proposal'",
+                    options: ["Ik", "zal", "over", "jouw", "voorstel", "nadenken"],
                     correctAnswer: 0,
-                    explanation: "Zij zullen hier een week blijven - Subject + zullen + location + time + infinitive",
-                    hint: "Remember: Subject + zullen + location + time + infinitive",
-                    exerciseType: .sentenceOrder
+                    explanation: "Ik zal over jouw voorstel nadenken means 'I will think about your proposal'",
+                    hint: "Start with 'Ik' (I)",
+                    exerciseType: .sentenceBuilding,
+                    correctSentence: "Ik zal over jouw voorstel nadenken"
                 ),
                 GrammarExercise(
-                    question: "Arrange the words in correct Dutch word order: 'I will find a solution to this problem'",
-                    options: ["Ik zal een oplossing voor dit probleem vinden", "Een oplossing zal ik voor dit probleem vinden", "Voor dit probleem zal ik een oplossing vinden", "Vinden zal ik een oplossing voor dit probleem"],
+                    question: "Build the sentence: 'Will they remember to bring the documents?'",
+                    options: ["Zullen", "zij", "denken", "aan", "het", "meenemen", "van", "de", "documenten"],
                     correctAnswer: 0,
-                    explanation: "Ik zal een oplossing voor dit probleem vinden - Subject + zal + object + prepositional phrase + infinitive",
-                    hint: "Remember: Subject + zal + object + prepositional phrase + infinitive",
-                    exerciseType: .sentenceOrder
-                ),
-                GrammarExercise(
-                    question: "Arrange the words in correct Dutch word order: 'Will he agree with our plan?'",
-                    options: ["Zal hij akkoord gaan met ons plan?", "Hij zal akkoord gaan met ons plan?", "Met ons plan zal hij akkoord gaan?", "Gaan zal hij akkoord met ons plan?"],
-                    correctAnswer: 0,
-                    explanation: "Zal hij akkoord gaan met ons plan? - Question: zal + subject + akkoord + gaan + prepositional phrase",
-                    hint: "Questions start with zal/zullen + subject",
-                    exerciseType: .sentenceOrder
-                ),
-                GrammarExercise(
-                    question: "Arrange the words in correct Dutch word order: 'We will need more time for this project'",
-                    options: ["Wij zullen meer tijd nodig hebben voor dit project", "Meer tijd zullen wij nodig hebben voor dit project", "Voor dit project zullen wij meer tijd nodig hebben", "Hebben zullen wij meer tijd nodig voor dit project"],
-                    correctAnswer: 0,
-                    explanation: "Wij zullen meer tijd nodig hebben voor dit project - Subject + zullen + object + nodig + hebben + prepositional phrase",
-                    hint: "Remember: Subject + zullen + object + nodig + hebben + prepositional phrase",
-                    exerciseType: .sentenceOrder
-                ),
-                GrammarExercise(
-                    question: "Arrange the words in correct Dutch word order: 'Will she be able to come to the meeting?'",
-                    options: ["Zal zij naar de vergadering kunnen komen?", "Zij zal naar de vergadering kunnen komen?", "Naar de vergadering zal zij kunnen komen?", "Komen zal zij naar de vergadering kunnen?"],
-                    correctAnswer: 0,
-                    explanation: "Zal zij naar de vergadering kunnen komen? - Question: zal + subject + prepositional phrase + kunnen + infinitive",
-                    hint: "Questions start with zal/zullen + subject",
-                    exerciseType: .sentenceOrder
-                ),
-                GrammarExercise(
-                    question: "Arrange the words in correct Dutch word order: 'The children will play in the garden'",
-                    options: ["De kinderen zullen in de tuin spelen", "In de tuin zullen de kinderen spelen", "De kinderen zullen spelen in de tuin", "Spelen zullen de kinderen in de tuin"],
-                    correctAnswer: 0,
-                    explanation: "De kinderen zullen in de tuin spelen - Subject + zullen + location + infinitive",
-                    hint: "Remember: Subject + zullen + location + infinitive",
-                    exerciseType: .sentenceOrder
-                ),
-                GrammarExercise(
-                    question: "Arrange the words in correct Dutch word order: 'I will think about your proposal'",
-                    options: ["Ik zal over jouw voorstel nadenken", "Over jouw voorstel zal ik nadenken", "Jouw voorstel zal ik over nadenken", "Nadenken zal ik over jouw voorstel"],
-                    correctAnswer: 0,
-                    explanation: "Ik zal over jouw voorstel nadenken - Subject + zal + prepositional phrase + infinitive",
-                    hint: "Remember: Subject + zal + prepositional phrase + infinitive",
-                    exerciseType: .sentenceOrder
-                ),
-                GrammarExercise(
-                    question: "Arrange the words in correct Dutch word order: 'Will they remember to bring the documents?'",
-                    options: ["Zullen zij denken aan het meenemen van de documenten?", "Zij zullen denken aan het meenemen van de documenten?", "Aan het meenemen zullen zij denken van de documenten?", "Denken zullen zij aan het meenemen van de documenten?"],
-                    correctAnswer: 0,
-                    explanation: "Zullen zij denken aan het meenemen van de documenten? - Question: zullen + subject + infinitive + prepositional phrase",
-                    hint: "Questions start with zal/zullen + subject",
-                    exerciseType: .sentenceOrder
+                    explanation: "Zullen zij denken aan het meenemen van de documenten? means 'Will they remember to bring the documents?'",
+                    hint: "Questions start with 'Zullen'",
+                    exerciseType: .sentenceBuilding,
+                    correctSentence: "Zullen zij denken aan het meenemen van de documenten?"
                 )
             ],
             commonMistakes: [

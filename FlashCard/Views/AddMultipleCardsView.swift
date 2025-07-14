@@ -255,7 +255,7 @@ struct AddMultipleCardsView: View {
             
             logger.debug("Adding card - Word: \(trimmedWord), Translation: \(trimmedDefinition)")
             
-            let _ = viewModel.addCard(
+            _ = viewModel.addCard(
                 word: trimmedWord,
                 definition: trimmedDefinition,
                 example: trimmedExample,

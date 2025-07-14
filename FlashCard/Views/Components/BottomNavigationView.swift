@@ -79,10 +79,9 @@ struct BottomNavigationView: View {
 }
 
 #Preview {
-    @State var selectedTab = BottomNavigationView.TabItem.home
-    return BottomNavigationView(
+    BottomNavigationView(
         viewModel: FlashCardViewModel(),
-        selectedTab: $selectedTab,
+        selectedTab: .constant(.home),
         onNavigate: { _ in }
     )
 } 

@@ -480,18 +480,14 @@ class CloudKitManager: ObservableObject {
                     if localDeck.lastModified > existingDeck.lastModified {
                         var updatedDeck = localDeck
                         // Merge card collections from both decks (avoid duplicates)
-                        let localCardIds = Set(localDeck.cards.map { $0.id })
-                        let cloudCardIds = Set(existingDeck.cards.map { $0.id })
-                        let uniqueCloudCards = existingDeck.cards.filter { !localCardIds.contains($0.id) }
+                        let uniqueCloudCards = existingDeck.cards.filter { !localDeck.cards.map { $0.id }.contains($0.id) }
                         updatedDeck.cards = localDeck.cards + uniqueCloudCards
                         mergedDecksDict[existingDeck.id] = updatedDeck
                         logger.info("🔄 Merged system deck '\(localDeck.name)' - kept newer version with merged cards")
                     } else {
                         // Cloud version is newer, but merge card collections
                         var updatedDeck = existingDeck
-                        let localCardIds = Set(localDeck.cards.map { $0.id })
-                        let cloudCardIds = Set(existingDeck.cards.map { $0.id })
-                        let uniqueLocalCards = localDeck.cards.filter { !cloudCardIds.contains($0.id) }
+                        let uniqueLocalCards = localDeck.cards.filter { !existingDeck.cards.map { $0.id }.contains($0.id) }
                         updatedDeck.cards = existingDeck.cards + uniqueLocalCards
                         mergedDecksDict[existingDeck.id] = updatedDeck
                         logger.info("🔄 Merged system deck '\(localDeck.name)' - kept cloud version with merged cards")

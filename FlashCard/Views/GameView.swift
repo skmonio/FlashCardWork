@@ -413,7 +413,7 @@ struct GameView: View {
     private func setupGame() {
         // For progressive study, always use 10 pairs (20 cards) per level
         let cardsToUse: [FlashCard]
-        if let maxQuestions = maxQuestions {
+        if maxQuestions != nil {
             // Always use 10 pairs (20 cards) for progressive study
             let targetPairs = 10
             let availableCards = Array(cards.prefix(targetPairs))
@@ -710,7 +710,7 @@ struct GameView: View {
                     },
                     onReviewUnknown: {
                         // Filter cards to only incorrect ones and restart
-                        let incorrectCardObjects = cards.filter { incorrectCards.contains($0.id) }
+                        _ = cards.filter { incorrectCards.contains($0.id) }
                         // For memory game, we need to create a new GameView with the incorrect cards
                         // This is a bit complex since we need to reconstruct the game state
                         // For now, just restart with the same cards

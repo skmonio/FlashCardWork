@@ -264,7 +264,7 @@ struct MultipleChoiceView: View {
     }
     
     private func setupCurrentQuestion() {
-        guard let card = currentCard else {
+        guard let _ = currentCard else {
             // Reset state if no card is available
             selectedAnswer = nil
             hasAnswered = false

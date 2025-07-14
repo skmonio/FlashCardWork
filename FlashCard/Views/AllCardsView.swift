@@ -469,7 +469,7 @@ struct AllCardsView: View {
                 cardToDelete = nil
             }
         } message: {
-            if let card = cardToDelete {
+            if let _ = cardToDelete {
                 Text("This card exists in multiple decks. Would you like to remove it from selected decks or from all decks?")
             }
         }

@@ -510,7 +510,7 @@ struct AddCardView: View {
         
         logger.debug("Attempting to save card...")
         
-        let newCard = viewModel.addCard(
+        _ = viewModel.addCard(
             word: trimmedWord,
             definition: trimmedDefinition,
             example: trimmedExample,

@@ -765,7 +765,7 @@ struct LessonDetailView: View {
                                         .onTapGesture {
                                             if !showFeedback {
                                                 // Remove word from sentence
-                                                let removedWord = selectedWords.remove(at: index)
+                                                _ = selectedWords.remove(at: index)
                                                 // No need to update availableWords, grid will update automatically
                                             }
                                         }
