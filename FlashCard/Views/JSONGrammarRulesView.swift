@@ -7,6 +7,7 @@ struct JSONGrammarRulesView: View {
     @State private var selectedLevel: LanguageLevel = .a1
     @State private var selectedRule: GrammarRuleData? = nil
     @State private var showingExercises = false
+    @State private var showingRuleDetail = false
     @State private var currentExerciseIndex = 0
     @State private var selectedAnswer: Int? = nil
     @State private var showingAnswer = false
@@ -18,7 +19,7 @@ struct JSONGrammarRulesView: View {
     @State private var questionAnswers: [Int: Int] = [:]
     @State private var questionScores: [Int: Bool] = [:]
     @State private var showingLeaveConfirmation = false
-    @State private var shuffledExercises: [GrammarExercise] = []
+    @State private var shuffledExercises: [GrammarQuestionItem] = []
     @State private var shuffledOptions: [[String]] = []
     @State private var correctAnswerMapping: [Int: Int] = [:]
     @State private var allQuestionsAnswered = false
@@ -62,6 +63,9 @@ struct JSONGrammarRulesView: View {
                         } else {
                             showingLeaveConfirmation = true
                         }
+                    } else if showingRuleDetail {
+                        showingRuleDetail = false
+                        selectedRule = nil
                     } else {
                         NavigationCoordinator.shared.pop()
                     }
@@ -85,6 +89,8 @@ struct JSONGrammarRulesView: View {
                 errorView
             } else if showingEndScreen {
                 endScreenContent
+            } else if showingRuleDetail {
+                ruleDetailView
             } else if showingExercises {
                 exerciseContent
             } else {
@@ -96,6 +102,7 @@ struct JSONGrammarRulesView: View {
         .alert("Leave Exercise?", isPresented: $showingLeaveConfirmation) {
             Button("Leave", role: .destructive) {
                 showingExercises = false
+                showingRuleDetail = false
                 selectedRule = nil
             }
             Button("Continue Exercise", role: .cancel) { }
@@ -106,16 +113,20 @@ struct JSONGrammarRulesView: View {
             Button("Save & Exit", role: .destructive) {
                 saveCurrentProgress()
                 showingExercises = false
+                showingRuleDetail = false
                 selectedRule = nil
             }
             Button("Exit without saving", role: .destructive) {
                 clearSavedProgress()
                 showingExercises = false
+                showingRuleDetail = false
                 selectedRule = nil
             }
             Button("Continue Exercise", role: .cancel) { }
         } message: {
-            Text("Do you want to save your progress and continue later, or exit without saving?")
+            Text(hasSignificantProgress ? 
+                "Would you like to save your progress and continue later, or exit without saving?" : 
+                "Are you sure you want to exit?")
         }
         .sheet(isPresented: $showingExportSheet) {
             exportSheet()
@@ -209,7 +220,7 @@ struct JSONGrammarRulesView: View {
                     ForEach(filteredRules, id: \.id) { rule in
                         GrammarRuleCard(rule: rule) {
                             selectedRule = rule
-                            startExercise()
+                            showingRuleDetail = true
                         }
                     }
                 }
@@ -219,40 +230,206 @@ struct JSONGrammarRulesView: View {
         }
     }
     
+    // MARK: - Rule Detail View
+    
+    private var ruleDetailView: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                if let rule = selectedRule {
+                    // Rule Title and Level
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Text(rule.title)
+                                .font(.title2)
+                                .fontWeight(.bold)
+                            
+                            Spacer()
+                            
+                            Text(rule.level.uppercased())
+                                .font(.caption)
+                                .fontWeight(.medium)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(levelColor(rule.level).opacity(0.2))
+                                .foregroundColor(levelColor(rule.level))
+                                .cornerRadius(12)
+                        }
+                        
+                        Text(rule.type.replacingOccurrences(of: "_", with: " ").capitalized)
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    // Rule Explanation
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Explanation")
+                            .font(.headline)
+                            .fontWeight(.semibold)
+                        
+                        Text(rule.explanation)
+                            .font(.body)
+                            .lineSpacing(2)
+                    }
+                    
+                    // Key Points
+                    if !rule.keyPoints.isEmpty {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Key Points")
+                                .font(.headline)
+                                .fontWeight(.semibold)
+                            
+                            VStack(alignment: .leading, spacing: 8) {
+                                ForEach(Array(rule.keyPoints.enumerated()), id: \.offset) { index, point in
+                                    HStack(alignment: .top, spacing: 8) {
+                                        Text("•")
+                                            .foregroundColor(.blue)
+                                            .fontWeight(.medium)
+                                        Text(point)
+                                            .font(.body)
+                                            .lineSpacing(2)
+                                    }
+                                }
+                            }
+                            .padding(.vertical, 8)
+                        }
+                    }
+                    
+                    // Examples
+                    if !rule.examples.isEmpty {
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("Examples")
+                                .font(.headline)
+                                .fontWeight(.semibold)
+                            
+                            VStack(spacing: 12) {
+                                ForEach(Array(rule.examples.enumerated()), id: \.offset) { index, example in
+                                    VStack(spacing: 0) {
+                                        // Dutch sentence (top section)
+                                        HStack {
+                                            VStack(alignment: .leading, spacing: 4) {
+                                                HStack {
+                                                    Image(systemName: "quote.bubble.fill")
+                                                        .font(.caption)
+                                                        .foregroundColor(.blue)
+                                                    Text("Dutch")
+                                                        .font(.caption)
+                                                        .fontWeight(.medium)
+                                                        .foregroundColor(.blue)
+                                                }
+                                                
+                                                Text(example.dutch)
+                                                    .font(.body)
+                                                    .fontWeight(.medium)
+                                                    .foregroundColor(.primary)
+                                            }
+                                            Spacer()
+                                        }
+                                        .padding()
+                                        .background(Color.blue.opacity(0.08))
+                                        
+                                        // English translation (bottom section)
+                                        HStack {
+                                            VStack(alignment: .leading, spacing: 4) {
+                                                HStack {
+                                                    Image(systemName: "globe")
+                                                        .font(.caption)
+                                                        .foregroundColor(.green)
+                                                    Text("English")
+                                                        .font(.caption)
+                                                        .fontWeight(.medium)
+                                                        .foregroundColor(.green)
+                                                }
+                                                
+                                                Text(example.english)
+                                                    .font(.body)
+                                                    .foregroundColor(.secondary)
+                                            }
+                                            Spacer()
+                                        }
+                                        .padding()
+                                        .background(Color.green.opacity(0.08))
+                                        
+                                        // Breakdown (if available)
+                                        if !example.breakdown.isEmpty {
+                                            HStack {
+                                                VStack(alignment: .leading, spacing: 4) {
+                                                    HStack {
+                                                        Image(systemName: "lightbulb.fill")
+                                                            .font(.caption)
+                                                            .foregroundColor(.orange)
+                                                        Text("Breakdown")
+                                                            .font(.caption)
+                                                            .fontWeight(.medium)
+                                                            .foregroundColor(.orange)
+                                                    }
+                                                    
+                                                    Text(example.breakdown)
+                                                        .font(.caption)
+                                                        .foregroundColor(.orange)
+                                                        .italic()
+                                                }
+                                                Spacer()
+                                            }
+                                            .padding()
+                                            .background(Color.orange.opacity(0.08))
+                                        }
+                                    }
+                                    .cornerRadius(12)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Start Exercise Button
+                    Button(action: {
+                        startExercise()
+                    }) {
+                        HStack {
+                            Text("Start Exercise")
+                                .font(.title3)
+                                .fontWeight(.semibold)
+                            
+                            Spacer()
+                            
+                            Text("\(rule.questions.count) questions")
+                                .font(.subheadline)
+                                .foregroundColor(.white.opacity(0.8))
+                        }
+                        .padding()
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(12)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                    .padding(.top, 8)
+                }
+            }
+            .padding()
+        }
+    }
+    
+    private func levelColor(_ level: String) -> Color {
+        switch level.uppercased() {
+        case "A1": return .green
+        case "A2": return .blue
+        case "B1": return .orange
+        case "B2": return .red
+        default: return .gray
+        }
+    }
+    
     // MARK: - Exercise Content
     
     private var exerciseContent: some View {
         VStack(spacing: 0) {
-            // Exercise Header
-            HStack {
-                Button("Exit") {
-                    if hasSignificantProgress {
-                        showingCloseConfirmation = true
-                    } else {
-                        showingLeaveConfirmation = true
-                    }
-                }
-                .foregroundColor(.red)
-                
-                Spacer()
-                
-                Text("\(currentExerciseIndex + 1) / \(shuffledExercises.count)")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                
-                Spacer()
-                
-                Button("Hint") {
-                    // Show hint if available
-                }
-                .foregroundColor(.blue)
-                .disabled(shuffledExercises.isEmpty || currentExerciseIndex >= shuffledExercises.count)
-            }
-            .padding()
-            
-            // Progress Bar
-            ProgressView(value: Double(currentExerciseIndex), total: Double(shuffledExercises.count))
+            // Lesson-style progress bar
+            LessonProgressBar(completedQuestions: currentExerciseIndex + 1, total: shuffledExercises.count)
                 .padding(.horizontal)
+                .padding(.bottom, 16)
             
             // Question Content
             if !shuffledExercises.isEmpty && currentExerciseIndex < shuffledExercises.count {
@@ -260,65 +437,136 @@ struct JSONGrammarRulesView: View {
                 let options = shuffledOptions.isEmpty ? exercise.options : shuffledOptions[currentExerciseIndex]
                 
                 VStack(spacing: 20) {
+                    // Question prompt
                     Text(exercise.question)
-                        .font(.title3)
-                        .fontWeight(.medium)
+                        .font(.title2)
+                        .fontWeight(.bold)
                         .multilineTextAlignment(.center)
-                        .padding()
+                        .padding(.horizontal)
                     
+                    // Hint if available and not showing answer
+                    if let hint = exercise.hint, !showingAnswer {
+                        Text("💡 \(hint)")
+                            .font(.subheadline)
+                            .foregroundColor(.blue)
+                            .padding(.horizontal)
+                    }
+                    
+                    // Answer options
                     VStack(spacing: 12) {
                         ForEach(Array(options.enumerated()), id: \.offset) { index, option in
                             Button(action: {
-                                selectedAnswer = index
+                                if !showingAnswer {
+                                    selectedAnswer = index
+                                    checkAnswer()
+                                }
                             }) {
                                 HStack {
                                     Text(option)
                                         .multilineTextAlignment(.leading)
                                     Spacer()
-                                    if selectedAnswer == index {
+                                    
+                                    if showingAnswer {
+                                        let correctAnswer = correctAnswerMapping[currentExerciseIndex] ?? shuffledExercises[currentExerciseIndex].correctAnswer
+                                        
+                                        if index == correctAnswer {
+                                            // Correct answer - show green checkmark
+                                            Image(systemName: "checkmark.circle.fill")
+                                                .foregroundColor(.white)
+                                        } else if selectedAnswer == index {
+                                            // Selected wrong answer - show red X
+                                            Image(systemName: "xmark.circle.fill")
+                                                .foregroundColor(.white)
+                                        }
+                                    } else if selectedAnswer == index {
+                                        // Selected but not yet checked
                                         Image(systemName: "checkmark.circle.fill")
                                             .foregroundColor(.blue)
                                     }
                                 }
                                 .padding()
-                                .background(selectedAnswer == index ? Color.blue.opacity(0.1) : Color.gray.opacity(0.1))
+                                .background(
+                                    showingAnswer ? 
+                                        answerButtonColor(index: index, correctAnswer: correctAnswerMapping[currentExerciseIndex] ?? shuffledExercises[currentExerciseIndex].correctAnswer) :
+                                        (selectedAnswer == index ? Color.blue.opacity(0.1) : Color.gray.opacity(0.1))
+                                )
                                 .cornerRadius(10)
                             }
                             .buttonStyle(PlainButtonStyle())
+                            .disabled(showingAnswer)
                         }
                     }
                     .padding(.horizontal)
                     
+                    // Feedback section (lesson-style) - shown immediately after selection
                     if showingAnswer {
-                        VStack(spacing: 8) {
-                            Text(exercise.explanation)
-                                .font(.body)
-                                .foregroundColor(.secondary)
-                                .multilineTextAlignment(.center)
-                                .padding()
-                                .background(Color.gray.opacity(0.1))
-                                .cornerRadius(10)
-                            
-                            Button("Next Question") {
-                                nextQuestion()
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .disabled(currentExerciseIndex >= shuffledExercises.count - 1)
-                        }
-                        .padding(.horizontal)
-                    } else {
-                        Button("Check Answer") {
-                            checkAnswer()
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .disabled(selectedAnswer == nil)
-                        .padding(.horizontal)
+                        feedbackView(exercise: exercise)
                     }
                 }
             }
             
             Spacer()
         }
+        .padding(.top)
+    }
+    
+    // MARK: - Feedback View (Lesson-style)
+    
+    private func feedbackView(exercise: GrammarQuestionItem) -> some View {
+        VStack(alignment: .leading, spacing: 16) {
+            // Explanation
+            Text(exercise.explanation)
+                .font(.body)
+                .foregroundColor(.secondary)
+                .padding()
+                .background(Color.gray.opacity(0.1))
+                .cornerRadius(10)
+                .padding(.horizontal)
+            
+            // Navigation buttons (Previous and Next/Finish) - Lesson style
+            HStack(spacing: 12) {
+                Button(action: {
+                    if currentExerciseIndex > 0 {
+                        currentExerciseIndex -= 1
+                        selectedAnswer = questionAnswers[currentExerciseIndex]
+                        showingAnswer = questionAnswers[currentExerciseIndex] != nil
+                    }
+                }) {
+                    Text("Previous")
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(currentExerciseIndex == 0 ? Color.gray.opacity(0.3) : Color.gray.opacity(0.2))
+                        .foregroundColor(currentExerciseIndex == 0 ? .gray : .blue)
+                        .cornerRadius(8)
+                }
+                .buttonStyle(PlainButtonStyle())
+                .disabled(currentExerciseIndex == 0)
+                
+                Button(action: {
+                    if currentExerciseIndex < shuffledExercises.count - 1 {
+                        currentExerciseIndex += 1
+                        selectedAnswer = questionAnswers[currentExerciseIndex]
+                        showingAnswer = questionAnswers[currentExerciseIndex] != nil
+                    } else {
+                        // Exercise complete
+                        finalScore = exerciseScore
+                        totalQuestions = shuffledExercises.count
+                        showingExercises = false
+                        showingEndScreen = true
+                    }
+                }) {
+                    Text(currentExerciseIndex < shuffledExercises.count - 1 ? "Next" : "Finish")
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
+                }
+                .buttonStyle(PlainButtonStyle())
+            }
+            .padding(.horizontal)
+        }
+        .padding(.top)
     }
     
     // MARK: - End Screen Content
@@ -365,6 +613,7 @@ struct JSONGrammarRulesView: View {
         shuffledOptions = shuffledOpts
         correctAnswerMapping = answerMapping
         
+        showingRuleDetail = false
         showingExercises = true
         currentExerciseIndex = 0
         selectedAnswer = nil
@@ -394,21 +643,8 @@ struct JSONGrammarRulesView: View {
         showingAnswer = true
     }
     
-    private func nextQuestion() {
-        if currentExerciseIndex < shuffledExercises.count - 1 {
-            currentExerciseIndex += 1
-            selectedAnswer = nil
-            showingAnswer = false
-        } else {
-            // Exercise complete
-            finalScore = exerciseScore
-            totalQuestions = shuffledExercises.count
-            showingEndScreen = true
-        }
-    }
-    
-    private func shuffleExerciseOptions(_ exercises: [GrammarExercise]) -> ([GrammarExercise], [[String]], [Int: Int]) {
-        var shuffledExercises: [GrammarExercise] = []
+    private func shuffleExerciseOptions(_ exercises: [GrammarQuestionItem]) -> ([GrammarQuestionItem], [[String]], [Int: Int]) {
+        var shuffledExercises: [GrammarQuestionItem] = []
         var shuffledOptions: [[String]] = []
         var answerMapping: [Int: Int] = [:]
         
@@ -435,6 +671,19 @@ struct JSONGrammarRulesView: View {
     
     private func clearSavedProgress() {
         // Implementation for clearing saved progress
+    }
+    
+    private func answerButtonColor(index: Int, correctAnswer: Int) -> Color {
+        if index == correctAnswer {
+            // Correct answer - green
+            return Color.green.opacity(0.8)
+        } else if selectedAnswer == index {
+            // Selected wrong answer - red
+            return Color.red.opacity(0.8)
+        } else {
+            // Unselected options - gray
+            return Color.gray.opacity(0.1)
+        }
     }
 }
 

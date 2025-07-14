@@ -1,4 +1,9 @@
 {
+  "metadata": {
+    "version": "2.0",
+    "lastUpdated": "2024-12-19",
+    "description": "Comprehensive Dutch grammar learning system with advanced exercise types"
+  },
   "grammar_rules": [
     {
       "id": "present_tense_a1",
@@ -32,34 +37,165 @@
       ],
       "questions": [
         {
+          "id": "pt_1",
           "question": "Conjugation of 'maken' (to make): Ik ... elke dag huiswerk.",
           "options": ["maak", "maakt", "maken", "maakte"],
-          "correct_answer": 0,
-          "explanation": "For 'ik' use only the stem: maak (maken - en = maak)"
+          "correctAnswer": 0,
+          "explanation": "For 'ik' use only the stem: maak (maken - en = maak)",
+          "hint": "Remember: 'ik' gets no ending",
+          "difficulty": "easy",
+          "tags": ["present_tense", "regular_verbs", "ik_form"],
+          "exerciseType": "multiple_choice"
         },
         {
+          "id": "pt_2",
           "question": "Conjugation of 'wonen' (to live): Hij ... in Utrecht.",
           "options": ["woon", "woont", "wonen", "woonde"],
-          "correct_answer": 1,
-          "explanation": "For 'hij' use stem + t: woon + t = woont"
+          "correctAnswer": 1,
+          "explanation": "For 'hij' use stem + t: woon + t = woont",
+          "hint": "Third person singular gets -t ending",
+          "difficulty": "easy",
+          "tags": ["present_tense", "regular_verbs", "hij_form"],
+          "exerciseType": "multiple_choice"
         },
         {
-          "question": "Conjugation of 'studeren' (to study): Wij ... aan de universiteit.",
-          "options": ["studeer", "studeert", "studeren", "studeerde"],
-          "correct_answer": 2,
-          "explanation": "For 'wij' use the whole verb: studeren"
+          "id": "pt_3",
+          "question": "Build the sentence: 'Ik / maken / huiswerk'",
+          "options": ["Ik maak huiswerk", "Ik maakt huiswerk", "Ik maken huiswerk", "Ik maakte huiswerk"],
+          "correctAnswer": 0,
+          "explanation": "Ik maak huiswerk - 'ik' form uses stem only",
+          "hint": "Arrange the words and conjugate 'maken' for 'ik'",
+          "difficulty": "medium",
+          "tags": ["present_tense", "sentence_building", "word_order"],
+          "exerciseType": "sentence_building"
         },
         {
-          "question": "Conjugation of 'spelen' (to play): Jij ... voetbal.",
-          "options": ["speel", "speelt", "spelen", "speelde"],
-          "correct_answer": 1,
-          "explanation": "For 'jij' use stem + t: speel + t = speelt"
+          "id": "pt_4",
+          "question": "Fill in the blank: 'Jij ___ Nederlands leren' (You learn Dutch)",
+          "options": ["leer", "leert", "leren", "leerde"],
+          "correctAnswer": 1,
+          "explanation": "Jij leert Nederlands - 'jij' form uses stem + t",
+          "hint": "Second person singular gets -t ending",
+          "difficulty": "medium",
+          "tags": ["present_tense", "fill_blank", "jij_form"],
+          "exerciseType": "fill_blank"
         },
         {
-          "question": "How do you ask 'Do you work?' in Dutch?",
-          "options": ["Werk jij?", "Werkt jij?", "Werk je?", "Werkt je?"],
+          "id": "pt_5",
+          "question": "Conjugate 'spelen' for 'wij': ___ voetbal",
+          "options": ["Wij speel", "Wij speelt", "Wij spelen", "Wij speelden"],
+          "correctAnswer": 2,
+          "explanation": "Wij spelen voetbal - plural uses infinitive form",
+          "hint": "Plural subjects use the whole verb",
+          "difficulty": "easy",
+          "tags": ["present_tense", "plural_forms", "wij_form"],
+          "exerciseType": "verb_conjugation"
+        }
+      ]
+    },
+    {
+      "id": "future_tense_zal_zullen_a2",
+      "title": "Future Tense - Zal and Zullen (A2)",
+      "type": "tenses",
+      "level": "A2",
+      "explanation": "In Dutch, the future tense is formed using the auxiliary verbs 'zal' and 'zullen' combined with the infinitive of the main verb. This is similar to English 'will' and 'shall'.",
+      "key_points": [
+        "Zal = will/shall (singular: ik, hij/zij/het)",
+        "Zullen = will/shall (plural: wij, jullie, zij)",
+        "Jij/je can use both 'zult' (formal) and 'zal' (informal)",
+        "Always use infinitive of main verb after zal/zullen",
+        "Word order: Subject + zal/zullen + infinitive",
+        "Used for future plans, predictions, promises",
+        "Similar to English 'will' and 'shall'",
+        "Common in everyday Dutch conversation"
+      ],
+      "examples": [
+        {
+          "dutch": "Ik zal morgen naar Amsterdam gaan.",
+          "english": "I will go to Amsterdam tomorrow.",
+          "breakdown": "Subject (Ik) + zal + infinitive (gaan) + time + place"
+        },
+        {
+          "dutch": "Zij zullen volgende week verhuizen.",
+          "english": "They will move next week.",
+          "breakdown": "Subject (Zij) + zullen + infinitive (verhuizen) + time"
+        },
+        {
+          "dutch": "Het zal morgen regenen.",
+          "english": "It will rain tomorrow.",
+          "breakdown": "Subject (Het) + zal + infinitive (regenen) + time"
+        },
+        {
+          "dutch": "Wij zullen het probleem oplossen.",
+          "english": "We will solve the problem.",
+          "breakdown": "Subject (Wij) + zullen + object + infinitive (oplossen)"
+        },
+        {
+          "dutch": "Zal ik de deur voor je openen?",
+          "english": "Shall I open the door for you?",
+          "breakdown": "Question: zal + subject (ik) + object + infinitive (openen)"
+        }
+      ],
+      "questions": [
+        {
+          "question": "Complete: 'Ik ___ morgen werken' (I will work tomorrow)",
+          "options": ["zal", "zullen", "zult", "ga"],
           "correct_answer": 0,
-          "explanation": "Werk jij? - In questions with 'jij', the verb doesn't get an extra -t"
+          "explanation": "Ik zal morgen werken - 'ik' uses 'zal' for future tense"
+        },
+        {
+          "question": "Complete: 'Wij ___ naar school gaan' (We will go to school)",
+          "options": ["zal", "zullen", "zult", "gaan"],
+          "correct_answer": 1,
+          "explanation": "Wij zullen naar school gaan - 'wij' uses 'zullen' for future tense"
+        },
+        {
+          "question": "Complete: 'Zij ___ een brief schrijven' (She will write a letter)",
+          "options": ["zal", "zullen", "zult", "schrijft"],
+          "correct_answer": 0,
+          "explanation": "Zij zal een brief schrijven - 'zij' (singular) uses 'zal'"
+        },
+        {
+          "question": "Complete: 'Zij ___ morgen aankomen' (They will arrive tomorrow)",
+          "options": ["zal", "zullen", "zult", "komen"],
+          "correct_answer": 1,
+          "explanation": "Zij zullen morgen aankomen - 'zij' (plural) uses 'zullen'"
+        },
+        {
+          "question": "Complete: '___ je me helpen?' (Will you help me?)",
+          "options": ["Zal", "Zullen", "Zult", "Ga"],
+          "correct_answer": 0,
+          "explanation": "Zal je me helpen? - Questions start with 'zal' for 'je'"
+        },
+        {
+          "question": "Complete: 'Hij ___ je later bellen' (He will call you later)",
+          "options": ["zal", "zullen", "zult", "belt"],
+          "correct_answer": 0,
+          "explanation": "Hij zal je later bellen - 'hij' uses 'zal' for future tense"
+        },
+        {
+          "question": "Complete: 'Wij ___ het probleem oplossen' (We will solve the problem)",
+          "options": ["zal", "zullen", "zult", "lossen"],
+          "correct_answer": 1,
+          "explanation": "Wij zullen het probleem oplossen - 'wij' uses 'zullen'"
+        },
+        {
+          "question": "Complete: 'Het ___ morgen regenen' (It will rain tomorrow)",
+          "options": ["zal", "zullen", "zult", "regent"],
+          "correct_answer": 0,
+          "explanation": "Het zal morgen regenen - 'het' uses 'zal' for future tense"
+        },
+        {
+          "question": "Complete: '___ zij naar het feest komen?' (Will they come to the party?)",
+          "options": ["Zal", "Zullen", "Zult", "Gaan"],
+          "correct_answer": 1,
+          "explanation": "Zullen zij naar het feest komen? - Questions with 'zij' (plural) start with 'zullen'"
+        },
+        {
+          "question": "Complete: 'Ik ___ volgende week Nederlands studeren' (I will study Dutch next week)",
+          "options": ["zal", "zullen", "zult", "studeer"],
+          "correct_answer": 0,
+          "explanation": "Ik zal volgende week Nederlands studeren - 'ik' uses 'zal'"
         }
       ]
     },
@@ -681,6 +817,104 @@
           "options": ["regent", "regen", "regenen", "geregend"],
           "correct_answer": 0,
           "explanation": "Ik denk dat het regent - in subordinate clause, verb goes to the end"
+        }
+      ]
+    },
+    {
+      "id": "sentence_structure_a1",
+      "title": "Basic Sentence Structure (A1)",
+      "type": "word_order",
+      "level": "A1",
+      "explanation": "Dutch has a specific word order: Subject + Verb + Object + Time + Place. The verb always comes in the second position in main clauses.",
+      "key_points": [
+        "Subject + Verb + Object + Time + Place",
+        "Verb always in second position",
+        "Time expressions can move to first position",
+        "Place expressions come at the end"
+      ],
+      "examples": [
+        {
+          "dutch": "Ik lees een boek.",
+          "english": "I read a book.",
+          "breakdown": "Subject (Ik) + Verb (lees) + Object (een boek)"
+        },
+        {
+          "dutch": "Morgen ga ik naar school.",
+          "english": "Tomorrow I go to school.",
+          "breakdown": "Time (Morgen) + Verb (ga) + Subject (ik) + Place (naar school)"
+        }
+      ],
+      "questions": [
+        {
+          "id": "ss_1",
+          "question": "Arrange the words: 'lezen / ik / een / boek'",
+          "options": ["Ik lezen een boek", "Ik een boek lezen", "Ik lees een boek", "Lezen ik een boek"],
+          "correctAnswer": 2,
+          "explanation": "Ik lees een boek - Subject + Verb + Object",
+          "hint": "Remember: Subject first, then verb",
+          "difficulty": "easy",
+          "tags": ["word_order", "basic_structure"],
+          "exerciseType": "sentence_building"
+        },
+        {
+          "id": "ss_2",
+          "question": "Arrange the words: 'morgen / ik / ga / naar / school'",
+          "options": ["Ik ga morgen naar school", "Morgen ga ik naar school", "Ik morgen ga naar school", "Ga ik morgen naar school"],
+          "correctAnswer": 1,
+          "explanation": "Morgen ga ik naar school - Time can come first, then verb in second position",
+          "hint": "Time expressions can start the sentence",
+          "difficulty": "medium",
+          "tags": ["word_order", "time_expressions"],
+          "exerciseType": "sentence_building"
+        }
+      ]
+    },
+    {
+      "id": "articles_gender_a1",
+      "title": "Articles and Gender (A1)",
+      "type": "grammar",
+      "level": "A1",
+      "explanation": "Dutch nouns have gender (masculine/feminine = 'de', neuter = 'het'). Learning the correct article is essential for proper Dutch.",
+      "key_points": [
+        "De = common gender (masculine/feminine)",
+        "Het = neuter gender",
+        "Plural always uses 'de'",
+        "Learn gender with each noun"
+      ],
+      "examples": [
+        {
+          "dutch": "De man (the man)",
+          "english": "The man",
+          "breakdown": "de + man (masculine noun)"
+        },
+        {
+          "dutch": "Het huis (the house)",
+          "english": "The house",
+          "breakdown": "het + huis (neuter noun)"
+        }
+      ],
+      "questions": [
+        {
+          "id": "ag_1",
+          "question": "Choose the correct article: '___ auto' (the car)",
+          "options": ["De", "Het", "Een", "Die"],
+          "correctAnswer": 0,
+          "explanation": "De auto - 'auto' is common gender",
+          "hint": "Most vehicles use 'de'",
+          "difficulty": "easy",
+          "tags": ["articles", "common_gender"],
+          "exerciseType": "multiple_choice"
+        },
+        {
+          "id": "ag_2",
+          "question": "Choose the correct article: '___ boek' (the book)",
+          "options": ["De", "Het", "Een", "Dat"],
+          "correctAnswer": 1,
+          "explanation": "Het boek - 'boek' is neuter gender",
+          "hint": "Most books and written materials use 'het'",
+          "difficulty": "easy",
+          "tags": ["articles", "neuter_gender"],
+          "exerciseType": "multiple_choice"
         }
       ]
     }

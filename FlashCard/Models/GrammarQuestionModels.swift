@@ -4,13 +4,19 @@ import Foundation
 
 struct GrammarQuestionData: Codable {
     let metadata: GrammarMetadata
-    let rules: [String: GrammarRuleData]
+    let grammar_rules: [GrammarRuleData]
 }
 
 struct GrammarMetadata: Codable {
     let version: String
     let lastUpdated: String
     let description: String
+}
+
+struct ExampleItem: Codable {
+    let dutch: String
+    let english: String
+    let breakdown: String
 }
 
 struct GrammarRuleData: Codable {
@@ -20,7 +26,19 @@ struct GrammarRuleData: Codable {
     let level: String
     let explanation: String
     let keyPoints: [String]
+    let examples: [ExampleItem]
     let questions: [GrammarQuestionItem]
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case title
+        case type
+        case level
+        case explanation
+        case keyPoints = "key_points"
+        case examples
+        case questions
+    }
 }
 
 struct GrammarQuestionItem: Codable, Identifiable {
@@ -33,17 +51,68 @@ struct GrammarQuestionItem: Codable, Identifiable {
     let difficulty: String
     let tags: [String]
     let exerciseType: String
+
+    // Regular initializer for direct creation
+    init(id: String, question: String, options: [String], correctAnswer: Int, explanation: String, hint: String? = nil, difficulty: String, tags: [String], exerciseType: String) {
+        self.id = id
+        self.question = question
+        self.options = options
+        self.correctAnswer = correctAnswer
+        self.explanation = explanation
+        self.hint = hint
+        self.difficulty = difficulty
+        self.tags = tags
+        self.exerciseType = exerciseType
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case question
+        case options
+        case correctAnswer = "correctAnswer"
+        case correctAnswerSnake = "correct_answer"
+        case explanation
+        case hint
+        case difficulty
+        case tags
+        case exerciseType
+    }
     
-    // Convert to existing GrammarExercise format
-    func toGrammarExercise() -> GrammarExercise {
-        return GrammarExercise(
-            question: question,
-            options: options,
-            correctAnswer: correctAnswer,
-            explanation: explanation,
-            hint: hint,
-            exerciseType: ExerciseType(rawValue: exerciseType) ?? .multipleChoice
-        )
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        // Handle missing id by generating one
+        id = try container.decodeIfPresent(String.self, forKey: .id) ?? UUID().uuidString
+        
+        question = try container.decode(String.self, forKey: .question)
+        options = try container.decode([String].self, forKey: .options)
+        
+        // Handle both correctAnswer formats
+        if let camelCase = try container.decodeIfPresent(Int.self, forKey: .correctAnswer) {
+            correctAnswer = camelCase
+        } else {
+            correctAnswer = try container.decode(Int.self, forKey: .correctAnswerSnake)
+        }
+        
+        explanation = try container.decode(String.self, forKey: .explanation)
+        hint = try container.decodeIfPresent(String.self, forKey: .hint)
+        difficulty = try container.decodeIfPresent(String.self, forKey: .difficulty) ?? "medium"
+        tags = try container.decodeIfPresent([String].self, forKey: .tags) ?? []
+        exerciseType = try container.decodeIfPresent(String.self, forKey: .exerciseType) ?? "multiple_choice"
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        
+        try container.encode(id, forKey: .id)
+        try container.encode(question, forKey: .question)
+        try container.encode(options, forKey: .options)
+        try container.encode(correctAnswer, forKey: .correctAnswer)
+        try container.encode(explanation, forKey: .explanation)
+        try container.encodeIfPresent(hint, forKey: .hint)
+        try container.encode(difficulty, forKey: .difficulty)
+        try container.encode(tags, forKey: .tags)
+        try container.encode(exerciseType, forKey: .exerciseType)
     }
 }
 
@@ -74,7 +143,7 @@ class GrammarQuestionManager: ObservableObject {
             let data = try Data(contentsOf: url)
             let decoder = JSONDecoder()
             questionData = try decoder.decode(GrammarQuestionData.self, from: data)
-            print("✅ Loaded \(questionData?.rules.count ?? 0) grammar rules with questions")
+            print("✅ Loaded \(questionData?.grammar_rules.count ?? 0) grammar rules with questions")
         } catch {
             errorMessage = "Failed to load questions: \(error.localizedDescription)"
             print("❌ Error loading grammar questions: \(error)")
@@ -84,24 +153,24 @@ class GrammarQuestionManager: ObservableObject {
     }
     
     func getRule(by id: String) -> GrammarRuleData? {
-        return questionData?.rules[id]
+        return questionData?.grammar_rules.first(where: { $0.id == id })
     }
     
     func getRulesByLevel(_ level: LanguageLevel) -> [GrammarRuleData] {
         guard let data = questionData else { return [] }
         
-        return data.rules.values.filter { rule in
+        return data.grammar_rules.filter { rule in
             rule.level.uppercased() == level.rawValue.uppercased()
         }
     }
     
     func getAllRules() -> [GrammarRuleData] {
-        return questionData?.rules.values.map { $0 } ?? []
+        return questionData?.grammar_rules ?? []
     }
     
-    func getQuestions(for ruleId: String) -> [GrammarExercise] {
+    func getQuestions(for ruleId: String) -> [GrammarQuestionItem] {
         guard let rule = getRule(by: ruleId) else { return [] }
-        return rule.questions.map { $0.toGrammarExercise() }
+        return rule.questions
     }
     
     func addQuestion(to ruleId: String, _ question: GrammarQuestionItem) {
@@ -114,13 +183,13 @@ class GrammarQuestionManager: ObservableObject {
         
         guard let data = questionData else { return csv }
         
-        for (ruleId, rule) in data.rules {
+        for rule in data.grammar_rules {
             for question in rule.questions {
                 let options = question.options.joined(separator: "; ")
                 let tags = question.tags.joined(separator: "; ")
                 let correctAnswerText = question.options.indices.contains(question.correctAnswer) ? question.options[question.correctAnswer] : ""
                 
-                let line = "\"\(ruleId)\",\"\(rule.title)\",\"\(question.id)\",\"\(question.question)\",\"\(options)\",\"\(correctAnswerText)\",\"\(question.explanation)\",\"\(question.hint ?? "")\",\"\(question.difficulty)\",\"\(tags)\",\"\(question.exerciseType)\"\n"
+                let line = "\"\(rule.id)\",\"\(rule.title)\",\"\(question.id)\",\"\(question.question)\",\"\(options)\",\"\(correctAnswerText)\",\"\(question.explanation)\",\"\(question.hint ?? "")\",\"\(question.difficulty)\",\"\(tags)\",\"\(question.exerciseType)\"\n"
                 csv += line
             }
         }
@@ -152,25 +221,5 @@ class GrammarQuestionManager: ObservableObject {
             errorMessage = "Failed to import questions: \(error.localizedDescription)"
             print("❌ Error importing grammar questions: \(error)")
         }
-    }
-}
-
-// MARK: - Extensions for Compatibility
-
-extension GrammarRuleData {
-    func toDutchGrammarRule() -> DutchGrammarRule {
-        return DutchGrammarRule(
-            id: id,
-            title: title,
-            type: GrammarRuleType(rawValue: type) ?? .verbConjugation,
-            level: LanguageLevel(rawValue: level) ?? .a1,
-            explanation: explanation,
-            keyPoints: keyPoints,
-            examples: [], // We'll add examples later if needed
-            exercises: questions.map { $0.toGrammarExercise() },
-            commonMistakes: [],
-            tips: [],
-            relatedRules: []
-        )
     }
 } 
