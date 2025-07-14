@@ -367,6 +367,322 @@
           "explanation": "Het blije kind - adjective gets -e before 'het' noun"
         }
       ]
+    },
+    {
+      "id": "negation_a2",
+      "title": "Negation - Basic Patterns (A2)",
+      "type": "grammar",
+      "level": "A2",
+      "explanation": "Dutch negation uses 'niet' (not) and 'geen' (no/none). 'Geen' is used with indefinite nouns, while 'niet' is used in other cases.",
+      "key_points": [
+        "Geen = no/none (with indefinite nouns)",
+        "Niet = not (in other cases)",
+        "Geen replaces 'een'",
+        "Niet usually comes at the end of the sentence"
+      ],
+      "examples": [
+        {
+          "dutch": "Ik heb geen auto.",
+          "english": "I don't have a car.",
+          "breakdown": "geen replaces 'een' with indefinite noun"
+        },
+        {
+          "dutch": "Ik werk niet.",
+          "english": "I don't work.",
+          "breakdown": "niet negates the verb"
+        },
+        {
+          "dutch": "Hij is niet thuis.",
+          "english": "He is not at home.",
+          "breakdown": "niet negates the location"
+        }
+      ],
+      "questions": [
+        {
+          "question": "Complete: 'Ik heb ___ auto' (I don't have a car)",
+          "options": ["niet", "geen", "nooit", "niets"],
+          "correct_answer": 1,
+          "explanation": "Ik heb geen auto - 'geen' replaces 'een' with indefinite noun"
+        },
+        {
+          "question": "Complete: 'Ik werk ___' (I don't work)",
+          "options": ["niet", "geen", "nooit", "niets"],
+          "correct_answer": 0,
+          "explanation": "Ik werk niet - 'niet' negates the verb"
+        },
+        {
+          "question": "Complete: 'Hij heeft ___ tijd' (He has no time)",
+          "options": ["niet", "geen", "nooit", "niets"],
+          "correct_answer": 1,
+          "explanation": "Hij heeft geen tijd - 'geen' with indefinite noun"
+        },
+        {
+          "question": "Complete: 'Zij is ___ thuis' (She is not at home)",
+          "options": ["niet", "geen", "nooit", "niets"],
+          "correct_answer": 0,
+          "explanation": "Zij is niet thuis - 'niet' negates the location"
+        },
+        {
+          "question": "Complete: 'Wij hebben ___ geld' (We have no money)",
+          "options": ["niet", "geen", "nooit", "niets"],
+          "correct_answer": 1,
+          "explanation": "Wij hebben geen geld - 'geen' with indefinite noun"
+        }
+      ]
+    },
+    {
+      "id": "demonstratives_a2",
+      "title": "Demonstratives - This/That (A2)",
+      "type": "grammar",
+      "level": "A2",
+      "explanation": "Dutch demonstratives change form based on gender and number. 'Deze' (this) and 'die' (that) are used with common gender nouns, while 'dit' (this) and 'dat' (that) are used with neuter nouns.",
+      "key_points": [
+        "Deze/dit = this (near)",
+        "Die/dat = that (far)",
+        "Deze/die with common gender (de-words)",
+        "Dit/dat with neuter gender (het-words)"
+      ],
+      "examples": [
+        {
+          "dutch": "Deze auto (this car)",
+          "english": "This car",
+          "breakdown": "deze + auto (common gender)"
+        },
+        {
+          "dutch": "Dit huis (this house)",
+          "english": "This house",
+          "breakdown": "dit + huis (neuter gender)"
+        },
+        {
+          "dutch": "Die vrouw (that woman)",
+          "english": "That woman",
+          "breakdown": "die + vrouw (common gender)"
+        }
+      ],
+      "questions": [
+        {
+          "question": "Complete: '___ auto is rood' (This car is red)",
+          "options": ["Deze", "Dit", "Die", "Dat"],
+          "correct_answer": 0,
+          "explanation": "Deze auto - 'auto' is common gender, so use 'deze'"
+        },
+        {
+          "question": "Complete: '___ huis is groot' (This house is big)",
+          "options": ["Deze", "Dit", "Die", "Dat"],
+          "correct_answer": 1,
+          "explanation": "Dit huis - 'huis' is neuter gender, so use 'dit'"
+        },
+        {
+          "question": "Complete: '___ boek is interessant' (That book is interesting)",
+          "options": ["Deze", "Dit", "Die", "Dat"],
+          "correct_answer": 3,
+          "explanation": "Dat boek - 'boek' is neuter gender, so use 'dat'"
+        },
+        {
+          "question": "Complete: '___ man werkt hard' (That man works hard)",
+          "options": ["Deze", "Dit", "Die", "Dat"],
+          "correct_answer": 2,
+          "explanation": "Die man - 'man' is common gender, so use 'die'"
+        },
+        {
+          "question": "Complete: '___ kinderen spelen' (These children play)",
+          "options": ["Deze", "Dit", "Die", "Dat"],
+          "correct_answer": 0,
+          "explanation": "Deze kinderen - plural always uses 'deze'"
+        }
+      ]
+    },
+    {
+      "id": "auxiliary_verbs_b1",
+      "title": "Auxiliary Verbs - Basic Usage (B1)",
+      "type": "verb_conjugation",
+      "level": "B1",
+      "explanation": "Auxiliary verbs help form compound tenses and express modality. The main auxiliary verbs in Dutch are 'hebben', 'zijn', 'worden', 'kunnen', 'moeten', 'willen', and 'zullen'.",
+      "key_points": [
+        "Hebben/zijn = perfect tense",
+        "Worden = passive voice",
+        "Kunnen = ability/possibility",
+        "Moeten = necessity/obligation",
+        "Willen = desire/intention",
+        "Zullen = future/obligation"
+      ],
+      "examples": [
+        {
+          "dutch": "Ik kan Nederlands spreken.",
+          "english": "I can speak Dutch.",
+          "breakdown": "kan (can) + infinitive"
+        },
+        {
+          "dutch": "Hij moet naar school.",
+          "english": "He must go to school.",
+          "breakdown": "moet (must) + infinitive"
+        },
+        {
+          "dutch": "Wij willen naar huis.",
+          "english": "We want to go home.",
+          "breakdown": "willen (want) + infinitive"
+        }
+      ],
+      "questions": [
+        {
+          "question": "Complete: 'Ik ___ Nederlands spreken' (I can speak Dutch)",
+          "options": ["heb", "ben", "kan", "moet"],
+          "correct_answer": 2,
+          "explanation": "Ik kan Nederlands spreken - 'kan' expresses ability"
+        },
+        {
+          "question": "Complete: 'Hij ___ naar school' (He must go to school)",
+          "options": ["heeft", "is", "kan", "moet"],
+          "correct_answer": 3,
+          "explanation": "Hij moet naar school - 'moet' expresses necessity"
+        },
+        {
+          "question": "Complete: 'Wij ___ naar huis' (We want to go home)",
+          "options": ["hebben", "zijn", "kunnen", "willen"],
+          "correct_answer": 3,
+          "explanation": "Wij willen naar huis - 'willen' expresses desire"
+        },
+        {
+          "question": "Complete: 'Zij ___ morgen komen' (She will come tomorrow)",
+          "options": ["heeft", "is", "zal", "moet"],
+          "correct_answer": 2,
+          "explanation": "Zij zal morgen komen - 'zal' expresses future"
+        },
+        {
+          "question": "Complete: 'Het ___ gedaan worden' (It must be done)",
+          "options": ["heeft", "is", "kan", "moet"],
+          "correct_answer": 3,
+          "explanation": "Het moet gedaan worden - 'moet' expresses necessity"
+        }
+      ]
+    },
+    {
+      "id": "prepositions_b1",
+      "title": "Prepositions - Common Usage (B1)",
+      "type": "grammar",
+      "level": "B1",
+      "explanation": "Dutch prepositions indicate relationships between words. Common prepositions include 'in', 'op', 'aan', 'voor', 'na', 'tussen', 'onder', 'boven', 'achter', and 'voor'.",
+      "key_points": [
+        "In = in/inside",
+        "Op = on/upon",
+        "Aan = on/at",
+        "Voor = for/before",
+        "Na = after",
+        "Tussen = between",
+        "Onder = under",
+        "Boven = above"
+      ],
+      "examples": [
+        {
+          "dutch": "Ik woon in Amsterdam.",
+          "english": "I live in Amsterdam.",
+          "breakdown": "in + city name"
+        },
+        {
+          "dutch": "Het boek ligt op de tafel.",
+          "english": "The book is on the table.",
+          "breakdown": "op + surface"
+        },
+        {
+          "dutch": "Hij werkt aan een project.",
+          "english": "He works on a project.",
+          "breakdown": "aan + object"
+        }
+      ],
+      "questions": [
+        {
+          "question": "Complete: 'Ik woon ___ Amsterdam' (I live in Amsterdam)",
+          "options": ["in", "op", "aan", "voor"],
+          "correct_answer": 0,
+          "explanation": "Ik woon in Amsterdam - 'in' for cities"
+        },
+        {
+          "question": "Complete: 'Het boek ligt ___ de tafel' (The book is on the table)",
+          "options": ["in", "op", "aan", "voor"],
+          "correct_answer": 1,
+          "explanation": "Het boek ligt op de tafel - 'op' for surfaces"
+        },
+        {
+          "question": "Complete: 'Hij werkt ___ een project' (He works on a project)",
+          "options": ["in", "op", "aan", "voor"],
+          "correct_answer": 2,
+          "explanation": "Hij werkt aan een project - 'aan' for working on something"
+        },
+        {
+          "question": "Complete: 'De kat zit ___ de stoel' (The cat is under the chair)",
+          "options": ["in", "op", "onder", "boven"],
+          "correct_answer": 2,
+          "explanation": "De kat zit onder de stoel - 'onder' means under"
+        },
+        {
+          "question": "Complete: 'Het vliegtuig vliegt ___ de wolken' (The plane flies above the clouds)",
+          "options": ["in", "op", "onder", "boven"],
+          "correct_answer": 3,
+          "explanation": "Het vliegtuig vliegt boven de wolken - 'boven' means above"
+        }
+      ]
+    },
+    {
+      "id": "word_order_a2",
+      "title": "Word Order - Basic Patterns (A2)",
+      "type": "sentence_structure",
+      "level": "A2",
+      "explanation": "Dutch word order follows specific patterns. In main clauses, the verb is in second position, while in subordinate clauses, the verb goes to the end.",
+      "key_points": [
+        "Main clause: Subject + Verb + Rest",
+        "Subordinate clause: Verb at the end",
+        "Time expressions often come first",
+        "Objects follow the verb"
+      ],
+      "examples": [
+        {
+          "dutch": "Ik ga morgen naar school.",
+          "english": "I go to school tomorrow.",
+          "breakdown": "Subject + Verb + Time + Place"
+        },
+        {
+          "dutch": "Hij leest een boek in de tuin.",
+          "english": "He reads a book in the garden.",
+          "breakdown": "Subject + Verb + Object + Place"
+        },
+        {
+          "dutch": "Ik weet dat hij komt.",
+          "english": "I know that he comes.",
+          "breakdown": "Main clause + 'dat' + subordinate clause (verb at end)"
+        }
+      ],
+      "questions": [
+        {
+          "question": "Arrange the words: 'morgen / ik / ga / naar / school'",
+          "options": ["Ik ga morgen naar school", "Morgen ga ik naar school", "Ik morgen ga naar school", "Ga ik morgen naar school"],
+          "correct_answer": 1,
+          "explanation": "Morgen ga ik naar school - time expression can come first, then verb in second position"
+        },
+        {
+          "question": "Arrange the words: 'hij / leest / een / boek / in / de / tuin'",
+          "options": ["Hij leest een boek in de tuin", "Een boek leest hij in de tuin", "Hij een boek leest in de tuin", "Leest hij een boek in de tuin"],
+          "correct_answer": 0,
+          "explanation": "Hij leest een boek in de tuin - Subject + Verb + Object + Place"
+        },
+        {
+          "question": "Complete: 'Ik weet dat hij ___' (I know that he comes)",
+          "options": ["komt", "kom", "komen", "gekomen"],
+          "correct_answer": 0,
+          "explanation": "Ik weet dat hij komt - in subordinate clause, verb goes to the end"
+        },
+        {
+          "question": "Arrange the words: 'gisteren / zij / heeft / hard / gewerkt'",
+          "options": ["Zij heeft gisteren hard gewerkt", "Gisteren heeft zij hard gewerkt", "Zij gisteren heeft hard gewerkt", "Heeft zij gisteren hard gewerkt"],
+          "correct_answer": 1,
+          "explanation": "Gisteren heeft zij hard gewerkt - time expression first, then verb in second position"
+        },
+        {
+          "question": "Complete: 'Ik denk dat het ___' (I think that it rains)",
+          "options": ["regent", "regen", "regenen", "geregend"],
+          "correct_answer": 0,
+          "explanation": "Ik denk dat het regent - in subordinate clause, verb goes to the end"
+        }
+      ]
     }
   ]
 } 
