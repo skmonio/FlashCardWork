@@ -369,7 +369,7 @@ struct MainNavigationView: View {
         case .dutchGrammar:
             // Only show in full version
             if BuildConfiguration.isFeatureAvailable(.dutchGrammar) {
-                DutchGrammarRulesView()
+                JSONGrammarRulesView()
             } else {
                 FeatureNotAvailableView(feature: "Dutch Grammar")
             }

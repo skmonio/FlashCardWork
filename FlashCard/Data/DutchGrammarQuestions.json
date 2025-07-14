@@ -1,184 +1,372 @@
 {
-  "metadata": {
-    "version": "1.0",
-    "lastUpdated": "2024-07-14",
-    "description": "Dutch Grammar Questions Database"
-  },
-  "rules": {
-    "verbPerfectB1": {
-      "id": "verbPerfectB1",
-      "title": "Perfect Tense (Voltooid Tegenwoordige Tijd) - B1",
-      "type": "verbConjugation",
-      "level": "B1",
-      "explanation": "The perfect tense (voltooid tegenwoordige tijd) is used to express completed actions in the past. It consists of an auxiliary verb (hebben/zijn) + past participle.",
-      "keyPoints": [
-        "Use 'hebben' for most verbs",
-        "Use 'zijn' for movement and state change verbs",
-        "Past participles often start with 'ge-'",
-        "Irregular verbs have special past participle forms"
+  "grammar_rules": [
+    {
+      "id": "present_tense_a1",
+      "title": "Present Tense - Regular Verbs (A1)",
+      "type": "verb_conjugation",
+      "level": "A1",
+      "explanation": "In Dutch, you conjugate verbs by adding endings to the stem of the verb. You get the stem by removing -en from the infinitive (whole verb).",
+      "key_points": [
+        "Stem = infinitive minus -en",
+        "Ik = stem only (no ending)",
+        "Jij/hij/zij = stem + t",
+        "Wij/jullie/zij = whole verb (infinitive)",
+        "Note: in questions, 'jij' doesn't get extra -t"
+      ],
+      "examples": [
+        {
+          "dutch": "Ik werk in een kantoor.",
+          "english": "I work in an office.",
+          "breakdown": "werk (stem) - no ending for 'ik'"
+        },
+        {
+          "dutch": "Jij werkt hard.",
+          "english": "You work hard.",
+          "breakdown": "werk (stem) + t = werkt"
+        },
+        {
+          "dutch": "Wij leren Nederlands.",
+          "english": "We learn Dutch.",
+          "breakdown": "leren (whole verb) - no change"
+        }
       ],
       "questions": [
         {
-          "id": "q1",
-          "question": "What is the past participle of 'besluiten'?",
-          "options": ["besloten", "besluit", "besluitt", "beslotenen"],
-          "correctAnswer": 0,
-          "explanation": "'besluiten' → 'besloten'",
-          "hint": "Irregular verb",
-          "difficulty": "medium",
-          "tags": ["irregular", "perfect-tense", "B1"],
-          "exerciseType": "multipleChoice"
+          "question": "Conjugation of 'maken' (to make): Ik ... elke dag huiswerk.",
+          "options": ["maak", "maakt", "maken", "maakte"],
+          "correct_answer": 0,
+          "explanation": "For 'ik' use only the stem: maak (maken - en = maak)"
         },
         {
-          "id": "q2",
-          "question": "What is the infinitive of 'besloten'?",
-          "options": ["besluiten", "beslissen", "besloter", "beslott"],
-          "correctAnswer": 0,
-          "explanation": "'besloten' → 'besluiten'",
-          "hint": "Irregular verb",
-          "difficulty": "medium",
-          "tags": ["irregular", "perfect-tense", "B1"],
-          "exerciseType": "multipleChoice"
+          "question": "Conjugation of 'wonen' (to live): Hij ... in Utrecht.",
+          "options": ["woon", "woont", "wonen", "woonde"],
+          "correct_answer": 1,
+          "explanation": "For 'hij' use stem + t: woon + t = woont"
         },
         {
-          "id": "q3",
-          "question": "What is the past participle of 'doen'?",
-          "options": ["gedaan", "doet", "gedoen", "doende"],
-          "correctAnswer": 0,
-          "explanation": "'doen' → 'gedaan'",
-          "hint": "Irregular verb",
-          "difficulty": "medium",
-          "tags": ["irregular", "perfect-tense", "B1"],
-          "exerciseType": "multipleChoice"
+          "question": "Conjugation of 'studeren' (to study): Wij ... aan de universiteit.",
+          "options": ["studeer", "studeert", "studeren", "studeerde"],
+          "correct_answer": 2,
+          "explanation": "For 'wij' use the whole verb: studeren"
         },
         {
-          "id": "q4",
-          "question": "What is the infinitive of 'gedaan'?",
-          "options": ["doen", "doet", "gedoen", "doende"],
-          "correctAnswer": 0,
-          "explanation": "'gedaan' → 'doen'",
-          "hint": "Irregular verb",
-          "difficulty": "medium",
-          "tags": ["irregular", "perfect-tense", "B1"],
-          "exerciseType": "multipleChoice"
+          "question": "Conjugation of 'spelen' (to play): Jij ... voetbal.",
+          "options": ["speel", "speelt", "spelen", "speelde"],
+          "correct_answer": 1,
+          "explanation": "For 'jij' use stem + t: speel + t = speelt"
         },
         {
-          "id": "q5",
-          "question": "What is the past participle of 'schrijven'?",
-          "options": ["geschreven", "schrijft", "geschrijft", "schrijvend"],
-          "correctAnswer": 0,
-          "explanation": "'schrijven' → 'geschreven'",
-          "hint": "Irregular verb",
-          "difficulty": "medium",
-          "tags": ["irregular", "perfect-tense", "B1"],
-          "exerciseType": "multipleChoice"
-        },
-        {
-          "id": "q6",
-          "question": "What is the infinitive of 'geschreven'?",
-          "options": ["schrijven", "schrijft", "geschrijft", "schrijvend"],
-          "correctAnswer": 0,
-          "explanation": "'geschreven' → 'schrijven'",
-          "hint": "Irregular verb",
-          "difficulty": "medium",
-          "tags": ["irregular", "perfect-tense", "B1"],
-          "exerciseType": "multipleChoice"
-        },
-        {
-          "id": "q7",
-          "question": "What is the past participle of 'lezen'?",
-          "options": ["gelezen", "leest", "geleest", "lezend"],
-          "correctAnswer": 0,
-          "explanation": "'lezen' → 'gelezen'",
-          "hint": "Irregular verb",
-          "difficulty": "medium",
-          "tags": ["irregular", "perfect-tense", "B1"],
-          "exerciseType": "multipleChoice"
-        },
-        {
-          "id": "q8",
-          "question": "What is the infinitive of 'gelezen'?",
-          "options": ["lezen", "leest", "geleest", "lezend"],
-          "correctAnswer": 0,
-          "explanation": "'gelezen' → 'lezen'",
-          "hint": "Irregular verb",
-          "difficulty": "medium",
-          "tags": ["irregular", "perfect-tense", "B1"],
-          "exerciseType": "multipleChoice"
-        },
-        {
-          "id": "q9",
-          "question": "What is the past participle of 'gaan'?",
-          "options": ["gegaan", "gaat", "gegaat", "gaand"],
-          "correctAnswer": 0,
-          "explanation": "'gaan' → 'gegaan'",
-          "hint": "Irregular verb",
-          "difficulty": "medium",
-          "tags": ["irregular", "perfect-tense", "B1"],
-          "exerciseType": "multipleChoice"
-        },
-        {
-          "id": "q10",
-          "question": "What is the infinitive of 'gegaan'?",
-          "options": ["gaan", "gaat", "gegaat", "gaand"],
-          "correctAnswer": 0,
-          "explanation": "'gegaan' → 'gaan'",
-          "hint": "Irregular verb",
-          "difficulty": "medium",
-          "tags": ["irregular", "perfect-tense", "B1"],
-          "exerciseType": "multipleChoice"
+          "question": "How do you ask 'Do you work?' in Dutch?",
+          "options": ["Werk jij?", "Werkt jij?", "Werk je?", "Werkt je?"],
+          "correct_answer": 0,
+          "explanation": "Werk jij? - In questions with 'jij', the verb doesn't get an extra -t"
         }
       ]
     },
-    "verledenTijdA2": {
-      "id": "verledenTijdA2",
-      "title": "Past Tense - Practice Exercise (A2)",
-      "type": "verbConjugation",
-      "level": "A2",
-      "explanation": "The past tense (imperfectum) is used to talk about what happened in the past. This exercise focuses on common verbs such as 'gaan' (to go), 'zijn' (to be), 'combineren' (to combine), 'besparen' (to save), 'vertrouwen' (to trust), 'logeren' (to stay), and 'verwennen' (to spoil).",
-      "keyPoints": [
-        "Regular verbs follow 't kofschip rule",
-        "Irregular verbs have special forms",
-        "Gaan → ging/gingen (irregular verb)",
-        "Zijn → was/waren (irregular verb)",
-        "Plural always gets -n added",
-        "Pay attention to stem spelling"
+    {
+      "id": "verb_perfect_b1",
+      "title": "Perfect Tense - Regular Verbs (B1)",
+      "type": "tenses",
+      "level": "B1",
+      "explanation": "The perfect tense in Dutch is used to express completed actions in the past. It is formed using the auxiliary verb 'hebben' or 'zijn' + the past participle.",
+      "key_points": [
+        "Use 'hebben' for most verbs",
+        "Use 'zijn' for movement verbs and state changes",
+        "Past participle: ge + stem + t/d",
+        "Regular verbs follow the t-kofschip rule"
+      ],
+      "examples": [
+        {
+          "dutch": "Ik heb gewerkt.",
+          "english": "I have worked.",
+          "breakdown": "heb (auxiliary) + ge + werk + t (past participle)"
+        },
+        {
+          "dutch": "Hij is naar huis gegaan.",
+          "english": "He has gone home.",
+          "breakdown": "is (auxiliary) + ge + gaan (past participle)"
+        }
       ],
       "questions": [
         {
-          "id": "vt1",
-          "question": "Conjugation of 'maken' (to make): Ik ... elke dag huiswerk.",
-          "options": ["maak", "maakt", "maken", "maakte"],
-          "correctAnswer": 0,
-          "explanation": "For 'ik' use only the stem: maak (maken - en = maak)",
-          "hint": "For 'ik' use no ending",
-          "difficulty": "easy",
-          "tags": ["present-tense", "regular", "A2"],
-          "exerciseType": "multipleChoice"
+          "question": "Complete: 'Ik ___ gisteren naar de film ___' (I went to the movie yesterday)",
+          "options": ["heb, gegaan", "ben, gegaan", "heb, gaan", "ben, gaan"],
+          "correct_answer": 1,
+          "explanation": "Use 'ben' because 'gaan' is a movement verb, and the past participle is 'gegaan'"
         },
         {
-          "id": "vt2",
-          "question": "Conjugation of 'wonen' (to live): Hij ... in Utrecht.",
-          "options": ["woon", "woont", "wonen", "woonde"],
-          "correctAnswer": 1,
-          "explanation": "For 'hij' use stem + t: woon + t = woont",
-          "hint": "For 'hij/zij' add -t to the stem",
-          "difficulty": "easy",
-          "tags": ["present-tense", "regular", "A2"],
-          "exerciseType": "multipleChoice"
+          "question": "Complete: 'Zij ___ hard ___' (She has worked hard)",
+          "options": ["heeft, gewerkt", "is, gewerkt", "heeft, werken", "is, werken"],
+          "correct_answer": 0,
+          "explanation": "Use 'heeft' because 'werken' is not a movement verb, and the past participle is 'gewerkt'"
         },
         {
-          "id": "vt3",
-          "question": "Conjugation of 'studeren' (to study): Wij ... aan de universiteit.",
-          "options": ["studeer", "studeert", "studeren", "studeerde"],
-          "correctAnswer": 2,
-          "explanation": "For 'wij' use the whole verb: studeren",
-          "hint": "For 'wij/jullie/zij' use the infinitive",
-          "difficulty": "easy",
-          "tags": ["present-tense", "regular", "A2"],
-          "exerciseType": "multipleChoice"
+          "question": "What is the past participle of 'maken' (to make)?",
+          "options": ["maken", "maakte", "gemaakt", "maakt"],
+          "correct_answer": 2,
+          "explanation": "The past participle is 'gemaakt' (ge + maak + t)"
+        },
+        {
+          "question": "What is the past participle of 'komen' (to come)?",
+          "options": ["komen", "kwam", "gekomen", "komt"],
+          "correct_answer": 2,
+          "explanation": "The past participle is 'gekomen' (ge + kom + en)"
+        },
+        {
+          "question": "Complete: 'Wij ___ naar Amsterdam ___' (We have traveled to Amsterdam)",
+          "options": ["hebben, gereisd", "zijn, gereisd", "hebben, reizen", "zijn, reizen"],
+          "correct_answer": 1,
+          "explanation": "Use 'zijn' because 'reizen' is a movement verb, and the past participle is 'gereisd'"
+        }
+      ]
+    },
+    {
+      "id": "irregular_verbs_a1",
+      "title": "Irregular Verbs - Common Patterns (A1)",
+      "type": "verb_conjugation",
+      "level": "A1",
+      "explanation": "Some Dutch verbs have irregular conjugations in the present tense. These verbs don't follow the standard stem + ending pattern.",
+      "key_points": [
+        "Some verbs have vowel changes in the stem",
+        "Common irregular verbs: zijn, hebben, gaan, komen, doen",
+        "Learn these patterns by heart",
+        "They are used very frequently"
+      ],
+      "examples": [
+        {
+          "dutch": "Ik ben student.",
+          "english": "I am a student.",
+          "breakdown": "zijn (to be) - ik ben"
+        },
+        {
+          "dutch": "Hij heeft een auto.",
+          "english": "He has a car.",
+          "breakdown": "hebben (to have) - hij heeft"
+        },
+        {
+          "dutch": "Wij gaan naar school.",
+          "english": "We go to school.",
+          "breakdown": "gaan (to go) - wij gaan"
+        }
+      ],
+      "questions": [
+        {
+          "question": "Conjugation of 'zijn' (to be): Ik ___ een student.",
+          "options": ["ben", "bent", "is", "zijn"],
+          "correct_answer": 0,
+          "explanation": "Ik ben - 'zijn' is irregular, 'ik' form is 'ben'"
+        },
+        {
+          "question": "Conjugation of 'hebben' (to have): Hij ___ een boek.",
+          "options": ["heb", "hebt", "heeft", "hebben"],
+          "correct_answer": 2,
+          "explanation": "Hij heeft - 'hebben' is irregular, 'hij' form is 'heeft'"
+        },
+        {
+          "question": "Conjugation of 'gaan' (to go): Wij ___ naar huis.",
+          "options": ["ga", "gaat", "gaan", "ging"],
+          "correct_answer": 2,
+          "explanation": "Wij gaan - 'gaan' is irregular, 'wij' form is 'gaan'"
+        },
+        {
+          "question": "Conjugation of 'komen' (to come): Zij ___ uit Nederland.",
+          "options": ["kom", "komt", "komen", "kwam"],
+          "correct_answer": 2,
+          "explanation": "Zij komen - 'komen' is irregular, 'zij' form is 'komen'"
+        },
+        {
+          "question": "Conjugation of 'doen' (to do): Ik ___ mijn huiswerk.",
+          "options": ["doe", "doet", "doen", "deed"],
+          "correct_answer": 0,
+          "explanation": "Ik doe - 'doen' is irregular, 'ik' form is 'doe'"
+        }
+      ]
+    },
+    {
+      "id": "past_tense_a2",
+      "title": "Past Tense - Regular Verbs (A2)",
+      "type": "tenses",
+      "level": "A2",
+      "explanation": "The past tense (imperfect) in Dutch is used to describe actions that happened in the past. Regular verbs follow the t-kofschip rule for the past tense.",
+      "key_points": [
+        "Past tense uses different endings than present",
+        "Follow the t-kofschip rule for regular verbs",
+        "Stem + te/ten for weak verbs",
+        "Learn common irregular past tense forms"
+      ],
+      "examples": [
+        {
+          "dutch": "Ik werkte gisteren.",
+          "english": "I worked yesterday.",
+          "breakdown": "werk (stem) + te = werkte"
+        },
+        {
+          "dutch": "Hij woonde in Amsterdam.",
+          "english": "He lived in Amsterdam.",
+          "breakdown": "woon (stem) + de = woonde"
+        },
+        {
+          "dutch": "Wij studeerden Nederlands.",
+          "english": "We studied Dutch.",
+          "breakdown": "studeer (stem) + den = studeerden"
+        }
+      ],
+      "questions": [
+        {
+          "question": "Past tense of 'werken' (to work): Ik ___ gisteren.",
+          "options": ["werk", "werkte", "werken", "werkten"],
+          "correct_answer": 1,
+          "explanation": "Ik werkte - past tense adds -te to the stem"
+        },
+        {
+          "question": "Past tense of 'wonen' (to live): Hij ___ in Utrecht.",
+          "options": ["woon", "woonde", "wonen", "woonden"],
+          "correct_answer": 1,
+          "explanation": "Hij woonde - past tense adds -de to the stem"
+        },
+        {
+          "question": "Past tense of 'studeren' (to study): Wij ___ hard.",
+          "options": ["studeer", "studeerde", "studeren", "studeerden"],
+          "correct_answer": 3,
+          "explanation": "Wij studeerden - past tense adds -den to the stem"
+        },
+        {
+          "question": "Past tense of 'spelen' (to play): Zij ___ voetbal.",
+          "options": ["speel", "speelde", "spelen", "speelden"],
+          "correct_answer": 1,
+          "explanation": "Zij speelde - past tense adds -de to the stem"
+        },
+        {
+          "question": "Past tense of 'koken' (to cook): Jullie ___ samen.",
+          "options": ["kook", "kookte", "koken", "kookten"],
+          "correct_answer": 3,
+          "explanation": "Jullie kookten - past tense adds -ten to the stem"
+        }
+      ]
+    },
+    {
+      "id": "nouns_articles_a1",
+      "title": "Nouns and Articles (A1)",
+      "type": "grammar",
+      "level": "A1",
+      "explanation": "Dutch nouns have gender (masculine, feminine, or neuter) which determines which article to use. The articles are 'de' (common gender) and 'het' (neuter gender).",
+      "key_points": [
+        "De = common gender (masculine/feminine)",
+        "Het = neuter gender",
+        "Plural nouns always use 'de'",
+        "Learn the gender with each noun"
+      ],
+      "examples": [
+        {
+          "dutch": "De man (the man)",
+          "english": "The man",
+          "breakdown": "de + man (masculine noun)"
+        },
+        {
+          "dutch": "Het huis (the house)",
+          "english": "The house",
+          "breakdown": "het + huis (neuter noun)"
+        },
+        {
+          "dutch": "De huizen (the houses)",
+          "english": "The houses",
+          "breakdown": "de + huizen (plural always uses 'de')"
+        }
+      ],
+      "questions": [
+        {
+          "question": "Which article is correct: '___ boek' (the book)?",
+          "options": ["De", "Het", "Een", "Die"],
+          "correct_answer": 1,
+          "explanation": "Het boek - 'boek' is a neuter noun"
+        },
+        {
+          "question": "Which article is correct: '___ vrouw' (the woman)?",
+          "options": ["De", "Het", "Een", "Die"],
+          "correct_answer": 0,
+          "explanation": "De vrouw - 'vrouw' is a feminine noun"
+        },
+        {
+          "question": "Which article is correct: '___ kinderen' (the children)?",
+          "options": ["De", "Het", "Een", "Die"],
+          "correct_answer": 0,
+          "explanation": "De kinderen - plural nouns always use 'de'"
+        },
+        {
+          "question": "Which article is correct: '___ water' (the water)?",
+          "options": ["De", "Het", "Een", "Die"],
+          "correct_answer": 1,
+          "explanation": "Het water - 'water' is a neuter noun"
+        },
+        {
+          "question": "Which article is correct: '___ auto' (the car)?",
+          "options": ["De", "Het", "Een", "Die"],
+          "correct_answer": 0,
+          "explanation": "De auto - 'auto' is a common gender noun"
+        }
+      ]
+    },
+    {
+      "id": "adjectives_a2",
+      "title": "Adjectives - Basic Patterns (A2)",
+      "type": "grammar",
+      "level": "A2",
+      "explanation": "Dutch adjectives change form depending on whether they come before a noun and what article is used. They can be inflected (with -e) or uninflected (no ending).",
+      "key_points": [
+        "Before 'de' noun: adjective + -e",
+        "Before 'het' noun: no ending (uninflected)",
+        "After verb: no ending (uninflected)",
+        "Plural always gets -e ending"
+      ],
+      "examples": [
+        {
+          "dutch": "De grote auto (the big car)",
+          "english": "The big car",
+          "breakdown": "grote (big + e) before 'de' noun"
+        },
+        {
+          "dutch": "Het grote huis (the big house)",
+          "english": "The big house",
+          "breakdown": "grote (big + e) before 'het' noun"
+        },
+        {
+          "dutch": "De auto is groot (the car is big)",
+          "english": "The car is big",
+          "breakdown": "groot (no ending) after verb"
+        }
+      ],
+      "questions": [
+        {
+          "question": "Complete: 'De ___ auto' (the red car)",
+          "options": ["rood", "rode", "roods", "roden"],
+          "correct_answer": 1,
+          "explanation": "De rode auto - adjective gets -e before 'de' noun"
+        },
+        {
+          "question": "Complete: 'Het ___ boek' (the new book)",
+          "options": ["nieuw", "nieuwe", "nieuws", "nieuwen"],
+          "correct_answer": 1,
+          "explanation": "Het nieuwe boek - adjective gets -e before 'het' noun"
+        },
+        {
+          "question": "Complete: 'De auto is ___' (the car is old)",
+          "options": ["oud", "oude", "ouds", "ouden"],
+          "correct_answer": 0,
+          "explanation": "De auto is oud - no ending after verb"
+        },
+        {
+          "question": "Complete: 'De ___ huizen' (the small houses)",
+          "options": ["klein", "kleine", "kleins", "kleinen"],
+          "correct_answer": 1,
+          "explanation": "De kleine huizen - adjective gets -e for plural"
+        },
+        {
+          "question": "Complete: 'Het ___ kind' (the happy child)",
+          "options": ["blij", "blije", "blijs", "blijen"],
+          "correct_answer": 1,
+          "explanation": "Het blije kind - adjective gets -e before 'het' noun"
         }
       ]
     }
-  }
+  ]
 } 
