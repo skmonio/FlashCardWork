@@ -49,24 +49,27 @@ struct GrammarExercise {
     let explanation: String
     let hint: String?
     let exerciseType: ExerciseType
+    let correctSentence: String? // For sentence building exercises
     
     // Initialize with default exercise type for backward compatibility
-    init(question: String, options: [String], correctAnswer: Int, explanation: String, hint: String? = nil, exerciseType: ExerciseType = .multipleChoice) {
+    init(question: String, options: [String], correctAnswer: Int, explanation: String, hint: String? = nil, exerciseType: ExerciseType = .multipleChoice, correctSentence: String? = nil) {
         self.question = question
         self.options = options
         self.correctAnswer = correctAnswer
         self.explanation = explanation
         self.hint = hint
         self.exerciseType = exerciseType
+        self.correctSentence = correctSentence
     }
 }
 
-enum ExerciseType {
+enum ExerciseType: String, CaseIterable {
     case multipleChoice
     case translation
     case fillInTheBlank
     case sentenceOrder
     case trueFalse
+    case sentenceBuilding
 }
 
 struct CommonMistake {
@@ -363,6 +366,53 @@ class DutchGrammarRulesDatabase {
                 explanation: "Woon jij hier? - In questions, 'jij' doesn't get extra -t",
                 hint: "Remember the question rule for 'jij'",
                 exerciseType: .translation
+            ),
+            
+            // Sentence Building exercises
+            GrammarExercise(
+                question: "Build the sentence: 'I live in the Netherlands'",
+                options: ["Ik", "woon", "in", "Nederland"],
+                correctAnswer: 0,
+                explanation: "Ik woon in Nederland means 'I live in the Netherlands'",
+                hint: "Start with 'Ik' (I)",
+                exerciseType: .sentenceBuilding,
+                correctSentence: "Ik woon in Nederland"
+            ),
+            GrammarExercise(
+                question: "Build the sentence: 'She works in Amsterdam'",
+                options: ["Zij", "werkt", "in", "Amsterdam"],
+                correctAnswer: 0,
+                explanation: "Zij werkt in Amsterdam means 'She works in Amsterdam'",
+                hint: "Start with 'Zij' (She)",
+                exerciseType: .sentenceBuilding,
+                correctSentence: "Zij werkt in Amsterdam"
+            ),
+            GrammarExercise(
+                question: "Build the sentence: 'We learn Dutch'",
+                options: ["Wij", "leren", "Nederlands"],
+                correctAnswer: 0,
+                explanation: "Wij leren Nederlands means 'We learn Dutch'",
+                hint: "Start with 'Wij' (We)",
+                exerciseType: .sentenceBuilding,
+                correctSentence: "Wij leren Nederlands"
+            ),
+            GrammarExercise(
+                question: "Build the sentence: 'He reads a book'",
+                options: ["Hij", "leest", "een", "boek"],
+                correctAnswer: 0,
+                explanation: "Hij leest een boek means 'He reads a book'",
+                hint: "Start with 'Hij' (He)",
+                exerciseType: .sentenceBuilding,
+                correctSentence: "Hij leest een boek"
+            ),
+            GrammarExercise(
+                question: "Build the sentence: 'You (plural) drink coffee'",
+                options: ["Jullie", "drinken", "koffie"],
+                correctAnswer: 0,
+                explanation: "Jullie drinken koffie means 'You (plural) drink coffee'",
+                hint: "Start with 'Jullie' (You plural)",
+                exerciseType: .sentenceBuilding,
+                correctSentence: "Jullie drinken koffie"
             )
         ],
         commonMistakes: [
@@ -377,19 +427,9 @@ class DutchGrammarRulesDatabase {
                 explanation: "For 'hij/zij' you must add -t to the stem"
             ),
             CommonMistake(
-                incorrect: "Wij werkt",
-                correct: "Wij werken",
-                explanation: "For 'wij/jullie/zij' use the whole verb"
-            ),
-            CommonMistake(
                 incorrect: "Werkt jij?",
                 correct: "Werk jij?",
                 explanation: "In questions with 'jij', don't add extra -t"
-            ),
-            CommonMistake(
-                incorrect: "Ik studeert",
-                correct: "Ik studeer",
-                explanation: "For 'ik' use only the stem, no -t"
             )
         ],
         tips: [
@@ -534,8 +574,8 @@ class DutchGrammarRulesDatabase {
             ),
             GrammarExercise(
                 question: "Conjugation of 'zijn': Wij ... in Nederland.",
-                options: ["zij", "ben", "bent", "is", "zijn"],
-                correctAnswer: 4,
+                options: ["zij", "ben", "bent", "zijn"],
+                correctAnswer: 3,
                 explanation: "'Zijn' with 'wij' becomes 'zijn'",
                 hint: "Plural forms are more regular"
             ),
@@ -717,16 +757,6 @@ class DutchGrammarRulesDatabase {
                 incorrect: "Jij is",
                 correct: "Jij bent",
                 explanation: "'Zijn' with 'jij' becomes 'bent', not 'is'"
-            ),
-            CommonMistake(
-                incorrect: "Ik gaat",
-                correct: "Ik ga",
-                explanation: "'Gaan' with 'ik' becomes 'ga', not 'gaat'"
-            ),
-            CommonMistake(
-                incorrect: "Zij hebt",
-                correct: "Zij heeft",
-                explanation: "'Hebben' with 'zij' becomes 'heeft', not 'hebt'"
             )
         ],
         tips: [
@@ -833,13 +863,13 @@ class DutchGrammarRulesDatabase {
         ],
         commonMistakes: [
             CommonMistake(
-                incorrect: "Ik maakde",
-                correct: "Ik maakte",
+                incorrect: "Ik maakde een fout",
+                correct: "Ik maakte een fout",
                 explanation: "K is hard ('t kofschip) dus gebruik -te, niet -de"
             ),
             CommonMistake(
-                incorrect: "Hij woonte",
-                correct: "Hij woonde",
+                incorrect: "Hij woonte in Utrecht",
+                correct: "Hij woonde in Utrecht",
                 explanation: "N is zacht (niet in 't kofschip) dus gebruik -de"
             ),
             CommonMistake(
@@ -1190,6 +1220,35 @@ class DutchGrammarRulesDatabase {
                 explanation: "Woon jij hier? - In questions, 'jij' doesn't get extra -t",
                 hint: "Remember the question rule for 'jij'",
                 exerciseType: .translation
+            ),
+            
+            // Sentence Building exercises
+            GrammarExercise(
+                question: "Build the sentence: 'I work in Amsterdam'",
+                options: ["Ik", "werk", "in", "Amsterdam"],
+                correctAnswer: 0,
+                explanation: "Ik werk in Amsterdam - 'ik' uses the stem form 'werk'",
+                hint: "Start with 'Ik' and remember 'ik' uses no ending",
+                exerciseType: .sentenceBuilding,
+                correctSentence: "Ik werk in Amsterdam"
+            ),
+            GrammarExercise(
+                question: "Build the sentence: 'She lives in Utrecht'",
+                options: ["Zij", "woont", "in", "Utrecht"],
+                correctAnswer: 0,
+                explanation: "Zij woont in Utrecht - 'zij' adds -t to the stem",
+                hint: "Start with 'Zij' and remember 'zij' adds -t",
+                exerciseType: .sentenceBuilding,
+                correctSentence: "Zij woont in Utrecht"
+            ),
+            GrammarExercise(
+                question: "Build the sentence: 'We study Dutch'",
+                options: ["Wij", "studeren", "Nederlands"],
+                correctAnswer: 0,
+                explanation: "Wij studeren Nederlands - 'wij' uses the whole verb",
+                hint: "Start with 'Wij' and remember 'wij' uses the infinitive",
+                exerciseType: .sentenceBuilding,
+                correctSentence: "Wij studeren Nederlands"
             )
         ],
         commonMistakes: [
@@ -1207,21 +1266,6 @@ class DutchGrammarRulesDatabase {
                 incorrect: "Zij levfte in Parijs",
                 correct: "Zij leefde in Parijs",
                 explanation: "leven → leef (F becomes V!). Stem ends in F, so use -DE: leefde"
-            ),
-            CommonMistake(
-                incorrect: "Wij reiste naar Spanje",
-                correct: "Wij reisden naar Spanje",
-                explanation: "reizen → reis (Z becomes S!). Stem ends in S from Z, so use -DE: reisden"
-            ),
-            CommonMistake(
-                incorrect: "De bus stopde",
-                correct: "De bus stopte",
-                explanation: "stoppen → stop. P is in 't kofschip, so use -TE: stopte (not -DE)"
-            ),
-            CommonMistake(
-                incorrect: "Ik speelte gitaar",
-                correct: "Ik speelde gitaar",
-                explanation: "spelen → speel. L is NOT in 't kofschip, so use -DE: speelde (not -TE)"
             )
         ],
         tips: [
@@ -1749,6 +1793,284 @@ class DutchGrammarRulesDatabase {
                 explanation: "False! It should be 'Wij maken een wandeling'. Dutch uses 'een wandeling maken', not 'zijn'.",
                 hint: "Remember the MAKEN pattern for walks",
                 exerciseType: .trueFalse
+            ),
+            // NEW ADDITIONAL FIXED WORD COMBINATIONS
+            
+            // Category 7: Attention and Focus Expressions
+            GrammarExercise(
+                question: "Complete: 'De docent ___ veel aandacht aan uitspraak' (The teacher pays much attention to pronunciation)",
+                options: ["geeft", "besteedt", "heeft", "maakt"],
+                correctAnswer: 1,
+                explanation: "De docent besteedt veel aandacht aan uitspraak - 'aandacht besteden aan' means to pay attention to",
+                hint: "Think about spending/devoting attention"
+            ),
+            GrammarExercise(
+                question: "Complete: 'Je moet ___ doen om Nederlands te leren' (You must make an effort to learn Dutch)",
+                options: ["werk", "moeite", "tijd", "plan"],
+                correctAnswer: 1,
+                explanation: "Je moet moeite doen om Nederlands te leren - 'moeite doen' means to make an effort",
+                hint: "Think about making effort"
+            ),
+            GrammarExercise(
+                question: "Complete: 'Die felle kleuren ___ meteen de aandacht' (Those bright colors immediately attract attention)",
+                options: ["geven", "hebben", "trekken", "maken"],
+                correctAnswer: 2,
+                explanation: "Die felle kleuren trekken meteen de aandacht - 'de aandacht trekken' means to attract attention",
+                hint: "Think about pulling/drawing attention"
+            ),
+            
+            // Category 8: Risk and Responsibility Expressions
+            GrammarExercise(
+                question: "Complete: 'Hij ___ een groot risico door zijn baan op te zeggen' (He took a big risk by quitting his job)",
+                options: ["maakte", "had", "nam", "kreeg"],
+                correctAnswer: 2,
+                explanation: "Hij nam een groot risico - 'risico nemen' means to take a risk",
+                hint: "Think about taking the risk"
+            ),
+            GrammarExercise(
+                question: "Complete: 'Je moet ___ nemen voor je fouten' (You must take responsibility for your mistakes)",
+                options: ["tijd", "verantwoordelijkheid", "beslissing", "kans"],
+                correctAnswer: 1,
+                explanation: "Je moet verantwoordelijkheid nemen voor je fouten - 'verantwoordelijkheid nemen' means to take responsibility",
+                hint: "Think about taking responsibility"
+            ),
+            
+            // Category 9: Communication and Conversation
+            GrammarExercise(
+                question: "Complete: 'We hebben een goed gesprek ___ over ons project' (We had a good conversation about our project)",
+                options: ["gemaakt", "gehad", "gevoerd", "gedaan"],
+                correctAnswer: 2,
+                explanation: "We hebben een goed gesprek gevoerd - 'een gesprek voeren' means to have a conversation",
+                hint: "Think about conducting a conversation"
+            ),
+            GrammarExercise(
+                question: "Complete: 'Stel gerust ___ als je iets niet begrijpt' (Feel free to ask questions if you don't understand something)",
+                options: ["vragen", "antwoorden", "problemen", "plannen"],
+                correctAnswer: 0,
+                explanation: "Stel gerust vragen - 'vragen stellen' means to ask questions",
+                hint: "Think about posing questions"
+            ),
+            
+            // Category 10: Opportunities and Choices
+            GrammarExercise(
+                question: "Complete: 'Ze ___ de kans om in het buitenland te studeren' (She got the chance to study abroad)",
+                options: ["maakte", "had", "kreeg", "nam"],
+                correctAnswer: 2,
+                explanation: "Ze kreeg de kans om in het buitenland te studeren - 'een kans krijgen' means to get a chance",
+                hint: "Think about receiving the opportunity"
+            ),
+            GrammarExercise(
+                question: "Complete: 'Je moet een ___ maken tussen de twee banen' (You must make a choice between the two jobs)",
+                options: ["beslissing", "keuze", "plan", "afspraak"],
+                correctAnswer: 1,
+                explanation: "Je moet een keuze maken tussen de twee banen - 'een keuze maken' means to make a choice",
+                hint: "Think about making a selection"
+            ),
+            
+            // Category 11: Feelings and Desires
+            GrammarExercise(
+                question: "Complete: 'Ik ___ zin in chocolade' (I feel like chocolate)",
+                options: ["ben", "heb", "krijg", "word"],
+                correctAnswer: 1,
+                explanation: "Ik heb zin in chocolade - 'zin hebben in' means to feel like (doing/eating something)",
+                hint: "Think about possessing the desire"
+            ),
+            GrammarExercise(
+                question: "Complete: 'Ik ben even in de ___ door die uitleg' (I'm a bit confused by that explanation)",
+                options: ["war", "druk", "hast", "pijn"],
+                correctAnswer: 0,
+                explanation: "Ik ben even in de war door die uitleg - 'in de war zijn' means to be confused",
+                hint: "Think about being in disorder/confusion"
+            ),
+            
+            // Category 12: Planning and Problem Solving
+            GrammarExercise(
+                question: "Complete: 'We moeten een ___ maken voor het evenement' (We must make a plan for the event)",
+                options: ["afspraak", "beslissing", "plan", "keuze"],
+                correctAnswer: 2,
+                explanation: "We moeten een plan maken voor het evenement - 'een plan maken' means to make a plan",
+                hint: "Think about creating a plan"
+            ),
+            GrammarExercise(
+                question: "Complete: 'Kun je dit ___ voor me oplossen?' (Can you solve this problem for me?)",
+                options: ["vraag", "probleem", "plan", "keuze"],
+                correctAnswer: 1,
+                explanation: "Kun je dit probleem voor me oplossen? - 'een probleem oplossen' means to solve a problem",
+                hint: "Think about solving the issue"
+            ),
+            
+            // Category 13: Attempts and Efforts
+            GrammarExercise(
+                question: "Complete: 'Ze ___ een poging om hem te helpen' (She made an attempt to help him)",
+                options: ["maakte", "had", "deed", "kreeg"],
+                correctAnswer: 2,
+                explanation: "Ze deed een poging om hem te helpen - 'een poging doen' means to make an attempt",
+                hint: "Think about doing an attempt"
+            ),
+            
+            // Category 14: Worry and Concern
+            GrammarExercise(
+                question: "Complete: 'Maak je niet ___ over die kleine fout' (Don't worry about that small mistake)",
+                options: ["tijd", "druk", "zorgen", "moeite"],
+                correctAnswer: 1,
+                explanation: "Maak je niet druk over die kleine fout - 'druk maken over' means to worry about",
+                hint: "Think about making yourself busy/worried"
+            ),
+            
+            // Category 15: Monitoring and Observation
+            GrammarExercise(
+                question: "Complete: 'Kun jij de kinderen in de ___ houden?' (Can you keep an eye on the children?)",
+                options: ["ogen", "gaten", "handen", "buurt"],
+                correctAnswer: 1,
+                explanation: "Kun jij de kinderen in de gaten houden? - 'in de gaten houden' means to keep an eye on",
+                hint: "Think about keeping in the holes/eyes"
+            ),
+            
+            // Category 16: Visiting and Social
+            GrammarExercise(
+                question: "Complete: 'We gaan dit weekend op ___ bij oma' (We're going to visit grandma this weekend)",
+                options: ["bezoek", "vakantie", "reis", "wandeling"],
+                correctAnswer: 0,
+                explanation: "We gaan dit weekend op bezoek bij oma - 'op bezoek gaan' means to visit someone",
+                hint: "Think about going on a visit"
+            ),
+            
+            // Category 17: Pressure and Stress
+            GrammarExercise(
+                question: "Complete: 'De student ___ onder druk voor het examen' (The student is under pressure for the exam)",
+                options: ["is", "heeft", "staat", "wordt"],
+                correctAnswer: 2,
+                explanation: "De student staat onder druk voor het examen - 'onder druk staan' means to be under pressure",
+                hint: "Think about standing under pressure"
+            ),
+            
+            // Category 18: Connection and Relationship
+            GrammarExercise(
+                question: "Complete: 'Dat heeft niets te ___ met mij' (That has nothing to do with me)",
+                options: ["doen", "maken", "hebben", "zijn"],
+                correctAnswer: 1,
+                explanation: "Dat heeft niets te maken met mij - 'iets te maken hebben met' means to have something to do with",
+                hint: "Think about having to make/do with"
+            ),
+            
+            // Category 19: Role and Function
+            GrammarExercise(
+                question: "Complete: 'Technologie ___ een grote rol in ons leven' (Technology plays a big role in our lives)",
+                options: ["heeft", "maakt", "speelt", "doet"],
+                correctAnswer: 2,
+                explanation: "Technologie speelt een grote rol in ons leven - 'een rol spelen' means to play a role",
+                hint: "Think about playing a role"
+            ),
+            
+            // Category 20: Motivation and Willingness
+            GrammarExercise(
+                question: "Complete: 'Ik zie het echt niet ___ vandaag' (I really don't feel up to it today)",
+                options: ["zitten", "staan", "liggen", "lopen"],
+                correctAnswer: 0,
+                explanation: "Ik zie het echt niet zitten vandaag - 'het niet zien zitten' means to not feel up to it",
+                hint: "Think about not seeing it sitting"
+            ),
+            
+            // Category 21: Consideration and Account
+            GrammarExercise(
+                question: "Complete: 'Je moet ___ houden met anderen' (You must take others into account)",
+                options: ["tijd", "rekening", "aandacht", "moeite"],
+                correctAnswer: 1,
+                explanation: "Je moet rekening houden met anderen - 'rekening houden met' means to take into account",
+                hint: "Think about keeping account/reckoning"
+            ),
+            
+            // NEW: Translation Exercises for New Combinations
+            GrammarExercise(
+                question: "How do you say 'to pay attention to' in Dutch?",
+                options: ["aandacht geven aan", "aandacht besteden aan", "aandacht hebben aan", "aandacht maken aan"],
+                correctAnswer: 1,
+                explanation: "aandacht besteden aan - means to pay attention to",
+                hint: "Think about spending/devoting attention",
+                exerciseType: .translation
+            ),
+            GrammarExercise(
+                question: "How do you say 'to take a risk' in Dutch?",
+                options: ["een risico maken", "een risico nemen", "een risico hebben", "een risico doen"],
+                correctAnswer: 1,
+                explanation: "een risico nemen - means to take a risk",
+                hint: "Think about taking the risk",
+                exerciseType: .translation
+            ),
+            GrammarExercise(
+                question: "How do you say 'to have a conversation' in Dutch?",
+                options: ["een gesprek hebben", "een gesprek maken", "een gesprek voeren", "een gesprek doen"],
+                correctAnswer: 2,
+                explanation: "een gesprek voeren - means to have a conversation",
+                hint: "Think about conducting a conversation",
+                exerciseType: .translation
+            ),
+            
+            // NEW: True/False Exercises for New Combinations
+            GrammarExercise(
+                question: "True or False: 'Ik maak een keuze' is correct Dutch",
+                options: ["True", "False"],
+                correctAnswer: 0,
+                explanation: "True! 'Een keuze maken' is the correct Dutch expression for making a choice.",
+                hint: "This follows the correct MAKEN pattern",
+                exerciseType: .trueFalse
+            ),
+            GrammarExercise(
+                question: "True or False: 'Hij heeft een risico' is correct Dutch for 'He takes a risk'",
+                options: ["True", "False"],
+                correctAnswer: 1,
+                explanation: "False! It should be 'Hij neemt een risico'. Dutch uses 'een risico nemen', not 'hebben'.",
+                hint: "Remember the NEMEN pattern for risks",
+                exerciseType: .trueFalse
+            ),
+            GrammarExercise(
+                question: "True or False: 'Zij doet een gesprek' is correct Dutch",
+                options: ["True", "False"],
+                correctAnswer: 1,
+                explanation: "False! It should be 'Zij voert een gesprek'. Dutch uses 'een gesprek voeren', not 'doen'.",
+                hint: "Remember the VOEREN pattern for conversations",
+                exerciseType: .trueFalse
+            ),
+            
+            // NEW: Context-Based Questions for New Combinations
+            GrammarExercise(
+                question: "When you're confused, how do you say 'I'm confused'?",
+                options: ["Ik ben verward", "Ik ben in de war", "Ik heb verwarring", "Ik krijg verwarring"],
+                correctAnswer: 1,
+                explanation: "Ik ben in de war - 'in de war zijn' means to be confused",
+                hint: "Think about being in disorder",
+                exerciseType: .translation
+            ),
+            GrammarExercise(
+                question: "When you want to visit someone, how do you say 'I'm going to visit'?",
+                options: ["Ik ga bezoeken", "Ik ga op bezoek", "Ik maak een bezoek", "Ik heb een bezoek"],
+                correctAnswer: 1,
+                explanation: "Ik ga op bezoek - 'op bezoek gaan' means to go to visit",
+                hint: "Think about going on a visit",
+                exerciseType: .translation
+            ),
+            
+            // NEW: Complex Scenarios with New Combinations
+            GrammarExercise(
+                question: "Complete: 'Hij ___ een risico en ___ een beslissing' (He takes a risk and makes a decision)",
+                options: ["neemt, neemt", "maakt, maakt", "heeft, heeft", "doet, doet"],
+                correctAnswer: 0,
+                explanation: "Hij neemt een risico en neemt een beslissing - both use 'nemen'",
+                hint: "Think about taking both the risk and the decision"
+            ),
+            GrammarExercise(
+                question: "Complete: 'We ___ een plan en ___ veel aandacht aan de details' (We make a plan and pay much attention to the details)",
+                options: ["maken, besteden", "hebben, geven", "doen, hebben", "nemen, maken"],
+                correctAnswer: 0,
+                explanation: "We maken een plan en besteden veel aandacht aan de details - 'plan maken' and 'aandacht besteden aan'",
+                hint: "Think about creating the plan and spending attention"
+            ),
+            GrammarExercise(
+                question: "Complete: 'Zij ___ verantwoordelijkheid en ___ een poging om te helpen' (She takes responsibility and makes an attempt to help)",
+                options: ["neemt, doet", "heeft, maakt", "maakt, heeft", "doet, neemt"],
+                correctAnswer: 0,
+                explanation: "Zij neemt verantwoordelijkheid en doet een poging om te helpen - 'verantwoordelijkheid nemen' and 'poging doen'",
+                hint: "Think about taking responsibility and doing an attempt"
             )
         ],
         commonMistakes: [
@@ -1766,21 +2088,6 @@ class DutchGrammarRulesDatabase {
                 incorrect: "Hij is honger",
                 correct: "Hij heeft honger",
                 explanation: "In Dutch you HAVE hunger, not ARE hunger. 'Honger hebben' = be hungry."
-            ),
-            CommonMistake(
-                incorrect: "Ik ben pijn",
-                correct: "Ik heb pijn",
-                explanation: "In Dutch you HAVE pain, not ARE pain. 'Pijn hebben' = be in pain."
-            ),
-            CommonMistake(
-                incorrect: "Wij doen stage",
-                correct: "Wij lopen stage",
-                explanation: "In Dutch you 'walk' an internship, not 'do' it. 'Stage lopen'."
-            ),
-            CommonMistake(
-                incorrect: "Hij is gelijk",
-                correct: "Hij heeft gelijk",
-                explanation: "In Dutch you HAVE right, not ARE right. 'Gelijk hebben' = be right."
             )
         ],
         tips: [
@@ -2879,16 +3186,6 @@ class DutchGrammarRulesDatabase {
                 incorrect: "Confusing subject and object",
                 correct: "Subject does the action, object receives the action",
                 explanation: "In 'Ik zie jou', 'Ik' is subject, 'jou' is object"
-            ),
-            CommonMistake(
-                incorrect: "Not recognizing separable verbs",
-                correct: "Identify the base verb and prefix",
-                explanation: "Meekomen = mee (prefix) + komen (verb)"
-            ),
-            CommonMistake(
-                incorrect: "Ignoring word order in analysis",
-                correct: "Consider word order to determine function",
-                explanation: "Dutch word order helps identify subject, verb, and object"
             )
         ],
         tips: [
@@ -3134,7 +3431,7 @@ class DutchGrammarRulesDatabase {
     
     lazy var dutchNounsAndArticlesA1 = DutchGrammarRule(
         id: "dutch_articles_a1",
-        title: "Nouns and Articles (A1)",
+        title: "Articles & Plural/Singular - De, Het, Een, Meervoud en Enkelvoud (A1)",
         type: .pluralization,
         level: .a1,
         explanation: """
@@ -3150,6 +3447,10 @@ class DutchGrammarRulesDatabase {
         • Words ending in -heid, -nis, -ing, -st are usually DE-words
         • Words ending in -je, -tje are always HET-words
         • Many words you just have to learn (no clear rule)
+        
+        Indefinite articles:
+        • een: used for both 'de' and 'het' words
+        • geen: negative form of 'een'
         
         Plural formation:
         • Usually: singular + -en (de man → de mannen)
@@ -3612,6 +3913,629 @@ class DutchGrammarRulesDatabase {
                 correctAnswer: 1,
                 explanation: "'Begrip' is a neuter word, so use 'het'",
                 hint: "This word doesn't follow a clear pattern"
+            ),
+            GrammarExercise(
+                question: "Wat is het meervoud van 'tafel'?",
+                options: ["tafels", "tafelen", "tafels", "tafelen"],
+                correctAnswer: 0,
+                explanation: "The plural of 'tafel' is 'tafels' (tafel + s)",
+                hint: "Some words get -s"
+            ),
+            GrammarExercise(
+                question: "Wat is het meervoud van 'vrouw'?",
+                options: ["vrouwen", "vrouwens", "vrouwes", "vrouws"],
+                correctAnswer: 0,
+                explanation: "Het meervoud van 'vrouw' is 'vrouwen' (vrouw + en)",
+                hint: "Meestal voeg je -en toe"
+            ),
+            GrammarExercise(
+                question: "Wat is het meervoud van 'kat'?",
+                options: ["katten", "kats", "katen", "katjes"],
+                correctAnswer: 0,
+                explanation: "Het meervoud van 'kat' is 'katten' (kat + en)",
+                hint: "Meestal voeg je -en toe"
+            ),
+            GrammarExercise(
+                question: "Wat is het meervoud van 'boek'?",
+                options: ["boeken", "boeks", "boekes", "boekjes"],
+                correctAnswer: 0,
+                explanation: "Het meervoud van 'boek' is 'boeken' (boek + en)",
+                hint: "Meestal voeg je -en toe"
+            ),
+            GrammarExercise(
+                question: "Wat is het meervoud van 'stoel'?",
+                options: ["stoelen", "stoels", "stoeles", "stoeltjes"],
+                correctAnswer: 0,
+                explanation: "Het meervoud van 'stoel' is 'stoelen' (stoel + en)",
+                hint: "Meestal voeg je -en toe"
+            ),
+            GrammarExercise(
+                question: "Wat is het meervoud van 'boom'?",
+                options: ["bomen", "booms", "boomen", "boomjes"],
+                correctAnswer: 0,
+                explanation: "Het meervoud van 'boom' is 'bomen' (boom + en)",
+                hint: "Meestal voeg je -en toe"
+            ),
+            GrammarExercise(
+                question: "Wat is het meervoud van 'appel'?",
+                options: ["appels", "appelen", "appel's", "appels"],
+                correctAnswer: 0,
+                explanation: "Het meervoud van 'appel' is 'appels' (appel + s)",
+                hint: "Sommige woorden krijgen -s"
+            ),
+            GrammarExercise(
+                question: "Wat is het meervoud van 'peer'?",
+                options: ["peren", "peers", "peeren", "peerjes"],
+                correctAnswer: 0,
+                explanation: "Het meervoud van 'peer' is 'peren' (peer + en)",
+                hint: "Meestal voeg je -en toe"
+            ),
+            GrammarExercise(
+                question: "Wat is het meervoud van 'ei'?",
+                options: ["eieren", "eis", "eijen", "eisjes"],
+                correctAnswer: 0,
+                explanation: "Het meervoud van 'ei' is 'eieren' (onregelmatig)",
+                hint: "Dit is een onregelmatig meervoud"
+            ),
+            GrammarExercise(
+                question: "Wat is het meervoud van 'fiets'?",
+                options: ["fietsen", "fiets", "fietses", "fietsjes"],
+                correctAnswer: 0,
+                explanation: "Het meervoud van 'fiets' is 'fietsen' (fiets + en)",
+                hint: "Meestal voeg je -en toe"
+            ),
+            GrammarExercise(
+                question: "Wat is het meervoud van 'vliegtuig'?",
+                options: ["vliegtuigen", "vliegtuigs", "vliegtuigjes", "vliegtuig"],
+                correctAnswer: 0,
+                explanation: "Het meervoud van 'vliegtuig' is 'vliegtuigen' (vliegtuig + en)",
+                hint: "Meestal voeg je -en toe"
+            ),
+            GrammarExercise(
+                question: "Wat is het meervoud van 'boot'?",
+                options: ["boten", "boots", "booten", "bootjes"],
+                correctAnswer: 0,
+                explanation: "Het meervoud van 'boot' is 'boten' (boot + en)",
+                hint: "Meestal voeg je -en toe"
+            ),
+            GrammarExercise(
+                question: "Wat is het meervoud van 'vis'?",
+                options: ["vissen", "vises", "visjes", "vissers"],
+                correctAnswer: 0,
+                explanation: "Het meervoud van 'vis' is 'vissen' (vis + en)",
+                hint: "Meestal voeg je -en toe"
+            ),
+            GrammarExercise(
+                question: "Wat is het meervoud van 'schoen'?",
+                options: ["schoenen", "schoens", "schoenes", "schoentjes"],
+                correctAnswer: 0,
+                explanation: "Het meervoud van 'schoen' is 'schoenen' (schoen + en)",
+                hint: "Meestal voeg je -en toe"
+            ),
+            GrammarExercise(
+                question: "Wat is het meervoud van 'jas'?",
+                options: ["jassen", "jasen", "jasjes", "jasses"],
+                correctAnswer: 0,
+                explanation: "Het meervoud van 'jas' is 'jassen' (jas + en)",
+                hint: "Meestal voeg je -en toe"
+            ),
+            GrammarExercise(
+                question: "Wat is het meervoud van 'deur'?",
+                options: ["deuren", "deurs", "deurens", "deurtjes"],
+                correctAnswer: 0,
+                explanation: "Het meervoud van 'deur' is 'deuren' (deur + en)",
+                hint: "Meestal voeg je -en toe"
+            ),
+            GrammarExercise(
+                question: "Wat is het meervoud van 'raam'?",
+                options: ["ramen", "raams", "ramens", "raampjes"],
+                correctAnswer: 0,
+                explanation: "Het meervoud van 'raam' is 'ramen' (raam + en)",
+                hint: "Meestal voeg je -en toe"
+            ),
+            GrammarExercise(
+                question: "Wat is het meervoud van 'muur'?",
+                options: ["muren", "muurs", "muuren", "muurtjes"],
+                correctAnswer: 0,
+                explanation: "Het meervoud van 'muur' is 'muren' (muur + en)",
+                hint: "Meestal voeg je -en toe"
+            ),
+            GrammarExercise(
+                question: "Wat is het meervoud van 'potlood'?",
+                options: ["potloden", "potloods", "potloden", "potloodjes"],
+                correctAnswer: 0,
+                explanation: "Het meervoud van 'potlood' is 'potloden' (onregelmatig)",
+                hint: "Dit is een onregelmatig meervoud"
+            ),
+            GrammarExercise(
+                question: "Wat is het meervoud van 'pen'?",
+                options: ["pennen", "pens", "penen", "penjes"],
+                correctAnswer: 0,
+                explanation: "Het meervoud van 'pen' is 'pennen' (pen + en)",
+                hint: "Meestal voeg je -en toe"
+            ),
+            GrammarExercise(
+                question: "Wat is het meervoud van 'mes'?",
+                options: ["messen", "mesen", "mesjes", "messers"],
+                correctAnswer: 0,
+                explanation: "Het meervoud van 'mes' is 'messen' (mes + en)",
+                hint: "Meestal voeg je -en toe"
+            ),
+            GrammarExercise(
+                question: "Wat is het meervoud van 'vork'?",
+                options: ["vorken", "vorks", "vorkjes", "vorkens"],
+                correctAnswer: 0,
+                explanation: "Het meervoud van 'vork' is 'vorken' (vork + en)",
+                hint: "Meestal voeg je -en toe"
+            ),
+            GrammarExercise(
+                question: "Wat is het meervoud van 'lepel'?",
+                options: ["lepels", "lepelens", "lepel's", "lepeljes"],
+                correctAnswer: 0,
+                explanation: "Het meervoud van 'lepel' is 'lepels' (lepel + s)",
+                hint: "Sommige woorden krijgen -s"
+            ),
+            GrammarExercise(
+                question: "Wat is het meervoud van 'bord'?",
+                options: ["borden", "bords", "bordjes", "borden"],
+                correctAnswer: 0,
+                explanation: "Het meervoud van 'bord' is 'borden' (bord + en)",
+                hint: "Meestal voeg je -en toe"
+            ),
+            GrammarExercise(
+                question: "Wat is het meervoud van 'glas'?",
+                options: ["glazen", "glases", "glassen", "glasjes"],
+                correctAnswer: 0,
+                explanation: "Het meervoud van 'glas' is 'glazen' (onregelmatig)",
+                hint: "Dit is een onregelmatig meervoud"
+            ),
+            GrammarExercise(
+                question: "Wat is het meervoud van 'fles'?",
+                options: ["flessen", "fleses", "flesjes", "flessers"],
+                correctAnswer: 0,
+                explanation: "Het meervoud van 'fles' is 'flessen' (fles + en)",
+                hint: "Meestal voeg je -en toe"
+            ),
+            GrammarExercise(
+                question: "Wat is het meervoud van 'bloem'?",
+                options: ["bloemen", "bloems", "bloemen", "bloemjes"],
+                correctAnswer: 0,
+                explanation: "Het meervoud van 'bloem' is 'bloemen' (bloem + en)",
+                hint: "Meestal voeg je -en toe"
+            ),
+            GrammarExercise(
+                question: "Wat is het meervoud van 'plant'?",
+                options: ["planten", "plants", "plantjes", "planten"],
+                correctAnswer: 0,
+                explanation: "Het meervoud van 'plant' is 'planten' (plant + en)",
+                hint: "Meestal voeg je -en toe"
+            ),
+            GrammarExercise(
+                question: "Wat is het meervoud van 'dier'?",
+                options: ["dieren", "diers", "dierens", "dierjes"],
+                correctAnswer: 0,
+                explanation: "Het meervoud van 'dier' is 'dieren' (dier + en)",
+                hint: "Meestal voeg je -en toe"
+            ),
+            GrammarExercise(
+                question: "Wat is het meervoud van 'vogel'?",
+                options: ["vogels", "vogeles", "vogelens", "vogeljes"],
+                correctAnswer: 0,
+                explanation: "Het meervoud van 'vogel' is 'vogels' (vogel + s)",
+                hint: "Sommige woorden krijgen -s"
+            ),
+            GrammarExercise(
+                question: "Wat is het meervoud van 'visser'?",
+                options: ["vissers", "visseren", "visseres", "visserjes"],
+                correctAnswer: 0,
+                explanation: "Het meervoud van 'visser' is 'vissers' (visser + s)",
+                hint: "Sommige woorden krijgen -s"
+            ),
+            GrammarExercise(
+                question: "Wat is het meervoud van 'boer'?",
+                options: ["boeren", "boers", "boeren", "boertjes"],
+                correctAnswer: 0,
+                explanation: "Het meervoud van 'boer' is 'boeren' (boer + en)",
+                hint: "Meestal voeg je -en toe"
+            ),
+            GrammarExercise(
+                question: "Wat is het meervoud van 'leraar'?",
+                options: ["leraren", "leraars", "leraaren", "leraarjes"],
+                correctAnswer: 0,
+                explanation: "Het meervoud van 'leraar' is 'leraren' (leraar + en)",
+                hint: "Meestal voeg je -en toe"
+            ),
+            GrammarExercise(
+                question: "Wat is het meervoud van 'student'?",
+                options: ["studenten", "students", "studentjes", "studenten"],
+                correctAnswer: 0,
+                explanation: "Het meervoud van 'student' is 'studenten' (student + en)",
+                hint: "Meestal voeg je -en toe"
+            ),
+            GrammarExercise(
+                question: "Wat is het meervoud van 'meisje'?",
+                options: ["meisjes", "meisjen", "meisjes", "meisjes"],
+                correctAnswer: 0,
+                explanation: "Het meervoud van 'meisje' is 'meisjes' (meisje + s)",
+                hint: "Woorden op -je krijgen meestal -s"
+            ),
+            GrammarExercise(
+                question: "Wat is het meervoud van 'jongen'?",
+                options: ["jongens", "jongens", "jongens", "jongens"],
+                correctAnswer: 0,
+                explanation: "Het meervoud van 'jongen' is 'jongens' (jongen + s)",
+                hint: "Sommige woorden krijgen -s"
+            ),
+            GrammarExercise(
+                question: "Wat is het meervoud van 'brood'?",
+                options: ["broden", "broods", "brooden", "broodjes"],
+                correctAnswer: 0,
+                explanation: "Het meervoud van 'brood' is 'broden' (onregelmatig)",
+                hint: "Dit is een onregelmatig meervoud"
+            ),
+            GrammarExercise(
+                question: "Wat is het meervoud van 'koekje'?",
+                options: ["koekjes", "koekjes", "koekjes", "koekjes"],
+                correctAnswer: 0,
+                explanation: "Het meervoud van 'koekje' is 'koekjes' (koekje + s)",
+                hint: "Woorden op -je krijgen meestal -s"
+            ),
+            GrammarExercise(
+                question: "Wat is het meervoud van 'taartje'?",
+                options: ["taartjes", "taartjes", "taartjes", "taartjes"],
+                correctAnswer: 0,
+                explanation: "Het meervoud van 'taartje' is 'taartjes' (taartje + s)",
+                hint: "Woorden op -je krijgen meestal -s"
+            ),
+            GrammarExercise(
+                question: "Wat is het meervoud van 'taart'?",
+                options: ["taarten", "taarts", "taartes", "taartjes"],
+                correctAnswer: 0,
+                explanation: "Het meervoud van 'taart' is 'taarten' (taart + en)",
+                hint: "Meestal voeg je -en toe"
+            ),
+            GrammarExercise(
+                question: "Wat is het meervoud van 'winkel'?",
+                options: ["winkels", "winkelen", "winkelens", "winkeljes"],
+                correctAnswer: 0,
+                explanation: "Het meervoud van 'winkel' is 'winkels' (winkel + s)",
+                hint: "Sommige woorden krijgen -s"
+            ),
+            GrammarExercise(
+                question: "Wat is het meervoud van 'supermarkt'?",
+                options: ["supermarkten", "supermarkts", "supermarktes", "supermarktjes"],
+                correctAnswer: 0,
+                explanation: "Het meervoud van 'supermarkt' is 'supermarkten' (supermarkt + en)",
+                hint: "Meestal voeg je -en toe"
+            ),
+            GrammarExercise(
+                question: "Wat is het meervoud van 'bakker'?",
+                options: ["bakkers", "bakkeren", "bakkers", "bakkerjes"],
+                correctAnswer: 0,
+                explanation: "Het meervoud van 'bakker' is 'bakkers' (bakker + s)",
+                hint: "Sommige woorden krijgen -s"
+            ),
+            GrammarExercise(
+                question: "Wat is het enkelvoud van 'mannen'?",
+                options: ["man", "mann", "mans", "manne"],
+                correctAnswer: 0,
+                explanation: "Het enkelvoud van 'mannen' is 'man'",
+                hint: "Verwijder -en van het meervoud"
+            ),
+            GrammarExercise(
+                question: "Wat is het enkelvoud van 'kinderen'?",
+                options: ["kind", "kinder", "kinde", "kinds"],
+                correctAnswer: 0,
+                explanation: "Het enkelvoud van 'kinderen' is 'kind' (onregelmatig)",
+                hint: "Dit is een onregelmatig enkelvoud"
+            ),
+            GrammarExercise(
+                question: "Wat is het enkelvoud van 'auto's'?",
+                options: ["auto", "autos", "auto", "aut"],
+                correctAnswer: 0,
+                explanation: "Het enkelvoud van 'auto's' is 'auto'",
+                hint: "Verwijder -'s van het meervoud"
+            ),
+            GrammarExercise(
+                question: "Wat is het enkelvoud van 'eieren'?",
+                options: ["ei", "eier", "eie", "eis"],
+                correctAnswer: 0,
+                explanation: "Het enkelvoud van 'eieren' is 'ei' (onregelmatig)",
+                hint: "Dit is een onregelmatig enkelvoud"
+            ),
+            GrammarExercise(
+                question: "Wat is het enkelvoud van 'steden'?",
+                options: ["stad", "stade", "stads", "staden"],
+                correctAnswer: 0,
+                explanation: "Het enkelvoud van 'steden' is 'stad' (onregelmatig)",
+                hint: "Dit is een onregelmatig enkelvoud"
+            ),
+            GrammarExercise(
+                question: "Wat is het enkelvoud van 'glazen'?",
+                options: ["glas", "glase", "glases", "glassen"],
+                correctAnswer: 0,
+                explanation: "Het enkelvoud van 'glazen' is 'glas' (onregelmatig)",
+                hint: "Dit is een onregelmatig enkelvoud"
+            ),
+            GrammarExercise(
+                question: "Wat is het enkelvoud van 'potloden'?",
+                options: ["potlood", "potlode", "potloods", "potloden"],
+                correctAnswer: 0,
+                explanation: "Het enkelvoud van 'potloden' is 'potlood' (onregelmatig)",
+                hint: "Dit is een onregelmatig enkelvoud"
+            ),
+            GrammarExercise(
+                question: "Wat is het enkelvoud van 'broden'?",
+                options: ["brood", "brode", "broods", "brooden"],
+                correctAnswer: 0,
+                explanation: "Het enkelvoud van 'broden' is 'brood' (onregelmatig)",
+                hint: "Dit is een onregelmatig enkelvoud"
+            ),
+            GrammarExercise(
+                question: "Wat is het enkelvoud van 'flessen'?",
+                options: ["fles", "flesse", "fless", "flessen"],
+                correctAnswer: 0,
+                explanation: "Het enkelvoud van 'flessen' is 'fles'",
+                hint: "Verwijder -en van het meervoud"
+            ),
+            GrammarExercise(
+                question: "Wat is het enkelvoud van 'vrouwen'?",
+                options: ["vrouw", "vrouwe", "vrouws", "vrouwen"],
+                correctAnswer: 0,
+                explanation: "Het enkelvoud van 'vrouwen' is 'vrouw'",
+                hint: "Verwijder -en van het meervoud"
+            ),
+            GrammarExercise(
+                question: "Wat is het enkelvoud van 'katten'?",
+                options: ["kat", "katte", "kats", "katten"],
+                correctAnswer: 0,
+                explanation: "Het enkelvoud van 'katten' is 'kat'",
+                hint: "Verwijder -en van het meervoud"
+            ),
+            GrammarExercise(
+                question: "Wat is het enkelvoud van 'boeken'?",
+                options: ["boek", "boeke", "boeks", "boeken"],
+                correctAnswer: 0,
+                explanation: "Het enkelvoud van 'boeken' is 'boek'",
+                hint: "Verwijder -en van het meervoud"
+            ),
+            GrammarExercise(
+                question: "Wat is het enkelvoud van 'stoelen'?",
+                options: ["stoel", "stoele", "stoels", "stoelen"],
+                correctAnswer: 0,
+                explanation: "Het enkelvoud van 'stoelen' is 'stoel'",
+                hint: "Verwijder -en van het meervoud"
+            ),
+            GrammarExercise(
+                question: "Wat is het enkelvoud van 'bomen'?",
+                options: ["boom", "boome", "booms", "bomen"],
+                correctAnswer: 0,
+                explanation: "Het enkelvoud van 'bomen' is 'boom'",
+                hint: "Verwijder -en van het meervoud"
+            ),
+            GrammarExercise(
+                question: "Wat is het enkelvoud van 'appels'?",
+                options: ["appel", "apple", "appels", "appelen"],
+                correctAnswer: 0,
+                explanation: "Het enkelvoud van 'appels' is 'appel'",
+                hint: "Verwijder -s van het meervoud"
+            ),
+            GrammarExercise(
+                question: "Wat is het enkelvoud van 'peren'?",
+                options: ["peer", "pere", "peers", "peren"],
+                correctAnswer: 0,
+                explanation: "Het enkelvoud van 'peren' is 'peer'",
+                hint: "Verwijder -en van het meervoud"
+            ),
+            GrammarExercise(
+                question: "Wat is het enkelvoud van 'fietsen'?",
+                options: ["fiets", "fietse", "fiets", "fietsen"],
+                correctAnswer: 0,
+                explanation: "Het enkelvoud van 'fietsen' is 'fiets'",
+                hint: "Verwijder -en van het meervoud"
+            ),
+            GrammarExercise(
+                question: "Wat is het enkelvoud van 'vliegtuigen'?",
+                options: ["vliegtuig", "vliegtuige", "vliegtuigs", "vliegtuigen"],
+                correctAnswer: 0,
+                explanation: "Het enkelvoud van 'vliegtuigen' is 'vliegtuig'",
+                hint: "Verwijder -en van het meervoud"
+            ),
+            GrammarExercise(
+                question: "Wat is het enkelvoud van 'boten'?",
+                options: ["boot", "bote", "boots", "boten"],
+                correctAnswer: 0,
+                explanation: "Het enkelvoud van 'boten' is 'boot'",
+                hint: "Verwijder -en van het meervoud"
+            ),
+            GrammarExercise(
+                question: "Wat is het enkelvoud van 'vissen'?",
+                options: ["vis", "visse", "vises", "vissen"],
+                correctAnswer: 0,
+                explanation: "Het enkelvoud van 'vissen' is 'vis'",
+                hint: "Verwijder -en van het meervoud"
+            ),
+            GrammarExercise(
+                question: "Wat is het enkelvoud van 'schoenen'?",
+                options: ["schoen", "schoene", "schoens", "schoenen"],
+                correctAnswer: 0,
+                explanation: "Het enkelvoud van 'schoenen' is 'schoen'",
+                hint: "Verwijder -en van het meervoud"
+            ),
+            GrammarExercise(
+                question: "Wat is het enkelvoud van 'jassen'?",
+                options: ["jas", "jase", "jass", "jassen"],
+                correctAnswer: 0,
+                explanation: "Het enkelvoud van 'jassen' is 'jas'",
+                hint: "Verwijder -en van het meervoud"
+            ),
+            GrammarExercise(
+                question: "Wat is het enkelvoud van 'deuren'?",
+                options: ["deur", "deure", "deurs", "deuren"],
+                correctAnswer: 0,
+                explanation: "Het enkelvoud van 'deuren' is 'deur'",
+                hint: "Verwijder -en van het meervoud"
+            ),
+            GrammarExercise(
+                question: "Wat is het enkelvoud van 'ramen'?",
+                options: ["raam", "raame", "raams", "ramen"],
+                correctAnswer: 0,
+                explanation: "Het enkelvoud van 'ramen' is 'raam'",
+                hint: "Verwijder -en van het meervoud"
+            ),
+            GrammarExercise(
+                question: "Wat is het enkelvoud van 'muren'?",
+                options: ["muur", "muure", "muurs", "muren"],
+                correctAnswer: 0,
+                explanation: "Het enkelvoud van 'muren' is 'muur'",
+                hint: "Verwijder -en van het meervoud"
+            ),
+            GrammarExercise(
+                question: "Wat is het enkelvoud van 'pennen'?",
+                options: ["pen", "pene", "pens", "pennen"],
+                correctAnswer: 0,
+                explanation: "Het enkelvoud van 'pennen' is 'pen'",
+                hint: "Verwijder -en van het meervoud"
+            ),
+            GrammarExercise(
+                question: "Wat is het enkelvoud van 'messen'?",
+                options: ["mes", "mese", "mess", "messen"],
+                correctAnswer: 0,
+                explanation: "Het enkelvoud van 'messen' is 'mes'",
+                hint: "Verwijder -en van het meervoud"
+            ),
+            GrammarExercise(
+                question: "Wat is het enkelvoud van 'vorken'?",
+                options: ["vork", "vorke", "vorks", "vorken"],
+                correctAnswer: 0,
+                explanation: "Het enkelvoud van 'vorken' is 'vork'",
+                hint: "Verwijder -en van het meervoud"
+            ),
+            GrammarExercise(
+                question: "Wat is het enkelvoud van 'lepels'?",
+                options: ["lepel", "lepele", "lepels", "lepelens"],
+                correctAnswer: 0,
+                explanation: "Het enkelvoud van 'lepels' is 'lepel'",
+                hint: "Verwijder -s van het meervoud"
+            ),
+            GrammarExercise(
+                question: "Wat is het enkelvoud van 'borden'?",
+                options: ["bord", "borde", "bords", "borden"],
+                correctAnswer: 0,
+                explanation: "Het enkelvoud van 'borden' is 'bord'",
+                hint: "Verwijder -en van het meervoud"
+            ),
+            GrammarExercise(
+                question: "Wat is het enkelvoud van 'bloemen'?",
+                options: ["bloem", "bloeme", "bloems", "bloemen"],
+                correctAnswer: 0,
+                explanation: "Het enkelvoud van 'bloemen' is 'bloem'",
+                hint: "Verwijder -en van het meervoud"
+            ),
+            GrammarExercise(
+                question: "Wat is het enkelvoud van 'planten'?",
+                options: ["plant", "plante", "plants", "planten"],
+                correctAnswer: 0,
+                explanation: "Het enkelvoud van 'planten' is 'plant'",
+                hint: "Verwijder -en van het meervoud"
+            ),
+            GrammarExercise(
+                question: "Wat is het enkelvoud van 'dieren'?",
+                options: ["dier", "diere", "diers", "dieren"],
+                correctAnswer: 0,
+                explanation: "Het enkelvoud van 'dieren' is 'dier'",
+                hint: "Verwijder -en van het meervoud"
+            ),
+            GrammarExercise(
+                question: "Wat is het enkelvoud van 'vogels'?",
+                options: ["vogel", "vogele", "vogels", "vogelens"],
+                correctAnswer: 0,
+                explanation: "Het enkelvoud van 'vogels' is 'vogel'",
+                hint: "Verwijder -s van het meervoud"
+            ),
+            GrammarExercise(
+                question: "Wat is het enkelvoud van 'vissers'?",
+                options: ["visser", "vissere", "vissers", "visseren"],
+                correctAnswer: 0,
+                explanation: "Het enkelvoud van 'vissers' is 'visser'",
+                hint: "Verwijder -s van het meervoud"
+            ),
+            GrammarExercise(
+                question: "Wat is het enkelvoud van 'boeren'?",
+                options: ["boer", "boere", "boers", "boeren"],
+                correctAnswer: 0,
+                explanation: "Het enkelvoud van 'boeren' is 'boer'",
+                hint: "Verwijder -en van het meervoud"
+            ),
+            GrammarExercise(
+                question: "Wat is het enkelvoud van 'leraren'?",
+                options: ["leraar", "leraare", "leraars", "leraren"],
+                correctAnswer: 0,
+                explanation: "Het enkelvoud van 'leraren' is 'leraar'",
+                hint: "Verwijder -en van het meervoud"
+            ),
+            GrammarExercise(
+                question: "Wat is het enkelvoud van 'studenten'?",
+                options: ["student", "studente", "students", "studenten"],
+                correctAnswer: 0,
+                explanation: "Het enkelvoud van 'studenten' is 'student'",
+                hint: "Verwijder -en van het meervoud"
+            ),
+            GrammarExercise(
+                question: "Wat is het enkelvoud van 'meisjes'?",
+                options: ["meisje", "meisje", "meisjes", "meisjen"],
+                correctAnswer: 0,
+                explanation: "Het enkelvoud van 'meisjes' is 'meisje'",
+                hint: "Verwijder -s van het meervoud"
+            ),
+            GrammarExercise(
+                question: "Wat is het enkelvoud van 'jongens'?",
+                options: ["jongen", "jongene", "jongens", "jongens"],
+                correctAnswer: 0,
+                explanation: "Het enkelvoud van 'jongens' is 'jongen'",
+                hint: "Verwijder -s van het meervoud"
+            ),
+            GrammarExercise(
+                question: "Wat is het enkelvoud van 'koekjes'?",
+                options: ["koekje", "koekje", "koekjes", "koekjen"],
+                correctAnswer: 0,
+                explanation: "Het enkelvoud van 'koekjes' is 'koekje'",
+                hint: "Verwijder -s van het meervoud"
+            ),
+            GrammarExercise(
+                question: "Wat is het enkelvoud van 'taartjes'?",
+                options: ["taartje", "taartje", "taartjes", "taartjen"],
+                correctAnswer: 0,
+                explanation: "Het enkelvoud van 'taartjes' is 'taartje'",
+                hint: "Verwijder -s van het meervoud"
+            ),
+            GrammarExercise(
+                question: "Wat is het enkelvoud van 'taarten'?",
+                options: ["taart", "taarte", "taarts", "taarten"],
+                correctAnswer: 0,
+                explanation: "Het enkelvoud van 'taarten' is 'taart'",
+                hint: "Verwijder -en van het meervoud"
+            ),
+            GrammarExercise(
+                question: "Wat is het enkelvoud van 'winkels'?",
+                options: ["winkel", "winkele", "winkels", "winkelen"],
+                correctAnswer: 0,
+                explanation: "Het enkelvoud van 'winkels' is 'winkel'",
+                hint: "Verwijder -s van het meervoud"
+            ),
+            GrammarExercise(
+                question: "Wat is het enkelvoud van 'supermarkten'?",
+                options: ["supermarkt", "supermarkte", "supermarkts", "supermarkten"],
+                correctAnswer: 0,
+                explanation: "Het enkelvoud van 'supermarkten' is 'supermarkt'",
+                hint: "Verwijder -en van het meervoud"
+            ),
+            GrammarExercise(
+                question: "Wat is het enkelvoud van 'bakkers'?",
+                options: ["bakker", "bakkere", "bakkers", "bakkeren"],
+                correctAnswer: 0,
+                explanation: "Het enkelvoud van 'bakkers' is 'bakker'",
+                hint: "Verwijder -s van het meervoud"
             )
         ],
         commonMistakes: [
@@ -3642,38 +4566,31 @@ class DutchGrammarRulesDatabase {
             ),
             CommonMistake(
                 incorrect: "autos",
-                correct: "auto's",
-                explanation: "The plural of 'auto' is 'auto's' (with apostrophe), not 'autos'"
+                correct: "de auto's",
+                explanation: "Words ending in -o get -'s, not -s"
             ),
             CommonMistake(
-                incorrect: "kinds",
-                correct: "kinderen",
-                explanation: "The plural of 'kind' is 'kinderen' (irregular), not 'kinds'"
+                incorrect: "de kinds",
+                correct: "de kinderen",
+                explanation: "Kind has an irregular plural"
             ),
             CommonMistake(
-                incorrect: "de vrijheid",
-                correct: "de vrijheid",
-                explanation: "This is actually correct - words ending in -heid get 'de'"
-            ),
-            CommonMistake(
-                incorrect: "het vergadering",
-                correct: "de vergadering",
-                explanation: "Words ending in -ing get 'de', not 'het'"
+                incorrect: "de stads",
+                correct: "de steden",
+                explanation: "Stad has an irregular plural"
             )
         ],
         tips: [
-            "Learn the most common words by heart first",
+            "Learn the most common patterns first",
+            "Practice with real sentences",
+            "Pay attention to word endings",
+            "Learn irregular plurals by heart",
             "Remember: all plurals get 'de'",
-            "Diminutives always get 'het'",
-            "Look at the ending of the word for hints",
-            "Words ending in -heid, -nis, -ing, -st are usually 'de' words",
-            "Words ending in -je, -tje are always 'het' words",
-            "Many words you just have to learn (no clear rule)",
-            "Practice with real sentences, not just individual words",
-            "Watch out with translations: English 'the' ≠ Dutch 'de'",
-            "Use a dictionary to check the gender"
+            "Use flashcards to memorize",
+            "Listen to native speakers",
+            "Read Dutch texts to see patterns"
         ],
-        relatedRules: ["verb_present_a1", "adjectives_a2", "possessives_a2", "demonstratives_a2"]
+        relatedRules: ["dutch_plural_singular_a1", "adjectives_a2"]
     )
     
     lazy var demonstrativesA2 = DutchGrammarRule(
@@ -3913,7 +4830,7 @@ class DutchGrammarRulesDatabase {
                 correctAnswer: 0,
                 explanation: "'Werken' uses 'hebben' - it's not a movement verb",
                 hint: "Most regular verbs use 'hebben'",
-                exerciseType: .multipleChoice
+                exerciseType: .multipleChoice,
             ),
             GrammarExercise(
                 question: "Which auxiliary verb for 'komen' (to come)?",
@@ -3921,7 +4838,7 @@ class DutchGrammarRulesDatabase {
                 correctAnswer: 1,
                 explanation: "'Komen' uses 'zijn' - it's a movement verb",
                 hint: "Movement verbs use 'zijn'",
-                exerciseType: .multipleChoice
+                exerciseType: .multipleChoice,
             ),
             GrammarExercise(
                 question: "Complete: 'Wij ___ al gegeten' (We have already eaten)",
@@ -3945,7 +4862,7 @@ class DutchGrammarRulesDatabase {
                 correctAnswer: 1,
                 explanation: "'Blijven' uses 'zijn' - it's a state verb",
                 hint: "State and movement verbs use 'zijn'",
-                exerciseType: .multipleChoice
+                exerciseType: .multipleChoice,
             ),
             GrammarExercise(
                 question: "Complete: 'Hij ___ de krant gelezen' (He has read the newspaper)",
@@ -4089,7 +5006,7 @@ class DutchGrammarRulesDatabase {
                 correctAnswer: 0,
                 explanation: "The past participle of 'werken' is 'gewerkt'",
                 hint: "Regular -en verb: ge + stem + t",
-                exerciseType: .multipleChoice
+                exerciseType: .multipleChoice,
             ),
             GrammarExercise(
                 question: "What is the past participle of 'zijn'?",
@@ -4097,7 +5014,7 @@ class DutchGrammarRulesDatabase {
                 correctAnswer: 0,
                 explanation: "The past participle of 'zijn' is 'geweest'",
                 hint: "This is irregular",
-                exerciseType: .multipleChoice
+                exerciseType: .multipleChoice,
             ),
             GrammarExercise(
                 question: "Complete: 'Wij ___ al gegeten' (We have already eaten)",
@@ -4113,7 +5030,7 @@ class DutchGrammarRulesDatabase {
                 correctAnswer: 0,
                 explanation: "The past participle of 'doen' is 'gedaan'",
                 hint: "This is irregular",
-                exerciseType: .multipleChoice
+                exerciseType: .multipleChoice,
             ),
             GrammarExercise(
                 question: "Complete: 'Het ___ gisteren geregend' (It rained yesterday)",
@@ -4129,7 +5046,7 @@ class DutchGrammarRulesDatabase {
                 correctAnswer: 0,
                 explanation: "The past participle of 'komen' is 'gekomen'",
                 hint: "This is irregular",
-                exerciseType: .multipleChoice
+                exerciseType: .multipleChoice,
             ),
             GrammarExercise(
                 question: "Complete: 'Hij ___ de film gezien' (He has seen the film)",
@@ -4145,37 +5062,12 @@ class DutchGrammarRulesDatabase {
                 correctAnswer: 0,
                 explanation: "The past participle of 'hebben' is 'gehad'",
                 hint: "This is irregular",
-                exerciseType: .multipleChoice
+                exerciseType: .multipleChoice,
             )
         ],
-        commonMistakes: [
-            CommonMistake(
-                incorrect: "Ik ben gewerkt",
-                correct: "Ik heb gewerkt",
-                explanation: "'Werken' uses 'hebben', not 'zijn'"
-            ),
-            CommonMistake(
-                incorrect: "gewerken",
-                correct: "gewerkt",
-                explanation: "Regular -en verb: ge + stem + t"
-            ),
-            CommonMistake(
-                incorrect: "Ik heb naar huis gegaan",
-                correct: "Ik ben naar huis gegaan",
-                explanation: "'Gaan' is a movement verb, so use 'zijn'"
-            )
-        ],
-        tips: [
-            "Learn irregular past participles by heart",
-            "Most verbs use 'hebben'",
-            "Movement verbs use 'zijn'",
-            "Past participle always at the end",
-            "Practice with real conversations",
-            "Watch out for 't kofschip rule",
-            "Perfect tense is very common in Dutch",
-            "Use for completed actions"
-        ],
-        relatedRules: ["verb_present_a1", "verb_past_a2", "auxiliary_verbs_b1", "t_kofschip_rule_b1"]
+        commonMistakes: [],
+        tips: [],
+        relatedRules: []
     )
     
     lazy var verbsWithFixedPrepositionsB1 = DutchGrammarRule(
@@ -4627,148 +5519,14 @@ class DutchGrammarRulesDatabase {
         relatedRules: ["verb_present_a1", "dutch_nouns_articles_a1"]
     )
     
-    lazy var possessivesA2 = DutchGrammarRule(
-        id: "possessives_a2",
-        title: "Possessive Pronouns (A2)",
-        type: .wordOrder,
-        level: .a2,
-        explanation: """
-        Dutch possessive pronouns show ownership and agree with the noun they describe, not the owner.
-        
-        **Possessive Pronouns:**
-        • mijn (my)
-        • jouw/je (your - informal)
-        • zijn (his/its)
-        • haar (her)
-        • ons/onze (our)
-        • jullie (your - plural)
-        • hun (their)
-        
-        **Agreement Rules:**
-        • mijn, jouw, zijn, haar, ons: no ending with 'het' words, -e with 'de' words
-        • onze: always -e (used with 'de' words)
-        • jullie, hun: always -e
-        
-        **Position:**
-        • Always before the noun
-        • Cannot be used alone (need a noun)
-        • Can be emphasized with 'eigen' (own)
-        """,
-        keyPoints: [
-            "Agree with noun, not owner",
-            "Mijn/jouw/zijn/haar/ons: no ending with het, -e with de",
-            "Onze: always -e (de words only)",
-            "Jullie/hun: always -e",
-            "Always before noun",
-            "Cannot be used alone",
-            "Can add 'eigen' for emphasis"
-        ],
-        examples: [
-            GrammarExample(
-                dutch: "Mijn boek",
-                english: "My book",
-                breakdown: "mijn (no ending, het word)",
-                audioHint: "mɛin buk"
-            ),
-            GrammarExample(
-                dutch: "Mijn auto",
-                english: "My car",
-                breakdown: "mijn + -e (de word)",
-                audioHint: "mɛin ɵtoː"
-            ),
-            GrammarExample(
-                dutch: "Ons huis",
-                english: "Our house",
-                breakdown: "ons (no ending, het word)",
-                audioHint: "ɔns hœys"
-            ),
-            GrammarExample(
-                dutch: "Onze auto",
-                english: "Our car",
-                breakdown: "onze (always -e, de word)",
-                audioHint: "ɔnzə ɵtoː"
-            ),
-            GrammarExample(
-                dutch: "Jullie boeken",
-                english: "Your books",
-                breakdown: "jullie (always -e, plural)",
-                audioHint: "jɵli bukə(n)"
-            )
-        ],
-        exercises: [
-            GrammarExercise(
-                question: "Complete: '___ boek' (My book)",
-                options: ["mijn", "mijne", "mijns", "mijnen"],
-                correctAnswer: 0,
-                explanation: "Mijn boek - 'boek' is a 'het' word, no ending",
-                hint: "Het words get no ending"
-            ),
-            GrammarExercise(
-                question: "Complete: '___ auto' (My car)",
-                options: ["mijn", "mijne", "mijns", "mijnen"],
-                correctAnswer: 1,
-                explanation: "Mijne auto - 'auto' is a 'de' word, add -e",
-                hint: "De words get -e ending"
-            ),
-            GrammarExercise(
-                question: "Complete: '___ huis' (Our house)",
-                options: ["ons", "onze", "onss", "onsen"],
-                correctAnswer: 0,
-                explanation: "Ons huis - 'huis' is a 'het' word, no ending",
-                hint: "Het words get no ending"
-            ),
-            GrammarExercise(
-                question: "Complete: '___ auto' (Our car)",
-                options: ["ons", "onze", "onss", "onsen"],
-                correctAnswer: 1,
-                explanation: "Onze auto - 'auto' is a 'de' word, use onze",
-                hint: "De words use onze"
-            ),
-            GrammarExercise(
-                question: "Complete: '___ boeken' (Your books)",
-                options: ["jullie", "jullies", "jullie's", "jullien"],
-                correctAnswer: 0,
-                explanation: "Jullie boeken - jullie always has -e",
-                hint: "Jullie always has -e"
-            )
-        ],
-        commonMistakes: [
-            CommonMistake(
-                incorrect: "Mijne boek",
-                correct: "Mijn boek",
-                explanation: "Het words don't get -e ending"
-            ),
-            CommonMistake(
-                incorrect: "Mijn auto",
-                correct: "Mijne auto",
-                explanation: "De words get -e ending"
-            ),
-            CommonMistake(
-                incorrect: "Ons auto",
-                correct: "Onze auto",
-                explanation: "Use onze with de words"
-            )
-        ],
-        tips: [
-            "Learn the gender of common nouns",
-            "Remember: agree with noun, not owner",
-            "Het words: no ending",
-            "De words: add -e",
-            "Onze: always -e (de words only)",
-            "Jullie/hun: always -e",
-            "Practice with real sentences",
-            "Use flashcards to memorize"
-        ],
-        relatedRules: ["dutch_nouns_articles_a1", "adjectives_a2"]
-    )
-    
     // MARK: - All Grammar Rules Array
     
     lazy var allGrammarRules: [DutchGrammarRule] = [
         // A1 Level
         presentTenseA1,
-        irregularVerbsA1,
         dutchNounsAndArticlesA1,
+        irregularVerbsA1,
+        
         
         // A2 Level  
         pastTenseA2,
@@ -4776,6 +5534,7 @@ class DutchGrammarRulesDatabase {
         dutchInformalContractionsA2,
         contractionsCliticsA2,
         wordClassificationSentenceAnalysisA2,
+        futureTenseZalZullenA2,
         
         // B1 Level
         auxiliaryVerbsB1,
@@ -4787,7 +5546,6 @@ class DutchGrammarRulesDatabase {
         // A2 Level Additional Rules
         adjectivesA2,
         negationA2,
-        possessivesA2,
         demonstrativesA2
     ]
     
@@ -4809,6 +5567,4 @@ class DutchGrammarRulesDatabase {
         guard let rule = getRuleById(ruleId) else { return [] }
         return rule.relatedRules.compactMap { getRuleById($0) }
     }
-} 
-
-
+}
