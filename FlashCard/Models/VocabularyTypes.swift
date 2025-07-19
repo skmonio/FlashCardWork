@@ -311,6 +311,13 @@ class DutchVocabularyDatabase {
         return _allPacks.flatMap { $0.words }
     }
     
+    // Method for finding a specific word by reference (Dutch word)
+    func findWord(_ reference: String) -> DutchWord? {
+        return _allPacks.flatMap { $0.words }.first { word in
+            word.word.lowercased() == reference.lowercased()
+        }
+    }
+    
     // Property for expanded packs (for TranslationService compatibility)
     static var expandedPacks: [DutchVocabularyPack] {
         return DutchVocabularyDatabase.shared.getAllPacks()

@@ -1,0 +1,2000 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "lastUpdated": "2025-01-19",
+    "totalLessons": 5,
+    "description": "Converted Dutch lessons from hardcoded Swift to JSON format"
+  },
+  "levels": [
+    {
+      "id": "A1",
+      "name": "Beginner",
+      "description": "Basic vocabulary and simple sentences",
+      "estimatedTime": 5
+    },
+    {
+      "id": "A2", 
+      "name": "Elementary",
+      "description": "Expanding vocabulary and basic grammar",
+      "estimatedTime": 8
+    },
+    {
+      "id": "B1",
+      "name": "Intermediate", 
+      "description": "Complex vocabulary and advanced grammar",
+      "estimatedTime": 12
+    }
+  ],
+  "categories": [
+    {
+      "id": "healthcare",
+      "name": "Healthcare & Community",
+      "dutchName": "Gezondheidszorg & Gemeenschap",
+      "description": "Healthcare, community services, and caregiving"
+    },
+    {
+      "id": "movement",
+      "name": "Movement & Body",
+      "dutchName": "Beweging & Lichaam",
+      "description": "Movement, body parts, and physical actions"
+    },
+    {
+      "id": "everyday",
+      "name": "Everyday Vocabulary",
+      "dutchName": "Dagelijkse Woordenschat",
+      "description": "Common items, actions, and descriptive terms"
+    },
+    {
+      "id": "meetings",
+      "name": "Meetings & Maintenance",
+      "dutchName": "Vergaderingen & Onderhoud",
+      "description": "Meetings, registration, and maintenance tasks"
+    },
+    {
+      "id": "context",
+      "name": "Vocabulary in Context",
+      "dutchName": "Woordenschat in Context",
+      "description": "Using Dutch words in context and conversation"
+    }
+  ],
+  "lessons": [
+    {
+      "id": "lesson_chapter_25",
+      "title": "Chapter 2.5 – Healthcare and Community Vocabulary",
+      "description": "Learn Dutch vocabulary related to healthcare, community services, and caregiving. Practice words for medical care, government services, and supporting others.",
+      "level": "A2",
+      "category": "healthcare",
+      "estimatedTime": 10,
+      "difficulty": "intermediate",
+      "prerequisites": [],
+      "vocabulary": [
+        {
+          "dutchWord": "aanpassen",
+          "translation": "adjust",
+          "article": "",
+          "example": "Ik moet mijn plannen aanpassen.",
+          "wordType": "verb",
+          "vocabularyReference": "aanpassen"
+        },
+        {
+          "dutchWord": "bejaarden",
+          "translation": "old people",
+          "article": "de",
+          "example": "De bejaarden hebben hulp nodig.",
+          "wordType": "noun",
+          "vocabularyReference": "bejaarden"
+        },
+        {
+          "dutchWord": "bestaan",
+          "translation": "exist",
+          "article": "",
+          "example": "Dit probleem bestaat al lang.",
+          "wordType": "verb",
+          "vocabularyReference": "bestaan"
+        },
+        {
+          "dutchWord": "geestelijk",
+          "translation": "spiritual, mentally",
+          "article": "",
+          "example": "Hij heeft geestelijke problemen.",
+          "wordType": "adjective",
+          "vocabularyReference": "geestelijk"
+        },
+        {
+          "dutchWord": "geheugen",
+          "translation": "memory",
+          "article": "het",
+          "example": "Mijn geheugen is niet zo goed.",
+          "wordType": "noun",
+          "vocabularyReference": "geheugen"
+        },
+        {
+          "dutchWord": "plotseling",
+          "translation": "suddenly, all of a sudden",
+          "article": "",
+          "example": "Het regende plotseling heel hard.",
+          "wordType": "adverb",
+          "vocabularyReference": "plotseling"
+        },
+        {
+          "dutchWord": "regering",
+          "translation": "government",
+          "article": "de",
+          "example": "De regering maakt nieuwe wetten.",
+          "wordType": "noun",
+          "vocabularyReference": "regering"
+        },
+        {
+          "dutchWord": "rekening",
+          "translation": "take into account / bill",
+          "article": "de",
+          "example": "Ik houd rekening met jouw wensen.",
+          "wordType": "noun",
+          "vocabularyReference": "rekening"
+        },
+        {
+          "dutchWord": "rolstoel",
+          "translation": "wheel chair",
+          "article": "de",
+          "example": "De rolstoel staat in de gang.",
+          "wordType": "noun",
+          "vocabularyReference": "rolstoel"
+        },
+        {
+          "dutchWord": "toenamen",
+          "translation": "to grow, increase",
+          "article": "",
+          "example": "De bevolking neemt toe elk jaar.",
+          "wordType": "verb",
+          "vocabularyReference": "toenamen"
+        },
+        {
+          "dutchWord": "troosten",
+          "translation": "comfort, consolation",
+          "article": "",
+          "example": "Ik probeer haar te troosten.",
+          "wordType": "verb",
+          "vocabularyReference": "troosten"
+        },
+        {
+          "dutchWord": "verpleegkundig",
+          "translation": "nursing",
+          "article": "",
+          "example": "Zij werkt als verpleegkundige.",
+          "wordType": "adjective",
+          "vocabularyReference": "verpleegkundig"
+        },
+        {
+          "dutchWord": "vrijwilliger",
+          "translation": "volunteer",
+          "article": "de",
+          "example": "De vrijwilliger helpt in het ziekenhuis.",
+          "wordType": "noun",
+          "vocabularyReference": "vrijwilliger"
+        },
+        {
+          "dutchWord": "zorgen",
+          "translation": "care",
+          "article": "",
+          "example": "Ik zorg voor mijn grootmoeder.",
+          "wordType": "verb",
+          "vocabularyReference": "zorgen"
+        }
+      ],
+      "exercises": [
+        {
+          "id": "ex_001",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["Ik", "moet", "mijn", "plannen", "aanpassen"],
+          "correctAnswer": "Ik moet mijn plannen aanpassen",
+          "explanation": "'Ik moet mijn plannen aanpassen' means 'I have to adjust my plans'. 'Aanpassen' means 'to adjust'.",
+          "vocabularyReference": "aanpassen",
+          "grammarReference": "basic_word_order"
+        },
+        {
+          "id": "ex_002",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["De", "bejaarden", "hebben", "hulp", "nodig"],
+          "correctAnswer": "De bejaarden hebben hulp nodig",
+          "explanation": "'De bejaarden hebben hulp nodig' means 'The elderly need help'. 'Bejaarden' means 'old people'.",
+          "vocabularyReference": "bejaarden",
+          "grammarReference": "basic_word_order"
+        },
+        {
+          "id": "ex_003",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["Dit", "probleem", "bestaat", "al", "lang"],
+          "correctAnswer": "Dit probleem bestaat al lang",
+          "explanation": "'Dit probleem bestaat al lang' means 'This problem has existed for a long time'. 'Bestaan' means 'to exist'.",
+          "vocabularyReference": "bestaan",
+          "grammarReference": "basic_word_order"
+        },
+        {
+          "id": "ex_004",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["Hij", "heeft", "geestelijke", "problemen"],
+          "correctAnswer": "Hij heeft geestelijke problemen",
+          "explanation": "'Hij heeft geestelijke problemen' means 'He has mental problems'. 'Geestelijk' means 'mental' or 'spiritual'.",
+          "vocabularyReference": "geestelijk",
+          "grammarReference": "basic_word_order"
+        },
+        {
+          "id": "ex_005",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["Mijn", "geheugen", "is", "niet", "zo", "goed"],
+          "correctAnswer": "Mijn geheugen is niet zo goed",
+          "explanation": "'Mijn geheugen is niet zo goed' means 'My memory is not so good'. 'Geheugen' means 'memory'.",
+          "vocabularyReference": "geheugen",
+          "grammarReference": "basic_word_order"
+        },
+        {
+          "id": "ex_006",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["Het", "regende", "plotseling", "heel", "hard"],
+          "correctAnswer": "Het regende plotseling heel hard",
+          "explanation": "'Het regende plotseling heel hard' means 'It suddenly rained very hard'. 'Plotseling' means 'suddenly'.",
+          "vocabularyReference": "plotseling",
+          "grammarReference": "adverb_placement"
+        },
+        {
+          "id": "ex_007",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["De", "regering", "maakt", "nieuwe", "wetten"],
+          "correctAnswer": "De regering maakt nieuwe wetten",
+          "explanation": "'De regering maakt nieuwe wetten' means 'The government makes new laws'. 'Regering' means 'government'.",
+          "vocabularyReference": "regering",
+          "grammarReference": "basic_word_order"
+        },
+        {
+          "id": "ex_008",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["Ik", "houd", "rekening", "met", "jouw", "wensen"],
+          "correctAnswer": "Ik houd rekening met jouw wensen",
+          "explanation": "'Ik houd rekening met jouw wensen' means 'I take your wishes into account'. 'Rekening houden met' means 'to take into account'.",
+          "vocabularyReference": "rekening",
+          "grammarReference": "prepositional_phrases"
+        },
+        {
+          "id": "ex_009",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["De", "rolstoel", "staat", "in", "de", "gang"],
+          "correctAnswer": "De rolstoel staat in de gang",
+          "explanation": "'De rolstoel staat in de gang' means 'The wheelchair is in the hallway'. 'Rolstoel' means 'wheelchair'.",
+          "vocabularyReference": "rolstoel",
+          "grammarReference": "basic_word_order"
+        },
+        {
+          "id": "ex_010",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["De", "bevolking", "neemt", "toe", "elk", "jaar"],
+          "correctAnswer": "De bevolking neemt toe elk jaar",
+          "explanation": "'De bevolking neemt toe elk jaar' means 'The population increases every year'. 'Toenemen' means 'to grow' or 'to increase'.",
+          "vocabularyReference": "toenamen",
+          "grammarReference": "basic_word_order"
+        },
+        {
+          "id": "ex_011",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["Ik", "probeer", "haar", "te", "troosten"],
+          "correctAnswer": "Ik probeer haar te troosten",
+          "explanation": "'Ik probeer haar te troosten' means 'I try to comfort her'. 'Troosten' means 'to comfort'.",
+          "vocabularyReference": "troosten",
+          "grammarReference": "infinitive_construction"
+        },
+        {
+          "id": "ex_012",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["Zij", "werkt", "als", "verpleegkundige"],
+          "correctAnswer": "Zij werkt als verpleegkundige",
+          "explanation": "'Zij werkt als verpleegkundige' means 'She works as a nurse'. 'Verpleegkundig' means 'nursing'.",
+          "vocabularyReference": "verpleegkundig",
+          "grammarReference": "profession_construction"
+        },
+        {
+          "id": "ex_013",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["De", "vrijwilliger", "helpt", "in", "het", "ziekenhuis"],
+          "correctAnswer": "De vrijwilliger helpt in het ziekenhuis",
+          "explanation": "'De vrijwilliger helpt in het ziekenhuis' means 'The volunteer helps in the hospital'. 'Vrijwilliger' means 'volunteer'.",
+          "vocabularyReference": "vrijwilliger",
+          "grammarReference": "basic_word_order"
+        },
+        {
+          "id": "ex_014",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["Ik", "zorg", "voor", "mijn", "grootmoeder"],
+          "correctAnswer": "Ik zorg voor mijn grootmoeder",
+          "explanation": "'Ik zorg voor mijn grootmoeder' means 'I take care of my grandmother'. 'Zorgen' means 'to care'.",
+          "vocabularyReference": "zorgen",
+          "grammarReference": "prepositional_phrases"
+        },
+        {
+          "id": "ex_015",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["De", "rekening", "is", "te", "hoog"],
+          "correctAnswer": "De rekening is te hoog",
+          "explanation": "'De rekening is te hoog' means 'The bill is too high'. 'Rekening' can also mean 'bill'.",
+          "vocabularyReference": "rekening",
+          "grammarReference": "basic_word_order"
+        },
+        {
+          "id": "ex_016",
+          "type": "matchMeaning",
+          "prompt": "Match: aanpassen",
+          "options": ["adjust", "exist", "care"],
+          "correctAnswer": "adjust",
+          "explanation": "'Aanpassen' means 'to adjust'.",
+          "vocabularyReference": "aanpassen"
+        },
+        {
+          "id": "ex_017",
+          "type": "matchMeaning",
+          "prompt": "Match: bejaarden",
+          "options": ["old people", "children", "adults"],
+          "correctAnswer": "old people",
+          "explanation": "'Bejaarden' means 'old people' or 'elderly'.",
+          "vocabularyReference": "bejaarden"
+        },
+        {
+          "id": "ex_018",
+          "type": "matchMeaning",
+          "prompt": "Match: bestaan",
+          "options": ["exist", "begin", "end"],
+          "correctAnswer": "exist",
+          "explanation": "'Bestaan' means 'to exist'.",
+          "vocabularyReference": "bestaan"
+        },
+        {
+          "id": "ex_019",
+          "type": "matchMeaning",
+          "prompt": "Match: geestelijk",
+          "options": ["spiritual, mentally", "physical", "emotional"],
+          "correctAnswer": "spiritual, mentally",
+          "explanation": "'Geestelijk' means 'spiritual' or 'mental'.",
+          "vocabularyReference": "geestelijk"
+        },
+        {
+          "id": "ex_020",
+          "type": "matchMeaning",
+          "prompt": "Match: geheugen",
+          "options": ["memory", "brain", "mind"],
+          "correctAnswer": "memory",
+          "explanation": "'Geheugen' means 'memory'.",
+          "vocabularyReference": "geheugen"
+        },
+        {
+          "id": "ex_021",
+          "type": "matchMeaning",
+          "prompt": "Match: plotseling",
+          "options": ["suddenly", "slowly", "always"],
+          "correctAnswer": "suddenly",
+          "explanation": "'Plotseling' means 'suddenly' or 'all of a sudden'.",
+          "vocabularyReference": "plotseling"
+        },
+        {
+          "id": "ex_022",
+          "type": "matchMeaning",
+          "prompt": "Match: regering",
+          "options": ["government", "hospital", "school"],
+          "correctAnswer": "government",
+          "explanation": "'Regering' means 'government'.",
+          "vocabularyReference": "regering"
+        },
+        {
+          "id": "ex_023",
+          "type": "matchMeaning",
+          "prompt": "Match: rolstoel",
+          "options": ["wheel chair", "car", "bicycle"],
+          "correctAnswer": "wheel chair",
+          "explanation": "'Rolstoel' means 'wheelchair'.",
+          "vocabularyReference": "rolstoel"
+        },
+        {
+          "id": "ex_024",
+          "type": "matchMeaning",
+          "prompt": "Match: toenemen",
+          "options": ["to grow, increase", "to decrease", "to stay the same"],
+          "correctAnswer": "to grow, increase",
+          "explanation": "'Toenemen' means 'to grow' or 'to increase'.",
+          "vocabularyReference": "toenamen"
+        },
+        {
+          "id": "ex_025",
+          "type": "matchMeaning",
+          "prompt": "Match: troosten",
+          "options": ["comfort, consolation", "help", "support"],
+          "correctAnswer": "comfort, consolation",
+          "explanation": "'Troosten' means 'to comfort' or 'to console'.",
+          "vocabularyReference": "troosten"
+        },
+        {
+          "id": "ex_026",
+          "type": "matchMeaning",
+          "prompt": "Match: verpleegkundig",
+          "options": ["nursing", "medical", "health"],
+          "correctAnswer": "nursing",
+          "explanation": "'Verpleegkundig' means 'nursing'.",
+          "vocabularyReference": "verpleegkundig"
+        },
+        {
+          "id": "ex_027",
+          "type": "matchMeaning",
+          "prompt": "Match: vrijwilliger",
+          "options": ["volunteer", "worker", "student"],
+          "correctAnswer": "volunteer",
+          "explanation": "'Vrijwilliger' means 'volunteer'.",
+          "vocabularyReference": "vrijwilliger"
+        },
+        {
+          "id": "ex_028",
+          "type": "matchMeaning",
+          "prompt": "Match: zorgen",
+          "options": ["care", "help", "support"],
+          "correctAnswer": "care",
+          "explanation": "'Zorgen' means 'to care'.",
+          "vocabularyReference": "zorgen"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "experience",
+          "value": 100,
+          "description": "Complete Chapter 2.5 - Healthcare and Community Vocabulary"
+        },
+        {
+          "type": "vocabulary",
+          "value": 14,
+          "description": "Unlock 14 new vocabulary words"
+        },
+        {
+          "type": "achievement",
+          "value": 1,
+          "description": "Earn 'Community Helper' badge"
+        }
+      ]
+    },
+    {
+      "id": "lesson_chapter_26",
+      "title": "Chapter 2.6 – Movement and Body Vocabulary",
+      "description": "Learn Dutch vocabulary related to movement, body parts, and physical actions. Practice words for directions, body positions, and breathing exercises.",
+      "level": "A2",
+      "category": "movement",
+      "estimatedTime": 12,
+      "difficulty": "intermediate",
+      "prerequisites": [],
+      "vocabulary": [
+        {
+          "dutchWord": "Achteren",
+          "translation": "Backwards",
+          "article": "",
+          "example": "Ik loop achteren naar achteren.",
+          "wordType": "adverb",
+          "vocabularyReference": "Achteren"
+        },
+        {
+          "dutchWord": "ademhaling",
+          "translation": "Breathing",
+          "article": "de",
+          "example": "Ik moet mijn ademhaling controleren.",
+          "wordType": "noun",
+          "vocabularyReference": "ademhaling"
+        },
+        {
+          "dutchWord": "buigen",
+          "translation": "Bend",
+          "article": "",
+          "example": "Ik moet mijn knieën buigen.",
+          "wordType": "verb",
+          "vocabularyReference": "buigen"
+        },
+        {
+          "dutchWord": "evenwicht",
+          "translation": "Balance",
+          "article": "het",
+          "example": "Ik moet mijn evenwicht bewaren.",
+          "wordType": "noun",
+          "vocabularyReference": "evenwicht"
+        },
+        {
+          "dutchWord": "gespannen",
+          "translation": "Tense",
+          "article": "",
+          "example": "De spanning in mijn schouders is gespannen.",
+          "wordType": "adjective",
+          "vocabularyReference": "gespannen"
+        },
+        {
+          "dutchWord": "gevolg",
+          "translation": "Consequence, Result, Effect",
+          "article": "het",
+          "example": "Wat is het gevolg van deze actie?",
+          "wordType": "noun",
+          "vocabularyReference": "gevolg"
+        },
+        {
+          "dutchWord": "inademen",
+          "translation": "Breathe in",
+          "article": "",
+          "example": "Ik moet diep inademen.",
+          "wordType": "verb",
+          "vocabularyReference": "inademen"
+        },
+        {
+          "dutchWord": "leunen",
+          "translation": "Lean",
+          "article": "",
+          "example": "Hij leunt tegen de muur.",
+          "wordType": "verb",
+          "vocabularyReference": "leunen"
+        },
+        {
+          "dutchWord": "lijf",
+          "translation": "Body",
+          "article": "het",
+          "example": "Ik moet mijn lijf strekken.",
+          "wordType": "noun",
+          "vocabularyReference": "lijf"
+        },
+        {
+          "dutchWord": "linker",
+          "translation": "Left",
+          "article": "",
+          "example": "De linker kant van de weg.",
+          "wordType": "adjective",
+          "vocabularyReference": "linker"
+        },
+        {
+          "dutchWord": "omhoog",
+          "translation": "Upwards",
+          "article": "",
+          "example": "De bal rolt omhoog de heuvel.",
+          "wordType": "adverb",
+          "vocabularyReference": "omhoog"
+        },
+        {
+          "dutchWord": "Omlaag",
+          "translation": "Downwards",
+          "article": "",
+          "example": "De temperatuur gaat omlaag.",
+          "wordType": "adverb",
+          "vocabularyReference": "Omlaag"
+        },
+        {
+          "dutchWord": "ondertussen",
+          "translation": "Meanwhile",
+          "article": "",
+          "example": "Ondertussen kookt het water.",
+          "wordType": "adverb",
+          "vocabularyReference": "ondertussen"
+        },
+        {
+          "dutchWord": "onthouden",
+          "translation": "Remember",
+          "article": "",
+          "example": "Ik moet dit onthouden.",
+          "wordType": "verb",
+          "vocabularyReference": "onthouden"
+        },
+        {
+          "dutchWord": "optillen",
+          "translation": "Lift up",
+          "article": "",
+          "example": "Kun je de doos optillen?",
+          "wordType": "verb",
+          "vocabularyReference": "optillen"
+        },
+        {
+          "dutchWord": "Rechter",
+          "translation": "Right (side)",
+          "article": "",
+          "example": "De rechter kant van de weg.",
+          "wordType": "adjective",
+          "vocabularyReference": "Rechter"
+        },
+        {
+          "dutchWord": "rechtop",
+          "translation": "Upright",
+          "article": "",
+          "example": "Ik moet rechtop zitten.",
+          "wordType": "adverb",
+          "vocabularyReference": "rechtop"
+        },
+        {
+          "dutchWord": "strekken",
+          "translation": "Stretch",
+          "article": "",
+          "example": "Ik moet mijn spieren strekken.",
+          "wordType": "verb",
+          "vocabularyReference": "strekken"
+        },
+        {
+          "dutchWord": "tijdelijk",
+          "translation": "Temporary",
+          "article": "",
+          "example": "Dit is een tijdelijke oplossing.",
+          "wordType": "adjective",
+          "vocabularyReference": "tijdelijk"
+        },
+        {
+          "dutchWord": "Uitademen",
+          "translation": "Breathe out",
+          "article": "",
+          "example": "Ik moet langzaam uitademen.",
+          "wordType": "verb",
+          "vocabularyReference": "Uitademen"
+        },
+        {
+          "dutchWord": "verminderen",
+          "translation": "Reduce, Decrease",
+          "article": "",
+          "example": "De pijn verminderde langzaam.",
+          "wordType": "verb",
+          "vocabularyReference": "verminderen"
+        },
+        {
+          "dutchWord": "volhouden",
+          "translation": "Persevere, Continue, Persist",
+          "article": "",
+          "example": "Ik moet volhouden met oefenen.",
+          "wordType": "verb",
+          "vocabularyReference": "volhouden"
+        },
+        {
+          "dutchWord": "Voorbij",
+          "translation": "Over, Finished",
+          "article": "",
+          "example": "De tijd is voorbij.",
+          "wordType": "adverb",
+          "vocabularyReference": "Voorbij"
+        },
+        {
+          "dutchWord": "voordoen",
+          "translation": "Demonstrate, Perform",
+          "article": "",
+          "example": "Ik ga je voordoen hoe je het moet doen.",
+          "wordType": "verb",
+          "vocabularyReference": "voordoen"
+        },
+        {
+          "dutchWord": "voren",
+          "translation": "Forward",
+          "article": "",
+          "example": "Ik loop voren naar de deur.",
+          "wordType": "adverb",
+          "vocabularyReference": "voren"
+        },
+        {
+          "dutchWord": "zakken",
+          "translation": "Go flat",
+          "article": "",
+          "example": "De ballon zakt naar beneden.",
+          "wordType": "verb",
+          "vocabularyReference": "zakken"
+        },
+        {
+          "dutchWord": "Zakt",
+          "translation": "Sinks",
+          "article": "",
+          "example": "De temperatuur zakt snel.",
+          "wordType": "verb",
+          "vocabularyReference": "Zakt"
+        }
+      ],
+      "exercises": [
+        {
+          "id": "ex_001",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["Ik", "moet", "mijn", "ademhaling", "controleren"],
+          "correctAnswer": "Ik moet mijn ademhaling controleren",
+          "explanation": "'Ik moet mijn ademhaling controleren' means 'I have to control my breathing'. 'Ademhaling' means 'breathing'.",
+          "vocabularyReference": "ademhaling",
+          "grammarReference": "basic_word_order"
+        },
+        {
+          "id": "ex_002",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["Hij", "leunt", "tegen", "de", "muur"],
+          "correctAnswer": "Hij leunt tegen de muur",
+          "explanation": "'Hij leunt tegen de muur' means 'He leans against the wall'. 'Leunen' means 'to lean'.",
+          "vocabularyReference": "leunen",
+          "grammarReference": "prepositional_phrases"
+        },
+        {
+          "id": "ex_003",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["Ik", "moet", "mijn", "lijf", "strekken"],
+          "correctAnswer": "Ik moet mijn lijf strekken",
+          "explanation": "'Ik moet mijn lijf strekken' means 'I have to stretch my body'. 'Lijf' means 'body' and 'strekken' means 'to stretch'.",
+          "vocabularyReference": "lijf",
+          "grammarReference": "basic_word_order"
+        },
+        {
+          "id": "ex_004",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["De", "bal", "rolt", "omhoog", "de", "heuvel"],
+          "correctAnswer": "De bal rolt omhoog de heuvel",
+          "explanation": "'De bal rolt omhoog de heuvel' means 'The ball rolls up the hill'. 'Omhoog' means 'upwards'.",
+          "vocabularyReference": "omhoog",
+          "grammarReference": "basic_word_order"
+        },
+        {
+          "id": "ex_005",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["Ik", "moet", "rechtop", "zitten"],
+          "correctAnswer": "Ik moet rechtop zitten",
+          "explanation": "'Ik moet rechtop zitten' means 'I have to sit upright'. 'Rechtop' means 'upright'.",
+          "vocabularyReference": "rechtop",
+          "grammarReference": "basic_word_order"
+        },
+        {
+          "id": "ex_006",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["Ondertussen", "kookt", "het", "water"],
+          "correctAnswer": "Ondertussen kookt het water",
+          "explanation": "'Ondertussen kookt het water' means 'Meanwhile the water is boiling'. 'Ondertussen' means 'meanwhile'.",
+          "vocabularyReference": "ondertussen",
+          "grammarReference": "adverb_placement"
+        },
+        {
+          "id": "ex_007",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["Ik", "moet", "dit", "onthouden"],
+          "correctAnswer": "Ik moet dit onthouden",
+          "explanation": "'Ik moet dit onthouden' means 'I have to remember this'. 'Onthouden' means 'to remember'.",
+          "vocabularyReference": "onthouden",
+          "grammarReference": "basic_word_order"
+        },
+        {
+          "id": "ex_008",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["Kun", "je", "de", "doos", "optillen"],
+          "correctAnswer": "Kun je de doos optillen",
+          "explanation": "'Kun je de doos optillen' means 'Can you lift up the box'. 'Optillen' means 'to lift up'.",
+          "vocabularyReference": "optillen",
+          "grammarReference": "question_formation"
+        },
+        {
+          "id": "ex_009",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["De", "temperatuur", "zakt", "snel"],
+          "correctAnswer": "De temperatuur zakt snel",
+          "explanation": "'De temperatuur zakt snel' means 'The temperature drops quickly'. 'Zakt' means 'sinks' or 'drops'.",
+          "vocabularyReference": "Zakt",
+          "grammarReference": "basic_word_order"
+        },
+        {
+          "id": "ex_010",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["Ik", "moet", "diep", "inademen"],
+          "correctAnswer": "Ik moet diep inademen",
+          "explanation": "'Ik moet diep inademen' means 'I have to breathe in deeply'. 'Inademen' means 'to breathe in'.",
+          "vocabularyReference": "inademen",
+          "grammarReference": "basic_word_order"
+        },
+        {
+          "id": "ex_011",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["De", "ballon", "zakt", "naar", "beneden"],
+          "correctAnswer": "De ballon zakt naar beneden",
+          "explanation": "'De ballon zakt naar beneden' means 'The balloon sinks down'. 'Zakken' means 'to go flat' or 'to sink'.",
+          "vocabularyReference": "zakken",
+          "grammarReference": "basic_word_order"
+        },
+        {
+          "id": "ex_012",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["Ik", "moet", "mijn", "spieren", "strekken"],
+          "correctAnswer": "Ik moet mijn spieren strekken",
+          "explanation": "'Ik moet mijn spieren strekken' means 'I have to stretch my muscles'. 'Strekken' means 'to stretch'.",
+          "vocabularyReference": "strekken",
+          "grammarReference": "basic_word_order"
+        },
+        {
+          "id": "ex_013",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["De", "pijn", "verminderde", "langzaam"],
+          "correctAnswer": "De pijn verminderde langzaam",
+          "explanation": "'De pijn verminderde langzaam' means 'The pain decreased slowly'. 'Verminderen' means 'to reduce' or 'to decrease'.",
+          "vocabularyReference": "verminderen",
+          "grammarReference": "basic_word_order"
+        },
+        {
+          "id": "ex_014",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["Ik", "moet", "volhouden", "met", "oefenen"],
+          "correctAnswer": "Ik moet volhouden met oefenen",
+          "explanation": "'Ik moet volhouden met oefenen' means 'I have to persevere with practicing'. 'Volhouden' means 'to persevere' or 'to continue'.",
+          "vocabularyReference": "volhouden",
+          "grammarReference": "prepositional_phrases"
+        },
+        {
+          "id": "ex_015",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["De", "tijd", "is", "voorbij"],
+          "correctAnswer": "De tijd is voorbij",
+          "explanation": "'De tijd is voorbij' means 'The time is over'. 'Voorbij' means 'over' or 'finished'.",
+          "vocabularyReference": "Voorbij",
+          "grammarReference": "basic_word_order"
+        },
+        {
+          "id": "ex_016",
+          "type": "matchMeaning",
+          "prompt": "Match: ademhaling",
+          "options": ["breathing", "body", "balance"],
+          "correctAnswer": "breathing",
+          "explanation": "'Ademhaling' means 'breathing'.",
+          "vocabularyReference": "ademhaling"
+        },
+        {
+          "id": "ex_017",
+          "type": "matchMeaning",
+          "prompt": "Match: evenwicht",
+          "options": ["balance", "tension", "movement"],
+          "correctAnswer": "balance",
+          "explanation": "'Evenwicht' means 'balance'.",
+          "vocabularyReference": "evenwicht"
+        },
+        {
+          "id": "ex_018",
+          "type": "matchMeaning",
+          "prompt": "Match: gespannen",
+          "options": ["tense", "relaxed", "strong"],
+          "correctAnswer": "tense",
+          "explanation": "'Gespannen' means 'tense'.",
+          "vocabularyReference": "gespannen"
+        },
+        {
+          "id": "ex_019",
+          "type": "matchMeaning",
+          "prompt": "Match: gevolg",
+          "options": ["consequence", "beginning", "middle"],
+          "correctAnswer": "consequence",
+          "explanation": "'Gevolg' means 'consequence', 'result', or 'effect'.",
+          "vocabularyReference": "gevolg"
+        },
+        {
+          "id": "ex_020",
+          "type": "matchMeaning",
+          "prompt": "Match: lijf",
+          "options": ["body", "head", "leg"],
+          "correctAnswer": "body",
+          "explanation": "'Lijf' means 'body'.",
+          "vocabularyReference": "lijf"
+        },
+        {
+          "id": "ex_021",
+          "type": "matchMeaning",
+          "prompt": "Match: linker",
+          "options": ["left", "right", "center"],
+          "correctAnswer": "left",
+          "explanation": "'Linker' means 'left'.",
+          "vocabularyReference": "linker"
+        },
+        {
+          "id": "ex_022",
+          "type": "matchMeaning",
+          "prompt": "Match: rechter",
+          "options": ["right", "left", "middle"],
+          "correctAnswer": "right",
+          "explanation": "'Rechter' means 'right' (side).",
+          "vocabularyReference": "Rechter"
+        },
+        {
+          "id": "ex_023",
+          "type": "matchMeaning",
+          "prompt": "Match: tijdelijk",
+          "options": ["temporary", "permanent", "long"],
+          "correctAnswer": "temporary",
+          "explanation": "'Tijdelijk' means 'temporary'.",
+          "vocabularyReference": "tijdelijk"
+        },
+        {
+          "id": "ex_024",
+          "type": "fillInBlank",
+          "prompt": "Ik moet diep ___ om te ontspannen.",
+          "options": ["inademen", "uitademen", "ademhaling"],
+          "correctAnswer": "inademen",
+          "explanation": "'Inademen' means 'to breathe in'. Ik moet diep inademen om te ontspannen. (I have to breathe in deeply to relax.)",
+          "vocabularyReference": "inademen"
+        },
+        {
+          "id": "ex_025",
+          "type": "fillInBlank",
+          "prompt": "De ballon ___ naar beneden.",
+          "options": ["zakt", "stijgt", "beweegt"],
+          "correctAnswer": "zakt",
+          "explanation": "'Zakt' means 'sinks'. De ballon zakt naar beneden. (The balloon sinks down.)",
+          "vocabularyReference": "Zakt"
+        },
+        {
+          "id": "ex_026",
+          "type": "fillInBlank",
+          "prompt": "Ik moet mijn spieren ___ voor de oefening.",
+          "options": ["strekken", "buigen", "optillen"],
+          "correctAnswer": "strekken",
+          "explanation": "'Strekken' means 'to stretch'. Ik moet mijn spieren strekken voor de oefening. (I have to stretch my muscles before the exercise.)",
+          "vocabularyReference": "strekken"
+        },
+        {
+          "id": "ex_027",
+          "type": "fillInBlank",
+          "prompt": "De pijn ___ langzaam.",
+          "options": ["verminderde", "verergerde", "bleef"],
+          "correctAnswer": "verminderde",
+          "explanation": "'Verminderde' means 'decreased'. De pijn verminderde langzaam. (The pain decreased slowly.)",
+          "vocabularyReference": "verminderen"
+        },
+        {
+          "id": "ex_028",
+          "type": "fillInBlank",
+          "prompt": "Ik moet ___ met mijn studie.",
+          "options": ["volhouden", "stoppen", "beginnen"],
+          "correctAnswer": "volhouden",
+          "explanation": "'Volhouden' means 'to persevere'. Ik moet volhouden met mijn studie. (I have to persevere with my studies.)",
+          "vocabularyReference": "volhouden"
+        },
+        {
+          "id": "ex_029",
+          "type": "fillInBlank",
+          "prompt": "De tijd is ___.",
+          "options": ["voorbij", "begonnen", "geweest"],
+          "correctAnswer": "voorbij",
+          "explanation": "'Voorbij' means 'over' or 'finished'. De tijd is voorbij. (The time is over.)",
+          "vocabularyReference": "Voorbij"
+        },
+        {
+          "id": "ex_030",
+          "type": "fillInBlank",
+          "prompt": "Ik ga je ___ hoe je het moet doen.",
+          "options": ["voordoen", "onthouden", "leunen"],
+          "correctAnswer": "voordoen",
+          "explanation": "'Voordoen' means 'to demonstrate'. Ik ga je voordoen hoe je het moet doen. (I'm going to show you how to do it.)",
+          "vocabularyReference": "voordoen"
+        },
+        {
+          "id": "ex_031",
+          "type": "fillInBlank",
+          "prompt": "Ik loop ___ naar de deur.",
+          "options": ["voren", "achteren", "omhoog"],
+          "correctAnswer": "voren",
+          "explanation": "'Voren' means 'forward'. Ik loop voren naar de deur. (I walk forward to the door.)",
+          "vocabularyReference": "voren"
+        },
+        {
+          "id": "ex_032",
+          "type": "useInSentence",
+          "prompt": "Choose the correct use of 'buigen':",
+          "options": [
+            "Ik moet mijn knieën buigen.",
+            "De bal buigt naar links.",
+            "Hij buigt zijn hoofd."
+          ],
+          "correctAnswer": "Ik moet mijn knieën buigen.",
+          "explanation": "'Buigen' means 'to bend'. Ik moet mijn knieën buigen. (I have to bend my knees.)",
+          "vocabularyReference": "buigen"
+        },
+        {
+          "id": "ex_033",
+          "type": "useInSentence",
+          "prompt": "Choose the correct use of 'leunen':",
+          "options": [
+            "Hij leunt tegen de muur.",
+            "De boom leunt naar links.",
+            "Ik leun op mijn ellebogen."
+          ],
+          "correctAnswer": "Hij leunt tegen de muur.",
+          "explanation": "'Leunen' means 'to lean'. Hij leunt tegen de muur. (He leans against the wall.)",
+          "vocabularyReference": "leunen"
+        },
+        {
+          "id": "ex_034",
+          "type": "useInSentence",
+          "prompt": "Choose the correct use of 'optillen':",
+          "options": [
+            "Kun je de doos optillen?",
+            "De vogel tilt op en vliegt weg.",
+            "Hij tilt zijn hand op."
+          ],
+          "correctAnswer": "Kun je de doos optillen?",
+          "explanation": "'Optillen' means 'to lift up'. Kun je de doos optillen? (Can you lift up the box?)",
+          "vocabularyReference": "optillen"
+        },
+        {
+          "id": "ex_035",
+          "type": "useInSentence",
+          "prompt": "Choose the correct use of 'uitademen':",
+          "options": [
+            "Ik moet langzaam uitademen.",
+            "De wind ademt uit.",
+            "Hij ademt uit van vermoeidheid."
+          ],
+          "correctAnswer": "Ik moet langzaam uitademen.",
+          "explanation": "'Uitademen' means 'to breathe out'. Ik moet langzaam uitademen. (I have to breathe out slowly.)",
+          "vocabularyReference": "Uitademen"
+        },
+        {
+          "id": "ex_036",
+          "type": "useInSentence",
+          "prompt": "Choose the correct use of 'ondertussen':",
+          "options": [
+            "Ondertussen kookt het water.",
+            "Ik ga ondertussen naar huis.",
+            "Hij werkt ondertussen hard."
+          ],
+          "correctAnswer": "Ondertussen kookt het water.",
+          "explanation": "'Ondertussen' means 'meanwhile'. Ondertussen kookt het water. (Meanwhile the water is boiling.)",
+          "vocabularyReference": "ondertussen"
+        },
+        {
+          "id": "ex_037",
+          "type": "missingWord",
+          "prompt": "Ik loop ___ naar achteren.",
+          "options": ["achteren", "voren", "omhoog"],
+          "correctAnswer": "achteren",
+          "explanation": "'Achteren' means 'backwards'. Ik loop achteren naar achteren. (I walk backwards.)",
+          "vocabularyReference": "Achteren"
+        },
+        {
+          "id": "ex_038",
+          "type": "missingWord",
+          "prompt": "De bal rolt ___ de heuvel.",
+          "options": ["omhoog", "omlaag", "voren"],
+          "correctAnswer": "omhoog",
+          "explanation": "'Omhoog' means 'upwards'. De bal rolt omhoog de heuvel. (The ball rolls up the hill.)",
+          "vocabularyReference": "omhoog"
+        },
+        {
+          "id": "ex_039",
+          "type": "missingWord",
+          "prompt": "De temperatuur gaat ___.",
+          "options": ["omlaag", "omhoog", "voren"],
+          "correctAnswer": "omlaag",
+          "explanation": "'Omlaag' means 'downwards'. De temperatuur gaat omlaag. (The temperature goes down.)",
+          "vocabularyReference": "Omlaag"
+        },
+        {
+          "id": "ex_040",
+          "type": "missingWord",
+          "prompt": "Ik moet dit ___ voor het examen.",
+          "options": ["onthouden", "voordoen", "volhouden"],
+          "correctAnswer": "onthouden",
+          "explanation": "'Onthouden' means 'to remember'. Ik moet dit onthouden voor het examen. (I have to remember this for the exam.)",
+          "vocabularyReference": "onthouden"
+        },
+        {
+          "id": "ex_041",
+          "type": "missingWord",
+          "prompt": "De spanning in mijn schouders is ___.",
+          "options": ["gespannen", "ontspannen", "normaal"],
+          "correctAnswer": "gespannen",
+          "explanation": "'Gespannen' means 'tense'. De spanning in mijn schouders is gespannen. (The tension in my shoulders is tense.)",
+          "vocabularyReference": "gespannen"
+        },
+        {
+          "id": "ex_042",
+          "type": "missingWord",
+          "prompt": "Dit is een ___ oplossing.",
+          "options": ["tijdelijk", "permanent", "langdurig"],
+          "correctAnswer": "tijdelijk",
+          "explanation": "'Tijdelijk' means 'temporary'. Dit is een tijdelijke oplossing. (This is a temporary solution.)",
+          "vocabularyReference": "tijdelijk"
+        },
+        {
+          "id": "ex_043",
+          "type": "missingWord",
+          "prompt": "Wat is het ___ van deze actie?",
+          "options": ["gevolg", "begin", "midden"],
+          "correctAnswer": "gevolg",
+          "explanation": "'Gevolg' means 'consequence' or 'result'. Wat is het gevolg van deze actie? (What is the consequence of this action?)",
+          "vocabularyReference": "gevolg"
+        },
+        {
+          "id": "ex_044",
+          "type": "missingWord",
+          "prompt": "Ik moet mijn ___ strekken.",
+          "options": ["lijf", "hoofd", "hand"],
+          "correctAnswer": "lijf",
+          "explanation": "'Lijf' means 'body'. Ik moet mijn lijf strekken. (I have to stretch my body.)",
+          "vocabularyReference": "lijf"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "experience",
+          "value": 120,
+          "description": "Complete Chapter 2.6 - Movement and Body Vocabulary"
+        },
+        {
+          "type": "vocabulary",
+          "value": 25,
+          "description": "Unlock 25 new vocabulary words"
+        },
+        {
+          "type": "achievement",
+          "value": 1,
+          "description": "Earn 'Body Movement Master' badge"
+        }
+      ]
+    },
+    {
+      "id": "lesson_chapter_33",
+      "title": "Chapter 3.3 – Meeting and Maintenance Vocabulary",
+      "description": "Practice Dutch vocabulary related to meetings, registration, and maintenance tasks. Learn words for chairing meetings, keeping things clean, and administrative tasks.",
+      "level": "B1",
+      "category": "meetings",
+      "estimatedTime": 10,
+      "difficulty": "intermediate",
+      "prerequisites": [],
+      "vocabulary": [
+        {
+          "dutchWord": "aanmelden",
+          "translation": "to register",
+          "article": "",
+          "example": "Ik moet me aanmelden voor de cursus.",
+          "wordType": "verb",
+          "vocabularyReference": "aanmelden"
+        },
+        {
+          "dutchWord": "achteraf",
+          "translation": "afterwards / later / in hindsight",
+          "article": "",
+          "example": "Achteraf was het een goede beslissing.",
+          "wordType": "adverb",
+          "vocabularyReference": "achteraf"
+        },
+        {
+          "dutchWord": "afmelden",
+          "translation": "log out",
+          "article": "",
+          "example": "Ik moet me afmelden van het systeem.",
+          "wordType": "verb",
+          "vocabularyReference": "afmelden"
+        },
+        {
+          "dutchWord": "bespreken",
+          "translation": "to discuss / to talk about / to review",
+          "article": "",
+          "example": "We bespreken dit tijdens de vergadering.",
+          "wordType": "verb",
+          "vocabularyReference": "bespreken"
+        },
+        {
+          "dutchWord": "dweil",
+          "translation": "mop",
+          "article": "de",
+          "example": "De dweil is nat en vies.",
+          "wordType": "noun",
+          "vocabularyReference": "dweil"
+        },
+        {
+          "dutchWord": "klusser",
+          "translation": "handyman",
+          "article": "de",
+          "example": "De klusser komt morgen langs.",
+          "wordType": "noun",
+          "vocabularyReference": "klusser"
+        },
+        {
+          "dutchWord": "notulen",
+          "translation": "meeting minutes",
+          "article": "de",
+          "example": "De notulen worden opgeschreven.",
+          "wordType": "noun",
+          "vocabularyReference": "notulen"
+        },
+        {
+          "dutchWord": "rondvraag",
+          "translation": "open floor discussion",
+          "article": "de",
+          "example": "We hebben een rondvraag gehouden.",
+          "wordType": "noun",
+          "vocabularyReference": "rondvraag"
+        },
+        {
+          "dutchWord": "schoonhouden",
+          "translation": "to keep clean",
+          "article": "",
+          "example": "Ik moet de kamer schoonhouden.",
+          "wordType": "verb",
+          "vocabularyReference": "schoonhouden"
+        },
+        {
+          "dutchWord": "vooraf",
+          "translation": "beforehand / in advance / ahead of time",
+          "article": "",
+          "example": "Ik waarschuw je vooraf.",
+          "wordType": "adverb",
+          "vocabularyReference": "vooraf"
+        },
+        {
+          "dutchWord": "voorzitten",
+          "translation": "to chair / to preside over",
+          "article": "",
+          "example": "Zij voorzit de vergadering.",
+          "wordType": "verb",
+          "vocabularyReference": "voorzitten"
+        },
+        {
+          "dutchWord": "vuilniszakken",
+          "translation": "garbage bags / trash bags",
+          "article": "de",
+          "example": "De vuilniszakken moeten buiten gezet worden.",
+          "wordType": "noun",
+          "vocabularyReference": "vuilniszakken"
+        },
+        {
+          "dutchWord": "waarschuwen",
+          "translation": "to warn",
+          "article": "",
+          "example": "Ik waarschuw je vooraf.",
+          "wordType": "verb",
+          "vocabularyReference": "waarschuwen"
+        }
+      ],
+      "exercises": [
+        {
+          "id": "ex_001",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["Ik", "moet", "me", "aanmelden", "voor", "de", "cursus"],
+          "correctAnswer": "Ik moet me aanmelden voor de cursus",
+          "explanation": "'Ik moet me aanmelden voor de cursus' means 'I have to register for the course'. 'Aanmelden' means 'to register'.",
+          "vocabularyReference": "aanmelden",
+          "grammarReference": "reflexive_verbs"
+        },
+        {
+          "id": "ex_002",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["We", "bespreken", "dit", "tijdens", "de", "vergadering"],
+          "correctAnswer": "We bespreken dit tijdens de vergadering",
+          "explanation": "'We bespreken dit tijdens de vergadering' means 'We will discuss this during the meeting'. 'Bespreken' means 'to discuss'.",
+          "vocabularyReference": "bespreken",
+          "grammarReference": "basic_word_order"
+        },
+        {
+          "id": "ex_003",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["De", "klusser", "komt", "morgen", "langs"],
+          "correctAnswer": "De klusser komt morgen langs",
+          "explanation": "'De klusser komt morgen langs' means 'The handyman is coming tomorrow'. 'Klusser' means 'handyman'.",
+          "vocabularyReference": "klusser",
+          "grammarReference": "basic_word_order"
+        },
+        {
+          "id": "ex_004",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["Ik", "moet", "de", "kamer", "schoonhouden"],
+          "correctAnswer": "Ik moet de kamer schoonhouden",
+          "explanation": "'Ik moet de kamer schoonhouden' means 'I have to keep the room clean'. 'Schoonhouden' means 'to keep clean'.",
+          "vocabularyReference": "schoonhouden",
+          "grammarReference": "basic_word_order"
+        },
+        {
+          "id": "ex_005",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["Zij", "voorzit", "de", "vergadering"],
+          "correctAnswer": "Zij voorzit de vergadering",
+          "explanation": "'Zij voorzit de vergadering' means 'She chairs the meeting'. 'Voorzitten' means 'to chair' or 'to preside over'.",
+          "vocabularyReference": "voorzitten",
+          "grammarReference": "basic_word_order"
+        },
+        {
+          "id": "ex_006",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["Ik", "waarschuw", "je", "vooraf"],
+          "correctAnswer": "Ik waarschuw je vooraf",
+          "explanation": "'Ik waarschuw je vooraf' means 'I warn you beforehand'. 'Waarschuwen' means 'to warn' and 'vooraf' means 'beforehand'.",
+          "vocabularyReference": "waarschuwen",
+          "grammarReference": "basic_word_order"
+        },
+        {
+          "id": "ex_007",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["De", "notulen", "worden", "opgeschreven"],
+          "correctAnswer": "De notulen worden opgeschreven",
+          "explanation": "'De notulen worden opgeschreven' means 'The meeting minutes are being written down'. 'Notulen' means 'meeting minutes'.",
+          "vocabularyReference": "notulen",
+          "grammarReference": "passive_voice"
+        },
+        {
+          "id": "ex_008",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["We", "hebben", "een", "rondvraag", "gehouden"],
+          "correctAnswer": "We hebben een rondvraag gehouden",
+          "explanation": "'We hebben een rondvraag gehouden' means 'We held an open floor discussion'. 'Rondvraag' means 'open floor discussion'.",
+          "vocabularyReference": "rondvraag",
+          "grammarReference": "perfect_tense"
+        },
+        {
+          "id": "ex_009",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["Ik", "moet", "me", "afmelden", "van", "het", "systeem"],
+          "correctAnswer": "Ik moet me afmelden van het systeem",
+          "explanation": "'Ik moet me afmelden van het systeem' means 'I have to log out of the system'. 'Afmelden' means 'to log out'.",
+          "vocabularyReference": "afmelden",
+          "grammarReference": "reflexive_verbs"
+        },
+        {
+          "id": "ex_010",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["De", "dweil", "is", "nat", "en", "vies"],
+          "correctAnswer": "De dweil is nat en vies",
+          "explanation": "'De dweil is nat en vies' means 'The mop is wet and dirty'. 'Dweil' means 'mop'.",
+          "vocabularyReference": "dweil",
+          "grammarReference": "basic_word_order"
+        },
+        {
+          "id": "ex_011",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["De", "vuilniszakken", "moeten", "buiten", "gezet", "worden"],
+          "correctAnswer": "De vuilniszakken moeten buiten gezet worden",
+          "explanation": "'De vuilniszakken moeten buiten gezet worden' means 'The garbage bags have to be put outside'. 'Vuilniszakken' means 'garbage bags'.",
+          "vocabularyReference": "vuilniszakken",
+          "grammarReference": "passive_voice"
+        },
+        {
+          "id": "ex_012",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["Achteraf", "was", "het", "een", "goede", "beslissing"],
+          "correctAnswer": "Achteraf was het een goede beslissing",
+          "explanation": "'Achteraf was het een goede beslissing' means 'Afterwards it was a good decision'. 'Achteraf' means 'afterwards' or 'in hindsight'.",
+          "vocabularyReference": "achteraf",
+          "grammarReference": "adverb_placement"
+        },
+        {
+          "id": "ex_013",
+          "type": "matchMeaning",
+          "prompt": "Match: aanmelden",
+          "options": ["to register", "to log out", "to discuss"],
+          "correctAnswer": "to register",
+          "explanation": "'Aanmelden' means 'to register'.",
+          "vocabularyReference": "aanmelden"
+        },
+        {
+          "id": "ex_014",
+          "type": "matchMeaning",
+          "prompt": "Match: bespreken",
+          "options": ["to discuss", "to warn", "to keep clean"],
+          "correctAnswer": "to discuss",
+          "explanation": "'Bespreken' means 'to discuss' or 'to talk about'.",
+          "vocabularyReference": "bespreken"
+        },
+        {
+          "id": "ex_015",
+          "type": "matchMeaning",
+          "prompt": "Match: klusser",
+          "options": ["handyman", "mop", "meeting minutes"],
+          "correctAnswer": "handyman",
+          "explanation": "'Klusser' means 'handyman'.",
+          "vocabularyReference": "klusser"
+        },
+        {
+          "id": "ex_016",
+          "type": "matchMeaning",
+          "prompt": "Match: voorzitten",
+          "options": ["to chair", "to warn", "to register"],
+          "correctAnswer": "to chair",
+          "explanation": "'Voorzitten' means 'to chair' or 'to preside over'.",
+          "vocabularyReference": "voorzitten"
+        },
+        {
+          "id": "ex_017",
+          "type": "matchMeaning",
+          "prompt": "Match: notulen",
+          "options": ["meeting minutes", "garbage bags", "open floor discussion"],
+          "correctAnswer": "meeting minutes",
+          "explanation": "'Notulen' means 'meeting minutes'.",
+          "vocabularyReference": "notulen"
+        },
+        {
+          "id": "ex_018",
+          "type": "fillInBlank",
+          "prompt": "Je moet je ___ voor de vergadering.",
+          "options": ["aanmelden", "afmelden", "bespreken"],
+          "correctAnswer": "aanmelden",
+          "explanation": "'Aanmelden' means 'to register'. Je moet je aanmelden voor de vergadering. (You have to register for the meeting.)",
+          "vocabularyReference": "aanmelden"
+        },
+        {
+          "id": "ex_019",
+          "type": "fillInBlank",
+          "prompt": "We gaan dit probleem ___ tijdens de vergadering.",
+          "options": ["bespreken", "waarschuwen", "voorzitten"],
+          "correctAnswer": "bespreken",
+          "explanation": "'Bespreken' means 'to discuss'. We gaan dit probleem bespreken tijdens de vergadering. (We will discuss this problem during the meeting.)",
+          "vocabularyReference": "bespreken"
+        },
+        {
+          "id": "ex_020",
+          "type": "fillInBlank",
+          "prompt": "De ___ komt morgen om de lekkage te repareren.",
+          "options": ["klusser", "dweil", "notulen"],
+          "correctAnswer": "klusser",
+          "explanation": "'Klusser' means 'handyman'. De klusser komt morgen om de lekkage te repareren. (The handyman is coming tomorrow to fix the leak.)",
+          "vocabularyReference": "klusser"
+        },
+        {
+          "id": "ex_021",
+          "type": "fillInBlank",
+          "prompt": "Ik moet de keuken ___ voordat de gasten komen.",
+          "options": ["schoonhouden", "aanmelden", "afmelden"],
+          "correctAnswer": "schoonhouden",
+          "explanation": "'Schoonhouden' means 'to keep clean'. Ik moet de keuken schoonhouden voordat de gasten komen. (I have to keep the kitchen clean before the guests come.)",
+          "vocabularyReference": "schoonhouden"
+        },
+        {
+          "id": "ex_022",
+          "type": "fillInBlank",
+          "prompt": "Zij zal de vergadering ___.",
+          "options": ["voorzitten", "waarschuwen", "bespreken"],
+          "correctAnswer": "voorzitten",
+          "explanation": "'Voorzitten' means 'to chair'. Zij zal de vergadering voorzitten. (She will chair the meeting.)",
+          "vocabularyReference": "voorzitten"
+        },
+        {
+          "id": "ex_023",
+          "type": "fillInBlank",
+          "prompt": "Ik wil je ___ waarschuwen dat het gevaarlijk is.",
+          "options": ["waarschuwen", "aanmelden", "afmelden"],
+          "correctAnswer": "waarschuwen",
+          "explanation": "'Waarschuwen' means 'to warn'. Ik wil je waarschuwen dat het gevaarlijk is. (I want to warn you that it's dangerous.)",
+          "vocabularyReference": "waarschuwen"
+        },
+        {
+          "id": "ex_024",
+          "type": "fillInBlank",
+          "prompt": "De ___ worden opgeschreven door de secretaris.",
+          "options": ["notulen", "vuilniszakken", "dweil"],
+          "correctAnswer": "notulen",
+          "explanation": "'Notulen' means 'meeting minutes'. De notulen worden opgeschreven door de secretaris. (The meeting minutes are being written down by the secretary.)",
+          "vocabularyReference": "notulen"
+        },
+        {
+          "id": "ex_025",
+          "type": "fillInBlank",
+          "prompt": "We hebben een ___ gehouden aan het einde van de vergadering.",
+          "options": ["rondvraag", "dweil", "klusser"],
+          "correctAnswer": "rondvraag",
+          "explanation": "'Rondvraag' means 'open floor discussion'. We hebben een rondvraag gehouden aan het einde van de vergadering. (We held an open floor discussion at the end of the meeting.)",
+          "vocabularyReference": "rondvraag"
+        },
+        {
+          "id": "ex_026",
+          "type": "fillInBlank",
+          "prompt": "Vergeet niet om je ___ van het systeem.",
+          "options": ["afmelden", "aanmelden", "bespreken"],
+          "correctAnswer": "afmelden",
+          "explanation": "'Afmelden' means 'to log out'. Vergeet niet om je afmelden van het systeem. (Don't forget to log out of the system.)",
+          "vocabularyReference": "afmelden"
+        },
+        {
+          "id": "ex_027",
+          "type": "fillInBlank",
+          "prompt": "De ___ is nat en moet drogen.",
+          "options": ["dweil", "notulen", "vuilniszakken"],
+          "correctAnswer": "dweil",
+          "explanation": "'Dweil' means 'mop'. De dweil is nat en moet drogen. (The mop is wet and needs to dry.)",
+          "vocabularyReference": "dweil"
+        },
+        {
+          "id": "ex_028",
+          "type": "fillInBlank",
+          "prompt": "De ___ moeten buiten gezet worden.",
+          "options": ["vuilniszakken", "notulen", "dweil"],
+          "correctAnswer": "vuilniszakken",
+          "explanation": "'Vuilniszakken' means 'garbage bags'. De vuilniszakken moeten buiten gezet worden. (The garbage bags have to be put outside.)",
+          "vocabularyReference": "vuilniszakken"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "experience",
+          "value": 100,
+          "description": "Complete Chapter 3.3 - Meeting and Maintenance Vocabulary"
+        },
+        {
+          "type": "vocabulary",
+          "value": 13,
+          "description": "Unlock 13 new vocabulary words"
+        },
+        {
+          "type": "achievement",
+          "value": 1,
+          "description": "Earn 'Meeting Manager' badge"
+        }
+      ]
+    },
+    {
+      "id": "lesson_chapter_35",
+      "title": "Chapter 3.5 – Dutch Vocabulary in Context",
+      "description": "Practice using new Dutch words in context. Learn their meanings and test your understanding with fill-in-the-blank and word selection exercises.",
+      "level": "B1",
+      "category": "context",
+      "estimatedTime": 12,
+      "difficulty": "intermediate",
+      "prerequisites": [],
+      "vocabulary": [
+        {
+          "dutchWord": "herrie",
+          "translation": "noise, racket",
+          "article": "de",
+          "example": "Er is veel herrie in de straat.",
+          "wordType": "noun",
+          "vocabularyReference": "herrie"
+        },
+        {
+          "dutchWord": "veilig",
+          "translation": "safe",
+          "article": "",
+          "example": "Het is hier veilig om te spelen.",
+          "wordType": "adjective",
+          "vocabularyReference": "veilig"
+        },
+        {
+          "dutchWord": "nogal",
+          "translation": "rather, quite",
+          "article": "",
+          "example": "Het is nogal koud buiten.",
+          "wordType": "adverb",
+          "vocabularyReference": "nogal"
+        },
+        {
+          "dutchWord": "logeren",
+          "translation": "to stay overnight",
+          "article": "",
+          "example": "Ik ga vanavond bij vrienden logeren.",
+          "wordType": "verb",
+          "vocabularyReference": "logeren"
+        },
+        {
+          "dutchWord": "aanvullen",
+          "translation": "to refill, to supplement",
+          "article": "",
+          "example": "Ik vul de voorraad aan.",
+          "wordType": "verb",
+          "vocabularyReference": "aanvullen"
+        },
+        {
+          "dutchWord": "aandoen",
+          "translation": "to turn on (e.g., lights, devices)",
+          "article": "",
+          "example": "Ik doe het licht aan.",
+          "wordType": "verb",
+          "vocabularyReference": "aandoen"
+        },
+        {
+          "dutchWord": "dat komt niet uit",
+          "translation": "that doesn't work out (schedule)",
+          "article": "",
+          "example": "Dat komt niet uit voor mij.",
+          "wordType": "phrase",
+          "vocabularyReference": "dat komt niet uit"
+        },
+        {
+          "dutchWord": "trouwens",
+          "translation": "by the way",
+          "article": "",
+          "example": "Trouwens, ik ga morgen naar de sportclub.",
+          "wordType": "adverb",
+          "vocabularyReference": "trouwens"
+        },
+        {
+          "dutchWord": "fit",
+          "translation": "fit, in shape",
+          "article": "",
+          "example": "Ik voel me fit vandaag.",
+          "wordType": "adjective",
+          "vocabularyReference": "fit"
+        },
+        {
+          "dutchWord": "nauwelijks",
+          "translation": "hardly",
+          "article": "",
+          "example": "Ik heb nauwelijks tijd gehad.",
+          "wordType": "adverb",
+          "vocabularyReference": "nauwelijks"
+        },
+        {
+          "dutchWord": "bereid",
+          "translation": "willing/prepared",
+          "article": "",
+          "example": "Ik ben bereid om te helpen.",
+          "wordType": "adjective",
+          "vocabularyReference": "bereid"
+        },
+        {
+          "dutchWord": "ontzettend",
+          "translation": "extremely",
+          "article": "",
+          "example": "Het is ontzettend druk vandaag.",
+          "wordType": "adverb",
+          "vocabularyReference": "ontzettend"
+        },
+        {
+          "dutchWord": "ziek",
+          "translation": "sick",
+          "article": "",
+          "example": "Ik ben ziek vandaag.",
+          "wordType": "adjective",
+          "vocabularyReference": "ziek"
+        },
+        {
+          "dutchWord": "het tijdstip",
+          "translation": "moment/time",
+          "article": "het",
+          "example": "Het tijdstip is niet belangrijk.",
+          "wordType": "noun",
+          "vocabularyReference": "het tijdstip"
+        },
+        {
+          "dutchWord": "de zekerheid",
+          "translation": "just to be sure",
+          "article": "de",
+          "example": "Ik neem voor de zekerheid een paraplu.",
+          "wordType": "noun",
+          "vocabularyReference": "de zekerheid"
+        },
+        {
+          "dutchWord": "waarderen",
+          "translation": "to appreciate",
+          "article": "",
+          "example": "Ik waardeer jouw hulp.",
+          "wordType": "verb",
+          "vocabularyReference": "waarderen"
+        },
+        {
+          "dutchWord": "het alarm",
+          "translation": "the alarm",
+          "article": "het",
+          "example": "Ik heb het alarm gezet.",
+          "wordType": "noun",
+          "vocabularyReference": "het alarm"
+        },
+        {
+          "dutchWord": "het best doen",
+          "translation": "to do one's best",
+          "article": "",
+          "example": "Ik doe mijn best voor het examen.",
+          "wordType": "phrase",
+          "vocabularyReference": "het best doen"
+        },
+        {
+          "dutchWord": "zich druk maken",
+          "translation": "to worry",
+          "article": "",
+          "example": "Ik maak me niet druk.",
+          "wordType": "phrase",
+          "vocabularyReference": "zich druk maken"
+        },
+        {
+          "dutchWord": "net zoals",
+          "translation": "just like",
+          "article": "",
+          "example": "Mijn zus houdt van winkelen, net zoals ik.",
+          "wordType": "phrase",
+          "vocabularyReference": "net zoals"
+        },
+        {
+          "dutchWord": "een praatje maken",
+          "translation": "to have a chat",
+          "article": "",
+          "example": "Ik ga een praatje maken.",
+          "wordType": "phrase",
+          "vocabularyReference": "een praatje maken"
+        }
+      ],
+      "exercises": [
+        {
+          "id": "ex_001",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["Ik", "logeren", "bij", "vrienden", "ga", "vanavond"],
+          "correctAnswer": "Ik ga vanavond bij vrienden logeren",
+          "explanation": "'Ik ga vanavond bij vrienden logeren' means 'I am going to stay overnight with friends tonight'. In Dutch, the word order is: Subject (Ik) + Verb (ga) + Time (vanavond) + Preposition (bij) + Object (vrienden) + Infinitive verb (logeren).",
+          "vocabularyReference": "logeren",
+          "grammarReference": "word_order_infinitives"
+        },
+        {
+          "id": "ex_002",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["Het", "is", "nogal", "koud", "buiten"],
+          "correctAnswer": "Het is nogal koud buiten",
+          "explanation": "'Het is nogal koud buiten' means 'It is quite cold outside'. 'Nogal' means 'quite' or 'rather'.",
+          "vocabularyReference": "nogal",
+          "grammarReference": "basic_word_order"
+        },
+        {
+          "id": "ex_003",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["Ik", "doe", "het", "licht", "aan"],
+          "correctAnswer": "Ik doe het licht aan",
+          "explanation": "'Ik doe het licht aan' means 'I turn on the light'. 'Aandoen' means 'to turn on'.",
+          "vocabularyReference": "aandoen",
+          "grammarReference": "separable_verbs"
+        },
+        {
+          "id": "ex_004",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["Ik", "ben", "bereid", "om", "te", "helpen"],
+          "correctAnswer": "Ik ben bereid om te helpen",
+          "explanation": "'Ik ben bereid om te helpen' means 'I am willing to help'. 'Bereid' means 'willing' or 'prepared'.",
+          "vocabularyReference": "bereid",
+          "grammarReference": "infinitive_construction"
+        },
+        {
+          "id": "ex_005",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["Ik", "waardeer", "jouw", "hulp"],
+          "correctAnswer": "Ik waardeer jouw hulp",
+          "explanation": "'Ik waardeer jouw hulp' means 'I appreciate your help'. 'Waarderen' means 'to appreciate'.",
+          "vocabularyReference": "waarderen",
+          "grammarReference": "basic_word_order"
+        },
+        {
+          "id": "ex_006",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["Het", "is", "ontzettend", "druk", "vandaag"],
+          "correctAnswer": "Het is ontzettend druk vandaag",
+          "explanation": "'Het is ontzettend druk vandaag' means 'It is extremely busy today'. 'Ontzettend' means 'extremely'.",
+          "vocabularyReference": "ontzettend",
+          "grammarReference": "basic_word_order"
+        },
+        {
+          "id": "ex_007",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["Ik", "heb", "nauwelijks", "tijd", "gehad"],
+          "correctAnswer": "Ik heb nauwelijks tijd gehad",
+          "explanation": "'Ik heb nauwelijks tijd gehad' means 'I hardly had time'. 'Nauwelijks' means 'hardly'.",
+          "vocabularyReference": "nauwelijks",
+          "grammarReference": "perfect_tense"
+        },
+        {
+          "id": "ex_008",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["Ik", "maak", "me", "niet", "druk"],
+          "correctAnswer": "Ik maak me niet druk",
+          "explanation": "'Ik maak me niet druk' means 'I don't worry'. 'Zich druk maken' means 'to worry'.",
+          "vocabularyReference": "zich druk maken",
+          "grammarReference": "reflexive_verbs"
+        },
+        {
+          "id": "ex_009",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["Ik", "ga", "een", "praatje", "maken"],
+          "correctAnswer": "Ik ga een praatje maken",
+          "explanation": "'Ik ga een praatje maken' means 'I am going to have a chat'. 'Een praatje maken' means 'to have a chat'.",
+          "vocabularyReference": "een praatje maken",
+          "grammarReference": "word_order_infinitives"
+        },
+        {
+          "id": "ex_010",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["Ik", "vul", "de", "voorraad", "aan"],
+          "correctAnswer": "Ik vul de voorraad aan",
+          "explanation": "'Ik vul de voorraad aan' means 'I refill the stock'. 'Aanvullen' means 'to supplement' or 'to refill'.",
+          "vocabularyReference": "aanvullen",
+          "grammarReference": "separable_verbs"
+        },
+        {
+          "id": "ex_011",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["Ik", "heb", "het", "alarm", "gezet"],
+          "correctAnswer": "Ik heb het alarm gezet",
+          "explanation": "'Ik heb het alarm gezet' means 'I have set the alarm'. 'Het alarm' means 'the alarm'.",
+          "vocabularyReference": "het alarm",
+          "grammarReference": "perfect_tense"
+        },
+        {
+          "id": "ex_012",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["Ik", "doe", "mijn", "best", "voor", "het", "examen"],
+          "correctAnswer": "Ik doe mijn best voor het examen",
+          "explanation": "'Ik doe mijn best voor het examen' means 'I do my best for the exam'. 'Het best doen' means 'to do one's best'.",
+          "vocabularyReference": "het best doen",
+          "grammarReference": "basic_word_order"
+        },
+        {
+          "id": "ex_013",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["Ik", "neem", "voor", "de", "zekerheid", "een", "paraplu"],
+          "correctAnswer": "Ik neem voor de zekerheid een paraplu",
+          "explanation": "'Ik neem voor de zekerheid een paraplu' means 'I take an umbrella just to be sure'. 'Voor de zekerheid' means 'just to be sure'.",
+          "vocabularyReference": "de zekerheid",
+          "grammarReference": "prepositional_phrases"
+        },
+        {
+          "id": "ex_014",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["Trouwens", "ik", "ga", "morgen", "naar", "de", "sportclub"],
+          "correctAnswer": "Trouwens ik ga morgen naar de sportclub",
+          "explanation": "'Trouwens ik ga morgen naar de sportclub' means 'By the way, I am going to the sports club tomorrow'. 'Trouwens' means 'by the way'.",
+          "vocabularyReference": "trouwens",
+          "grammarReference": "adverb_placement"
+        },
+        {
+          "id": "ex_015",
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["Het", "tijdstip", "is", "niet", "belangrijk"],
+          "correctAnswer": "Het tijdstip is niet belangrijk",
+          "explanation": "'Het tijdstip is niet belangrijk' means 'The time is not important'. 'Het tijdstip' means 'the moment' or 'time'.",
+          "vocabularyReference": "het tijdstip",
+          "grammarReference": "basic_word_order"
+        },
+        {
+          "id": "ex_016",
+          "type": "matchMeaning",
+          "prompt": "Match: ziek",
+          "options": ["sick", "time", "to appreciate"],
+          "correctAnswer": "sick",
+          "explanation": "'Ziek' means 'sick' in English.",
+          "vocabularyReference": "ziek"
+        },
+        {
+          "id": "ex_017",
+          "type": "matchMeaning",
+          "prompt": "Match: het tijdstip",
+          "options": ["moment/time", "alarm", "to worry"],
+          "correctAnswer": "moment/time",
+          "explanation": "'Het tijdstip' means 'moment' or 'time'.",
+          "vocabularyReference": "het tijdstip"
+        },
+        {
+          "id": "ex_018",
+          "type": "useInSentence",
+          "prompt": "Choose the correct use of 'waarderen':",
+          "options": [
+            "Ik waardeer jouw hulp.",
+            "Ik waardeer de mooie bloemen.",
+            "Ik waardeer de goede service."
+          ],
+          "correctAnswer": "Ik waardeer jouw hulp.",
+          "explanation": "'Waarderen' means 'to appreciate'. Ik waardeer jouw hulp. (I appreciate your help)",
+          "vocabularyReference": "waarderen"
+        },
+        {
+          "id": "ex_019",
+          "type": "fillInBlank",
+          "prompt": "Het is ___ druk op straat vandaag!",
+          "options": ["ontzettend", "nauwelijks", "nogal"],
+          "correctAnswer": "ontzettend",
+          "explanation": "'Ontzettend' means 'extremely' or 'very'. Het is ontzettend druk op straat vandaag! (It is extremely busy on the street today!)",
+          "vocabularyReference": "ontzettend"
+        },
+        {
+          "id": "ex_020",
+          "type": "useInSentence",
+          "prompt": "Choose the correct use of 'logeren':",
+          "options": [
+            "Mijn kinderen logeren bij vrienden.",
+            "Wij logeren in een hotel.",
+            "Zij logeren bij hun oma."
+          ],
+          "correctAnswer": "Mijn kinderen logeren bij vrienden.",
+          "explanation": "'Logeren' means 'to stay overnight'. Mijn kinderen logeren bij vrienden. (My children are staying overnight with friends)",
+          "vocabularyReference": "logeren"
+        },
+        {
+          "id": "ex_021",
+          "type": "fillInBlank",
+          "prompt": "Kun je de deur voorzichtig ___? Het kind slaapt.",
+          "options": ["aandoen", "aanvullen", "waarderen"],
+          "correctAnswer": "aandoen",
+          "explanation": "'Aandoen' means 'to turn on' or 'to close gently'. Kun je de deur voorzichtig aandoen? Het kind slaapt. (Can you carefully close the door? The child is sleeping.)",
+          "vocabularyReference": "aandoen"
+        },
+        {
+          "id": "ex_022",
+          "type": "missingWord",
+          "prompt": "Ik heb ___ gezet voor morgenochtend vroeg.",
+          "options": ["het alarm", "de zekerheid", "het tijdstip"],
+          "correctAnswer": "het alarm",
+          "explanation": "'Het alarm' means 'the alarm'. Ik heb het alarm gezet voor morgenochtend vroeg. (I have set the alarm for early tomorrow morning.)",
+          "vocabularyReference": "het alarm"
+        },
+        {
+          "id": "ex_023",
+          "type": "useInSentence",
+          "prompt": "Choose the correct use of 'het best doen':",
+          "options": [
+            "Ik ga mijn best doen voor het examen.",
+            "Zij doet haar best om te helpen.",
+            "Wij doen ons best om op tijd te komen."
+          ],
+          "correctAnswer": "Ik ga mijn best doen voor het examen.",
+          "explanation": "'Het best doen' (or 'mijn best doen') means 'to do one's best'. Ik ga mijn best doen voor het examen. (I will do my best for the exam)",
+          "vocabularyReference": "het best doen"
+        },
+        {
+          "id": "ex_024",
+          "type": "fillInBlank",
+          "prompt": "Maak je niet zo ___! Alles komt goed.",
+          "options": ["zich druk maken", "druk", "ontzettend"],
+          "correctAnswer": "druk",
+          "explanation": "'Zich druk maken' means 'to worry'. Maak je niet zo druk! Alles komt goed. (Don't worry so much! Everything will be fine.)",
+          "vocabularyReference": "zich druk maken"
+        },
+        {
+          "id": "ex_025",
+          "type": "fillInBlank",
+          "prompt": "Mijn zus houdt van winkelen, ___ ik.",
+          "options": ["net zoals", "nauwelijks", "nogal"],
+          "correctAnswer": "net zoals",
+          "explanation": "'Net zoals' means 'just like'. Mijn zus houdt van winkelen, net zoals ik. (My sister likes shopping, just like me.)",
+          "vocabularyReference": "net zoals"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "experience",
+          "value": 120,
+          "description": "Complete Chapter 3.5 - Dutch Vocabulary in Context"
+        },
+        {
+          "type": "vocabulary",
+          "value": 20,
+          "description": "Unlock 20 new vocabulary words"
+        },
+        {
+          "type": "achievement",
+          "value": 1,
+          "description": "Earn 'Context Master' badge"
+        }
+      ]
+    }
+  ]
+} 

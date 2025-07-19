@@ -52,7 +52,7 @@ struct LearningPathView: View {
     private var lessonDetailDestination: some View {
         Group {
             if let lesson = selectedLesson {
-                if let actualLesson = lessonManager.lesson(withId: lesson.lessonId) {
+                if let actualLesson = lessonManager.lesson(withId: lesson.lessonId.uuidString) {
                     LessonDetailView(lesson: actualLesson, completedLessons: $completedLessons, viewModel: viewModel, shouldLoadSaveState: SaveStateManager.shared.hasSaveState(gameType: .lesson))
                         .onDisappear {
                             checkAndMarkLessonCompletion(lesson)
