@@ -75,25 +75,6 @@ struct DutchVocabularyImportView: View {
                 onProfile: { NavigationCoordinator.shared.presentSheet(.userProfile) }
             )
             
-            // Debug info - temporary
-            VStack {
-                Text("Debug Info:")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                Text("Total packs: \(database.getAllPacks().count)")
-                    .font(.caption)
-                Text("A1 words: \(database.getWordsForLevel(.a1).count)")
-                    .font(.caption)
-                Text("A2 words: \(database.getWordsForLevel(.a2).count)")
-                    .font(.caption)
-                Text("B1 words: \(database.getWordsForLevel(.b1).count)")
-                    .font(.caption)
-                Text("Filtered packs: \(filteredPacks.count)")
-                    .font(.caption)
-            }
-            .padding()
-            .background(Color(.systemGray6))
-            
             // Search Bar
             HStack {
                 Image(systemName: "magnifyingglass")

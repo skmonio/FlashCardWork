@@ -17,17 +17,8 @@ struct ContentView: View {
             MainNavigationView(viewModel: viewModel, streakManager: streakManager)
         }
         .onAppear {
-            print("🚀 ContentView appeared - initializing vocabulary...")
-            
             // Initialize vocabulary system
             DutchVocabularyDatabase.initializeVocabulary()
-            
-            // Debug: Check vocabulary status
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                print("🔍 Checking vocabulary status after 1 second...")
-                let database = DutchVocabularyDatabase.shared
-                database.debugVocabularyStatus()
-            }
             
             // Add a timeout to prevent infinite loading
             DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
