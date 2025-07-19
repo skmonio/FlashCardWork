@@ -1,0 +1,306 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "lastUpdated": "2024-01-15",
+    "language": "Dutch",
+    "targetLanguage": "English"
+  },
+  "levels": [
+    {
+      "id": "A1",
+      "name": "Beginner",
+      "description": "Basic everyday words"
+    },
+    {
+      "id": "A2",
+      "name": "Elementary", 
+      "description": "Expanding vocabulary"
+    },
+    {
+      "id": "B1",
+      "name": "Intermediate",
+      "description": "Complex concepts"
+    }
+  ],
+  "categories": [
+    { "id": "family", "name": "Family", "dutchName": "Familie" },
+    { "id": "food", "name": "Food and Drink", "dutchName": "Eten en Drinken" },
+    { "id": "home", "name": "House and Living", "dutchName": "Huis en Wonen" },
+    { "id": "work", "name": "Work and Professions", "dutchName": "Werk en Beroepen" },
+    { "id": "travel", "name": "Travel and Transport", "dutchName": "Reizen en Transport" },
+    { "id": "time", "name": "Time and Date", "dutchName": "Tijd en Datum" },
+    { "id": "weather", "name": "Weather and Seasons", "dutchName": "Weer en Seizoenen" },
+    { "id": "body", "name": "Body and Health", "dutchName": "Lichaam en Gezondheid" },
+    { "id": "clothing", "name": "Clothing", "dutchName": "Kleding" },
+    { "id": "animals", "name": "Animals", "dutchName": "Dieren" },
+    { "id": "colors", "name": "Colors", "dutchName": "Kleuren" },
+    { "id": "numbers", "name": "Numbers", "dutchName": "Getallen" },
+    { "id": "verbs", "name": "Verbs", "dutchName": "Werkwoorden" },
+    { "id": "adjectives", "name": "Adjectives", "dutchName": "Bijvoeglijke Naamwoorden" },
+    { "id": "emotions", "name": "Emotions and Feelings", "dutchName": "Emoties en Gevoelens" },
+    { "id": "education", "name": "Education", "dutchName": "Onderwijs" },
+    { "id": "technology", "name": "Technology", "dutchName": "Technologie" },
+    { "id": "sports", "name": "Sports and Hobbies", "dutchName": "Sport en Hobby's" },
+    { "id": "shopping", "name": "Shopping", "dutchName": "Winkelen" },
+    { "id": "nature", "name": "Nature", "dutchName": "Natuur" },
+    { "id": "business", "name": "Business and Office", "dutchName": "Zakelijk en Kantoor" },
+    { "id": "medical", "name": "Medical and Health", "dutchName": "Medisch en Gezondheid" },
+    { "id": "politics", "name": "Politics and Society", "dutchName": "Politiek en Maatschappij" },
+    { "id": "culture", "name": "Culture and Art", "dutchName": "Cultuur en Kunst" },
+    { "id": "media", "name": "Media and Communication", "dutchName": "Media en Communicatie" },
+    { "id": "science", "name": "Science and Research", "dutchName": "Wetenschap en Onderzoek" },
+    { "id": "environment", "name": "Environment and Sustainability", "dutchName": "Milieu en Duurzaamheid" },
+    { "id": "finance", "name": "Finance and Money", "dutchName": "Financiën en Geld" },
+    { "id": "relationships", "name": "Relationships and Friendship", "dutchName": "Relaties en Vriendschap" },
+    { "id": "personality", "name": "Personality and Character", "dutchName": "Persoonlijkheid en Karakter" },
+    { "id": "cooking", "name": "Cooking and Recipes", "dutchName": "Koken en Recepten" },
+    { "id": "textiles", "name": "Textiles and Fashion", "dutchName": "Textiel en Mode" },
+    { "id": "daily", "name": "Daily Activities", "dutchName": "Dagelijkse Activiteiten" },
+    { "id": "transportation", "name": "Transport and Traffic", "dutchName": "Vervoer en Transport" },
+    { "id": "entertainment", "name": "Entertainment and Leisure", "dutchName": "Entertainment en Vrije Tijd" },
+    { "id": "law", "name": "Law and Legal", "dutchName": "Recht en Juridisch" }
+  ],
+  "wordTypes": [
+    { "id": "noun", "name": "Noun", "dutchName": "Zelfstandig naamwoord" },
+    { "id": "verb", "name": "Verb", "dutchName": "Werkwoord" },
+    { "id": "adjective", "name": "Adjective", "dutchName": "Bijvoeglijk naamwoord" },
+    { "id": "adverb", "name": "Adverb", "dutchName": "Bijwoord" },
+    { "id": "preposition", "name": "Preposition", "dutchName": "Voorzetsel" },
+    { "id": "conjunction", "name": "Conjunction", "dutchName": "Voegwoord" },
+    { "id": "pronoun", "name": "Pronoun", "dutchName": "Voornaamwoord" },
+    { "id": "interjection", "name": "Interjection", "dutchName": "Tussenwerpsel" }
+  ],
+  "vocabularyPacks": [
+    {
+      "id": "family_a1",
+      "name": "Familie (A1)",
+      "level": "A1",
+      "category": "family",
+      "description": "Essential family members and relationships",
+      "words": [
+        {
+          "word": "vader",
+          "article": "de",
+          "definition": "father",
+          "example": "Mijn vader werkt in een kantoor.",
+          "plural": "vaders",
+          "pastTense": "",
+          "futureTense": "",
+          "pastParticiple": "",
+          "wordType": "noun",
+          "level": "A1",
+          "category": "family"
+        },
+        {
+          "word": "moeder",
+          "article": "de",
+          "definition": "mother",
+          "example": "De moeder kookt het avondeten.",
+          "plural": "moeders",
+          "pastTense": "",
+          "futureTense": "",
+          "pastParticiple": "",
+          "wordType": "noun",
+          "level": "A1",
+          "category": "family"
+        },
+        {
+          "word": "kind",
+          "article": "het",
+          "definition": "child",
+          "example": "Het kind speelt in de tuin.",
+          "plural": "kinderen",
+          "pastTense": "",
+          "futureTense": "",
+          "pastParticiple": "",
+          "wordType": "noun",
+          "level": "A1",
+          "category": "family"
+        },
+        {
+          "word": "broer",
+          "article": "de",
+          "definition": "brother",
+          "example": "Mijn broer is achttien jaar oud.",
+          "plural": "broers",
+          "pastTense": "",
+          "futureTense": "",
+          "pastParticiple": "",
+          "wordType": "noun",
+          "level": "A1",
+          "category": "family"
+        },
+        {
+          "word": "zus",
+          "article": "de",
+          "definition": "sister",
+          "example": "Zijn zus studeert aan de universiteit.",
+          "plural": "zussen",
+          "pastTense": "",
+          "futureTense": "",
+          "pastParticiple": "",
+          "wordType": "noun",
+          "level": "A1",
+          "category": "family"
+        }
+      ]
+    },
+    {
+      "id": "food_a1",
+      "name": "Eten en Drinken (A1)",
+      "level": "A1",
+      "category": "food",
+      "description": "Basic food and drink vocabulary",
+      "words": [
+        {
+          "word": "brood",
+          "article": "het",
+          "definition": "bread",
+          "example": "Ik eet brood met boter.",
+          "plural": "broden",
+          "pastTense": "",
+          "futureTense": "",
+          "pastParticiple": "",
+          "wordType": "noun",
+          "level": "A1",
+          "category": "food"
+        },
+        {
+          "word": "melk",
+          "article": "de",
+          "definition": "milk",
+          "example": "Hij drinkt een glas melk.",
+          "plural": "",
+          "pastTense": "",
+          "futureTense": "",
+          "pastParticiple": "",
+          "wordType": "noun",
+          "level": "A1",
+          "category": "food"
+        },
+        {
+          "word": "eten",
+          "article": "",
+          "definition": "to eat",
+          "example": "Wij eten om zes uur.",
+          "plural": "",
+          "pastTense": "at",
+          "futureTense": "zal eten",
+          "pastParticiple": "gegeten",
+          "wordType": "verb",
+          "level": "A1",
+          "category": "food"
+        },
+        {
+          "word": "drinken",
+          "article": "",
+          "definition": "to drink",
+          "example": "Zij drinkt graag thee.",
+          "plural": "",
+          "pastTense": "dronk",
+          "futureTense": "zal drinken",
+          "pastParticiple": "gedronken",
+          "wordType": "verb",
+          "level": "A1",
+          "category": "food"
+        }
+      ]
+    },
+    {
+      "id": "verbs_a1",
+      "name": "Werkwoorden (A1)",
+      "level": "A1",
+      "category": "verbs",
+      "description": "Essential Dutch verbs for daily communication",
+      "words": [
+        {
+          "word": "zijn",
+          "article": "",
+          "definition": "to be",
+          "example": "Ik ben student.",
+          "plural": "",
+          "pastTense": "was/waren",
+          "futureTense": "zal zijn",
+          "pastParticiple": "geweest",
+          "wordType": "verb",
+          "level": "A1",
+          "category": "verbs"
+        },
+        {
+          "word": "hebben",
+          "article": "",
+          "definition": "to have",
+          "example": "Wij hebben een hond.",
+          "plural": "",
+          "pastTense": "had/hadden",
+          "futureTense": "zal hebben",
+          "pastParticiple": "gehad",
+          "wordType": "verb",
+          "level": "A1",
+          "category": "verbs"
+        },
+        {
+          "word": "gaan",
+          "article": "",
+          "definition": "to go",
+          "example": "Ik ga naar school.",
+          "plural": "",
+          "pastTense": "ging/gingen",
+          "futureTense": "zal gaan",
+          "pastParticiple": "gegaan",
+          "wordType": "verb",
+          "level": "A1",
+          "category": "verbs"
+        }
+      ]
+    },
+    {
+      "id": "technology_b1",
+      "name": "Technologie (B1)",
+      "level": "B1",
+      "category": "technology",
+      "description": "Modern technology vocabulary for digital communication",
+      "words": [
+        {
+          "word": "computer",
+          "article": "de",
+          "definition": "computer",
+          "example": "Mijn computer is snel.",
+          "plural": "computers",
+          "pastTense": "",
+          "futureTense": "",
+          "pastParticiple": "",
+          "wordType": "noun",
+          "level": "B1",
+          "category": "technology"
+        },
+        {
+          "word": "internet",
+          "article": "het",
+          "definition": "internet",
+          "example": "Internet is belangrijk tegenwoordig.",
+          "plural": "",
+          "pastTense": "",
+          "futureTense": "",
+          "pastParticiple": "",
+          "wordType": "noun",
+          "level": "B1",
+          "category": "technology"
+        },
+        {
+          "word": "downloaden",
+          "article": "",
+          "definition": "to download",
+          "example": "Ik ga de app downloaden.",
+          "plural": "",
+          "pastTense": "downloadde",
+          "futureTense": "zal downloaden",
+          "pastParticiple": "gedownload",
+          "wordType": "verb",
+          "level": "B1",
+          "category": "technology"
+        }
+      ]
+    }
+  ]
+} 

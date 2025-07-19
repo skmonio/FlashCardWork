@@ -1,0 +1,88 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Dutch Vocabulary System",
+  "description": "A comprehensive Dutch vocabulary learning system with levels, categories, and detailed word information",
+  "type": "object",
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "version": { "type": "string" },
+        "lastUpdated": { "type": "string", "format": "date" },
+        "language": { "type": "string", "default": "Dutch" },
+        "targetLanguage": { "type": "string", "default": "English" }
+      }
+    },
+    "levels": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "enum": ["A1", "A2", "B1"] },
+          "name": { "type": "string" },
+          "description": { "type": "string" }
+        },
+        "required": ["id", "name", "description"]
+      }
+    },
+    "categories": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "dutchName": { "type": "string" }
+        },
+        "required": ["id", "name", "dutchName"]
+      }
+    },
+    "wordTypes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "dutchName": { "type": "string" }
+        },
+        "required": ["id", "name", "dutchName"]
+      }
+    },
+    "vocabularyPacks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "level": { "type": "string", "enum": ["A1", "A2", "B1"] },
+          "category": { "type": "string" },
+          "description": { "type": "string" },
+          "words": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "word": { "type": "string" },
+                "article": { "type": "string" },
+                "definition": { "type": "string" },
+                "example": { "type": "string" },
+                "plural": { "type": "string" },
+                "pastTense": { "type": "string" },
+                "futureTense": { "type": "string" },
+                "pastParticiple": { "type": "string" },
+                "wordType": { "type": "string" },
+                "level": { "type": "string", "enum": ["A1", "A2", "B1"] },
+                "category": { "type": "string" }
+              },
+              "required": ["word", "definition", "wordType", "level", "category"]
+            }
+          }
+        },
+        "required": ["id", "name", "level", "category", "description", "words"]
+      }
+    }
+  },
+  "required": ["metadata", "levels", "categories", "wordTypes", "vocabularyPacks"]
+} 

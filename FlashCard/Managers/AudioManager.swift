@@ -12,9 +12,9 @@ class AudioManager: NSObject, ObservableObject {
         if let instance = _shared {
             return instance
         }
-        let instance = AudioManager()
-        _shared = instance
-        return instance
+            let instance = AudioManager()
+            _shared = instance
+            return instance
     }
     
     private var audioRecorder: AVAudioRecorder?
