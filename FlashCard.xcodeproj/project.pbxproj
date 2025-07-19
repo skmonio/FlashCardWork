@@ -7,8 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		DC7824A22E2BAE8300497BF4 /* dutch_vocabulary_complete.json in Resources */ = {isa = PBXBuildFile; fileRef = DC7824A12E2BAE8300497BF4 /* dutch_vocabulary_complete.json */; };
-		DC7824A32E2BAE8300497BF4 /* dutch_vocabulary_complete.json in Resources */ = {isa = PBXBuildFile; fileRef = DC7824A12E2BAE8300497BF4 /* dutch_vocabulary_complete.json */; };
 		DC7C27332E02FEF20089C13B /* Begin.wav in Resources */ = {isa = PBXBuildFile; fileRef = DC7C27322E02FEF20089C13B /* Begin.wav */; };
 		DC7C27362E03014C0089C13B /* Correct.wav in Resources */ = {isa = PBXBuildFile; fileRef = DC7C27342E03014C0089C13B /* Correct.wav */; };
 		DC7C27372E03014C0089C13B /* Wrong.wav in Resources */ = {isa = PBXBuildFile; fileRef = DC7C27352E03014C0089C13B /* Wrong.wav */; };
@@ -42,7 +40,6 @@
 		0A780F9E2DF0528600F71F44 /* FlashCard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FlashCard.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0A780FAB2DF0528700F71F44 /* FlashCardTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlashCardTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		0A780FB52DF0528700F71F44 /* FlashCardUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlashCardUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		DC7824A12E2BAE8300497BF4 /* dutch_vocabulary_complete.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = dutch_vocabulary_complete.json; sourceTree = "<group>"; };
 		DC7C27322E02FEF20089C13B /* Begin.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Begin.wav; sourceTree = "<group>"; };
 		DC7C27342E03014C0089C13B /* Correct.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Correct.wav; sourceTree = "<group>"; };
 		DC7C27352E03014C0089C13B /* Wrong.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Wrong.wav; sourceTree = "<group>"; };
@@ -120,7 +117,6 @@
 		0A780F952DF0528600F71F44 = {
 			isa = PBXGroup;
 			children = (
-				DC7824A12E2BAE8300497BF4 /* dutch_vocabulary_complete.json */,
 				DC7C27382E0304560089C13B /* Complete.wav */,
 				DC7C27392E0304560089C13B /* Game.wav */,
 				DC7C27342E03014C0089C13B /* Correct.wav */,
@@ -288,7 +284,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				DC7C27362E03014C0089C13B /* Correct.wav in Resources */,
-				DC7824A22E2BAE8300497BF4 /* dutch_vocabulary_complete.json in Resources */,
 				DC7C27372E03014C0089C13B /* Wrong.wav in Resources */,
 				DC7C27332E02FEF20089C13B /* Begin.wav in Resources */,
 				DC7C273A2E0304560089C13B /* Complete.wav in Resources */,
@@ -316,7 +311,6 @@
 			files = (
 				DC837CBD2E21585A00F8A51E /* Correct.wav in Resources */,
 				DC837CBE2E21585A00F8A51E /* Wrong.wav in Resources */,
-				DC7824A32E2BAE8300497BF4 /* dutch_vocabulary_complete.json in Resources */,
 				DC837CBF2E21585A00F8A51E /* Begin.wav in Resources */,
 				DC837CC02E21585A00F8A51E /* Complete.wav in Resources */,
 				DC837CC12E21585A00F8A51E /* Game.wav in Resources */,

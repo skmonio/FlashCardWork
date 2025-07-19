@@ -4,30 +4,6 @@ import Foundation
 // This file contains JSON loading and database functionality
 // Core types and DutchVocabularyDatabase are defined in FlashCard/Models/VocabularyTypes.swift
 
-// MARK: - JSON Data Structures
-
-struct VocabularyPackJSON: Codable {
-    let name: String
-    let level: String
-    let category: String
-    let words: [DutchWordJSON]
-    let description: String
-}
-
-struct DutchWordJSON: Codable {
-    let word: String
-    let article: String
-    let definition: String
-    let example: String
-    let plural: String
-    let pastTense: String
-    let futureTense: String
-    let pastParticiple: String
-    let wordType: String
-    let level: String
-    let category: String
-}
-
 // MARK: - JSON Loader
 
 class VocabularyLoader {
@@ -47,12 +23,34 @@ class VocabularyLoader {
         do {
             let data = try Data(contentsOf: url)
             let decoder = JSONDecoder()
-            let vocabularyData = try decoder.decode([VocabularyPackJSON].self, from: data)
-            allPacks = vocabularyData
+            let rootData = try decoder.decode(VocabularyRootJSON.self, from: data)
+            allPacks = rootData.vocabularyPacks
             print("✅ Loaded \(allPacks.count) vocabulary packs from JSON")
             
             // Load the data into the database
-            let vocabularyPacks = allPacks.map { DutchVocabularyPack(from: $0) }
+            let vocabularyPacks = allPacks.map { jsonPack in
+                DutchVocabularyPack(
+                    name: jsonPack.name,
+                    level: LanguageLevel(rawValue: jsonPack.level) ?? .a1,
+                    category: VocabularyCategory(rawValue: jsonPack.category) ?? .family,
+                    words: jsonPack.words.map { jsonWord in
+                        DutchWord(
+                            word: jsonWord.word,
+                            article: jsonWord.article,
+                            definition: jsonWord.definition,
+                            example: jsonWord.example,
+                            plural: jsonWord.plural,
+                            pastTense: jsonWord.pastTense,
+                            futureTense: jsonWord.futureTense,
+                            pastParticiple: jsonWord.pastParticiple,
+                            wordType: WordType(rawValue: jsonWord.wordType) ?? .noun,
+                            level: LanguageLevel(rawValue: jsonWord.level) ?? .a1,
+                            category: VocabularyCategory(rawValue: jsonWord.category) ?? .family
+                        )
+                    },
+                    description: jsonPack.description
+                )
+            }
             DutchVocabularyDatabase.shared.loadPacks(vocabularyPacks)
             
         } catch {
@@ -91,35 +89,5 @@ extension VocabularyLoader {
     static func initializeVocabulary() {
         // This will trigger the shared instance creation and load the data
         _ = VocabularyLoader.shared
-    }
-}
-
-// MARK: - Extensions for JSON Conversion
-
-extension DutchVocabularyPack {
-    // Create from JSON data
-    init(from jsonPack: VocabularyPackJSON) {
-        self.name = jsonPack.name
-        self.level = LanguageLevel(rawValue: jsonPack.level) ?? .a1
-        self.category = VocabularyCategory(rawValue: jsonPack.category) ?? .family
-        self.words = jsonPack.words.map { DutchWord(from: $0) }
-        self.description = jsonPack.description
-    }
-}
-
-extension DutchWord {
-    // Create from JSON data
-    init(from jsonWord: DutchWordJSON) {
-        self.word = jsonWord.word
-        self.article = jsonWord.article
-        self.definition = jsonWord.definition
-        self.example = jsonWord.example
-        self.plural = jsonWord.plural
-        self.pastTense = jsonWord.pastTense
-        self.futureTense = jsonWord.futureTense
-        self.pastParticiple = jsonWord.pastParticiple
-        self.wordType = WordType(rawValue: jsonWord.wordType) ?? .noun
-        self.level = LanguageLevel(rawValue: jsonWord.level) ?? .a1
-        self.category = VocabularyCategory(rawValue: jsonWord.category) ?? .family
     }
 } 
