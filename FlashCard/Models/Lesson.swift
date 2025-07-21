@@ -169,6 +169,12 @@ class LessonManager: ObservableObject {
         }
     }
     
+    // MARK: - Replace Lessons (for import)
+    @MainActor
+    func replaceLessons(with newLessons: [Lesson]) {
+        self.lessons = newLessons
+    }
+    
     // MARK: - Legacy Support (for backward compatibility)
     
     // These properties maintain backward compatibility with existing code
@@ -190,5 +196,50 @@ class LessonManager: ObservableObject {
     
     var chapter35: Lesson? {
         return lessons.first { $0.title.contains("Chapter 3.5") }
+    }
+    
+    // MARK: - Export Methods
+    
+    /// Export selected lessons as JSON string
+    func exportLessonsToJSON(_ lessons: [Lesson]) -> String {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .prettyPrinted
+        do {
+            let data = try encoder.encode(lessons)
+            return String(data: data, encoding: .utf8) ?? ""
+        } catch {
+            print("❌ Error encoding lessons to JSON: \(error)")
+            return ""
+        }
+    }
+    
+    /// Export selected lessons as CSV string (basic, for spreadsheet use)
+    func exportLessonsToCSV(_ lessons: [Lesson]) -> String {
+        var csv = "Title,Description,Level,Category,EstimatedTime,Difficulty,Vocabulary,Exercises\n"
+        for lesson in lessons {
+            let vocab = lesson.vocabulary.map { $0.dutchWord }.joined(separator: "; ")
+            let exercises = lesson.exercises.map { $0.prompt }.joined(separator: "; ")
+            let row = [
+                escapeCSV(lesson.title),
+                escapeCSV(lesson.description),
+                escapeCSV(lesson.level),
+                escapeCSV(lesson.category),
+                "\(lesson.estimatedTime)",
+                escapeCSV(lesson.difficulty),
+                escapeCSV(vocab),
+                escapeCSV(exercises)
+            ].joined(separator: ",")
+            csv += row + "\n"
+        }
+        return csv
+    }
+    
+    /// Helper to escape CSV fields
+    private func escapeCSV(_ value: String) -> String {
+        var v = value.replacingOccurrences(of: "\"", with: "\"\"")
+        if v.contains(",") || v.contains("\n") || v.contains("\"") {
+            v = "\"" + v + "\""
+        }
+        return v
     }
 } 

@@ -7,6 +7,29 @@ struct LessonsListView: View {
     let viewModel: FlashCardViewModel
     @Environment(\.dismiss) private var dismiss
     
+    // Export state
+    @State private var showingExportSheet = false
+    @State private var showingLessonSelection = false
+    @State private var selectedLessonIds: Set<UUID> = []
+    @State private var exportFormat: ExportFormat? = nil
+    @State private var exportData: Data? = nil
+    @State private var exportFileName: String = ""
+    @State private var exportMimeType: String = "application/json"
+    // Import state
+    @State private var showingImportPicker = false
+    @State private var importResultMessage: String? = nil
+    @State private var showingImportAlert = false
+    
+    enum ExportFormat: Identifiable {
+        case csv, json
+        var id: String {
+            switch self {
+            case .csv: return "csv"
+            case .json: return "json"
+            }
+        }
+    }
+    
     init(viewModel: FlashCardViewModel) {
         self.viewModel = viewModel
     }
@@ -18,7 +41,28 @@ struct LessonsListView: View {
                 title: "Dutch Lessons",
                 showBackButton: true,
                 showProfileIcon: false,
-                onBack: { dismiss() }
+                onBack: { dismiss() },
+                trailing: {
+                    AnyView(
+                        HStack(spacing: 16) {
+                            Button(action: {
+                                selectedLessonIds = []
+                                showingLessonSelection = true
+                            }) {
+                                Image(systemName: "square.and.arrow.up")
+                                    .font(.title2)
+                                    .foregroundColor(.blue)
+                            }
+                            Button(action: {
+                                showingImportPicker = true
+                            }) {
+                                Image(systemName: "square.and.arrow.down")
+                                    .font(.title2)
+                                    .foregroundColor(.green)
+                            }
+                        }
+                    )
+                }
             )
             
             ScrollView {
@@ -33,6 +77,35 @@ struct LessonsListView: View {
         .navigationBarHidden(true)
         .navigationBarBackButtonHidden(true)
         .background(Color(.systemGroupedBackground))
+        .sheet(isPresented: $showingExportSheet) {
+            if let data = exportData {
+                ShareSheet(activityItems: [ExportFileWrapper(data: data, fileName: exportFileName, mimeType: exportMimeType)])
+            } else {
+                Text("No data to export")
+            }
+        }
+        .sheet(isPresented: $showingLessonSelection) {
+            lessonSelectionSheet()
+        }
+        .actionSheet(item: $exportFormat) { format in
+            ActionSheet(title: Text("Export Format"), message: Text("Choose export format"), buttons: [
+                .default(Text("CSV")) { exportLessons(as: .csv) },
+                .default(Text("JSON")) { exportLessons(as: .json) },
+                .cancel()
+            ])
+        }
+        .fileImporter(
+            isPresented: $showingImportPicker,
+            allowedContentTypes: [.json, .commaSeparatedText, .plainText],
+            allowsMultipleSelection: false
+        ) { result in
+            handleLessonImport(result: result)
+        }
+        .alert("Import Result", isPresented: $showingImportAlert) {
+            Button("OK") {}
+        } message: {
+            Text(importResultMessage ?? "Unknown result")
+        }
     }
     
     private var regularLessonsSection: some View {
@@ -981,5 +1054,214 @@ extension String {
         let fontAttributes = [NSAttributedString.Key.font: font]
         let size = self.size(withAttributes: fontAttributes)
         return size.width
+    }
+} 
+
+// MARK: - Export UI
+
+extension LessonsListView {
+    private func lessonSelectionSheet() -> some View {
+        NavigationView {
+            VStack(spacing: 0) {
+                HStack {
+                    Text("Select Lessons to Export")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                    Spacer()
+                    Button("Cancel") {
+                        showingLessonSelection = false
+                    }
+                    .foregroundColor(.blue)
+                }
+                .padding()
+                
+                ScrollView {
+                    LazyVStack(spacing: 12) {
+                        Button(action: {
+                            selectedLessonIds = Set(lessonManager.lessons.map { $0.id })
+                            showingLessonSelection = false
+                            exportFormat = nil
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                                exportFormat = .json // default to show action sheet
+                            }
+                        }) {
+                            HStack {
+                                Text("All Lessons")
+                                    .fontWeight(.semibold)
+                                Spacer()
+                                Text("\(lessonManager.lessons.count) lessons")
+                                    .foregroundColor(.secondary)
+                            }
+                            .padding()
+                            .background(Color.blue.opacity(0.1))
+                            .cornerRadius(10)
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                        
+                        ForEach(lessonManager.lessons, id: \.id) { lesson in
+                            Button(action: {
+                                if selectedLessonIds.contains(lesson.id) {
+                                    selectedLessonIds.remove(lesson.id)
+                                } else {
+                                    selectedLessonIds.insert(lesson.id)
+                                }
+                            }) {
+                                HStack {
+                                    Image(systemName: selectedLessonIds.contains(lesson.id) ? "checkmark.square.fill" : "square")
+                                        .foregroundColor(.blue)
+                                    VStack(alignment: .leading) {
+                                        Text(lesson.title)
+                                            .fontWeight(.medium)
+                                        Text(lesson.level)
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+                                    Spacer()
+                                }
+                                .padding()
+                                .background(Color.gray.opacity(0.1))
+                                .cornerRadius(10)
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                        }
+                    }
+                    .padding(.horizontal)
+                }
+                Button("Export Selected") {
+                    showingLessonSelection = false
+                    exportFormat = nil
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                        exportFormat = .json // default to show action sheet
+                    }
+                }
+                .font(.headline)
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color.blue)
+                .foregroundColor(.white)
+                .cornerRadius(12)
+                .padding()
+                .disabled(selectedLessonIds.isEmpty)
+            }
+        }
+    }
+    
+    private func exportLessons(as format: ExportFormat) {
+        let lessonsToExport = lessonManager.lessons.filter { selectedLessonIds.contains($0.id) }
+        switch format {
+        case .csv:
+            let csv = lessonManager.exportLessonsToCSV(lessonsToExport)
+            exportData = csv.data(using: .utf8)
+            exportFileName = selectedLessonIds.count == lessonManager.lessons.count ? "DutchLessons_All.csv" : "DutchLessons_Selected.csv"
+            exportMimeType = "text/csv"
+        case .json:
+            let json = lessonManager.exportLessonsToJSON(lessonsToExport)
+            exportData = json.data(using: .utf8)
+            exportFileName = selectedLessonIds.count == lessonManager.lessons.count ? "DutchLessons_All.json" : "DutchLessons_Selected.json"
+            exportMimeType = "application/json"
+        }
+        showingExportSheet = true
+    }
+    
+    // MARK: - Export File Wrapper
+    class ExportFileWrapper: NSObject, UIActivityItemSource {
+        let data: Data
+        let fileName: String
+        let mimeType: String
+        init(data: Data, fileName: String, mimeType: String) {
+            self.data = data
+            self.fileName = fileName
+            self.mimeType = mimeType
+        }
+        func activityViewControllerPlaceholderItem(_ activityViewController: UIActivityViewController) -> Any { data }
+        func activityViewController(_ activityViewController: UIActivityViewController, itemForActivityType activityType: UIActivity.ActivityType?) -> Any? { data }
+        func activityViewController(_ activityViewController: UIActivityViewController, subjectForActivityType activityType: UIActivity.ActivityType?) -> String { fileName }
+        func activityViewController(_ activityViewController: UIActivityViewController, dataTypeIdentifierForActivityType activityType: UIActivity.ActivityType?) -> String { mimeType }
+    }
+    
+    struct ShareSheet: UIViewControllerRepresentable {
+        let activityItems: [Any]
+        func makeUIViewController(context: Context) -> UIActivityViewController {
+            UIActivityViewController(activityItems: activityItems, applicationActivities: nil)
+        }
+        func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
+    }
+    
+    // MARK: - Import Logic
+    private func handleLessonImport(result: Result<[URL], Error>) {
+        switch result {
+        case .success(let urls):
+            guard let url = urls.first else {
+                importResultMessage = "No file selected."
+                showingImportAlert = true
+                return
+            }
+            do {
+                let data = try Data(contentsOf: url)
+                let decoder = JSONDecoder()
+                var importedLessons: [Lesson] = []
+                var importType: String = ""
+                // Try JSON import (LessonRootJSON or [LessonJSON])
+                if url.pathExtension.lowercased() == "json" {
+                    do {
+                        if let root = try? decoder.decode(LessonRootJSON.self, from: data) {
+                            importedLessons = root.lessons.map { $0.toLesson() }
+                            importType = "JSON (LessonRootJSON)"
+                        } else if let arr = try? decoder.decode([LessonJSON].self, from: data) {
+                            importedLessons = arr.map { $0.toLesson() }
+                            importType = "JSON ([LessonJSON])"
+                        } else {
+                            throw NSError(domain: "Import", code: 1, userInfo: [NSLocalizedDescriptionKey: "Invalid JSON structure for lessons."])
+                        }
+                    }
+                } else {
+                    // Try CSV import
+                    if let csvString = String(data: data, encoding: .utf8) {
+                        let rows = csvString.components(separatedBy: .newlines).filter { !$0.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines).isEmpty }
+                        guard let header = rows.first else { throw NSError(domain: "Import", code: 2, userInfo: [NSLocalizedDescriptionKey: "CSV missing header row"]) }
+                        let columns = header.components(separatedBy: ",")
+                        let titleIdx = columns.firstIndex(of: "Title")
+                        let descIdx = columns.firstIndex(of: "Description")
+                        let levelIdx = columns.firstIndex(of: "Level")
+                        let catIdx = columns.firstIndex(of: "Category")
+                        let timeIdx = columns.firstIndex(of: "EstimatedTime")
+                        let diffIdx = columns.firstIndex(of: "Difficulty")
+                        // Only basic fields for CSV import
+                        for row in rows.dropFirst() {
+                            let fields = row.components(separatedBy: ",")
+                            func val(_ idx: Int?) -> String { idx != nil && idx! < fields.count ? fields[idx!].trimmingCharacters(in: CharacterSet.whitespacesAndNewlines) : "" }
+                            let lesson = Lesson(
+                                title: val(titleIdx),
+                                description: val(descIdx),
+                                vocabulary: [],
+                                exercises: []
+                            )
+                            var l = lesson
+                            l.level = val(levelIdx)
+                            l.category = val(catIdx)
+                            l.estimatedTime = Int(val(timeIdx)) ?? 0
+                            l.difficulty = val(diffIdx)
+                            importedLessons.append(l)
+                        }
+                        importType = "CSV"
+                    } else {
+                        throw NSError(domain: "Import", code: 3, userInfo: [NSLocalizedDescriptionKey: "Could not decode file as UTF-8 text."])
+                    }
+                }
+                if importedLessons.isEmpty {
+                    importResultMessage = "No lessons found in import file."
+                } else {
+                    LessonManager.shared.replaceLessons(with: importedLessons)
+                    importResultMessage = "Imported \(importedLessons.count) lessons (\(importType))."
+                }
+                showingImportAlert = true
+            } catch {
+                importResultMessage = "Failed to import: \(error.localizedDescription)"
+                showingImportAlert = true
+            }
+        case .failure(let error):
+            importResultMessage = "Import failed: \(error.localizedDescription)"
+            showingImportAlert = true
+        }
     }
 } 

@@ -34,6 +34,10 @@ struct JSONGrammarRulesView: View {
     @State private var exportMimeType: String = "text/csv"
     @State private var exportRuleSelection: GrammarRuleData? = nil
     @State private var exportAllRules = false
+    // Import functionality
+    @State private var showingImportPicker = false
+    @State private var importResultMessage: String? = nil
+    @State private var showingImportAlert = false
     
     var filteredRules: [GrammarRuleData] {
         let levelRules = questionManager.getRulesByLevel(selectedLevel)
@@ -72,12 +76,21 @@ struct JSONGrammarRulesView: View {
                 },
                 trailing: {
                     AnyView(
-                        Button(action: {
-                            showingRuleSelection = true
-                        }) {
-                            Image(systemName: "square.and.arrow.up")
-                                .font(.title2)
-                                .foregroundColor(.blue)
+                        HStack(spacing: 16) {
+                            Button(action: {
+                                showingRuleSelection = true
+                            }) {
+                                Image(systemName: "square.and.arrow.up")
+                                    .font(.title2)
+                                    .foregroundColor(.blue)
+                            }
+                            Button(action: {
+                                showingImportPicker = true
+                            }) {
+                                Image(systemName: "square.and.arrow.down")
+                                    .font(.title2)
+                                    .foregroundColor(.green)
+                            }
                         }
                     )
                 }
@@ -133,6 +146,18 @@ struct JSONGrammarRulesView: View {
         }
         .sheet(isPresented: $showingRuleSelection) {
             ruleSelectionSheet()
+        }
+        .fileImporter(
+            isPresented: $showingImportPicker,
+            allowedContentTypes: [.json, .commaSeparatedText, .plainText],
+            allowsMultipleSelection: false
+        ) { result in
+            handleGrammarImport(result: result)
+        }
+        .alert("Import Result", isPresented: $showingImportAlert) {
+            Button("OK") {}
+        } message: {
+            Text(importResultMessage ?? "Unknown result")
         }
     }
     
@@ -880,5 +905,90 @@ extension JSONGrammarRulesView {
             UIActivityViewController(activityItems: activityItems, applicationActivities: nil)
         }
         func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
+    }
+    
+    // MARK: - Import Logic
+    private func handleGrammarImport(result: Result<[URL], Error>) {
+        switch result {
+        case .success(let urls):
+            guard let url = urls.first else {
+                importResultMessage = "No file selected."
+                showingImportAlert = true
+                return
+            }
+            do {
+                let data = try Data(contentsOf: url)
+                let decoder = JSONDecoder()
+                var importedRules: [GrammarRuleData] = []
+                var importType: String = ""
+                // Try JSON import
+                if url.pathExtension.lowercased() == "json" {
+                    if let imported = try? decoder.decode(GrammarQuestionData.self, from: data) {
+                        importedRules = imported.grammar_rules
+                        importType = "JSON (GrammarQuestionData)"
+                    } else {
+                        throw NSError(domain: "Import", code: 1, userInfo: [NSLocalizedDescriptionKey: "Invalid JSON structure for grammar rules."])
+                    }
+                } else {
+                    // Try CSV import (only basic support)
+                    if let csvString = String(data: data, encoding: .utf8) {
+                        let rows = csvString.components(separatedBy: .newlines).filter { !$0.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines).isEmpty }
+                        guard let header = rows.first else { throw NSError(domain: "Import", code: 2, userInfo: [NSLocalizedDescriptionKey: "CSV missing header row"]) }
+                        let columns = header.components(separatedBy: ",")
+                        let idIdx = columns.firstIndex(of: "Rule ID")
+                        let titleIdx = columns.firstIndex(of: "Rule Title")
+                        let typeIdx = columns.firstIndex(of: "Type")
+                        let levelIdx = columns.firstIndex(of: "Level")
+                        let explanationIdx = columns.firstIndex(of: "Explanation")
+                        // Only basic fields for CSV import
+                        for row in rows.dropFirst() {
+                            let fields = row.components(separatedBy: ",")
+                            func val(_ idx: Int?) -> String { idx != nil && idx! < fields.count ? fields[idx!].trimmingCharacters(in: CharacterSet.whitespacesAndNewlines) : "" }
+                            let rule = GrammarRuleData(
+                                id: val(idIdx),
+                                title: val(titleIdx),
+                                type: val(typeIdx),
+                                level: val(levelIdx),
+                                explanation: val(explanationIdx),
+                                keyPoints: [],
+                                examples: [],
+                                questions: []
+                            )
+                            importedRules.append(rule)
+                        }
+                        importType = "CSV"
+                    } else {
+                        throw NSError(domain: "Import", code: 3, userInfo: [NSLocalizedDescriptionKey: "Could not decode file as UTF-8 text."])
+                    }
+                }
+                if importedRules.isEmpty {
+                    importResultMessage = "No grammar rules found in import file."
+                } else {
+                    // Merge/replace logic
+                    var updated = 0, added = 0
+                    var currentRules = questionManager.questionData?.grammar_rules ?? []
+                    for rule in importedRules {
+                        if let idx = currentRules.firstIndex(where: { $0.id == rule.id }) {
+                            currentRules[idx] = rule; updated += 1
+                        } else {
+                            currentRules.append(rule); added += 1
+                        }
+                    }
+                    let newMetadata = questionManager.questionData?.metadata ?? GrammarMetadata(version: "imported", lastUpdated: "now", description: "Imported")
+                    questionManager.questionData = GrammarQuestionData(
+                        metadata: newMetadata,
+                        grammar_rules: currentRules
+                    )
+                    importResultMessage = "Imported/updated \(importedRules.count) rules (\(importType)). Updated: \(updated), Added: \(added)."
+                }
+                showingImportAlert = true
+            } catch {
+                importResultMessage = "Failed to import: \(error.localizedDescription)"
+                showingImportAlert = true
+            }
+        case .failure(let error):
+            importResultMessage = "Import failed: \(error.localizedDescription)"
+            showingImportAlert = true
+        }
     }
 } 
