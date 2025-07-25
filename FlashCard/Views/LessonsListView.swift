@@ -122,6 +122,7 @@ struct LessonsListView: View {
                                 HStack {
                                 Text(lesson.title)
                                     .font(.headline)
+                                    .textSelection(.enabled)
                                     Spacer()
                                     let bestScore = analyticsManager.getBestScoreForLesson(lesson.id)
                                     let hasSaveState = SaveStateManager.shared.hasSaveState(gameType: .lesson)
@@ -584,6 +585,7 @@ struct LessonDetailView: View {
                                     Text(exercise.explanation)
                                         .font(.body)
                                         .foregroundColor(.secondary)
+                                        .textSelection(.enabled)
                                     
                                     // Navigation buttons (Previous and Next/Finish)
                                     HStack(spacing: 12) {
@@ -1003,8 +1005,9 @@ struct WrapHStack: View {
                     VStack(alignment: .leading, spacing: 4) {
                         HStack(spacing: 4) {
                             Text(item.dutchWord)
-                                        .foregroundColor(.blue)
+                                .foregroundColor(.blue)
                                 .fontWeight(.semibold)
+                                .textSelection(.enabled)
                             
                             Spacer()
                             
