@@ -155,7 +155,8 @@ struct GameCardView: View {
                                     font: .system(size: 42, weight: .bold, design: .rounded), 
                                     foregroundColor: .primary, 
                                     multilineTextAlignment: .center, 
-                                    lineLimit: 3)
+                                    lineLimit: 3,
+                                    forceSelectable: true)
             
             // Example (if showing) - plain text, centered
             if isShowingExample && !card.example.isEmpty {
@@ -163,7 +164,8 @@ struct GameCardView: View {
                                         font: .title3, 
                                         foregroundColor: .secondary, 
                                         multilineTextAlignment: .center, 
-                                        lineLimit: 4)
+                                        lineLimit: 4,
+                                        forceSelectable: true)
                     .padding(.top, 12)
                     .transition(.opacity.combined(with: .scale))
             }
@@ -182,7 +184,8 @@ struct GameCardView: View {
                                     font: .system(size: 36, weight: .semibold, design: .rounded), 
                                     foregroundColor: .primary, 
                                     multilineTextAlignment: .center, 
-                                    lineLimit: 6) // Increased from 5
+                                    lineLimit: 6,
+                                    forceSelectable: true) // Increased from 5
             
             Spacer()
         }
@@ -362,8 +365,17 @@ struct SelectableTextView: UIViewRepresentable {
         textView.textContainer.lineFragmentPadding = 0
         textView.showsVerticalScrollIndicator = false
         textView.showsHorizontalScrollIndicator = false
+        
+        // Better layout handling
         textView.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         textView.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        textView.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
+        textView.setContentHuggingPriority(.defaultLow, for: .vertical)
+        
+        // Ensure text wraps properly
+        textView.textContainer.lineBreakMode = .byWordWrapping
+        textView.textContainer.maximumNumberOfLines = 0
+        
         return textView
     }
     
@@ -380,18 +392,20 @@ struct ConditionalSelectableText: View {
     let foregroundColor: Color
     let multilineTextAlignment: TextAlignment
     let lineLimit: Int?
+    let forceSelectable: Bool
     
-    init(_ text: String, font: Font = .body, foregroundColor: Color = .primary, multilineTextAlignment: TextAlignment = .leading, lineLimit: Int? = nil) {
+    init(_ text: String, font: Font = .body, foregroundColor: Color = .primary, multilineTextAlignment: TextAlignment = .leading, lineLimit: Int? = nil, forceSelectable: Bool = false) {
         self.text = text
         self.font = font
         self.foregroundColor = foregroundColor
         self.multilineTextAlignment = multilineTextAlignment
         self.lineLimit = lineLimit
+        self.forceSelectable = forceSelectable
     }
     
     var body: some View {
-        // Only use SelectableTextView for longer text that users might want to copy
-        if text.count > 50 {
+        // Use SelectableTextView for longer text or when forced (like flashcards)
+        if text.count > 50 || forceSelectable {
             SelectableTextView(text, 
                              font: font.uiFont, 
                              textColor: foregroundColor.uiColor, 
