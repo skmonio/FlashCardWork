@@ -234,6 +234,52 @@ class LessonManager: ObservableObject {
         return csv
     }
     
+    /// Export lessons as CSV (one row per lesson, no exercises)
+    func exportLessonsTableCSV(_ lessons: [Lesson]) -> String {
+        var csv = "LessonID,Title,Description,Level,Category,EstimatedTime,Difficulty,Vocabulary,Prerequisites,Rewards\n"
+        for lesson in lessons {
+            let vocab = lesson.vocabulary.map { "\($0.dutchWord) (\($0.translation))" }.joined(separator: "; ")
+            let prereqs = lesson.prerequisites.joined(separator: "; ")
+            let rewards = lesson.rewards.map { "\($0.type):\($0.value)" }.joined(separator: "; ")
+            let row = [
+                escapeCSV(lesson.id.uuidString),
+                escapeCSV(lesson.title),
+                escapeCSV(lesson.description),
+                escapeCSV(lesson.level),
+                escapeCSV(lesson.category),
+                "\(lesson.estimatedTime)",
+                escapeCSV(lesson.difficulty),
+                escapeCSV(vocab),
+                escapeCSV(prereqs),
+                escapeCSV(rewards)
+            ].joined(separator: ",")
+            csv += row + "\n"
+        }
+        return csv
+    }
+
+    /// Export exercises as CSV (one row per exercise, with lesson ID)
+    func exportExercisesTableCSV(_ lessons: [Lesson]) -> String {
+        var csv = "LessonID,ExerciseID,Type,Prompt,Options,CorrectAnswer,Explanation,VocabularyReference\n"
+        for lesson in lessons {
+            for exercise in lesson.exercises {
+                let options = exercise.options.joined(separator: "|")
+                let row = [
+                    escapeCSV(lesson.id.uuidString),
+                    escapeCSV(exercise.id.uuidString),
+                    escapeCSV(exercise.type.rawValue),
+                    escapeCSV(exercise.prompt),
+                    escapeCSV(options),
+                    escapeCSV(exercise.correctAnswer),
+                    escapeCSV(exercise.explanation),
+                    escapeCSV(exercise.vocabularyReference ?? "")
+                ].joined(separator: ",")
+                csv += row + "\n"
+            }
+        }
+        return csv
+    }
+    
     /// Helper to escape CSV fields
     private func escapeCSV(_ value: String) -> String {
         var v = value.replacingOccurrences(of: "\"", with: "\"\"")

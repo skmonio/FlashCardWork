@@ -1,3 +1,1260 @@
 Command line invocation:
-    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project FlashCard.xcodeproj -scheme FlashCard -destination "platform=iOS Simulator,name=iPhone 15" build
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -scheme FlashCard -destination platform=macOS
+
+ComputePackagePrebuildTargetDependencyGraph
+
+Prepare packages
+
+CreateBuildRequest
+
+SendProjectDescription
+
+CreateBuildOperation
+
+ComputeTargetDependencyGraph
+note: Building targets in dependency order
+note: Target dependency graph (1 target)
+    Target 'FlashCard' in project 'FlashCard' (no dependencies)
+
+GatherProvisioningInputs
+
+CreateBuildDescription
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.5.sdk -x c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/actool --print-asset-tag-combinations --output-format xml1 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/AssetsLite.xcassets /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Assets.xcassets
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/actool --version --output-format xml1
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc --version
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld -version_details
+
+Build description signature: 6c6402da817affa1292a9dd44a4d70dc
+Build description path: /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/XCBuildData/6c6402da817affa1292a9dd44a4d70dc.xcbuilddata
+ClangStatCache /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.5.sdk /Users/stephen/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphoneos18.5-22F76-7fa4eea80a99bbfdc046826b63ec4baf.sdkstatcache
+    cd /Users/stephen/Documents/FlashCardWorkStat/FlashCard.xcodeproj
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.5.sdk -o /Users/stephen/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphoneos18.5-22F76-7fa4eea80a99bbfdc046826b63ec4baf.sdkstatcache
+
+CreateBuildDirectory /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos
+    cd /Users/stephen/Documents/FlashCardWorkStat/FlashCard.xcodeproj
+    builtin-create-build-directory /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos
+
+CreateBuildDirectory /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphoneos
+    cd /Users/stephen/Documents/FlashCardWorkStat/FlashCard.xcodeproj
+    builtin-create-build-directory /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphoneos
+
+WriteAuxiliaryFile /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard-aab2d916fbe6d107883453a826911fb0-VFS-iphoneos/all-product-headers.yaml
+    cd /Users/stephen/Documents/FlashCardWorkStat/FlashCard.xcodeproj
+    write-file /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard-aab2d916fbe6d107883453a826911fb0-VFS-iphoneos/all-product-headers.yaml
+
+WriteAuxiliaryFile /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/empty-FlashCard.plist (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    write-file /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/empty-FlashCard.plist
+
+WriteAuxiliaryFile /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/FlashCard-project-headers.hmap (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    write-file /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/FlashCard-project-headers.hmap
+
+WriteAuxiliaryFile /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/FlashCard.hmap (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    write-file /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/FlashCard.hmap
+
+WriteAuxiliaryFile /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/FlashCard-own-target-headers.hmap (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    write-file /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/FlashCard-own-target-headers.hmap
+
+WriteAuxiliaryFile /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/FlashCard-all-target-headers.hmap (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    write-file /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/FlashCard-all-target-headers.hmap
+
+WriteAuxiliaryFile /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/FlashCard-generated-files.hmap (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    write-file /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/FlashCard-generated-files.hmap
+
+WriteAuxiliaryFile /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/FlashCard.SwiftFileList (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    write-file /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/FlashCard.SwiftFileList
+
+WriteAuxiliaryFile /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/FlashCard_const_extract_protocols.json (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    write-file /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/FlashCard_const_extract_protocols.json
+
+WriteAuxiliaryFile /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/FlashCard-OutputFileMap.json (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    write-file /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/FlashCard-OutputFileMap.json
+
+WriteAuxiliaryFile /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/FlashCard.SwiftConstValuesFileList (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    write-file /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/FlashCard.SwiftConstValuesFileList
+
+WriteAuxiliaryFile /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/FlashCard.LinkFileList (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    write-file /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/FlashCard.LinkFileList
+
+WriteAuxiliaryFile /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/FlashCard.DependencyStaticMetadataFileList (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    write-file /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/FlashCard.DependencyStaticMetadataFileList
+
+WriteAuxiliaryFile /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/FlashCard.DependencyMetadataFileList (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    write-file /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/FlashCard.DependencyMetadataFileList
+
+WriteAuxiliaryFile /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/FlashCard-all-non-framework-target-headers.hmap (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    write-file /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/FlashCard-all-non-framework-target-headers.hmap
+
+WriteAuxiliaryFile /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/FlashCard-DebugDylibPath-normal-arm64.txt (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    write-file /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/FlashCard-DebugDylibPath-normal-arm64.txt
+
+WriteAuxiliaryFile /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/FlashCard-DebugDylibInstallName-normal-arm64.txt (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    write-file /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/FlashCard-DebugDylibInstallName-normal-arm64.txt
+
+WriteAuxiliaryFile /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/DerivedSources/Entitlements.plist (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    write-file /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/DerivedSources/Entitlements.plist
+
+MkDir /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    /bin/mkdir -p /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app
+
+ProcessProductPackaging /Users/stephen/Library/Developer/Xcode/UserData/Provisioning\ Profiles/f7c8092b-895c-4741-bf33-246f9e257d9f.mobileprovision /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app/embedded.mobileprovision (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    builtin-productPackagingUtility /Users/stephen/Library/Developer/Xcode/UserData/Provisioning\ Profiles/f7c8092b-895c-4741-bf33-246f9e257d9f.mobileprovision -o /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app/embedded.mobileprovision
+
+ProcessProductPackaging /Users/stephen/Documents/FlashCardWorkStat/FlashCard/FlashCardDebug.entitlements /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/FlashCard.app.xcent (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+    Entitlements:
+    
+    {
+    "application-identifier" = "33JRS76UKD.Dutch.FlashCard";
+    "aps-environment" = development;
+    "com.apple.developer.icloud-container-identifiers" =     (
+        "iCloud.Dutch.FlashCard"
+    );
+    "com.apple.developer.icloud-services" =     (
+        CloudKit
+    );
+    "com.apple.developer.team-identifier" = 33JRS76UKD;
+    "get-task-allow" = 1;
+}
+    
+    builtin-productPackagingUtility /Users/stephen/Documents/FlashCardWorkStat/FlashCard/FlashCardDebug.entitlements -entitlements -format xml -o /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/FlashCard.app.xcent
+
+ProcessProductPackagingDER /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/FlashCard.app.xcent /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/FlashCard.app.xcent.der (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    /usr/bin/derq query -f xml -i /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/FlashCard.app.xcent -o /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/FlashCard.app.xcent.der --raw
+
+CpResource /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app/dutch_vocabulary_schema.json /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Data/dutch_vocabulary_schema.json (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Data/dutch_vocabulary_schema.json /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app
+
+GenerateAssetSymbols /Users/stephen/Documents/FlashCardWorkStat/FlashCard/AssetsLite.xcassets /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Assets.xcassets (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    /Applications/Xcode.app/Contents/Developer/usr/bin/actool /Users/stephen/Documents/FlashCardWorkStat/FlashCard/AssetsLite.xcassets /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Assets.xcassets --compile /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app --output-format human-readable-text --notices --warnings --export-dependency-info /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/assetcatalog_dependencies --output-partial-info-plist /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/assetcatalog_generated_info.plist --app-icon AppIcon --accent-color AccentColor --compress-pngs --enable-on-demand-resources YES --development-region en --target-device iphone --target-device ipad --minimum-deployment-target 16.0 --platform iphoneos --bundle-identifier Dutch.FlashCard --generate-swift-asset-symbols /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/DerivedSources/GeneratedAssetSymbols.swift --generate-objc-asset-symbols /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/DerivedSources/GeneratedAssetSymbols.h --generate-asset-symbol-index /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/DerivedSources/GeneratedAssetSymbols-Index.plist
+/* com.apple.actool.compilation-results */
+/Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/DerivedSources/GeneratedAssetSymbols-Index.plist
+/Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/DerivedSources/GeneratedAssetSymbols.h
+/Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/DerivedSources/GeneratedAssetSymbols.swift
+
+
+CpResource /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app/dutch_vocabulary_data.json /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Data/dutch_vocabulary_data.json (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Data/dutch_vocabulary_data.json /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app
+
+CpResource /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app/dutch_vocabulary_complete.json /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Data/dutch_vocabulary_complete.json (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Data/dutch_vocabulary_complete.json /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app
+
+MkDir /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/assetcatalog_output/unthinned (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    /bin/mkdir -p /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/assetcatalog_output/unthinned
+
+MkDir /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/assetcatalog_output/thinned (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    /bin/mkdir -p /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/assetcatalog_output/thinned
+
+CpResource /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app/dutch_lessons_sample.json /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Data/dutch_lessons_sample.json (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Data/dutch_lessons_sample.json /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app
+
+Ld /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app/__preview.dylib normal (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios16.0 -dynamiclib -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.5.sdk -O0 -L/Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos -F/Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos -install_name @rpath/FlashCard.debug.dylib -dead_strip -rdynamic -Xlinker -no_deduplicate -Xlinker -debug_variant -Xlinker -dependency_info -Xlinker /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/FlashCard_dependency_info.dat -Xlinker -no_adhoc_codesign -o /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app/__preview.dylib
+
+CpResource /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app/dutch_lessons_complete.json /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Data/dutch_lessons_complete.json (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Data/dutch_lessons_complete.json /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app
+
+CpResource /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app/Wrong.wav /Users/stephen/Documents/FlashCardWorkStat/Wrong.wav (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/stephen/Documents/FlashCardWorkStat/Wrong.wav /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app
+
+CpResource /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app/VOCABULARY_SETUP.md /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Documentation/VOCABULARY_SETUP.md (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Documentation/VOCABULARY_SETUP.md /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app
+
+CpResource /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app/README.md /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Resources/README.md (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Resources/README.md /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app
+
+CpResource /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app/MIGRATION_GUIDE.md /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Documentation/MIGRATION_GUIDE.md (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Documentation/MIGRATION_GUIDE.md /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app
+
+CpResource /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app/LESSON_MIGRATION_PLAN.md /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Data/LESSON_MIGRATION_PLAN.md (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Data/LESSON_MIGRATION_PLAN.md /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app
+
+CpResource /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app/Info.plist.reference /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Info.plist.reference (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Info.plist.reference /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app
+
+CpResource /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app/Info.plist.backup /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Info.plist.backup (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Info.plist.backup /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app
+
+CpResource /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app/Game.wav /Users/stephen/Documents/FlashCardWorkStat/Game.wav (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/stephen/Documents/FlashCardWorkStat/Game.wav /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app
+
+CpResource /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app/DutchGrammarQuestions.json /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Data/DutchGrammarQuestions.json (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Data/DutchGrammarQuestions.json /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app
+
+CpResource /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app/DutchExpansionPlan.md /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Data/DutchExpansionPlan.md (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Data/DutchExpansionPlan.md /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app
+
+CpResource /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app/Correct.wav /Users/stephen/Documents/FlashCardWorkStat/Correct.wav (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/stephen/Documents/FlashCardWorkStat/Correct.wav /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app
+
+CpResource /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app/Complete.wav /Users/stephen/Documents/FlashCardWorkStat/Complete.wav (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/stephen/Documents/FlashCardWorkStat/Complete.wav /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app
+
+CpResource /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app/Begin.wav /Users/stephen/Documents/FlashCardWorkStat/Begin.wav (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/stephen/Documents/FlashCardWorkStat/Begin.wav /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app
+
+CpResource /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app/BUBBLE_WORD_README.md /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Resources/BUBBLE_WORD_README.md (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Resources/BUBBLE_WORD_README.md /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app
+
+CompileAssetCatalogVariant thinned /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app /Users/stephen/Documents/FlashCardWorkStat/FlashCard/AssetsLite.xcassets /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Assets.xcassets (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    /Applications/Xcode.app/Contents/Developer/usr/bin/actool /Users/stephen/Documents/FlashCardWorkStat/FlashCard/AssetsLite.xcassets /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Assets.xcassets --compile /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/assetcatalog_output/thinned --output-format human-readable-text --notices --warnings --export-dependency-info /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/assetcatalog_dependencies_thinned --output-partial-info-plist /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/assetcatalog_generated_info.plist_thinned --app-icon AppIcon --accent-color AccentColor --compress-pngs --enable-on-demand-resources YES --filter-for-thinning-device-configuration MacFamily20,1 --filter-for-device-os-version 18.5 --development-region en --target-device iphone --target-device ipad --minimum-deployment-target 16.0 --platform iphoneos
+/* com.apple.actool.compilation-results */
+/Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/assetcatalog_generated_info.plist_thinned
+/Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/assetcatalog_output/thinned/AppIcon60x60@2x.png
+/Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/assetcatalog_output/thinned/AppIcon76x76@2x~ipad.png
+/Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/assetcatalog_output/thinned/Assets.car
+
+
+SwiftDriver FlashCard normal arm64 com.apple.xcode.tools.swift.compiler (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    builtin-SwiftDriver -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name FlashCard -Onone -enforce-exclusivity\=checked @/Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/FlashCard.SwiftFileList -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.5.sdk -target arm64-apple-ios16.0 -g -module-cache-path /Users/stephen/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -Xfrontend -serialize-debugging-options -profile-coverage-mapping -profile-generate -enable-testing -index-store-path /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Index.noindex/DataStore -swift-version 5 -I /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos -F /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos -emit-localized-strings -emit-localized-strings-path /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64 -c -j10 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/stephen/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphoneos18.5-22F76-7fa4eea80a99bbfdc046826b63ec4baf.sdkstatcache -output-file-map /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/FlashCard-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/FlashCard.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/stephen/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/Session.modulevalidation -Xcc -I/Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/FlashCard_const_extract_protocols.json -Xcc -iquote -Xcc /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/FlashCard-generated-files.hmap -Xcc -I/Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/FlashCard-own-target-headers.hmap -Xcc -I/Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/FlashCard-all-target-headers.hmap -Xcc -iquote -Xcc /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/FlashCard-project-headers.hmap -Xcc -I/Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/include -Xcc -I/Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/DerivedSources-normal/arm64 -Xcc -I/Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/DerivedSources/arm64 -Xcc -I/Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/FlashCard-Swift.h -working-directory /Users/stephen/Documents/FlashCardWorkStat -experimental-emit-module-separately -disable-cmo
+
+SwiftCompile normal arm64 Compiling\ AddCardView.swift,\ HapticManager.swift,\ ManageDecksView.swift,\ Deck.swift,\ LearningPercentageView.swift,\ BubbleWordTestView.swift,\ WritingView.swift,\ GameProgressBar.swift,\ ExportImportView.swift,\ LessonAnalyticsView.swift,\ UserProfileView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/AddCardView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Utils/HapticManager.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/ManageDecksView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Models/Deck.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/LearningPercentageView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/BubbleWordTestView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/WritingView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/GameProgressBar.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/ExportImportView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/LessonAnalyticsView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/UserProfileView.swift (in target 'FlashCard' from project 'FlashCard')
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/AddCardView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/AddCardView.swift:682:15: warning: 'catch' block is unreachable because no errors are thrown in 'do' block
+            } catch {
+              ^
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Utils/HapticManager.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/ManageDecksView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/ManageDecksView.swift:586:9: warning: 'init(destination:isActive:label:)' was deprecated in iOS 16.0: use NavigationLink(value:label:), or navigationDestination(isPresented:destination:), inside a NavigationStack or NavigationSplitView
+        NavigationLink(destination: 
+        ^
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Models/Deck.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/LearningPercentageView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/BubbleWordTestView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/BubbleWordTestView.swift:72:27: warning: result of call to 'addNode(word:at:color:)' is unused
+            bubbleManager.addNode(word: word, at: position)
+                          ^      ~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/WritingView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/GameProgressBar.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/ExportImportView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/ExportImportView.swift:465:54: warning: 'windows' was deprecated in iOS 15.0: Use UIWindowScene.windows on a relevant window scene instead
+                if let window = UIApplication.shared.windows.first {
+                                                     ^
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/ExportImportView.swift:484:20: warning: value 'csvString' was defined but never used; consider replacing with boolean test
+            if let csvString = activityItems.first as? String {
+               ~~~~^~~~~~~~~~~~                    ~~~
+                                                   is
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/LessonAnalyticsView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/UserProfileView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 Compiling\ CloudKitManager.swift,\ LessonProgressBar.swift,\ AdvancedGrammarExerciseView.swift,\ BubbleWordView.swift,\ StudyModeSelectionView.swift,\ ArrayExtensions.swift,\ VocabularyTypes.swift,\ GrammarQuestionModels.swift,\ LessonAnalytics.swift,\ GameView.swift,\ LessonsListView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Managers/CloudKitManager.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/LessonProgressBar.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/AdvancedGrammarExerciseView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/BubbleWordView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/StudyModeSelectionView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Extensions/ArrayExtensions.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Models/VocabularyTypes.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Models/GrammarQuestionModels.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Models/LessonAnalytics.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/GameView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/LessonsListView.swift (in target 'FlashCard' from project 'FlashCard')
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Managers/CloudKitManager.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Managers/CloudKitManager.swift:83:17: warning: switch must be exhaustive
+                switch status {
+                ^
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Managers/CloudKitManager.swift:83:17: note: add missing case: '.temporarilyUnavailable'
+                switch status {
+                ^
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Managers/CloudKitManager.swift:636:19: warning: value 'database' was defined but never used; consider replacing with boolean test
+        guard let database = database else {
+              ~~~~^~~~~~~~~~~
+                                      != nil
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Managers/CloudKitManager.swift:1241:22: warning: immutable value 'recordID' was never used; consider replacing with '_' or removing it
+                for (recordID, result) in deleteResults {
+                     ^~~~~~~~
+                     _
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Managers/CloudKitManager.swift:1274:22: warning: immutable value 'recordID' was never used; consider replacing with '_' or removing it
+                for (recordID, result) in deleteResults {
+                     ^~~~~~~~
+                     _
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/LessonProgressBar.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/AdvancedGrammarExerciseView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/BubbleWordView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/StudyModeSelectionView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Extensions/ArrayExtensions.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Models/VocabularyTypes.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Models/GrammarQuestionModels.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Models/LessonAnalytics.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/GameView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/LessonsListView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 Compiling\ WordScrambleView.swift,\ UserProfileManager.swift,\ GameFooterView.swift,\ DeckDropdownChecklist.swift,\ DutchGrammarInfoView.swift,\ TestView.swift,\ SoundManager.swift,\ FlashCardViewModel.swift,\ QuickStudyView.swift,\ DuplicateCardResolutionView.swift,\ MemoryGameInfoView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/WordScrambleView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Managers/UserProfileManager.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/GameFooterView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DeckDropdownChecklist.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchGrammarInfoView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/TestView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Services/SoundManager.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/QuickStudyView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DuplicateCardResolutionView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/MemoryGameInfoView.swift (in target 'FlashCard' from project 'FlashCard')
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/WordScrambleView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Managers/UserProfileManager.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Managers/UserProfileManager.swift:51:9: warning: immutable property will not be decoded because it is declared with an initial value which cannot be overwritten
+    let id = UUID()
+        ^
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Managers/UserProfileManager.swift:51:9: note: set the initial value via the initializer or explicitly define a CodingKeys enum including a 'id' case to silence this warning
+    let id = UUID()
+        ^
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Managers/UserProfileManager.swift:51:9: note: make the property mutable instead
+    let id = UUID()
+    ~~~ ^
+    var
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/GameFooterView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DeckDropdownChecklist.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchGrammarInfoView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/TestView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Services/SoundManager.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel.swift:179:9: warning: result of call to 'addCard(word:definition:example:deckIds:article:plural:pastTense:futureTense:pastParticiple:cardId:)' is unused
+        addCard(
+        ^      ~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel.swift:185:9: warning: result of call to 'addCard(word:definition:example:deckIds:article:plural:pastTense:futureTense:pastParticiple:cardId:)' is unused
+        addCard(
+        ^      ~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel.swift:191:9: warning: result of call to 'addCard(word:definition:example:deckIds:article:plural:pastTense:futureTense:pastParticiple:cardId:)' is unused
+        addCard(
+        ^      ~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel.swift:199:9: warning: result of call to 'addCard(word:definition:example:deckIds:article:plural:pastTense:futureTense:pastParticiple:cardId:)' is unused
+        addCard(
+        ^      ~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel.swift:207:9: warning: result of call to 'addCard(word:definition:example:deckIds:article:plural:pastTense:futureTense:pastParticiple:cardId:)' is unused
+        addCard(
+        ^      ~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel.swift:215:9: warning: result of call to 'addCard(word:definition:example:deckIds:article:plural:pastTense:futureTense:pastParticiple:cardId:)' is unused
+        addCard(
+        ^      ~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel.swift:225:9: warning: result of call to 'addCard(word:definition:example:deckIds:article:plural:pastTense:futureTense:pastParticiple:cardId:)' is unused
+        addCard(
+        ^      ~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel.swift:233:9: warning: result of call to 'addCard(word:definition:example:deckIds:article:plural:pastTense:futureTense:pastParticiple:cardId:)' is unused
+        addCard(
+        ^      ~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel.swift:241:9: warning: result of call to 'addCard(word:definition:example:deckIds:article:plural:pastTense:futureTense:pastParticiple:cardId:)' is unused
+        addCard(
+        ^      ~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel.swift:251:9: warning: result of call to 'addCard(word:definition:example:deckIds:article:plural:pastTense:futureTense:pastParticiple:cardId:)' is unused
+        addCard(
+        ^      ~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel.swift:257:9: warning: result of call to 'addCard(word:definition:example:deckIds:article:plural:pastTense:futureTense:pastParticiple:cardId:)' is unused
+        addCard(
+        ^      ~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel.swift:265:9: warning: result of call to 'addCard(word:definition:example:deckIds:article:plural:pastTense:futureTense:pastParticiple:cardId:)' is unused
+        addCard(
+        ^      ~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel.swift:275:9: warning: result of call to 'addCard(word:definition:example:deckIds:article:plural:pastTense:futureTense:pastParticiple:cardId:)' is unused
+        addCard(
+        ^      ~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel.swift:284:9: warning: result of call to 'addCard(word:definition:example:deckIds:article:plural:pastTense:futureTense:pastParticiple:cardId:)' is unused
+        addCard(
+        ^      ~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel.swift:293:9: warning: result of call to 'addCard(word:definition:example:deckIds:article:plural:pastTense:futureTense:pastParticiple:cardId:)' is unused
+        addCard(
+        ^      ~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel.swift:301:9: warning: result of call to 'addCard(word:definition:example:deckIds:article:plural:pastTense:futureTense:pastParticiple:cardId:)' is unused
+        addCard(
+        ^      ~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel.swift:311:9: warning: result of call to 'addCard(word:definition:example:deckIds:article:plural:pastTense:futureTense:pastParticiple:cardId:)' is unused
+        addCard(
+        ^      ~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel.swift:318:9: warning: result of call to 'addCard(word:definition:example:deckIds:article:plural:pastTense:futureTense:pastParticiple:cardId:)' is unused
+        addCard(
+        ^      ~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel.swift:325:9: warning: result of call to 'addCard(word:definition:example:deckIds:article:plural:pastTense:futureTense:pastParticiple:cardId:)' is unused
+        addCard(
+        ^      ~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel.swift:479:11: warning: 'catch' block is unreachable because no errors are thrown in 'do' block
+        } catch {
+          ^
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel.swift:1190:13: warning: variable 'needsSave' was never mutated; consider changing to 'let' constant
+        var needsSave = false
+        ~~~ ^
+        let
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel.swift:1654:15: warning: 'catch' block is unreachable because no errors are thrown in 'do' block
+            } catch {
+              ^
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel.swift:1716:60: warning: conformance of 'UUID' to 'Comparable' is only available in iOS 17 or newer; this is an error in the Swift 6 language mode
+                                     syncedCards.map(\.id).sorted() != self.flashCards.map(\.id).sorted()
+                                                           ^
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel.swift:1716:60: note: add 'if #available' version check
+                                     syncedCards.map(\.id).sorted() != self.flashCards.map(\.id).sorted()
+                                                           ^
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel.swift:1690:18: note: add @available attribute to enclosing instance method
+    private func performCloudKitSync() {
+                 ^
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel.swift:5:7: note: add @available attribute to enclosing class
+class FlashCardViewModel: ObservableObject {
+      ^
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel.swift:1716:98: warning: conformance of 'UUID' to 'Comparable' is only available in iOS 17 or newer; this is an error in the Swift 6 language mode
+                                     syncedCards.map(\.id).sorted() != self.flashCards.map(\.id).sorted()
+                                                                                                 ^
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel.swift:1716:98: note: add 'if #available' version check
+                                     syncedCards.map(\.id).sorted() != self.flashCards.map(\.id).sorted()
+                                                                                                 ^
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel.swift:1690:18: note: add @available attribute to enclosing instance method
+    private func performCloudKitSync() {
+                 ^
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel.swift:5:7: note: add @available attribute to enclosing class
+class FlashCardViewModel: ObservableObject {
+      ^
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel.swift:1718:60: warning: conformance of 'UUID' to 'Comparable' is only available in iOS 17 or newer; this is an error in the Swift 6 language mode
+                                     syncedDecks.map(\.id).sorted() != self.decks.map(\.id).sorted()
+                                                           ^
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel.swift:1718:60: note: add 'if #available' version check
+                                     syncedDecks.map(\.id).sorted() != self.decks.map(\.id).sorted()
+                                                           ^
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel.swift:1690:18: note: add @available attribute to enclosing instance method
+    private func performCloudKitSync() {
+                 ^
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel.swift:5:7: note: add @available attribute to enclosing class
+class FlashCardViewModel: ObservableObject {
+      ^
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel.swift:1718:93: warning: conformance of 'UUID' to 'Comparable' is only available in iOS 17 or newer; this is an error in the Swift 6 language mode
+                                     syncedDecks.map(\.id).sorted() != self.decks.map(\.id).sorted()
+                                                                                            ^
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel.swift:1718:93: note: add 'if #available' version check
+                                     syncedDecks.map(\.id).sorted() != self.decks.map(\.id).sorted()
+                                                                                            ^
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel.swift:1690:18: note: add @available attribute to enclosing instance method
+    private func performCloudKitSync() {
+                 ^
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel.swift:5:7: note: add @available attribute to enclosing class
+class FlashCardViewModel: ObservableObject {
+      ^
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel.swift:1735:15: warning: 'catch' block is unreachable because no errors are thrown in 'do' block
+            } catch {
+              ^
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel.swift:1808:15: warning: 'catch' block is unreachable because no errors are thrown in 'do' block
+            } catch {
+              ^
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel.swift:1956:15: warning: 'catch' block is unreachable because no errors are thrown in 'do' block
+            } catch {
+              ^
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel.swift:1983:13: warning: result of call to 'addCard(word:definition:example:deckIds:article:plural:pastTense:futureTense:pastParticiple:cardId:)' is unused
+            addCard(
+            ^      ~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel.swift:1199:22: warning: will never be executed
+        if needsSave {
+                     ^
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel.swift:1199:12: note: condition always evaluates to false
+        if needsSave {
+           ^
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/QuickStudyView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/QuickStudyView.swift:185:9: warning: 'init(destination:isActive:label:)' was deprecated in iOS 16.0: use NavigationLink(value:label:), or navigationDestination(isPresented:destination:), inside a NavigationStack or NavigationSplitView
+        NavigationLink(
+        ^
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DuplicateCardResolutionView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/MemoryGameInfoView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 Compiling\ BubbleWordMapSelectionView.swift,\ FeatureNotAvailableView.swift,\ WelcomeView.swift,\ ContentView.swift,\ CardEntry.swift,\ StatCard.swift,\ ProgressiveStudyView.swift,\ StudyView.swift,\ LessonJSON.swift,\ Lesson.swift,\ ImageImportView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/BubbleWordMapSelectionView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/FeatureNotAvailableView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/WelcomeView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/ContentView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Models/CardEntry.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/StatCard.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/ProgressiveStudyView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/StudyView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Models/LessonJSON.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Models/Lesson.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/ImageImportView.swift (in target 'FlashCard' from project 'FlashCard')
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/BubbleWordMapSelectionView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/FeatureNotAvailableView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/WelcomeView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/ContentView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Models/CardEntry.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/StatCard.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/ProgressiveStudyView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/StudyView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Models/LessonJSON.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Models/Lesson.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Models/Lesson.swift:4:9: warning: immutable property will not be decoded because it is declared with an initial value which cannot be overwritten
+    let id = UUID()
+        ^
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Models/Lesson.swift:4:9: note: set the initial value via the initializer or explicitly define a CodingKeys enum including a 'id' case to silence this warning
+    let id = UUID()
+        ^
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Models/Lesson.swift:4:9: note: make the property mutable instead
+    let id = UUID()
+    ~~~ ^
+    var
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/ImageImportView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/ImageImportView.swift:370:12: warning: unnecessary check for 'iOS'; enclosing scope ensures guard will always be true
+        if #available(iOS 18.0, *) {
+           ^
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/ImageImportView.swift:355:9: note: enclosing scope here
+        guard #available(iOS 18.0, *), CompatibilityHelper.isTranslationFrameworkAvailable else {
+        ^
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/ImageImportView.swift:128:23: warning: backward matching of the unlabeled trailing closure is deprecated; label the argument with 'onComplete' to suppress this warning
+                    ) {
+~~~~~~~~~~~~~~~~~~~~~ ^
+, onComplete: 
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/WordSelectionView.swift:48:5: note: 'init(image:extractedWords:selectedDeckIds:viewModel:onComplete:showToolbar:)' declared here
+    init(
+    ^
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/ImageImportView.swift:252:13: warning: initialization of immutable value 'ocrConfig' was never used; consider replacing with assignment to '_' or removing it
+        let ocrConfig = VisionCompatibility.getOCRConfiguration()
+        ~~~~^~~~~~~~~
+        _
+
+SwiftCompile normal arm64 Compiling\ WordScrambleInfoView.swift,\ SettingsManager.swift,\ StreakManager.swift,\ ContinueGameView.swift,\ CustomHeaderView.swift,\ SmartStudyManager.swift,\ SavedGamesView.swift,\ BottomNavigationView.swift,\ FlashCard.swift,\ TestInfoView.swift,\ AddMultipleCardsView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/WordScrambleInfoView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Managers/SettingsManager.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Managers/StreakManager.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/ContinueGameView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/CustomHeaderView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Managers/SmartStudyManager.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/SavedGamesView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/BottomNavigationView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Models/FlashCard.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/TestInfoView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/AddMultipleCardsView.swift (in target 'FlashCard' from project 'FlashCard')
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/WordScrambleInfoView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Managers/SettingsManager.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Managers/StreakManager.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/ContinueGameView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/CustomHeaderView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Managers/SmartStudyManager.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/SavedGamesView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/BottomNavigationView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Models/FlashCard.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/TestInfoView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/AddMultipleCardsView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 Compiling\ GameHeaderView.swift,\ FlashCardApp.swift,\ UnifiedHeader.swift,\ HomeView.swift,\ LookCoverCheckView.swift,\ NotificationManager.swift,\ AudioManager.swift,\ StatisticsManager.swift,\ AllCardsView.swift,\ WordSelectionView.swift,\ DutchSpeechControlView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/GameHeaderView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/FlashCardApp.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/UnifiedHeader.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/HomeView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/LookCoverCheckView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Managers/NotificationManager.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Managers/AudioManager.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Managers/StatisticsManager.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/AllCardsView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/WordSelectionView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/DutchSpeechControlView.swift (in target 'FlashCard' from project 'FlashCard')
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/GameHeaderView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/FlashCardApp.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/UnifiedHeader.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/HomeView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/LookCoverCheckView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Managers/NotificationManager.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Managers/AudioManager.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Managers/StatisticsManager.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/AllCardsView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/WordSelectionView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/DutchSpeechControlView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 Compiling\ EditCardView.swift,\ LearningPathView.swift,\ TrueFalseView.swift,\ WordNode.swift,\ NavigationCoordinator.swift,\ StudyInfoView.swift,\ SimplifiedDeckSelectionView.swift,\ NotificationViews.swift,\ CardView.swift,\ StudyTypeSelectionView.swift,\ CircularXPProgressBar.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/EditCardView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/LearningPathView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/TrueFalseView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Models/WordNode.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/NavigationCoordinator.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/StudyInfoView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/SimplifiedDeckSelectionView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/NotificationViews.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/CardView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/StudyTypeSelectionView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/CircularXPProgressBar.swift (in target 'FlashCard' from project 'FlashCard')
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/EditCardView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/EditCardView.swift:528:15: warning: 'catch' block is unreachable because no errors are thrown in 'do' block
+            } catch {
+              ^
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/LearningPathView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/LearningPathView.swift:38:17: warning: 'init(destination:isActive:label:)' was deprecated in iOS 16.0: use NavigationLink(value:label:), or navigationDestination(isPresented:destination:), inside a NavigationStack or NavigationSplitView
+                NavigationLink(
+                ^
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/TrueFalseView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Models/WordNode.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/NavigationCoordinator.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/StudyInfoView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/SimplifiedDeckSelectionView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/SimplifiedDeckSelectionView.swift:162:9: warning: 'init(destination:isActive:label:)' was deprecated in iOS 16.0: use NavigationLink(value:label:), or navigationDestination(isPresented:destination:), inside a NavigationStack or NavigationSplitView
+        NavigationLink(
+        ^
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/NotificationViews.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/CardView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/StudyTypeSelectionView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/CircularXPProgressBar.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 Compiling\ MainNavigationView.swift,\ TranslationService.swift,\ DutchSpeechService.swift,\ SaveStateManager.swift,\ GameCardView.swift,\ WritingInfoView.swift,\ DuplicateSummaryView.swift,\ CompletionCelebrationScene.swift,\ BuildConfiguration.swift,\ DutchVocabulary.swift,\ DeckView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/MainNavigationView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Services/TranslationService.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Services/DutchSpeechService.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Managers/SaveStateManager.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/GameCardView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/WritingInfoView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DuplicateSummaryView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/CompletionCelebrationScene.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Utils/BuildConfiguration.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Services/DutchVocabulary.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DeckView.swift (in target 'FlashCard' from project 'FlashCard')
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/MainNavigationView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Services/TranslationService.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Services/TranslationService.swift:39:11: warning: 'catch' block is unreachable because no errors are thrown in 'do' block
+        } catch {
+          ^
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Services/DutchSpeechService.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Managers/SaveStateManager.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/GameCardView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/WritingInfoView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DuplicateSummaryView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DuplicateSummaryView.swift:166:13: warning: variable 'finalEntries' was never mutated; consider changing to 'let' constant
+        var finalEntries = nonDuplicateEntries
+        ~~~ ^
+        let
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/CompletionCelebrationScene.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Utils/BuildConfiguration.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Services/DutchVocabulary.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DeckView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DeckView.swift:461:9: warning: 'init(destination:isActive:label:)' was deprecated in iOS 16.0: use NavigationLink(value:label:), or navigationDestination(isPresented:destination:), inside a NavigationStack or NavigationSplitView
+        NavigationLink(destination: 
+        ^
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DeckView.swift:510:20: warning: value 'card' was defined but never used; consider replacing with boolean test
+            if let card = cardToDelete {
+               ~~~~^~~~~~~
+                                       != nil
+
+SwiftEmitModule normal arm64 Emitting\ module\ for\ FlashCard (in target 'FlashCard' from project 'FlashCard')
+
+EmitSwiftModule normal arm64 (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 Compiling\ CloudKitSettingsView.swift,\ DeckSelectionView.swift,\ DutchVocabularyImportView.swift,\ AudioControlView.swift,\ JSONGrammarRulesView.swift,\ CompatibilityHelper.swift,\ TrueFalseInfoView.swift,\ FlashCardViewModel+Diagnostics.swift,\ LearningPath.swift,\ GameScene.swift,\ MultipleChoiceView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/CloudKitSettingsView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DeckSelectionView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/AudioControlView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/JSONGrammarRulesView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Utils/CompatibilityHelper.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/TrueFalseInfoView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel+Diagnostics.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Models/LearningPath.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/GameScene.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/MultipleChoiceView.swift (in target 'FlashCard' from project 'FlashCard')
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/CloudKitSettingsView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/CloudKitSettingsView.swift:527:29: warning: no 'async' operations occur within 'await' expression
+                            await viewModel.resetCloudKitSync()
+                            ^
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/CloudKitSettingsView.swift:692:17: warning: initialization of immutable value 'localDecks' was never used; consider replacing with assignment to '_' or removing it
+            let localDecks = viewModel.decks.count
+            ~~~~^~~~~~~~~~
+            _
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/CloudKitSettingsView.swift:695:30: warning: immutable value 'cloudDecks' was never used; consider replacing with '_' or removing it
+            let (cloudCards, cloudDecks) = await CloudKitManager.shared.getCloudKitRecordCounts()
+                             ^~~~~~~~~~
+                             _
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/CloudKitSettingsView.swift:713:11: warning: 'catch' block is unreachable because no errors are thrown in 'do' block
+        } catch {
+          ^
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DeckSelectionView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DeckSelectionView.swift:364:13: warning: 'init(destination:isActive:label:)' was deprecated in iOS 16.0: use NavigationLink(value:label:), or navigationDestination(isPresented:destination:), inside a NavigationStack or NavigationSplitView
+            NavigationLink(
+            ^
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:405:43: warning: result of call to 'addCard(word:definition:example:deckIds:article:plural:pastTense:futureTense:pastParticiple:cardId:)' is unused
+                                viewModel.addCard(
+                                          ^      ~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:792:13: error: cannot find 'importResultMessage' in scope
+            importResultMessage = "No file selected."
+            ^~~~~~~~~~~~~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:793:13: error: cannot find 'showingImportAlert' in scope
+            showingImportAlert = true
+            ^~~~~~~~~~~~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:863:17: error: cannot find 'importResultMessage' in scope
+                importResultMessage = "No vocabulary packs found in import file."
+                ^~~~~~~~~~~~~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:867:36: error: cannot find 'database' in scope
+                var currentPacks = database.getAllPacks()
+                                   ^~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:876:17: error: cannot find 'importResultMessage' in scope
+                importResultMessage = "Imported/updated \(importedPacks.count) packs (\(importType)). Updated: \(updated), Added: \(added)."
+                ^~~~~~~~~~~~~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:878:13: error: cannot find 'showingImportAlert' in scope
+            showingImportAlert = true
+            ^~~~~~~~~~~~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:880:13: error: cannot find 'importResultMessage' in scope
+            importResultMessage = "Failed to import: \(error.localizedDescription)"
+            ^~~~~~~~~~~~~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:881:13: error: cannot find 'showingImportAlert' in scope
+            showingImportAlert = true
+            ^~~~~~~~~~~~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:884:9: error: cannot find 'importResultMessage' in scope
+        importResultMessage = "Import failed: \(error.localizedDescription)"
+        ^~~~~~~~~~~~~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:885:9: error: cannot find 'showingImportAlert' in scope
+        showingImportAlert = true
+        ^~~~~~~~~~~~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:921:21: error: cannot find 'showingExportSelection' in scope
+                    showingExportSelection = false
+                    ^~~~~~~~~~~~~~~~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:930:25: error: cannot find 'selectedPacksA1' in scope
+                        selectedPacksA1 = Set(database.getPacksByLevel(.a1).map { $0.id })
+                        ^~~~~~~~~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:930:47: error: cannot find 'database' in scope
+                        selectedPacksA1 = Set(database.getPacksByLevel(.a1).map { $0.id })
+                                              ^~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:931:25: error: cannot find 'selectedPacksA2' in scope
+                        selectedPacksA2 = Set(database.getPacksByLevel(.a2).map { $0.id })
+                        ^~~~~~~~~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:931:47: error: cannot find 'database' in scope
+                        selectedPacksA2 = Set(database.getPacksByLevel(.a2).map { $0.id })
+                                              ^~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:932:25: error: cannot find 'selectedPacksB1' in scope
+                        selectedPacksB1 = Set(database.getPacksByLevel(.b1).map { $0.id })
+                        ^~~~~~~~~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:932:47: error: cannot find 'database' in scope
+                        selectedPacksB1 = Set(database.getPacksByLevel(.b1).map { $0.id })
+                                              ^~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:933:25: error: cannot find 'showingExportSelection' in scope
+                        showingExportSelection = false
+                        ^~~~~~~~~~~~~~~~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:934:25: error: cannot find 'exportFormat' in scope
+                        exportFormat = nil
+                        ^~~~~~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:936:29: error: cannot find 'exportFormat' in scope
+                            exportFormat = .json // default to show action sheet
+                            ^~~~~~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:943:37: error: cannot find 'database' in scope
+                            Text("\(database.getAllPacks().count) packs")
+                                    ^~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:951:29: error: cannot find 'database' in scope
+                    ForEach(database.getAllPacks(), id: \.id) { pack in
+                            ^~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:954:32: error: cannot find 'selectedPacksA1' in scope
+                            if selectedPacksA1.contains(pack.id) || selectedPacksA2.contains(pack.id) || selectedPacksB1.contains(pack.id) {
+                               ^~~~~~~~~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:954:69: error: cannot find 'selectedPacksA2' in scope
+                            if selectedPacksA1.contains(pack.id) || selectedPacksA2.contains(pack.id) || selectedPacksB1.contains(pack.id) {
+                                                                    ^~~~~~~~~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:954:106: error: cannot find 'selectedPacksB1' in scope
+                            if selectedPacksA1.contains(pack.id) || selectedPacksA2.contains(pack.id) || selectedPacksB1.contains(pack.id) {
+                                                                                                         ^~~~~~~~~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:955:33: error: cannot find 'selectedPacksA1' in scope
+                                selectedPacksA1.remove(pack.id)
+                                ^~~~~~~~~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:956:33: error: cannot find 'selectedPacksA2' in scope
+                                selectedPacksA2.remove(pack.id)
+                                ^~~~~~~~~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:957:33: error: cannot find 'selectedPacksB1' in scope
+                                selectedPacksB1.remove(pack.id)
+                                ^~~~~~~~~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:960:43: error: cannot find 'selectedPacksA1' in scope
+                                case .a1: selectedPacksA1.insert(pack.id)
+                                          ^~~~~~~~~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:961:43: error: cannot find 'selectedPacksA2' in scope
+                                case .a2: selectedPacksA2.insert(pack.id)
+                                          ^~~~~~~~~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:962:43: error: cannot find 'selectedPacksB1' in scope
+                                case .b1: selectedPacksB1.insert(pack.id)
+                                          ^~~~~~~~~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:967:52: error: cannot find 'selectedPacksA1' in scope
+                                Image(systemName: (selectedPacksA1.contains(pack.id) || selectedPacksA2.contains(pack.id) || selectedPacksB1.contains(pack.id)) ? "checkmark.square.fill" : "square")
+                                                   ^~~~~~~~~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:967:89: error: cannot find 'selectedPacksA2' in scope
+                                Image(systemName: (selectedPacksA1.contains(pack.id) || selectedPacksA2.contains(pack.id) || selectedPacksB1.contains(pack.id)) ? "checkmark.square.fill" : "square")
+                                                                                        ^~~~~~~~~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:967:126: error: cannot find 'selectedPacksB1' in scope
+                                Image(systemName: (selectedPacksA1.contains(pack.id) || selectedPacksA2.contains(pack.id) || selectedPacksB1.contains(pack.id)) ? "checkmark.square.fill" : "square")
+                                                                                                                             ^~~~~~~~~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:988:17: error: cannot find 'showingExportSelection' in scope
+                showingExportSelection = false
+                ^~~~~~~~~~~~~~~~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:989:17: error: cannot find 'exportFormat' in scope
+                exportFormat = nil
+                ^~~~~~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:991:21: error: cannot find 'exportFormat' in scope
+                    exportFormat = .json // default to show action sheet
+                    ^~~~~~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:1001:23: error: cannot find 'selectedPacksA1' in scope
+            .disabled(selectedPacksA1.isEmpty && selectedPacksA2.isEmpty && selectedPacksB1.isEmpty)
+                      ^~~~~~~~~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:1001:50: error: cannot find 'selectedPacksA2' in scope
+            .disabled(selectedPacksA1.isEmpty && selectedPacksA2.isEmpty && selectedPacksB1.isEmpty)
+                                                 ^~~~~~~~~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:1001:77: error: cannot find 'selectedPacksB1' in scope
+            .disabled(selectedPacksA1.isEmpty && selectedPacksA2.isEmpty && selectedPacksB1.isEmpty)
+                                                                            ^~~~~~~~~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:1007:23: error: cannot find 'selectedPacksA1' in scope
+    let selectedIds = selectedPacksA1.union(selectedPacksA2).union(selectedPacksB1)
+                      ^~~~~~~~~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:1007:45: error: cannot find 'selectedPacksA2' in scope
+    let selectedIds = selectedPacksA1.union(selectedPacksA2).union(selectedPacksB1)
+                                            ^~~~~~~~~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:1007:68: error: cannot find 'selectedPacksB1' in scope
+    let selectedIds = selectedPacksA1.union(selectedPacksA2).union(selectedPacksB1)
+                                                                   ^~~~~~~~~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:1008:25: error: cannot find 'database' in scope
+    let packsToExport = database.getAllPacks().filter { selectedIds.contains($0.id) }
+                        ^~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:1012:9: error: cannot find 'exportData' in scope
+        exportData = csv.data(using: .utf8)
+        ^~~~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:1012:39: error: cannot infer contextual base in reference to member 'utf8'
+        exportData = csv.data(using: .utf8)
+                                     ~^~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:1013:9: error: cannot find 'exportFileName' in scope
+        exportFileName = selectedIds.count == database.getAllPacks().count ? "DutchVocabulary_All.csv" : "DutchVocabulary_Selected.csv"
+        ^~~~~~~~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:1013:47: error: cannot find 'database' in scope
+        exportFileName = selectedIds.count == database.getAllPacks().count ? "DutchVocabulary_All.csv" : "DutchVocabulary_Selected.csv"
+                                              ^~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:1014:9: error: cannot find 'exportMimeType' in scope
+        exportMimeType = "text/csv"
+        ^~~~~~~~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:1017:9: error: cannot find 'exportData' in scope
+        exportData = json.data(using: .utf8)
+        ^~~~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:1017:40: error: cannot infer contextual base in reference to member 'utf8'
+        exportData = json.data(using: .utf8)
+                                      ~^~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:1018:9: error: cannot find 'exportFileName' in scope
+        exportFileName = selectedIds.count == database.getAllPacks().count ? "DutchVocabulary_All.json" : "DutchVocabulary_Selected.json"
+        ^~~~~~~~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:1018:47: error: cannot find 'database' in scope
+        exportFileName = selectedIds.count == database.getAllPacks().count ? "DutchVocabulary_All.json" : "DutchVocabulary_Selected.json"
+                                              ^~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:1019:9: error: cannot find 'exportMimeType' in scope
+        exportMimeType = "application/json"
+        ^~~~~~~~~~~~~~
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift:1021:5: error: cannot find 'showingExportSheet' in scope
+    showingExportSheet = true
+    ^~~~~~~~~~~~~~~~~~
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/AudioControlView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/AudioControlView.swift:85:19: warning: 'catch' block is unreachable because no errors are thrown in 'do' block
+                } catch {
+                  ^
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/JSONGrammarRulesView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Utils/CompatibilityHelper.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/TrueFalseInfoView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel+Diagnostics.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel+Diagnostics.swift:11:23: warning: expression is 'async' but is not marked with 'await'; this is an error in the Swift 6 language mode
+        let manager = CloudKitManager.shared
+                      ^~~~~~~~~~~~~~~~~~~~~~
+                      await 
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel+Diagnostics.swift:11:23: note: property access is 'async'
+        let manager = CloudKitManager.shared
+                      ^
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel+Diagnostics.swift:25:23: warning: expression is 'async' but is not marked with 'await'; this is an error in the Swift 6 language mode
+        let manager = CloudKitManager.shared
+                      ^~~~~~~~~~~~~~~~~~~~~~
+                      await 
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel+Diagnostics.swift:25:23: note: property access is 'async'
+        let manager = CloudKitManager.shared
+                      ^
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel+Diagnostics.swift:62:23: warning: expression is 'async' but is not marked with 'await'; this is an error in the Swift 6 language mode
+        let manager = CloudKitManager.shared
+                      ^~~~~~~~~~~~~~~~~~~~~~
+                      await 
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel+Diagnostics.swift:62:23: note: property access is 'async'
+        let manager = CloudKitManager.shared
+                      ^
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel+Diagnostics.swift:124:23: warning: expression is 'async' but is not marked with 'await'; this is an error in the Swift 6 language mode
+        let manager = CloudKitManager.shared
+                      ^~~~~~~~~~~~~~~~~~~~~~
+                      await 
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel+Diagnostics.swift:124:23: note: property access is 'async'
+        let manager = CloudKitManager.shared
+                      ^
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel+Diagnostics.swift:205:11: warning: 'catch' block is unreachable because no errors are thrown in 'do' block
+        } catch {
+          ^
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel+Diagnostics.swift:239:13: warning: initialization of immutable value 'localDeckCount' was never used; consider replacing with assignment to '_' or removing it
+        let localDeckCount = decks.count
+        ~~~~^~~~~~~~~~~~~~
+        _
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel+Diagnostics.swift:269:13: warning: immutable value 'i' was never used; consider replacing with '_' or removing it
+        for i in 0..<30 { // Monitor for 30 seconds
+            ^
+            _
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel+Diagnostics.swift:420:11: warning: 'catch' block is unreachable because no errors are thrown in 'do' block
+        } catch {
+          ^
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel+Diagnostics.swift:449:13: warning: variable 'systemDeckNames' was never mutated; consider changing to 'let' constant
+        var systemDeckNames = ["Uncategorized", "Review"]
+        ~~~ ^
+        let
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel+Diagnostics.swift:459:25: warning: initialization of immutable value 'newCardIds' was never used; consider replacing with assignment to '_' or removing it
+                    let newCardIds = Set(deck.cards.map { $0.id })
+                    ~~~~^~~~~~~~~~
+                    _
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel+Diagnostics.swift:539:13: warning: variable 'systemDeckNames' was never mutated; consider changing to 'let' constant
+        var systemDeckNames = ["Uncategorized", "Review"]
+        ~~~ ^
+        let
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel+Diagnostics.swift:549:25: warning: initialization of immutable value 'newCardIds' was never used; consider replacing with assignment to '_' or removing it
+                    let newCardIds = Set(deck.cards.map { $0.id })
+                    ~~~~^~~~~~~~~~
+                    _
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel+Diagnostics.swift:685:11: warning: 'catch' block is unreachable because no errors are thrown in 'do' block
+        } catch {
+          ^
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Models/LearningPath.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/GameScene.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/MultipleChoiceView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+Failed frontend command:
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swift-frontend -frontend -c /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/WordScrambleView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Managers/UserProfileManager.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/GameFooterView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DeckDropdownChecklist.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchGrammarInfoView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/TestView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Services/SoundManager.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/QuickStudyView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DuplicateCardResolutionView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/MemoryGameInfoView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Managers/CloudKitManager.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/LessonProgressBar.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/AdvancedGrammarExerciseView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/BubbleWordView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/StudyModeSelectionView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Extensions/ArrayExtensions.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Models/VocabularyTypes.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Models/GrammarQuestionModels.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Models/LessonAnalytics.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/GameView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/LessonsListView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/WordScrambleInfoView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Managers/SettingsManager.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Managers/StreakManager.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/ContinueGameView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/CustomHeaderView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Managers/SmartStudyManager.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/SavedGamesView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/BottomNavigationView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Models/FlashCard.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/TestInfoView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/AddMultipleCardsView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/AddCardView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Utils/HapticManager.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/ManageDecksView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Models/Deck.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/LearningPercentageView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/BubbleWordTestView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/WritingView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/GameProgressBar.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/ExportImportView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/LessonAnalyticsView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/UserProfileView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/BubbleWordMapSelectionView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/FeatureNotAvailableView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/WelcomeView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/ContentView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Models/CardEntry.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/StatCard.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/ProgressiveStudyView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/StudyView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Models/LessonJSON.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Models/Lesson.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/ImageImportView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/MainNavigationView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Services/TranslationService.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Services/DutchSpeechService.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Managers/SaveStateManager.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/GameCardView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/WritingInfoView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DuplicateSummaryView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/CompletionCelebrationScene.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Utils/BuildConfiguration.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Services/DutchVocabulary.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DeckView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/EditCardView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/LearningPathView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/TrueFalseView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Models/WordNode.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/NavigationCoordinator.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/StudyInfoView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/SimplifiedDeckSelectionView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/NotificationViews.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/CardView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/StudyTypeSelectionView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/CircularXPProgressBar.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/GameHeaderView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/FlashCardApp.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/UnifiedHeader.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/HomeView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/LookCoverCheckView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Managers/NotificationManager.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Managers/AudioManager.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Managers/StatisticsManager.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/AllCardsView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/WordSelectionView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/DutchSpeechControlView.swift -primary-file /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/CloudKitSettingsView.swift -primary-file /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DeckSelectionView.swift -primary-file /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/DutchVocabularyImportView.swift -primary-file /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/AudioControlView.swift -primary-file /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/JSONGrammarRulesView.swift -primary-file /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Utils/CompatibilityHelper.swift -primary-file /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/TrueFalseInfoView.swift -primary-file /Users/stephen/Documents/FlashCardWorkStat/FlashCard/ViewModels/FlashCardViewModel+Diagnostics.swift -primary-file /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Models/LearningPath.swift -primary-file /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/GameScene.swift -primary-file /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/MultipleChoiceView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/SettingsView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/NotificationBanner.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Managers/SRSManager.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/AddDeckView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/CardsManagementView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/StudySessionResultsView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/UnifiedBackButton.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/GrammarLearningDashboard.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/LoadingView.swift /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/DerivedSources/GeneratedAssetSymbols.swift -supplementary-output-file-map /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/supplementaryOutputs-9 -emit-localized-strings -emit-localized-strings-path /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64 -target arm64-apple-ios16.0 -Xllvm -aarch64-use-tbi -enable-objc-interop -stack-check -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.5.sdk -I /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos -F /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos -no-color-diagnostics -enable-testing -g -debug-info-format\=dwarf -dwarf-version\=4 -module-cache-path /Users/stephen/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -profile-generate -profile-coverage-mapping -swift-version 5 -enforce-exclusivity\=checked -Onone -serialize-debugging-options -const-gather-protocols-file /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/FlashCard_const_extract_protocols.json -enable-experimental-feature DebugDescriptionMacro -enable-bare-slash-regex -empty-abi-descriptor -validate-clang-modules-once -clang-build-session-file /Users/stephen/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/Session.modulevalidation -Xcc -working-directory -Xcc /Users/stephen/Documents/FlashCardWorkStat -resource-dir /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift -enable-anonymous-context-mangled-names -file-compilation-dir /Users/stephen/Documents/FlashCardWorkStat -Xcc -ivfsstatcache -Xcc /Users/stephen/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphoneos18.5-22F76-7fa4eea80a99bbfdc046826b63ec4baf.sdkstatcache -Xcc -I/Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/swift-overrides.hmap -Xcc -iquote -Xcc /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/FlashCard-generated-files.hmap -Xcc -I/Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/FlashCard-own-target-headers.hmap -Xcc -I/Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/FlashCard-all-target-headers.hmap -Xcc -iquote -Xcc /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/FlashCard-project-headers.hmap -Xcc -I/Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/include -Xcc -I/Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/DerivedSources-normal/arm64 -Xcc -I/Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/DerivedSources/arm64 -Xcc -I/Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/DerivedSources -Xcc -DDEBUG\=1 -module-name FlashCard -frontend-parseable-output -disable-clang-spi -target-sdk-version 18.5 -target-sdk-name iphoneos18.5 -external-plugin-path /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/swift/host/plugins\#/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server -external-plugin-path /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/local/lib/swift/host/plugins\#/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server -in-process-plugin-server-path /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/libSwiftInProcPluginServer.dylib -plugin-path /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins -plugin-path /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/local/lib/swift/host/plugins -o /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/CloudKitSettingsView.o -o /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/DeckSelectionView.o -o /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/DutchVocabularyImportView.o -o /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/AudioControlView.o -o /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/JSONGrammarRulesView.o -o /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/CompatibilityHelper.o -o /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/TrueFalseInfoView.o -o /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/FlashCardViewModel+Diagnostics.o -o /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/LearningPath.o -o /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/GameScene.o -o /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/MultipleChoiceView.o -index-unit-output-path /FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/CloudKitSettingsView.o -index-unit-output-path /FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/DeckSelectionView.o -index-unit-output-path /FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/DutchVocabularyImportView.o -index-unit-output-path /FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/AudioControlView.o -index-unit-output-path /FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/JSONGrammarRulesView.o -index-unit-output-path /FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/CompatibilityHelper.o -index-unit-output-path /FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/TrueFalseInfoView.o -index-unit-output-path /FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/FlashCardViewModel+Diagnostics.o -index-unit-output-path /FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/LearningPath.o -index-unit-output-path /FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/GameScene.o -index-unit-output-path /FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/MultipleChoiceView.o -index-store-path /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Index.noindex/DataStore -index-system-modules
+LinkAssetCatalog /Users/stephen/Documents/FlashCardWorkStat/FlashCard/AssetsLite.xcassets /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Assets.xcassets (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    builtin-linkAssetCatalog --thinned /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/assetcatalog_output/thinned --thinned-dependencies /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/assetcatalog_dependencies_thinned --thinned-info-plist-content /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/assetcatalog_generated_info.plist_thinned --unthinned /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/assetcatalog_output/unthinned --unthinned-dependencies /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/assetcatalog_dependencies_unthinned --unthinned-info-plist-content /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/assetcatalog_generated_info.plist_unthinned --output /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app --plist-output /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/assetcatalog_generated_info.plist
+note: Emplaced /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app/Assets.car (in target 'FlashCard' from project 'FlashCard')
+note: Emplaced /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app/AppIcon60x60@2x.png (in target 'FlashCard' from project 'FlashCard')
+note: Emplaced /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app/AppIcon76x76@2x~ipad.png (in target 'FlashCard' from project 'FlashCard')
+
+SwiftDriverJobDiscovery normal arm64 Emitting module for FlashCard (in target 'FlashCard' from project 'FlashCard')
+
+SwiftDriver\ Compilation\ Requirements FlashCard normal arm64 com.apple.xcode.tools.swift.compiler (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    builtin-Swift-Compilation-Requirements -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name FlashCard -Onone -enforce-exclusivity\=checked @/Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/FlashCard.SwiftFileList -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.5.sdk -target arm64-apple-ios16.0 -g -module-cache-path /Users/stephen/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -Xfrontend -serialize-debugging-options -profile-coverage-mapping -profile-generate -enable-testing -index-store-path /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Index.noindex/DataStore -swift-version 5 -I /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos -F /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos -emit-localized-strings -emit-localized-strings-path /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64 -c -j10 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/stephen/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphoneos18.5-22F76-7fa4eea80a99bbfdc046826b63ec4baf.sdkstatcache -output-file-map /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/FlashCard-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/FlashCard.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/stephen/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/Session.modulevalidation -Xcc -I/Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/FlashCard_const_extract_protocols.json -Xcc -iquote -Xcc /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/FlashCard-generated-files.hmap -Xcc -I/Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/FlashCard-own-target-headers.hmap -Xcc -I/Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/FlashCard-all-target-headers.hmap -Xcc -iquote -Xcc /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/FlashCard-project-headers.hmap -Xcc -I/Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/include -Xcc -I/Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/DerivedSources-normal/arm64 -Xcc -I/Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/DerivedSources/arm64 -Xcc -I/Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/FlashCard-Swift.h -working-directory /Users/stephen/Documents/FlashCardWorkStat -experimental-emit-module-separately -disable-cmo
+
+ProcessInfoPlistFile /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app/Info.plist /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/empty-FlashCard.plist (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    builtin-infoPlistUtility /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/empty-FlashCard.plist -producttype com.apple.product-type.application -genpkginfo /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app/PkgInfo -expandbuildsettings -format binary -platform iphoneos -additionalcontentfile /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/assetcatalog_generated_info.plist -requiredArchitecture arm64 -o /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.app/Info.plist
+
+SwiftMergeGeneratedHeaders /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/DerivedSources/FlashCard-Swift.h /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/FlashCard-Swift.h (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    builtin-swiftHeaderTool -arch arm64 /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/FlashCard-Swift.h -o /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/DerivedSources/FlashCard-Swift.h
+
+Copy /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.swiftmodule/arm64-apple-ios.swiftmodule /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/FlashCard.swiftmodule (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/FlashCard.swiftmodule /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.swiftmodule/arm64-apple-ios.swiftmodule
+
+Copy /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.swiftmodule/arm64-apple-ios.swiftdoc /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/FlashCard.swiftdoc (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/FlashCard.swiftdoc /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.swiftmodule/arm64-apple-ios.swiftdoc
+
+Copy /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.swiftmodule/arm64-apple-ios.abi.json /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/FlashCard.abi.json (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/FlashCard.abi.json /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.swiftmodule/arm64-apple-ios.abi.json
+
+Copy /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.swiftmodule/Project/arm64-apple-ios.swiftsourceinfo /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/FlashCard.swiftsourceinfo (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/Objects-normal/arm64/FlashCard.swiftsourceinfo /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Products/Debug-iphoneos/FlashCard.swiftmodule/Project/arm64-apple-ios.swiftsourceinfo
+
+SwiftCompile normal arm64 Compiling\ SettingsView.swift,\ NotificationBanner.swift,\ SRSManager.swift,\ AddDeckView.swift,\ CardsManagementView.swift,\ StudySessionResultsView.swift,\ UnifiedBackButton.swift,\ GrammarLearningDashboard.swift,\ LoadingView.swift,\ GeneratedAssetSymbols.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/SettingsView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/NotificationBanner.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Managers/SRSManager.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/AddDeckView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/CardsManagementView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/StudySessionResultsView.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/UnifiedBackButton.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/GrammarLearningDashboard.swift /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/LoadingView.swift /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/DerivedSources/GeneratedAssetSymbols.swift (in target 'FlashCard' from project 'FlashCard')
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/SettingsView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/NotificationBanner.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Managers/SRSManager.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/AddDeckView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/CardsManagementView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/StudySessionResultsView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/Components/UnifiedBackButton.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/GrammarLearningDashboard.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+/Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/GrammarLearningDashboard.swift:335:13: warning: initialization of immutable value 'levelRules' was never used; consider replacing with assignment to '_' or removing it
+        let levelRules = questionManager.getRulesByLevel(level)
+        ~~~~^~~~~~~~~~
+        _
+
+SwiftCompile normal arm64 /Users/stephen/Documents/FlashCardWorkStat/FlashCard/Views/LoadingView.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftCompile normal arm64 /Users/stephen/Library/Developer/Xcode/DerivedData/FlashCard-gflqendcznxvqyeyqgyifzdrpegc/Build/Intermediates.noindex/FlashCard.build/Debug-iphoneos/FlashCard.build/DerivedSources/GeneratedAssetSymbols.swift (in target 'FlashCard' from project 'FlashCard')
+    cd /Users/stephen/Documents/FlashCardWorkStat
+    
+
+SwiftDriverJobDiscovery normal arm64 Compiling WordScrambleInfoView.swift, SettingsManager.swift, StreakManager.swift, ContinueGameView.swift, CustomHeaderView.swift, SmartStudyManager.swift, SavedGamesView.swift, BottomNavigationView.swift, FlashCard.swift, TestInfoView.swift, AddMultipleCardsView.swift (in target 'FlashCard' from project 'FlashCard')
+
+SwiftDriverJobDiscovery normal arm64 Compiling SettingsView.swift, NotificationBanner.swift, SRSManager.swift, AddDeckView.swift, CardsManagementView.swift, StudySessionResultsView.swift, UnifiedBackButton.swift, GrammarLearningDashboard.swift, LoadingView.swift, GeneratedAssetSymbols.swift (in target 'FlashCard' from project 'FlashCard')
+
+SwiftDriverJobDiscovery normal arm64 Compiling WordScrambleView.swift, UserProfileManager.swift, GameFooterView.swift, DeckDropdownChecklist.swift, DutchGrammarInfoView.swift, TestView.swift, SoundManager.swift, FlashCardViewModel.swift, QuickStudyView.swift, DuplicateCardResolutionView.swift, MemoryGameInfoView.swift (in target 'FlashCard' from project 'FlashCard')
+
+SwiftDriverJobDiscovery normal arm64 Compiling GameHeaderView.swift, FlashCardApp.swift, UnifiedHeader.swift, HomeView.swift, LookCoverCheckView.swift, NotificationManager.swift, AudioManager.swift, StatisticsManager.swift, AllCardsView.swift, WordSelectionView.swift, DutchSpeechControlView.swift (in target 'FlashCard' from project 'FlashCard')
+
+SwiftDriverJobDiscovery normal arm64 Compiling BubbleWordMapSelectionView.swift, FeatureNotAvailableView.swift, WelcomeView.swift, ContentView.swift, CardEntry.swift, StatCard.swift, ProgressiveStudyView.swift, StudyView.swift, LessonJSON.swift, Lesson.swift, ImageImportView.swift (in target 'FlashCard' from project 'FlashCard')
+
+SwiftDriverJobDiscovery normal arm64 Compiling MainNavigationView.swift, TranslationService.swift, DutchSpeechService.swift, SaveStateManager.swift, GameCardView.swift, WritingInfoView.swift, DuplicateSummaryView.swift, CompletionCelebrationScene.swift, BuildConfiguration.swift, DutchVocabulary.swift, DeckView.swift (in target 'FlashCard' from project 'FlashCard')
+
+SwiftDriverJobDiscovery normal arm64 Compiling AddCardView.swift, HapticManager.swift, ManageDecksView.swift, Deck.swift, LearningPercentageView.swift, BubbleWordTestView.swift, WritingView.swift, GameProgressBar.swift, ExportImportView.swift, LessonAnalyticsView.swift, UserProfileView.swift (in target 'FlashCard' from project 'FlashCard')
+
+SwiftDriverJobDiscovery normal arm64 Compiling EditCardView.swift, LearningPathView.swift, TrueFalseView.swift, WordNode.swift, NavigationCoordinator.swift, StudyInfoView.swift, SimplifiedDeckSelectionView.swift, NotificationViews.swift, CardView.swift, StudyTypeSelectionView.swift, CircularXPProgressBar.swift (in target 'FlashCard' from project 'FlashCard')
+
+SwiftDriverJobDiscovery normal arm64 Compiling CloudKitManager.swift, LessonProgressBar.swift, AdvancedGrammarExerciseView.swift, BubbleWordView.swift, StudyModeSelectionView.swift, ArrayExtensions.swift, VocabularyTypes.swift, GrammarQuestionModels.swift, LessonAnalytics.swift, GameView.swift, LessonsListView.swift (in target 'FlashCard' from project 'FlashCard')
 

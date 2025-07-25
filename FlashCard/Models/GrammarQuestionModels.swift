@@ -211,6 +211,35 @@ class GrammarQuestionManager: ObservableObject {
         }
     }
     
+    func exportToCSV(rules: [GrammarRuleData]) -> String {
+        var csv = "Rule ID,Rule Title,Rule Type,Rule Level,Rule Explanation,Rule Key Points,Rule Examples,Question ID,Question,Options,Correct Answer,Explanation,Hint,Difficulty,Tags,Exercise Type\n"
+        for rule in rules {
+            let keyPoints = rule.keyPoints.joined(separator: "; ")
+            let examples = rule.examples.map { "Dutch: \($0.dutch) | English: \($0.english) | Breakdown: \($0.breakdown)" }.joined(separator: " || ")
+            for question in rule.questions {
+                let options = question.options.joined(separator: "; ")
+                let tags = question.tags.joined(separator: "; ")
+                let correctAnswerText = question.options.indices.contains(question.correctAnswer) ? question.options[question.correctAnswer] : ""
+                let line = "\"\(rule.id)\",\"\(rule.title)\",\"\(rule.type)\",\"\(rule.level)\",\"\(rule.explanation)\",\"\(keyPoints)\",\"\(examples)\",\"\(question.id)\",\"\(question.question)\",\"\(options)\",\"\(correctAnswerText)\",\"\(question.explanation)\",\"\(question.hint ?? "")\",\"\(question.difficulty)\",\"\(tags)\",\"\(question.exerciseType)\"\n"
+                csv += line
+            }
+        }
+        return csv
+    }
+
+    func exportToJSON(rules: [GrammarRuleData]) -> String {
+        let data = GrammarQuestionData(metadata: questionData?.metadata ?? GrammarMetadata(version: "export", lastUpdated: "now", description: "Exported"), grammar_rules: rules)
+        do {
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = .prettyPrinted
+            let jsonData = try encoder.encode(data)
+            return String(data: jsonData, encoding: .utf8) ?? "{}"
+        } catch {
+            print("❌ Error exporting to JSON: \(error)")
+            return "{}"
+        }
+    }
+    
     func importFromJSON(_ jsonString: String) {
         do {
             let data = jsonString.data(using: .utf8) ?? Data()

@@ -34,10 +34,13 @@ struct JSONGrammarRulesView: View {
     @State private var exportMimeType: String = "text/csv"
     @State private var exportRuleSelection: GrammarRuleData? = nil
     @State private var exportAllRules = false
+    @State private var exportFileURL: URL? = nil
     // Import functionality
     @State private var showingImportPicker = false
     @State private var importResultMessage: String? = nil
     @State private var showingImportAlert = false
+    @State private var showingExportFormatSheet = false
+    @State private var selectedRuleIds: Set<String> = []
     
     var filteredRules: [GrammarRuleData] {
         let levelRules = questionManager.getRulesByLevel(selectedLevel)
@@ -78,6 +81,7 @@ struct JSONGrammarRulesView: View {
                     AnyView(
                         HStack(spacing: 16) {
                             Button(action: {
+                                selectedRuleIds = []
                                 showingRuleSelection = true
                             }) {
                                 Image(systemName: "square.and.arrow.up")
@@ -142,7 +146,11 @@ struct JSONGrammarRulesView: View {
                 "Are you sure you want to exit?")
         }
         .sheet(isPresented: $showingExportSheet) {
-            exportSheet()
+            if let fileURL = exportFileURL {
+                ShareSheet(activityItems: [fileURL])
+            } else {
+                Text("No data to export")
+            }
         }
         .sheet(isPresented: $showingRuleSelection) {
             ruleSelectionSheet()
@@ -158,6 +166,11 @@ struct JSONGrammarRulesView: View {
             Button("OK") {}
         } message: {
             Text(importResultMessage ?? "Unknown result")
+        }
+        .confirmationDialog("Export Format", isPresented: $showingExportFormatSheet, titleVisibility: .visible) {
+            Button("CSV") { exportGrammarQuestions(as: .csv) }
+            Button("JSON") { exportGrammarQuestions(as: .json) }
+            Button("Cancel", role: .cancel) {}
         }
     }
     
@@ -799,14 +812,12 @@ extension JSONGrammarRulesView {
                     .foregroundColor(.blue)
                 }
                 .padding()
-                
                 ScrollView {
                     LazyVStack(spacing: 12) {
                         Button(action: {
-                            exportAllRules = true
-                            exportRuleSelection = nil
+                            selectedRuleIds = Set(questionManager.getAllRules().map { $0.id })
                             showingRuleSelection = false
-                            showExportPicker()
+                            showingExportFormatSheet = true
                         }) {
                             HStack {
                                 Text("All Rules")
@@ -820,13 +831,11 @@ extension JSONGrammarRulesView {
                             .cornerRadius(10)
                         }
                         .buttonStyle(PlainButtonStyle())
-                        
-                        ForEach(questionManager.getAllRules(), id: \.id) { rule in
+                        ForEach(questionManager.getAllRules(), id: \ .id) { rule in
                             Button(action: {
-                                exportAllRules = false
-                                exportRuleSelection = rule
+                                selectedRuleIds = [rule.id]
                                 showingRuleSelection = false
-                                showExportPicker()
+                                showingExportFormatSheet = true
                             }) {
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(rule.title)
@@ -849,38 +858,37 @@ extension JSONGrammarRulesView {
         }
     }
     
-    private func showExportPicker() {
-        let alert = UIAlertController(title: "Export Format", message: "Choose export format", preferredStyle: .actionSheet)
-        alert.addAction(UIAlertAction(title: "CSV", style: .default, handler: { _ in
-            exportGrammarQuestions(as: .csv)
-        }))
-        alert.addAction(UIAlertAction(title: "JSON", style: .default, handler: { _ in
-            exportGrammarQuestions(as: .json)
-        }))
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
-        
-        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-           let window = windowScene.windows.first {
-            window.rootViewController?.present(alert, animated: true)
-        }
-    }
-    
     private enum ExportFormat { case csv, json }
     
     private func exportGrammarQuestions(as format: ExportFormat) {
+        let allRules = questionManager.getAllRules()
+        let rulesToExport = allRules.filter { selectedRuleIds.contains($0.id) }
         switch format {
         case .csv:
-            let csv = questionManager.exportToCSV()
+            let csv = questionManager.exportToCSV(rules: rulesToExport)
             exportData = csv.data(using: .utf8)
-            exportFileName = exportAllRules ? "DutchGrammar_AllRules.csv" : "DutchGrammar_\(exportRuleSelection?.title.replacingOccurrences(of: " ", with: "_") ?? "Rule").csv"
+            exportFileName = (rulesToExport.count == allRules.count) ? "DutchGrammar_AllRules.csv" : "DutchGrammar_\(rulesToExport.first?.title.replacingOccurrences(of: " ", with: "_") ?? "Rule").csv"
             exportMimeType = "text/csv"
         case .json:
-            let json = questionManager.exportToJSON()
+            let json = questionManager.exportToJSON(rules: rulesToExport)
             exportData = json.data(using: .utf8)
-            exportFileName = exportAllRules ? "DutchGrammar_AllRules.json" : "DutchGrammar_\(exportRuleSelection?.title.replacingOccurrences(of: " ", with: "_") ?? "Rule").json"
+            exportFileName = (rulesToExport.count == allRules.count) ? "DutchGrammar_AllRules.json" : "DutchGrammar_\(rulesToExport.first?.title.replacingOccurrences(of: " ", with: "_") ?? "Rule").json"
             exportMimeType = "application/json"
         }
-        
+        // Write to temp file
+        if let data = exportData {
+            let tempDir = FileManager.default.temporaryDirectory
+            let fileURL = tempDir.appendingPathComponent(exportFileName)
+            do {
+                try data.write(to: fileURL, options: .atomic)
+                exportFileURL = fileURL
+            } catch {
+                print("❌ Failed to write export file: \(error)")
+                exportFileURL = nil
+            }
+        } else {
+            exportFileURL = nil
+        }
         showingExportSheet = true
     }
     
