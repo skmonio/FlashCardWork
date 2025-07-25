@@ -117,39 +117,30 @@ struct GameCardView: View {
                 .rotationEffect(.degrees(rotationOffset))
             .rotation3DEffect(.degrees(isShowingFront ? 0 : 180), axis: (x: 0, y: 1, z: 0))
             .gesture(cardGesture)
-            .simultaneousGesture(
-                TapGesture(count: 3)
-                    .onEnded {
-                        // Triple tap to show/hide example (only on front side)
-                        if isShowingFront {
-                            HapticManager.shared.lightImpact()
-                            withAnimation(.easeInOut(duration: 0.3)) {
-                                isShowingExample.toggle()
-                            }
-                        }
+            .onTapGesture(count: 3) {
+                // Triple tap to show/hide example (only on front side)
+                if isShowingFront {
+                    HapticManager.shared.lightImpact()
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        isShowingExample.toggle()
                     }
-            )
-            .simultaneousGesture(
-                TapGesture(count: 2)
-                    .onEnded {
-                        // Double tap to flip card
-                        HapticManager.shared.cardFlip()
-                        withAnimation(.easeInOut(duration: 0.6)) {
-                            isShowingFront.toggle()
-                            isShowingExample = false
-                        }
-                    }
-            )
-            .simultaneousGesture(
-                TapGesture(count: 1)
-                    .onEnded {
-                        // Single tap to play audio
-                        HapticManager.shared.lightImpact()
-                        #if !LITE_VERSION
-                        speakCurrentText()
-                        #endif
-                    }
-            )
+                }
+            }
+            .onTapGesture(count: 2) {
+                // Double tap to flip card
+                HapticManager.shared.cardFlip()
+                withAnimation(.easeInOut(duration: 0.6)) {
+                    isShowingFront.toggle()
+                    isShowingExample = false
+                }
+            }
+            .onTapGesture(count: 1) {
+                // Single tap to play audio
+                HapticManager.shared.lightImpact()
+                #if !LITE_VERSION
+                speakCurrentText()
+                #endif
+            }
         }
     }
     
@@ -160,21 +151,23 @@ struct GameCardView: View {
             Spacer()
             
             // Word - prominent display (removed article)
-            SimpleSelectableText(card.word, 
-                               font: .system(size: 42, weight: .bold, design: .rounded), 
-                               foregroundColor: .primary, 
-                               multilineTextAlignment: .center, 
-                               lineLimit: 3)
+            Text(card.word)
+                .font(.system(size: 42, weight: .bold, design: .rounded))
+                .foregroundColor(.primary)
+                .multilineTextAlignment(.center)
+                .lineLimit(3)
+                .textSelection(.enabled)
             
             // Example (if showing) - plain text, centered
             if isShowingExample && !card.example.isEmpty {
-                SimpleSelectableText(card.example, 
-                                   font: .title3, 
-                                   foregroundColor: .secondary, 
-                                   multilineTextAlignment: .center, 
-                                   lineLimit: 4)
+                Text(card.example)
+                    .font(.title3)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(4)
                     .padding(.top, 12)
                     .transition(.opacity.combined(with: .scale))
+                    .textSelection(.enabled)
             }
             
             Spacer()
@@ -187,11 +180,12 @@ struct GameCardView: View {
             Spacer()
             
             // Definition - prominent display
-            SimpleSelectableText(card.definition, 
-                               font: .system(size: 36, weight: .semibold, design: .rounded), 
-                               foregroundColor: .primary, 
-                               multilineTextAlignment: .center, 
-                               lineLimit: 6) // Increased from 5
+            Text(card.definition)
+                .font(.system(size: 36, weight: .semibold, design: .rounded))
+                .foregroundColor(.primary)
+                .multilineTextAlignment(.center)
+                .lineLimit(6) // Increased from 5
+                .textSelection(.enabled)
             
             Spacer()
         }
