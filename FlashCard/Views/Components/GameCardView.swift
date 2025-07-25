@@ -151,23 +151,23 @@ struct GameCardView: View {
             Spacer()
             
             // Word - prominent display (removed article)
-            Text(card.word)
-                .font(.system(size: 42, weight: .bold, design: .rounded)) // Increased from 32
-                .foregroundColor(.primary)
-                .multilineTextAlignment(.center)
+            SelectableTextView(card.word, 
+                             font: .systemFont(ofSize: 42, weight: .bold), 
+                             textColor: .label, 
+                             textAlignment: .center)
+                .frame(maxWidth: .infinity)
                 .lineLimit(3)
-                .textSelection(.enabled)
             
             // Example (if showing) - plain text, centered
             if isShowingExample && !card.example.isEmpty {
-                Text(card.example)
-                    .font(.title3) // Increased from .body
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
+                SelectableTextView(card.example, 
+                                 font: .systemFont(ofSize: 17), 
+                                 textColor: .secondaryLabel, 
+                                 textAlignment: .center)
+                    .frame(maxWidth: .infinity)
                     .lineLimit(4)
                     .padding(.top, 12)
                     .transition(.opacity.combined(with: .scale))
-                    .textSelection(.enabled)
             }
             
             Spacer()
@@ -180,12 +180,12 @@ struct GameCardView: View {
             Spacer()
             
             // Definition - prominent display
-            Text(card.definition)
-                .font(.system(size: 36, weight: .semibold, design: .rounded)) // Increased from 28
-                .foregroundColor(.primary)
-                .multilineTextAlignment(.center)
+            SelectableTextView(card.definition, 
+                             font: .systemFont(ofSize: 36, weight: .semibold), 
+                             textColor: .label, 
+                             textAlignment: .center)
+                .frame(maxWidth: .infinity)
                 .lineLimit(6) // Increased from 5
-                .textSelection(.enabled)
             
             Spacer()
         }
@@ -333,6 +333,43 @@ struct GameCardView: View {
 extension View {
     func selectableText() -> some View {
         self.textSelection(.enabled)
+    }
+}
+
+// MARK: - Selectable Text View
+
+struct SelectableTextView: UIViewRepresentable {
+    let text: String
+    let font: UIFont
+    let textColor: UIColor
+    let textAlignment: NSTextAlignment
+    
+    init(_ text: String, font: UIFont = .systemFont(ofSize: 16), textColor: UIColor = .label, textAlignment: NSTextAlignment = .left) {
+        self.text = text
+        self.font = font
+        self.textColor = textColor
+        self.textAlignment = textAlignment
+    }
+    
+    func makeUIView(context: Context) -> UITextView {
+        let textView = UITextView()
+        textView.text = text
+        textView.font = font
+        textView.textColor = textColor
+        textView.textAlignment = textAlignment
+        textView.backgroundColor = .clear
+        textView.isEditable = false
+        textView.isSelectable = true
+        textView.isScrollEnabled = false
+        textView.textContainerInset = .zero
+        textView.textContainer.lineFragmentPadding = 0
+        textView.showsVerticalScrollIndicator = false
+        textView.showsHorizontalScrollIndicator = false
+        return textView
+    }
+    
+    func updateUIView(_ uiView: UITextView, context: Context) {
+        uiView.text = text
     }
 }
 

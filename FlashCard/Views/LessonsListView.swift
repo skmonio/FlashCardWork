@@ -150,11 +150,12 @@ struct LessonsListView: View {
                                         }
                                     }
                                 }
-                                Text(lesson.description)
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
+                                SelectableTextView(lesson.description, 
+                                                 font: .systemFont(ofSize: 14), 
+                                                 textColor: .secondaryLabel, 
+                                                 textAlignment: .left)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
                                     .lineLimit(2)
-                                    .textSelection(.enabled)
                                 
                                 // Progress indicator
                                 let bestScore = analyticsManager.getBestScoreForLesson(lesson.id)
@@ -490,11 +491,12 @@ struct LessonDetailView: View {
             let options = tuple.shuffledOptions
             let correctIdx = tuple.correctIndex
             
-                                Text(exercise.prompt)
-                                    .font(.headline)
-                                    .foregroundColor(.primary)
+                                SelectableTextView(exercise.prompt, 
+                                                 font: .systemFont(ofSize: 17, weight: .semibold), 
+                                                 textColor: .label, 
+                                                 textAlignment: .center)
+                                    .frame(maxWidth: .infinity)
                                     .multilineTextAlignment(.center)
-                                    .textSelection(.enabled)
                                     .bold()
             
             if exercise.type == .sentenceBuilding {
