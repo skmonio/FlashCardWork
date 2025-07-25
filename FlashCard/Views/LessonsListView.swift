@@ -491,12 +491,20 @@ struct LessonDetailView: View {
             let options = tuple.shuffledOptions
             let correctIdx = tuple.correctIndex
             
-                                Text(exercise.prompt)
-                                    .font(.headline)
-                                    .foregroundColor(.primary)
-                                    .multilineTextAlignment(.center)
-                                    .textSelection(.enabled)
-                                    .bold()
+            // Exercise prompt with text selection
+            Text(exercise.prompt)
+                .font(.headline)
+                .foregroundColor(.primary)
+                .multilineTextAlignment(.center)
+                .textSelection(.enabled)
+                .bold()
+                .padding(.horizontal)
+            .frame(maxWidth: .infinity)
+                .bold()
+                .allowsHitTesting(true)
+                .onTapGesture {
+                    // Allow tap to pass through to text selection
+                }
             
             if exercise.type == .sentenceBuilding {
                 // Sentence Building UI
