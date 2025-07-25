@@ -142,7 +142,6 @@ struct ExportImportView: View {
                             .padding(8)
                             .background(Color(.systemGray6))
                             .cornerRadius(8)
-                            .textSelection(.enabled)
                     }
                 }
             }

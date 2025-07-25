@@ -448,7 +448,6 @@ struct TestView: View {
                     .font(.title3)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
-                    .selectableText()
                 
                 // Use shared card component with vibrant borders - show definition or word based on startFlipped
                 SharedGameCardView(
@@ -542,7 +541,6 @@ struct TestView: View {
                                 .padding(.vertical, 12)
                                 .padding(.horizontal, 16)
                                 .frame(maxWidth: .infinity)
-                                .selectableText()
                                 .background(
                                     Group {
                                         if hasAnswered {

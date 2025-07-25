@@ -122,7 +122,6 @@ struct LessonsListView: View {
                                 HStack {
                                 Text(lesson.title)
                                     .font(.headline)
-                                    .textSelection(.enabled)
                                     Spacer()
                                     let bestScore = analyticsManager.getBestScoreForLesson(lesson.id)
                                     let hasSaveState = SaveStateManager.shared.hasSaveState(gameType: .lesson)
@@ -155,7 +154,6 @@ struct LessonsListView: View {
                                     .font(.subheadline)
                                     .foregroundColor(.secondary)
                                     .lineLimit(2)
-                                    .textSelection(.enabled)
                                 
                                 // Progress indicator
                                 let bestScore = analyticsManager.getBestScoreForLesson(lesson.id)
@@ -491,20 +489,9 @@ struct LessonDetailView: View {
             let options = tuple.shuffledOptions
             let correctIdx = tuple.correctIndex
             
-            // Exercise prompt with text selection
-            Text(exercise.prompt)
-                .font(.headline)
-                .foregroundColor(.primary)
-                .multilineTextAlignment(.center)
-                .textSelection(.enabled)
-                .bold()
-                .padding(.horizontal)
-            .frame(maxWidth: .infinity)
-                .bold()
-                .allowsHitTesting(true)
-                .onTapGesture {
-                    // Allow tap to pass through to text selection
-                }
+                                Text(exercise.prompt)
+                                    .font(.title2)
+                                    .bold()
             
             if exercise.type == .sentenceBuilding {
                 // Sentence Building UI
@@ -593,7 +580,6 @@ struct LessonDetailView: View {
                                     Text(exercise.explanation)
                                         .font(.body)
                                         .foregroundColor(.secondary)
-                                        .textSelection(.enabled)
                                     
                                     // Navigation buttons (Previous and Next/Finish)
                                     HStack(spacing: 12) {
@@ -886,7 +872,6 @@ struct LessonDetailView: View {
                         .background(Color.green.opacity(0.15))
                         .foregroundColor(.green)
                         .cornerRadius(12)
-                        .textSelection(.enabled)
                 }
             }
             
@@ -996,7 +981,6 @@ struct WrapHStack: View {
                         Text(item.dutchWord)
                             .foregroundColor(.blue)
                             .fontWeight(.semibold)
-                            .textSelection(.enabled)
                         Text("-")
                             .foregroundColor(.secondary)
                         Text(item.translation)
@@ -1013,9 +997,8 @@ struct WrapHStack: View {
                     VStack(alignment: .leading, spacing: 4) {
                         HStack(spacing: 4) {
                             Text(item.dutchWord)
-                                .foregroundColor(.blue)
+                                        .foregroundColor(.blue)
                                 .fontWeight(.semibold)
-                                .textSelection(.enabled)
                             
                             Spacer()
                             
@@ -1030,7 +1013,6 @@ struct WrapHStack: View {
                                     .foregroundColor(.secondary)
                                 Text(item.translation)
                                     .foregroundColor(.primary)
-                                    .textSelection(.enabled)
                                 Spacer()
                             }
                         }

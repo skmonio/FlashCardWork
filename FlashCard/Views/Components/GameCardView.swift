@@ -152,7 +152,7 @@ struct GameCardView: View {
             
             // Word - prominent display (removed article)
             Text(card.word)
-                .font(.system(size: 42, weight: .bold, design: .rounded))
+                .font(.system(size: 42, weight: .bold, design: .rounded)) // Increased from 32
                 .foregroundColor(.primary)
                 .multilineTextAlignment(.center)
                 .lineLimit(3)
@@ -161,7 +161,7 @@ struct GameCardView: View {
             // Example (if showing) - plain text, centered
             if isShowingExample && !card.example.isEmpty {
                 Text(card.example)
-                    .font(.title3)
+                    .font(.title3) // Increased from .body
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
                     .lineLimit(4)
@@ -181,7 +181,7 @@ struct GameCardView: View {
             
             // Definition - prominent display
             Text(card.definition)
-                .font(.system(size: 36, weight: .semibold, design: .rounded))
+                .font(.system(size: 36, weight: .semibold, design: .rounded)) // Increased from 28
                 .foregroundColor(.primary)
                 .multilineTextAlignment(.center)
                 .lineLimit(6) // Increased from 5
@@ -325,180 +325,6 @@ struct GameCardView: View {
     
     private var rotationOffset: Double {
         return offset.width / 20  // Subtle rotation while dragging
-    }
-}
-
-// MARK: - Text Selection Helper
-
-extension View {
-    func selectableText() -> some View {
-        self.textSelection(.enabled)
-    }
-}
-
-// MARK: - Selectable Text View
-
-struct SelectableTextView: UIViewRepresentable {
-    let text: String
-    let font: UIFont
-    let textColor: UIColor
-    let textAlignment: NSTextAlignment
-    
-    init(_ text: String, font: UIFont = .systemFont(ofSize: 16), textColor: UIColor = .label, textAlignment: NSTextAlignment = .left) {
-        self.text = text
-        self.font = font
-        self.textColor = textColor
-        self.textAlignment = textAlignment
-    }
-    
-    func makeUIView(context: Context) -> UITextView {
-        let textView = UITextView()
-        textView.text = text
-        textView.font = font
-        textView.textColor = textColor
-        textView.textAlignment = textAlignment
-        textView.backgroundColor = .clear
-        textView.isEditable = false
-        textView.isSelectable = true
-        textView.isScrollEnabled = false
-        textView.textContainerInset = .zero
-        textView.textContainer.lineFragmentPadding = 0
-        textView.showsVerticalScrollIndicator = false
-        textView.showsHorizontalScrollIndicator = false
-        
-        // Better layout handling
-        textView.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        textView.setContentHuggingPriority(.defaultLow, for: .horizontal)
-        textView.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
-        textView.setContentHuggingPriority(.defaultLow, for: .vertical)
-        
-        // Ensure text wraps properly
-        textView.textContainer.lineBreakMode = .byWordWrapping
-        textView.textContainer.maximumNumberOfLines = 0
-        
-        return textView
-    }
-    
-    func updateUIView(_ uiView: UITextView, context: Context) {
-        uiView.text = text
-    }
-}
-
-// MARK: - Simple Selectable Text (More Reliable)
-
-struct SimpleSelectableText: View {
-    let text: String
-    let font: Font
-    let foregroundColor: Color
-    let multilineTextAlignment: TextAlignment
-    let lineLimit: Int?
-    
-    init(_ text: String, font: Font = .body, foregroundColor: Color = .primary, multilineTextAlignment: TextAlignment = .leading, lineLimit: Int? = nil) {
-        self.text = text
-        self.font = font
-        self.foregroundColor = foregroundColor
-        self.multilineTextAlignment = multilineTextAlignment
-        self.lineLimit = lineLimit
-    }
-    
-    var body: some View {
-        Text(text)
-            .font(font)
-            .foregroundColor(foregroundColor)
-            .multilineTextAlignment(multilineTextAlignment)
-            .lineLimit(lineLimit)
-            .textSelection(.enabled)
-            .contextMenu {
-                Button(action: {
-                    UIPasteboard.general.string = text
-                }) {
-                    Label("Copy", systemImage: "doc.on.doc")
-                }
-            }
-    }
-}
-
-// MARK: - Conditional Selectable Text
-
-struct ConditionalSelectableText: View {
-    let text: String
-    let font: Font
-    let foregroundColor: Color
-    let multilineTextAlignment: TextAlignment
-    let lineLimit: Int?
-    let forceSelectable: Bool
-    
-    init(_ text: String, font: Font = .body, foregroundColor: Color = .primary, multilineTextAlignment: TextAlignment = .leading, lineLimit: Int? = nil, forceSelectable: Bool = false) {
-        self.text = text
-        self.font = font
-        self.foregroundColor = foregroundColor
-        self.multilineTextAlignment = multilineTextAlignment
-        self.lineLimit = lineLimit
-        self.forceSelectable = forceSelectable
-    }
-    
-    var body: some View {
-        // Use SelectableTextView for longer text or when forced (like flashcards)
-        if text.count > 50 || forceSelectable {
-            SelectableTextView(text, 
-                             font: font.uiFont, 
-                             textColor: foregroundColor.uiColor, 
-                             textAlignment: multilineTextAlignment.nsTextAlignment)
-                .frame(maxWidth: .infinity)
-                .lineLimit(lineLimit)
-        } else {
-            Text(text)
-                .font(font)
-                .foregroundColor(foregroundColor)
-                .multilineTextAlignment(multilineTextAlignment)
-                .lineLimit(lineLimit)
-                .textSelection(.enabled)
-        }
-    }
-}
-
-// MARK: - Extensions for Font and Color conversion
-
-extension Font {
-    var uiFont: UIFont {
-        switch self {
-        case .largeTitle: return .systemFont(ofSize: 34, weight: .bold)
-        case .title: return .systemFont(ofSize: 28, weight: .bold)
-        case .title2: return .systemFont(ofSize: 22, weight: .bold)
-        case .title3: return .systemFont(ofSize: 20, weight: .semibold)
-        case .headline: return .systemFont(ofSize: 17, weight: .semibold)
-        case .body: return .systemFont(ofSize: 17)
-        case .callout: return .systemFont(ofSize: 16)
-        case .subheadline: return .systemFont(ofSize: 15)
-        case .footnote: return .systemFont(ofSize: 13)
-        case .caption: return .systemFont(ofSize: 12)
-        case .caption2: return .systemFont(ofSize: 11)
-        default: return .systemFont(ofSize: 17)
-        }
-    }
-}
-
-extension Color {
-    var uiColor: UIColor {
-        switch self {
-        case .primary: return .label
-        case .secondary: return .secondaryLabel
-        case .blue: return .systemBlue
-        case .green: return .systemGreen
-        case .red: return .systemRed
-        case .orange: return .systemOrange
-        default: return .label
-        }
-    }
-}
-
-extension TextAlignment {
-    var nsTextAlignment: NSTextAlignment {
-        switch self {
-        case .leading: return .left
-        case .center: return .center
-        case .trailing: return .right
-        }
     }
 }
 

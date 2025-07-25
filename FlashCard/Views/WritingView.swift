@@ -208,7 +208,6 @@ struct WritingView: View {
                         .font(.title3)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
-                        .selectableText()
                     
                     // Custom smaller card view
                     smallerCardView(for: card)
@@ -225,7 +224,6 @@ struct WritingView: View {
                                 .frame(maxWidth: .infinity)
                                 .background(Color(.systemGray6))
                                 .cornerRadius(12)
-                                .selectableText()
                                 .onTapGesture {
                                     isKeyboardFocused = true
                                 }
