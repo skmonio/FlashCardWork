@@ -146,6 +146,7 @@ struct MultipleChoiceView: View {
                         .bold()
                         .multilineTextAlignment(.center)
                         .padding()
+                        .selectableText()
                     
                     // Options
                     VStack(spacing: 12) {
@@ -158,6 +159,7 @@ struct MultipleChoiceView: View {
                                     .foregroundColor(.primary)
                                     .frame(maxWidth: .infinity)
                                     .padding()
+                                    .selectableText()
                                     .background(
                                         RoundedRectangle(cornerRadius: 10)
                                             .fill(Color(.systemBackground))

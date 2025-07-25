@@ -306,7 +306,10 @@ struct JSONGrammarRulesView: View {
                         
                         Text(rule.explanation)
                             .font(.body)
-                            .lineSpacing(2)
+                            .foregroundColor(.primary)
+                            .multilineTextAlignment(.leading)
+                            .padding()
+                            .textSelection(.enabled)
                     }
                     
                     // Key Points
@@ -325,6 +328,7 @@ struct JSONGrammarRulesView: View {
                                         Text(point)
                                             .font(.body)
                                             .lineSpacing(2)
+                                            .textSelection(.enabled)
                                     }
                                 }
                             }
@@ -359,6 +363,7 @@ struct JSONGrammarRulesView: View {
                                                     .font(.body)
                                                     .fontWeight(.medium)
                                                     .foregroundColor(.primary)
+                                                    .textSelection(.enabled)
                                             }
                                             Spacer()
                                         }
@@ -381,6 +386,7 @@ struct JSONGrammarRulesView: View {
                                                 Text(example.english)
                                                     .font(.body)
                                                     .foregroundColor(.secondary)
+                                                    .textSelection(.enabled)
                                             }
                                             Spacer()
                                         }
@@ -405,6 +411,7 @@ struct JSONGrammarRulesView: View {
                                                         .font(.caption)
                                                         .foregroundColor(.orange)
                                                         .italic()
+                                                        .textSelection(.enabled)
                                                 }
                                                 Spacer()
                                             }
@@ -481,6 +488,7 @@ struct JSONGrammarRulesView: View {
                         .fontWeight(.bold)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal)
+                        .textSelection(.enabled)
                     
                     // Hint if available and not showing answer
                     if let hint = exercise.hint, !showingAnswer {

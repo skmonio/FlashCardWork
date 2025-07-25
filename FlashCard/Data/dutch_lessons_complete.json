@@ -55,7 +55,8 @@
       "name": "Vocabulary in Context",
       "dutchName": "Woordenschat in Context",
       "description": "Using Dutch words in context and conversation"
-    }
+    },
+    { "id": "ch4", "name": "Chapter 4", "dutchName": "Hoofdstuk 4", "description": "Hoofdstuk 4 oefeningen" }
   ],
   "lessons": [
     {
@@ -1995,6 +1996,62 @@
           "description": "Earn 'Context Master' badge"
         }
       ]
+    },
+    {
+      "id": "chapter_4_1",
+      "title": "Chapter 4.1",
+      "description": "Oefeningen met nieuwe woorden uit hoofdstuk 4.1. Focus op zinnen en context.",
+      "level": "B1",
+      "category": "ch4",
+      "estimatedTime": 30,
+      "difficulty": "medium",
+      "prerequisites": [],
+      "vocabulary": [
+        { "dutchWord": "beseffen", "translation": "to realize", "article": "", "example": "Ik besef dat ik te laat ben.", "wordType": "verb", "vocabularyReference": null },
+        { "dutchWord": "biljet", "translation": "ticket, banknote", "article": "het", "example": "Ik heb een treinkaartje (biljet) gekocht.", "wordType": "noun", "vocabularyReference": null },
+        { "dutchWord": "bruid", "translation": "bride", "article": "de", "example": "De bruid draagt een witte jurk.", "wordType": "noun", "vocabularyReference": null },
+        { "dutchWord": "erfenis", "translation": "inheritance", "article": "de", "example": "Hij kreeg een huis als erfenis.", "wordType": "noun", "vocabularyReference": null },
+        { "dutchWord": "gebeurtenis", "translation": "event", "article": "de", "example": "De geboorte was een grote gebeurtenis.", "wordType": "noun", "vocabularyReference": null },
+        { "dutchWord": "gierig", "translation": "stingy", "article": "", "example": "Hij is erg gierig met zijn geld.", "wordType": "adjective", "vocabularyReference": null },
+        { "dutchWord": "goedkomen", "translation": "to turn out well", "article": "", "example": "Maak je geen zorgen, het komt goed.", "wordType": "verb", "vocabularyReference": null },
+        { "dutchWord": "gracht", "translation": "canal", "article": "de", "example": "De boot vaart door de gracht.", "wordType": "noun", "vocabularyReference": null },
+        { "dutchWord": "hartstikke", "translation": "very, extremely", "article": "", "example": "Ik ben hartstikke blij!", "wordType": "adverb", "vocabularyReference": null },
+        { "dutchWord": "inmiddels", "translation": "meanwhile", "article": "", "example": "Inmiddels is hij thuis.", "wordType": "adverb", "vocabularyReference": null },
+        { "dutchWord": "inzamelen", "translation": "to collect, raise", "article": "", "example": "We zamelen geld in voor het goede doel.", "wordType": "verb", "vocabularyReference": null },
+        { "dutchWord": "kwijtraken", "translation": "to lose", "article": "", "example": "Ik ben mijn sleutels kwijtgeraakt.", "wordType": "verb", "vocabularyReference": null },
+        { "dutchWord": "noteren", "translation": "to note, write down", "article": "", "example": "Kun je mijn nummer noteren?", "wordType": "verb", "vocabularyReference": null },
+        { "dutchWord": "overmaken", "translation": "to transfer, send money", "article": "", "example": "Kun je het geld overmaken?", "wordType": "verb", "vocabularyReference": null },
+        { "dutchWord": "overvallen", "translation": "to rob, to surprise", "article": "", "example": "De bank werd overvallen.", "wordType": "verb", "vocabularyReference": null },
+        { "dutchWord": "pech", "translation": "bad luck", "article": "de", "example": "Ik had pech met mijn fiets.", "wordType": "noun", "vocabularyReference": null },
+        { "dutchWord": "rente", "translation": "interest", "article": "de", "example": "De rente is laag.", "wordType": "noun", "vocabularyReference": null },
+        { "dutchWord": "schuldig", "translation": "guilty, in debt", "article": "", "example": "Hij voelt zich schuldig.", "wordType": "adjective", "vocabularyReference": null },
+        { "dutchWord": "trakteren", "translation": "to treat, to pay for others", "article": "", "example": "Ik zal trakteren op taart.", "wordType": "verb", "vocabularyReference": null },
+        { "dutchWord": "verbaasd", "translation": "surprised", "article": "", "example": "Ik ben verbaasd over het nieuws.", "wordType": "adjective", "vocabularyReference": null },
+        { "dutchWord": "zich", "translation": "oneself", "article": "", "example": "Hij schaamt zich.", "wordType": "pronoun", "vocabularyReference": null }
+      ],
+      "exercises": [
+        { "id": "ex1", "type": "fillInBlank", "prompt": "Na het ongeluk ________ hij hoe belangrijk gezondheid is.", "options": ["beseffen", "noteren", "inzamelen", "overvallen"], "correctAnswer": "beseffen", "explanation": "'Beseffen' betekent 'to realize'.", "vocabularyReference": "beseffen" },
+        { "id": "ex2", "type": "fillInBlank", "prompt": "Ik ben mijn ________ kwijtgeraakt in de trein.", "options": ["biljet", "gracht", "pech", "rente"], "correctAnswer": "biljet", "explanation": "'Biljet' betekent 'ticket' of 'banknote'.", "vocabularyReference": "biljet" },
+        { "id": "ex3", "type": "fillInBlank", "prompt": "De ________ droeg een prachtige witte jurk.", "options": ["bruid", "gebeurtenis", "hartstikke", "trakteren"], "correctAnswer": "bruid", "explanation": "'Bruid' betekent 'bride'.", "vocabularyReference": "bruid" },
+        { "id": "ex4", "type": "fillInBlank", "prompt": "Na de ________ kreeg hij een groot huis.", "options": ["erfenis", "pech", "overmaken", "gierig"], "correctAnswer": "erfenis", "explanation": "'Erfenis' betekent 'inheritance'.", "vocabularyReference": "erfenis" },
+        { "id": "ex5", "type": "fillInBlank", "prompt": "Het was een bijzondere ________ voor de familie.", "options": ["gebeurtenis", "gracht", "hartstikke", "zich"], "correctAnswer": "gebeurtenis", "explanation": "'Gebeurtenis' betekent 'event'.", "vocabularyReference": "gebeurtenis" },
+        { "id": "ex6", "type": "fillInBlank", "prompt": "Hij is zo ________; hij geeft nooit geld uit.", "options": ["gierig", "verbaasd", "noteren", "trakteren"], "correctAnswer": "gierig", "explanation": "'Gierig' betekent 'stingy'.", "vocabularyReference": "gierig" },
+        { "id": "ex7", "type": "fillInBlank", "prompt": "Maak je geen zorgen, alles zal ________.", "options": ["goedkomen", "kwijtraken", "inzamelen", "overvallen"], "correctAnswer": "goedkomen", "explanation": "'Goedkomen' betekent 'to turn out well'.", "vocabularyReference": "goedkomen" },
+        { "id": "ex8", "type": "fillInBlank", "prompt": "In Amsterdam zie je veel ________ met boten.", "options": ["gracht", "biljet", "pech", "hartstikke"], "correctAnswer": "gracht", "explanation": "'Gracht' betekent 'canal'.", "vocabularyReference": "gracht" },
+        { "id": "ex9", "type": "fillInBlank", "prompt": "Ik ben ________ blij met mijn nieuwe baan!", "options": ["hartstikke", "verbaasd", "schuldig", "zich"], "correctAnswer": "hartstikke", "explanation": "'Hartstikke' betekent 'very, extremely'.", "vocabularyReference": "hartstikke" },
+        { "id": "ex10", "type": "fillInBlank", "prompt": "Ik heb het boek nog niet gelezen, maar ik ben ________ erg benieuwd.", "options": ["inmiddels", "overmaken", "noteren", "pech"], "correctAnswer": "inmiddels", "explanation": "'Inmiddels' betekent 'meanwhile'.", "vocabularyReference": "inmiddels" },
+        { "id": "ex11", "type": "sentenceBuilding", "prompt": "Zet de woorden in de juiste volgorde: beseffen / soms / pas / we / later / het belang", "options": ["Soms beseffen we het belang pas later."], "correctAnswer": "Soms beseffen we het belang pas later.", "explanation": "Correcte volgorde: Soms beseffen we het belang pas later.", "vocabularyReference": "beseffen" },
+        { "id": "ex12", "type": "sentenceBuilding", "prompt": "Zet de woorden in de juiste volgorde: overmaken / kun je / het geld / naar mijn rekening?", "options": ["Kun je het geld naar mijn rekening overmaken?"], "correctAnswer": "Kun je het geld naar mijn rekening overmaken?", "explanation": "Correcte volgorde: Kun je het geld naar mijn rekening overmaken?", "vocabularyReference": "overmaken" },
+        { "id": "ex13", "type": "sentenceBuilding", "prompt": "Zet de woorden in de juiste volgorde: verbaasd / was / over / het nieuws / hij", "options": ["Hij was verbaasd over het nieuws."], "correctAnswer": "Hij was verbaasd over het nieuws.", "explanation": "Correcte volgorde: Hij was verbaasd over het nieuws.", "vocabularyReference": "verbaasd" },
+        { "id": "ex14", "type": "sentenceBuilding", "prompt": "Zet de woorden in de juiste volgorde: inzamelen / voor het goede doel / we / geld", "options": ["We zamelen geld in voor het goede doel."], "correctAnswer": "We zamelen geld in voor het goede doel.", "explanation": "Correcte volgorde: We zamelen geld in voor het goede doel.", "vocabularyReference": "inzamelen" },
+        { "id": "ex15", "type": "sentenceBuilding", "prompt": "Zet de woorden in de juiste volgorde: noteren / kun je / mijn telefoonnummer?", "options": ["Kun je mijn telefoonnummer noteren?"], "correctAnswer": "Kun je mijn telefoonnummer noteren?", "explanation": "Correcte volgorde: Kun je mijn telefoonnummer noteren?", "vocabularyReference": "noteren" },
+        { "id": "ex16", "type": "fillInBlank", "prompt": "Hij schaamt ________ voor zijn fout.", "options": ["zich", "trakteren", "hartstikke", "gierig"], "correctAnswer": "zich", "explanation": "'Zich' is het juiste reflexieve voornaamwoord.", "vocabularyReference": "zich" },
+        { "id": "ex17", "type": "fillInBlank", "prompt": "De ________ op mijn spaarrekening is erg laag.", "options": ["rente", "pech", "gracht", "erfenis"], "correctAnswer": "rente", "explanation": "'Rente' betekent 'interest'.", "vocabularyReference": "rente" },
+        { "id": "ex18", "type": "fillInBlank", "prompt": "Na het ongeluk voelde hij zich erg ________.", "options": ["verbaasd", "schuldig", "hartstikke", "gierig"], "correctAnswer": "schuldig", "explanation": "'Schuldig' betekent 'guilty'.", "vocabularyReference": "schuldig" },
+        { "id": "ex19", "type": "fillInBlank", "prompt": "Omdat ik jarig ben, zal ik ________ op taart.", "options": ["trakteren", "overvallen", "inzamelen", "noteren"], "correctAnswer": "trakteren", "explanation": "'Trakteren' betekent 'to treat'.", "vocabularyReference": "trakteren" },
+        { "id": "ex20", "type": "fillInBlank", "prompt": "De bank werd gisteren ________.", "options": ["overvallen", "overmaken", "kwijtraken", "beseffen"], "correctAnswer": "overvallen", "explanation": "'Overvallen' betekent 'to rob'.", "vocabularyReference": "overvallen" }
+      ],
+      "rewards": []
     }
   ]
 } 

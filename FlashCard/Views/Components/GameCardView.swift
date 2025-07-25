@@ -328,6 +328,14 @@ struct GameCardView: View {
     }
 }
 
+// MARK: - Text Selection Helper
+
+extension View {
+    func selectableText() -> some View {
+        self.textSelection(.enabled)
+    }
+}
+
 // Preview
 struct GameCardView_Previews: PreviewProvider {
     static var previews: some View {
