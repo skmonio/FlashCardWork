@@ -151,21 +151,19 @@ struct GameCardView: View {
             Spacer()
             
             // Word - prominent display (removed article)
-            SelectableTextView(card.word, 
-                             font: .systemFont(ofSize: 42, weight: .bold), 
-                             textColor: .label, 
-                             textAlignment: .center)
-                .frame(maxWidth: .infinity)
-                .lineLimit(3)
+            ConditionalSelectableText(card.word, 
+                                    font: .system(size: 42, weight: .bold, design: .rounded), 
+                                    foregroundColor: .primary, 
+                                    multilineTextAlignment: .center, 
+                                    lineLimit: 3)
             
             // Example (if showing) - plain text, centered
             if isShowingExample && !card.example.isEmpty {
-                SelectableTextView(card.example, 
-                                 font: .systemFont(ofSize: 17), 
-                                 textColor: .secondaryLabel, 
-                                 textAlignment: .center)
-                    .frame(maxWidth: .infinity)
-                    .lineLimit(4)
+                ConditionalSelectableText(card.example, 
+                                        font: .title3, 
+                                        foregroundColor: .secondary, 
+                                        multilineTextAlignment: .center, 
+                                        lineLimit: 4)
                     .padding(.top, 12)
                     .transition(.opacity.combined(with: .scale))
             }
@@ -180,12 +178,11 @@ struct GameCardView: View {
             Spacer()
             
             // Definition - prominent display
-            SelectableTextView(card.definition, 
-                             font: .systemFont(ofSize: 36, weight: .semibold), 
-                             textColor: .label, 
-                             textAlignment: .center)
-                .frame(maxWidth: .infinity)
-                .lineLimit(6) // Increased from 5
+            ConditionalSelectableText(card.definition, 
+                                    font: .system(size: 36, weight: .semibold, design: .rounded), 
+                                    foregroundColor: .primary, 
+                                    multilineTextAlignment: .center, 
+                                    lineLimit: 6) // Increased from 5
             
             Spacer()
         }
@@ -365,11 +362,95 @@ struct SelectableTextView: UIViewRepresentable {
         textView.textContainer.lineFragmentPadding = 0
         textView.showsVerticalScrollIndicator = false
         textView.showsHorizontalScrollIndicator = false
+        textView.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        textView.setContentHuggingPriority(.defaultLow, for: .horizontal)
         return textView
     }
     
     func updateUIView(_ uiView: UITextView, context: Context) {
         uiView.text = text
+    }
+}
+
+// MARK: - Conditional Selectable Text
+
+struct ConditionalSelectableText: View {
+    let text: String
+    let font: Font
+    let foregroundColor: Color
+    let multilineTextAlignment: TextAlignment
+    let lineLimit: Int?
+    
+    init(_ text: String, font: Font = .body, foregroundColor: Color = .primary, multilineTextAlignment: TextAlignment = .leading, lineLimit: Int? = nil) {
+        self.text = text
+        self.font = font
+        self.foregroundColor = foregroundColor
+        self.multilineTextAlignment = multilineTextAlignment
+        self.lineLimit = lineLimit
+    }
+    
+    var body: some View {
+        // Only use SelectableTextView for longer text that users might want to copy
+        if text.count > 50 {
+            SelectableTextView(text, 
+                             font: font.uiFont, 
+                             textColor: foregroundColor.uiColor, 
+                             textAlignment: multilineTextAlignment.nsTextAlignment)
+                .frame(maxWidth: .infinity)
+                .lineLimit(lineLimit)
+        } else {
+            Text(text)
+                .font(font)
+                .foregroundColor(foregroundColor)
+                .multilineTextAlignment(multilineTextAlignment)
+                .lineLimit(lineLimit)
+                .textSelection(.enabled)
+        }
+    }
+}
+
+// MARK: - Extensions for Font and Color conversion
+
+extension Font {
+    var uiFont: UIFont {
+        switch self {
+        case .largeTitle: return .systemFont(ofSize: 34, weight: .bold)
+        case .title: return .systemFont(ofSize: 28, weight: .bold)
+        case .title2: return .systemFont(ofSize: 22, weight: .bold)
+        case .title3: return .systemFont(ofSize: 20, weight: .semibold)
+        case .headline: return .systemFont(ofSize: 17, weight: .semibold)
+        case .body: return .systemFont(ofSize: 17)
+        case .callout: return .systemFont(ofSize: 16)
+        case .subheadline: return .systemFont(ofSize: 15)
+        case .footnote: return .systemFont(ofSize: 13)
+        case .caption: return .systemFont(ofSize: 12)
+        case .caption2: return .systemFont(ofSize: 11)
+        default: return .systemFont(ofSize: 17)
+        }
+    }
+}
+
+extension Color {
+    var uiColor: UIColor {
+        switch self {
+        case .primary: return .label
+        case .secondary: return .secondaryLabel
+        case .blue: return .systemBlue
+        case .green: return .systemGreen
+        case .red: return .systemRed
+        case .orange: return .systemOrange
+        default: return .label
+        }
+    }
+}
+
+extension TextAlignment {
+    var nsTextAlignment: NSTextAlignment {
+        switch self {
+        case .leading: return .left
+        case .center: return .center
+        case .trailing: return .right
+        }
     }
 }
 

@@ -304,12 +304,12 @@ struct JSONGrammarRulesView: View {
                             .font(.headline)
                             .fontWeight(.semibold)
                         
-                        SelectableTextView(rule.explanation, 
-                                         font: .systemFont(ofSize: 17), 
-                                         textColor: .label, 
-                                         textAlignment: .left)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                        Text(rule.explanation)
+                            .font(.body)
+                            .foregroundColor(.primary)
+                            .multilineTextAlignment(.leading)
                             .padding()
+                            .textSelection(.enabled)
                     }
                     
                     // Key Points
@@ -325,11 +325,10 @@ struct JSONGrammarRulesView: View {
                                         Text("•")
                                             .foregroundColor(.blue)
                                             .fontWeight(.medium)
-                                        SelectableTextView(point, 
-                                                         font: .systemFont(ofSize: 17), 
-                                                         textColor: .label, 
-                                                         textAlignment: .left)
-                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                        Text(point)
+                                            .font(.body)
+                                            .lineSpacing(2)
+                                            .textSelection(.enabled)
                                     }
                                 }
                             }
@@ -360,11 +359,11 @@ struct JSONGrammarRulesView: View {
                                                         .foregroundColor(.blue)
                                                 }
                                                 
-                                                SelectableTextView(example.dutch, 
-                                                                 font: .systemFont(ofSize: 17, weight: .medium), 
-                                                                 textColor: .label, 
-                                                                 textAlignment: .left)
-                                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                                Text(example.dutch)
+                                                    .font(.body)
+                                                    .fontWeight(.medium)
+                                                    .foregroundColor(.primary)
+                                                    .textSelection(.enabled)
                                             }
                                             Spacer()
                                         }
@@ -384,11 +383,10 @@ struct JSONGrammarRulesView: View {
                                                         .foregroundColor(.green)
                                                 }
                                                 
-                                                SelectableTextView(example.english, 
-                                                                 font: .systemFont(ofSize: 17), 
-                                                                 textColor: .secondaryLabel, 
-                                                                 textAlignment: .left)
-                                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                                Text(example.english)
+                                                    .font(.body)
+                                                    .foregroundColor(.secondary)
+                                                    .textSelection(.enabled)
                                             }
                                             Spacer()
                                         }
@@ -409,11 +407,11 @@ struct JSONGrammarRulesView: View {
                                                             .foregroundColor(.orange)
                                                     }
                                                     
-                                                    SelectableTextView(example.breakdown, 
-                                                                     font: .systemFont(ofSize: 12), 
-                                                                     textColor: .systemOrange, 
-                                                                     textAlignment: .left)
-                                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                                    Text(example.breakdown)
+                                                        .font(.caption)
+                                                        .foregroundColor(.orange)
+                                                        .italic()
+                                                        .textSelection(.enabled)
                                                 }
                                                 Spacer()
                                             }
@@ -485,12 +483,12 @@ struct JSONGrammarRulesView: View {
                 
                 VStack(spacing: 20) {
                     // Question prompt
-                    SelectableTextView(exercise.question, 
-                                     font: .systemFont(ofSize: 22, weight: .bold), 
-                                     textColor: .label, 
-                                     textAlignment: .center)
-                        .frame(maxWidth: .infinity)
+                    Text(exercise.question)
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .multilineTextAlignment(.center)
                         .padding(.horizontal)
+                        .textSelection(.enabled)
                     
                     // Hint if available and not showing answer
                     if let hint = exercise.hint, !showingAnswer {
