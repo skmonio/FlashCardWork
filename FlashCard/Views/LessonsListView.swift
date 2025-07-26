@@ -1489,6 +1489,17 @@ extension LessonsListView {
                 .disabled(exportingUserLessons ? selectedUserLessonIds.isEmpty : selectedLessonIds.isEmpty)
             }
         }
+        .onAppear {
+            // Refresh user lessons data when the sheet appears, especially for user lesson exports
+            if exportingUserLessons {
+                print("📤 Lesson selection sheet appeared for user lessons - Current count: \(userLessonManager.userLessons.count)")
+                userLessonManager.loadUserLessons()
+                DispatchQueue.main.async {
+                    userLessonManager.objectWillChange.send()
+                    print("📤 User lessons refreshed in sheet - New count: \(userLessonManager.userLessons.count)")
+                }
+            }
+        }
     }
     
     private func handleExportTypeSelection(_ type: ExportType) {
@@ -1501,10 +1512,17 @@ extension LessonsListView {
             selectedLessonIds = []
             selectedUserLessonIds = Set(userLessonManager.userLessons.map { $0.id })
             exportingUserLessons = true
+            // Immediately refresh user lessons when this type is selected
+            print("📤 User lessons export selected - Refreshing data")
+            userLessonManager.loadUserLessons()
+            userLessonManager.objectWillChange.send()
         case .both:
             selectedLessonIds = Set(lessonManager.lessons.map { $0.id })
             selectedUserLessonIds = Set(userLessonManager.userLessons.map { $0.id })
             exportingUserLessons = false // Will handle both
+            // Refresh user lessons for combined export too
+            userLessonManager.loadUserLessons()
+            userLessonManager.objectWillChange.send()
         }
         showingExportTypeSelection = false
         
