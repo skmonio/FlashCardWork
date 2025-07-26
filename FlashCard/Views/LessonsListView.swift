@@ -3,6 +3,7 @@ import SwiftUI
 struct LessonsListView: View {
     @ObservedObject var lessonManager = LessonManager.shared
     @ObservedObject var analyticsManager = LessonAnalyticsManager.shared
+    @ObservedObject var userLessonManager = UserLessonManager.shared
     @State private var completedLessons: [UUID: Int] = [:] // lessonId: bestScore
     let viewModel: FlashCardViewModel
     @Environment(\.dismiss) private var dismiss
@@ -19,6 +20,12 @@ struct LessonsListView: View {
     @State private var showingImportPicker = false
     @State private var importResultMessage: String? = nil
     @State private var showingImportAlert = false
+    
+    // User lesson state
+    @State private var showingCreateLesson = false
+    @State private var editingUserLesson: UserLesson? = nil
+    @State private var showingDeleteAlert = false
+    @State private var lessonToDelete: UserLesson? = nil
     
     enum ExportFormat: Identifiable {
         case csv, json
@@ -67,10 +74,44 @@ struct LessonsListView: View {
             
             ScrollView {
                 VStack(spacing: 24) {
+                    // Make a Lesson Button
+                    VStack(spacing: 16) {
+                        Button(action: {
+                            showingCreateLesson = true
+                        }) {
+                            HStack {
+                                Image(systemName: "plus.circle.fill")
+                                    .font(.title2)
+                                Text("Make a Lesson")
+                                    .font(.headline)
+                                    .fontWeight(.semibold)
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                            }
+                            .foregroundColor(.white)
+                            .padding()
+                            .background(
+                                LinearGradient(
+                                    colors: [.blue, .purple],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .cornerRadius(12)
+                        }
+                        .padding(.horizontal)
+                    }
+                    
+                    // User Created Lessons Section
+                    if !userLessonManager.userLessons.isEmpty {
+                        userLessonsSection
+                    }
+                    
                     // Regular Lessons Section
                     regularLessonsSection
                 }
-                .padding(.horizontal)
                 .padding(.top, 16)
             }
         }
@@ -86,6 +127,12 @@ struct LessonsListView: View {
         }
         .sheet(isPresented: $showingLessonSelection) {
             lessonSelectionSheet()
+        }
+        .sheet(isPresented: $showingCreateLesson) {
+            CreateLessonView(editingLesson: editingUserLesson)
+                .onDisappear {
+                    editingUserLesson = nil
+                }
         }
         .actionSheet(item: $exportFormat) { format in
             ActionSheet(title: Text("Export Format"), message: Text("Choose export format"), buttons: [
@@ -106,13 +153,113 @@ struct LessonsListView: View {
         } message: {
             Text(importResultMessage ?? "Unknown result")
         }
+        .alert("Delete Lesson", isPresented: $showingDeleteAlert) {
+            Button("Delete", role: .destructive) {
+                if let lesson = lessonToDelete {
+                    userLessonManager.deleteLesson(id: lesson.id)
+                }
+                lessonToDelete = nil
+            }
+            Button("Cancel", role: .cancel) {
+                lessonToDelete = nil
+            }
+        } message: {
+            Text("Are you sure you want to delete this lesson? This action cannot be undone.")
+        }
     }
     
+    private var userLessonsSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("My Lessons")
+                .font(.title2)
+                .fontWeight(.bold)
+                .padding(.horizontal)
+            
+            LazyVStack(spacing: 12) {
+                ForEach(userLessonManager.userLessons) { userLesson in
+                    let lesson = userLesson.toLesson()
+                    
+                    NavigationLink(destination: LessonDetailView(lesson: lesson, completedLessons: $completedLessons, viewModel: viewModel, shouldLoadSaveState: false)) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack {
+                                    Text(userLesson.title)
+                                        .font(.headline)
+                                    Spacer()
+                                    
+                                    // User created badge
+                                    Text("My Lesson")
+                                        .font(.caption)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(.white)
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 2)
+                                        .background(Color.purple)
+                                        .cornerRadius(8)
+                                }
+                                
+                                Text(userLesson.description)
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                                    .lineLimit(2)
+                                
+                                Text("\(userLesson.questions.count) question\(userLesson.questions.count == 1 ? "" : "s")")
+                                    .font(.caption)
+                                    .foregroundColor(.blue)
+                                
+                                Text("Created: \(userLesson.createdDate.formatted(date: .abbreviated, time: .omitted))")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            Spacer()
+                            
+                            // Action buttons
+                            HStack(spacing: 8) {
+                                Button(action: {
+                                    editingUserLesson = userLesson
+                                    DispatchQueue.main.async {
+                                        showingCreateLesson = true
+                                    }
+                                }) {
+                                    Image(systemName: "pencil")
+                                        .font(.caption)
+                                        .foregroundColor(.blue)
+                                        .padding(6)
+                                        .background(Color.blue.opacity(0.1))
+                                        .cornerRadius(6)
+                                }
+                                
+                                Button(action: {
+                                    lessonToDelete = userLesson
+                                    showingDeleteAlert = true
+                                }) {
+                                    Image(systemName: "trash")
+                                        .font(.caption)
+                                        .foregroundColor(.red)
+                                        .padding(6)
+                                        .background(Color.red.opacity(0.1))
+                                        .cornerRadius(6)
+                                }
+                            }
+                        }
+                        .padding()
+                        .background(Color(.secondarySystemGroupedBackground))
+                        .cornerRadius(12)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                }
+            }
+            .padding(.horizontal)
+        }
+    }
+
     private var regularLessonsSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Individual Lessons")
                 .font(.title2)
                 .fontWeight(.bold)
+                .padding(.horizontal)
             
             LazyVStack(spacing: 12) {
                 ForEach(lessonManager.lessons) { lesson in
@@ -226,6 +373,7 @@ struct LessonsListView: View {
                     .buttonStyle(PlainButtonStyle())
                 }
             }
+            .padding(.horizontal)
         }
     }
 }
