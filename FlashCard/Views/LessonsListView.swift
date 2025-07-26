@@ -12,7 +12,6 @@ struct LessonsListView: View {
     @State private var showingExportSheet = false
     @State private var showingLessonSelection = false
     @State private var selectedLessonIds: Set<UUID> = []
-    @State private var exportFormat: ExportFormat? = nil
     @State private var exportData: Data? = nil
     @State private var exportFileName: String = ""
     @State private var exportMimeType: String = "application/json"
@@ -27,6 +26,14 @@ struct LessonsListView: View {
     @State private var showingDeleteAlert = false
     @State private var lessonToDelete: UserLesson? = nil
     
+    // Export/Import type selection
+    @State private var showingExportTypeSelection = false
+    @State private var showingImportTypeSelection = false
+    @State private var selectedUserLessonIds: Set<UUID> = []
+    @State private var exportingUserLessons = false
+    @State private var showingNoLessonsAlert = false
+    @State private var showingExportFormatSheet = false
+    
     enum ExportFormat: Identifiable {
         case csv, json
         var id: String {
@@ -34,6 +41,49 @@ struct LessonsListView: View {
             case .csv: return "csv"
             case .json: return "json"
             }
+        }
+    }
+    
+    enum ExportType: CaseIterable, Identifiable {
+        case builtInLessons, userLessons, both
+        
+        var id: String {
+            switch self {
+            case .builtInLessons: return "builtin"
+            case .userLessons: return "user"
+            case .both: return "both"
+            }
+        }
+        
+        var displayName: String {
+            switch self {
+            case .builtInLessons: return "Built-in Lessons"
+            case .userLessons: return "My Lessons"
+            case .both: return "All Lessons"
+            }
+        }
+        
+        var description: String {
+            switch self {
+            case .builtInLessons: return "Export the app's built-in Dutch lessons"
+            case .userLessons: return "Export your custom created lessons"
+            case .both: return "Export both built-in and custom lessons"
+            }
+        }
+    }
+    
+    // Combined export structure
+    struct CombinedLessonsExport: Codable {
+        let builtInLessons: [Lesson]
+        let userLessons: [UserLesson]
+        let exportDate: Date
+        let version: String
+        
+        init(builtInLessons: [Lesson], userLessons: [UserLesson]) {
+            self.builtInLessons = builtInLessons
+            self.userLessons = userLessons
+            self.exportDate = Date()
+            self.version = "1.0"
         }
     }
     
@@ -53,8 +103,7 @@ struct LessonsListView: View {
                     AnyView(
                         HStack(spacing: 16) {
                             Button(action: {
-                                selectedLessonIds = []
-                                showingLessonSelection = true
+                                showingExportTypeSelection = true
                             }) {
                                 Image(systemName: "square.and.arrow.up")
                                     .font(.title2)
@@ -118,11 +167,38 @@ struct LessonsListView: View {
         .navigationBarHidden(true)
         .navigationBarBackButtonHidden(true)
         .background(Color(.systemGroupedBackground))
+        .onAppear {
+            // Force refresh of user lessons when view appears
+            print("📱 LessonsListView appeared - User lessons count: \(userLessonManager.userLessons.count)")
+            // Force reload from storage
+            userLessonManager.loadUserLessons()
+            DispatchQueue.main.async {
+                userLessonManager.objectWillChange.send()
+                print("📱 Forced UI refresh for user lessons - Count now: \(userLessonManager.userLessons.count)")
+            }
+        }
         .sheet(isPresented: $showingExportSheet) {
-            if let data = exportData {
-                ShareSheet(activityItems: [ExportFileWrapper(data: data, fileName: exportFileName, mimeType: exportMimeType)])
+            if let data = exportData, !exportFileName.isEmpty {
+                ShareSheet(activityItems: [createTemporaryFile(data: data, fileName: exportFileName)])
             } else {
-                Text("No data to export")
+                VStack(spacing: 20) {
+                    Image(systemName: "exclamationmark.triangle")
+                        .font(.largeTitle)
+                        .foregroundColor(.orange)
+                    Text("Export Error")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                    Text("No data to export or filename is missing.")
+                        .foregroundColor(.secondary)
+                    Button("Close") {
+                        showingExportSheet = false
+                    }
+                    .padding()
+                    .background(Color.blue)
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
+                }
+                .padding()
             }
         }
         .sheet(isPresented: $showingLessonSelection) {
@@ -134,16 +210,27 @@ struct LessonsListView: View {
                     editingUserLesson = nil
                 }
         }
-        .actionSheet(item: $exportFormat) { format in
+        .sheet(isPresented: $showingExportTypeSelection) {
+            exportTypeSelectionSheet()
+        }
+        .actionSheet(isPresented: $showingExportFormatSheet) {
             ActionSheet(title: Text("Export Format"), message: Text("Choose export format"), buttons: [
-                .default(Text("CSV")) { exportLessons(as: .csv) },
-                .default(Text("JSON")) { exportLessons(as: .json) },
-                .cancel()
+                .default(Text("CSV")) { 
+                    print("📤 CSV format selected")
+                    exportLessons(as: .csv) 
+                },
+                .default(Text("JSON")) { 
+                    print("📤 JSON format selected")
+                    exportLessons(as: .json) 
+                },
+                .cancel {
+                    print("📤 Export cancelled")
+                }
             ])
         }
         .fileImporter(
             isPresented: $showingImportPicker,
-            allowedContentTypes: [.json, .commaSeparatedText, .plainText],
+            allowedContentTypes: [.json, .commaSeparatedText, .plainText, .data, .item],
             allowsMultipleSelection: false
         ) { result in
             handleLessonImport(result: result)
@@ -151,7 +238,11 @@ struct LessonsListView: View {
         .alert("Import Result", isPresented: $showingImportAlert) {
             Button("OK") {}
         } message: {
-            Text(importResultMessage ?? "Unknown result")
+            if let message = importResultMessage, message.contains("permission") || message.contains("readable") {
+                Text("\(message)\n\nTip: Try saving the file to the Files app first, then import from there.")
+            } else {
+                Text(importResultMessage ?? "Unknown result")
+            }
         }
         .alert("Delete Lesson", isPresented: $showingDeleteAlert) {
             Button("Delete", role: .destructive) {
@@ -165,6 +256,11 @@ struct LessonsListView: View {
             }
         } message: {
             Text("Are you sure you want to delete this lesson? This action cannot be undone.")
+        }
+        .alert("No Lessons to Export", isPresented: $showingNoLessonsAlert) {
+            Button("OK") {}
+        } message: {
+            Text("You don't have any custom lessons to export yet. Create some lessons first using the 'Make a Lesson' button.")
         }
     }
     
@@ -218,7 +314,10 @@ struct LessonsListView: View {
                             HStack(spacing: 8) {
                                 Button(action: {
                                     editingUserLesson = userLesson
-                                    DispatchQueue.main.async {
+                                    // Force UI refresh to ensure the lesson data is current
+                                    userLessonManager.objectWillChange.send()
+                                    // Small delay to ensure state is properly set
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                                         showingCreateLesson = true
                                     }
                                 }) {
@@ -1208,6 +1307,53 @@ extension String {
 // MARK: - Export UI
 
 extension LessonsListView {
+    private func exportTypeSelectionSheet() -> some View {
+        NavigationView {
+            VStack(spacing: 20) {
+                Text("What would you like to export?")
+                    .font(.title2)
+                    .fontWeight(.semibold)
+                    .padding(.top)
+                
+                ForEach(ExportType.allCases) { exportType in
+                    Button(action: {
+                        handleExportTypeSelection(exportType)
+                    }) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Text(exportType.displayName)
+                                    .font(.headline)
+                                    .foregroundColor(.primary)
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            Text(exportType.description)
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                                .multilineTextAlignment(.leading)
+                        }
+                        .padding()
+                        .background(Color(.systemGray6))
+                        .cornerRadius(12)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                }
+                
+                Spacer()
+            }
+            .padding()
+            .navigationTitle("Export Lessons")
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarItems(
+                trailing: Button("Cancel") {
+                    showingExportTypeSelection = false
+                }
+            )
+        }
+    }
+
     private func lessonSelectionSheet() -> some View {
         NavigationView {
             VStack(spacing: 0) {
@@ -1225,112 +1371,371 @@ extension LessonsListView {
                 
                 ScrollView {
                     LazyVStack(spacing: 12) {
-                        Button(action: {
-                            selectedLessonIds = Set(lessonManager.lessons.map { $0.id })
-                            showingLessonSelection = false
-                            exportFormat = nil
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                                exportFormat = .json // default to show action sheet
-                            }
-                        }) {
-                            HStack {
-                                Text("All Lessons")
-                                    .fontWeight(.semibold)
-                                Spacer()
-                                Text("\(lessonManager.lessons.count) lessons")
-                                    .foregroundColor(.secondary)
-                            }
-                            .padding()
-                            .background(Color.blue.opacity(0.1))
-                            .cornerRadius(10)
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                        
-                        ForEach(lessonManager.lessons, id: \.id) { lesson in
+                        if exportingUserLessons {
+                            // User lessons selection
                             Button(action: {
-                                if selectedLessonIds.contains(lesson.id) {
-                                    selectedLessonIds.remove(lesson.id)
-                                } else {
-                                    selectedLessonIds.insert(lesson.id)
-                                }
+                                selectedUserLessonIds = Set(userLessonManager.userLessons.map { $0.id })
+                                showingLessonSelection = false
+                                showingExportFormatSheet = true
                             }) {
                                 HStack {
-                                    Image(systemName: selectedLessonIds.contains(lesson.id) ? "checkmark.square.fill" : "square")
-                                        .foregroundColor(.blue)
-                                    VStack(alignment: .leading) {
-                                        Text(lesson.title)
-                                            .fontWeight(.medium)
-                                        Text(lesson.level)
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                    }
+                                    Text("All My Lessons")
+                                        .fontWeight(.semibold)
                                     Spacer()
+                                    Text("\(userLessonManager.userLessons.count) lessons")
+                                        .foregroundColor(.secondary)
                                 }
                                 .padding()
-                                .background(Color.gray.opacity(0.1))
+                                .background(Color.purple.opacity(0.1))
                                 .cornerRadius(10)
                             }
                             .buttonStyle(PlainButtonStyle())
+                            
+                            ForEach(userLessonManager.userLessons) { userLesson in
+                                Button(action: {
+                                    if selectedUserLessonIds.contains(userLesson.id) {
+                                        selectedUserLessonIds.remove(userLesson.id)
+                                    } else {
+                                        selectedUserLessonIds.insert(userLesson.id)
+                                    }
+                                }) {
+                                    HStack {
+                                        Image(systemName: selectedUserLessonIds.contains(userLesson.id) ? "checkmark.square.fill" : "square")
+                                            .foregroundColor(.purple)
+                                        VStack(alignment: .leading) {
+                                            Text(userLesson.title)
+                                                .fontWeight(.medium)
+                                            Text("\(userLesson.questions.count) questions")
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                        }
+                                        Spacer()
+                                    }
+                                    .padding()
+                                    .background(Color.gray.opacity(0.1))
+                                    .cornerRadius(10)
+                                }
+                                .buttonStyle(PlainButtonStyle())
+                            }
+                        } else {
+                            // Built-in lessons selection
+                            Button(action: {
+                                selectedLessonIds = Set(lessonManager.lessons.map { $0.id })
+                                showingLessonSelection = false
+                                showingExportFormatSheet = true
+                            }) {
+                                HStack {
+                                    Text("All Lessons")
+                                        .fontWeight(.semibold)
+                                    Spacer()
+                                    Text("\(lessonManager.lessons.count) lessons")
+                                        .foregroundColor(.secondary)
+                                }
+                                .padding()
+                                .background(Color.blue.opacity(0.1))
+                                .cornerRadius(10)
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                            
+                            ForEach(lessonManager.lessons, id: \.id) { lesson in
+                                Button(action: {
+                                    if selectedLessonIds.contains(lesson.id) {
+                                        selectedLessonIds.remove(lesson.id)
+                                    } else {
+                                        selectedLessonIds.insert(lesson.id)
+                                    }
+                                }) {
+                                    HStack {
+                                        Image(systemName: selectedLessonIds.contains(lesson.id) ? "checkmark.square.fill" : "square")
+                                            .foregroundColor(.blue)
+                                        VStack(alignment: .leading) {
+                                            Text(lesson.title)
+                                                .fontWeight(.medium)
+                                            Text(lesson.level)
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                        }
+                                        Spacer()
+                                    }
+                                    .padding()
+                                    .background(Color.gray.opacity(0.1))
+                                    .cornerRadius(10)
+                                }
+                                .buttonStyle(PlainButtonStyle())
+                            }
                         }
                     }
                     .padding(.horizontal)
                 }
+                
                 Button("Export Selected") {
+                    print("📤 Export Selected clicked - User lessons: \(selectedUserLessonIds.count), Built-in: \(selectedLessonIds.count)")
                     showingLessonSelection = false
-                    exportFormat = nil
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                        exportFormat = .json // default to show action sheet
+                        print("📤 Showing format selection sheet")
+                        showingExportFormatSheet = true
                     }
                 }
                 .font(.headline)
                 .frame(maxWidth: .infinity)
                 .padding()
-                .background(Color.blue)
+                .background(
+                    (exportingUserLessons ? selectedUserLessonIds.isEmpty : selectedLessonIds.isEmpty) ? 
+                    Color.gray.opacity(0.3) : Color.blue
+                )
                 .foregroundColor(.white)
                 .cornerRadius(12)
                 .padding()
-                .disabled(selectedLessonIds.isEmpty)
+                .disabled(exportingUserLessons ? selectedUserLessonIds.isEmpty : selectedLessonIds.isEmpty)
             }
         }
     }
     
+    private func handleExportTypeSelection(_ type: ExportType) {
+        switch type {
+        case .builtInLessons:
+            selectedLessonIds = Set(lessonManager.lessons.map { $0.id })
+            selectedUserLessonIds = []
+            exportingUserLessons = false
+        case .userLessons:
+            selectedLessonIds = []
+            selectedUserLessonIds = Set(userLessonManager.userLessons.map { $0.id })
+            exportingUserLessons = true
+        case .both:
+            selectedLessonIds = Set(lessonManager.lessons.map { $0.id })
+            selectedUserLessonIds = Set(userLessonManager.userLessons.map { $0.id })
+            exportingUserLessons = false // Will handle both
+        }
+        showingExportTypeSelection = false
+        
+        // Check if there are any lessons to export
+        if type == .userLessons && userLessonManager.userLessons.isEmpty {
+            showingNoLessonsAlert = true
+            print("📤 No user lessons to export, showing alert")
+        } else {
+            // Always show lesson selection to allow users to choose
+            showingLessonSelection = true
+            print("📤 Showing lesson selection for \(type.displayName)")
+        }
+    }
+    
     private func exportLessons(as format: ExportFormat) {
-        let lessonsToExport = lessonManager.lessons.filter { selectedLessonIds.contains($0.id) }
+        print("📤 Starting export process - Format: \(format)")
+        print("📤 Export state - exportingUserLessons: \(exportingUserLessons)")
+        print("📤 Selected user lessons: \(selectedUserLessonIds.count)")
+        print("📤 Selected built-in lessons: \(selectedLessonIds.count)")
+        print("📤 Total user lessons available: \(userLessonManager.userLessons.count)")
+        
         switch format {
         case .csv:
-            let csv = lessonManager.exportLessonsToCSV(lessonsToExport)
-            exportData = csv.data(using: .utf8)
-            exportFileName = selectedLessonIds.count == lessonManager.lessons.count ? "DutchLessons_All.csv" : "DutchLessons_Selected.csv"
+            if exportingUserLessons {
+                // Export selected user lessons as CSV
+                let selectedLessons = userLessonManager.userLessons.filter { selectedUserLessonIds.contains($0.id) }
+                let csv = generateUserLessonsCSV(selectedLessons)
+                exportData = csv.data(using: .utf8)
+                exportFileName = selectedUserLessonIds.count == userLessonManager.userLessons.count ? 
+                    "MyLessons_All.csv" : "MyLessons_Selected.csv"
+            } else if !selectedUserLessonIds.isEmpty && !selectedLessonIds.isEmpty {
+                // Export both types - create combined CSV
+                let builtInLessons = lessonManager.lessons.filter { selectedLessonIds.contains($0.id) }
+                let userLessons = userLessonManager.userLessons.filter { selectedUserLessonIds.contains($0.id) }
+                let builtInCSV = lessonManager.exportLessonsToCSV(builtInLessons)
+                let userCSV = generateUserLessonsCSV(userLessons)
+                let combinedCSV = builtInCSV + "\n" + userCSV.components(separatedBy: "\n").dropFirst().joined(separator: "\n")
+                exportData = combinedCSV.data(using: .utf8)
+                exportFileName = "AllLessons.csv"
+            } else {
+                // Export only built-in lessons
+                let lessonsToExport = lessonManager.lessons.filter { selectedLessonIds.contains($0.id) }
+                let csv = lessonManager.exportLessonsToCSV(lessonsToExport)
+                exportData = csv.data(using: .utf8)
+                exportFileName = selectedLessonIds.count == lessonManager.lessons.count ? "DutchLessons_All.csv" : "DutchLessons_Selected.csv"
+            }
             exportMimeType = "text/csv"
+            
         case .json:
-            let json = lessonManager.exportLessonsToJSON(lessonsToExport)
-            exportData = json.data(using: .utf8)
-            exportFileName = selectedLessonIds.count == lessonManager.lessons.count ? "DutchLessons_All.json" : "DutchLessons_Selected.json"
+            if exportingUserLessons {
+                // Export selected user lessons as JSON
+                let selectedLessons = userLessonManager.userLessons.filter { selectedUserLessonIds.contains($0.id) }
+                let json = generateUserLessonsJSON(selectedLessons)
+                exportData = json.data(using: .utf8)
+                exportFileName = selectedUserLessonIds.count == userLessonManager.userLessons.count ? 
+                    "MyLessons_All.json" : "MyLessons_Selected.json"
+            } else if !selectedUserLessonIds.isEmpty && !selectedLessonIds.isEmpty {
+                // Export both types - create combined JSON
+                let builtInLessons = lessonManager.lessons.filter { selectedLessonIds.contains($0.id) }
+                let userLessons = userLessonManager.userLessons.filter { selectedUserLessonIds.contains($0.id) }
+                
+                // Create a combined export structure
+                let combinedData = CombinedLessonsExport(builtInLessons: builtInLessons, userLessons: userLessons)
+                
+                do {
+                    let encoder = JSONEncoder()
+                    encoder.outputFormatting = .prettyPrinted
+                    encoder.dateEncodingStrategy = .iso8601
+                    let data = try encoder.encode(combinedData)
+                    exportData = data
+                } catch {
+                    print("❌ Error encoding combined lessons: \(error)")
+                    exportData = "{}".data(using: .utf8)
+                }
+                exportFileName = "AllLessons.json"
+            } else {
+                // Export only built-in lessons
+                let lessonsToExport = lessonManager.lessons.filter { selectedLessonIds.contains($0.id) }
+                let json = lessonManager.exportLessonsToJSON(lessonsToExport)
+                exportData = json.data(using: .utf8)
+                exportFileName = selectedLessonIds.count == lessonManager.lessons.count ? "DutchLessons_All.json" : "DutchLessons_Selected.json"
+            }
             exportMimeType = "application/json"
         }
+        
+        print("📤 Exporting file: \(exportFileName) (\(exportData?.count ?? 0) bytes)")
+        
+        // Validate export data before showing sheet
+        guard let data = exportData, !data.isEmpty, !exportFileName.isEmpty else {
+            print("❌ Export validation failed - Data: \(exportData?.count ?? 0) bytes, Filename: '\(exportFileName)'")
+            // Reset export state and show error
+            exportData = nil
+            exportFileName = ""
+            return
+        }
+        
         showingExportSheet = true
     }
     
-    // MARK: - Export File Wrapper
+    // Helper function to generate CSV for selected user lessons
+    private func generateUserLessonsCSV(_ lessons: [UserLesson]) -> String {
+        var csv = "Title,Description,Question Type,Question,All Answers,Hint,Created Date,Last Modified\n"
+        
+        for lesson in lessons {
+            for question in lesson.questions {
+                let allAnswers: String
+                if question.questionType.lowercased() == "sentence building" {
+                    // For sentence building, show word order
+                    allAnswers = question.answers.map { answer in
+                        if let orderIndex = answer.orderIndex {
+                            return "\(answer.text) (\(orderIndex + 1))"
+                        } else {
+                            return answer.text
+                        }
+                    }.joined(separator: "; ")
+                } else {
+                    // For other question types, show correct/wrong markers
+                    allAnswers = question.answers.map { answer in
+                        let marker = answer.isCorrect ? "[CORRECT]" : "[WRONG]"
+                        return "\(answer.text) \(marker)"
+                    }.joined(separator: "; ")
+                }
+                
+                let row = [
+                    escapeCSVField(lesson.title),
+                    escapeCSVField(lesson.description),
+                    escapeCSVField(question.questionType),
+                    escapeCSVField(question.question),
+                    escapeCSVField(allAnswers),
+                    escapeCSVField(question.hint),
+                    formatDate(lesson.createdDate),
+                    formatDate(lesson.lastModified)
+                ].joined(separator: ",")
+                csv += row + "\n"
+            }
+        }
+        
+        return csv
+    }
+    
+    // Helper function to generate JSON for selected user lessons
+    private func generateUserLessonsJSON(_ lessons: [UserLesson]) -> String {
+        do {
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = .prettyPrinted
+            encoder.dateEncodingStrategy = .iso8601
+            let data = try encoder.encode(lessons)
+            return String(data: data, encoding: .utf8) ?? "[]"
+        } catch {
+            print("❌ Error exporting selected user lessons to JSON: \(error)")
+            return "[]"
+        }
+    }
+    
+    // Helper functions for CSV formatting
+    private func escapeCSVField(_ field: String) -> String {
+        let trimmed = field.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.contains(",") || trimmed.contains("\"") || trimmed.contains("\n") {
+            return "\"" + trimmed.replacingOccurrences(of: "\"", with: "\"\"") + "\""
+        }
+        return trimmed
+    }
+    
+    private func formatDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        return formatter.string(from: date)
+    }
+    
+    // MARK: - Temporary File Creation
+    private func createTemporaryFile(data: Data, fileName: String) -> URL {
+        let tempDir = FileManager.default.temporaryDirectory
+        let tempFileURL = tempDir.appendingPathComponent(fileName)
+        
+        do {
+            try data.write(to: tempFileURL)
+            print("📤 Created temporary file: \(tempFileURL.lastPathComponent)")
+            return tempFileURL
+        } catch {
+            print("❌ Error creating temporary file: \(error)")
+            // Return a fallback URL with the data embedded
+            return tempDir.appendingPathComponent("export_error.txt")
+        }
+    }
+    
+    // MARK: - Export File Wrapper (Legacy - keeping for reference)
     class ExportFileWrapper: NSObject, UIActivityItemSource {
         let data: Data
         let fileName: String
         let mimeType: String
+        
         init(data: Data, fileName: String, mimeType: String) {
             self.data = data
             self.fileName = fileName
             self.mimeType = mimeType
+            print("📤 ExportFileWrapper created: \(fileName) (\(data.count) bytes) - MIME: \(mimeType)")
         }
-        func activityViewControllerPlaceholderItem(_ activityViewController: UIActivityViewController) -> Any { data }
-        func activityViewController(_ activityViewController: UIActivityViewController, itemForActivityType activityType: UIActivity.ActivityType?) -> Any? { data }
-        func activityViewController(_ activityViewController: UIActivityViewController, subjectForActivityType activityType: UIActivity.ActivityType?) -> String { fileName }
-        func activityViewController(_ activityViewController: UIActivityViewController, dataTypeIdentifierForActivityType activityType: UIActivity.ActivityType?) -> String { mimeType }
+        
+        func activityViewControllerPlaceholderItem(_ activityViewController: UIActivityViewController) -> Any { 
+            print("📤 Placeholder item requested")
+            return data 
+        }
+        
+        func activityViewController(_ activityViewController: UIActivityViewController, itemForActivityType activityType: UIActivity.ActivityType?) -> Any? { 
+            print("📤 Item requested for activity type: \(activityType?.rawValue ?? "nil")")
+            return data 
+        }
+        
+        func activityViewController(_ activityViewController: UIActivityViewController, subjectForActivityType activityType: UIActivity.ActivityType?) -> String { 
+            print("📤 Subject requested: \(fileName)")
+            return fileName 
+        }
+        
+        func activityViewController(_ activityViewController: UIActivityViewController, dataTypeIdentifierForActivityType activityType: UIActivity.ActivityType?) -> String { 
+            print("📤 Data type identifier requested: \(mimeType)")
+            return mimeType 
+        }
+        
+        // This is the missing method that provides the filename!
+        func activityViewController(_ activityViewController: UIActivityViewController, filenameForActivityType activityType: UIActivity.ActivityType?) -> String? {
+            print("📤 Filename requested: \(fileName)")
+            return fileName
+        }
     }
     
     struct ShareSheet: UIViewControllerRepresentable {
         let activityItems: [Any]
         func makeUIViewController(context: Context) -> UIActivityViewController {
-            UIActivityViewController(activityItems: activityItems, applicationActivities: nil)
+            let controller = UIActivityViewController(activityItems: activityItems, applicationActivities: nil)
+            return controller
         }
         func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
     }
@@ -1344,72 +1749,305 @@ extension LessonsListView {
                 showingImportAlert = true
                 return
             }
+            
+            print("📥 Attempting to import file: \(url.lastPathComponent)")
+            print("📥 File URL: \(url)")
+            
+            // Start accessing security-scoped resource (needed for AirDropped files)
+            let didStartAccessing = url.startAccessingSecurityScopedResource()
+            print("📥 Security scoped access: \(didStartAccessing)")
+            
+            defer {
+                if didStartAccessing {
+                    url.stopAccessingSecurityScopedResource()
+                }
+            }
+            
             do {
+                // Check if file exists and is readable
+                guard FileManager.default.fileExists(atPath: url.path) else {
+                    throw NSError(domain: "Import", code: 404, userInfo: [NSLocalizedDescriptionKey: "File not found at path: \(url.path)"])
+                }
+                
+                // Check if file is readable
+                guard FileManager.default.isReadableFile(atPath: url.path) else {
+                    throw NSError(domain: "Import", code: 403, userInfo: [NSLocalizedDescriptionKey: "File is not readable. Try copying it to Files app first."])
+                }
+                
                 let data = try Data(contentsOf: url)
+                print("📥 Successfully read \(data.count) bytes from file")
+                
                 let decoder = JSONDecoder()
+                decoder.dateDecodingStrategy = .iso8601
+                
                 var importedLessons: [Lesson] = []
+                var importedUserLessons: [UserLesson] = []
                 var importType: String = ""
-                // Try JSON import (LessonRootJSON or [LessonJSON])
+                
+                // Try JSON import
                 if url.pathExtension.lowercased() == "json" {
-                    do {
-                        if let root = try? decoder.decode(LessonRootJSON.self, from: data) {
-                            importedLessons = root.lessons.map { $0.toLesson() }
-                            importType = "JSON (LessonRootJSON)"
-                        } else if let arr = try? decoder.decode([LessonJSON].self, from: data) {
-                            importedLessons = arr.map { $0.toLesson() }
-                            importType = "JSON ([LessonJSON])"
-                        } else {
-                            throw NSError(domain: "Import", code: 1, userInfo: [NSLocalizedDescriptionKey: "Invalid JSON structure for lessons."])
+                    // First try to import as user lessons
+                    if let userLessons = try? decoder.decode([UserLesson].self, from: data) {
+                        let addedCount = try userLessonManager.importUserLessonsFromJSON(String(data: data, encoding: .utf8) ?? "[]")
+                        importResultMessage = "Imported \(addedCount) user lessons."
+                        importType = "User Lessons (JSON)"
+                    }
+                    // Try combined format (both built-in and user lessons)
+                    else if let combined = try? decoder.decode(CombinedLessonsExport.self, from: data) {
+                        // Handle combined import
+                        var addedBuiltIn = 0
+                        var addedUser = 0
+                        
+                        // Import built-in lessons directly
+                        LessonManager.shared.replaceLessons(with: combined.builtInLessons)
+                        addedBuiltIn = combined.builtInLessons.count
+                        
+                        // Import user lessons directly
+                        do {
+                            let encoder = JSONEncoder()
+                            encoder.dateEncodingStrategy = .iso8601
+                            let userLessonsData = try encoder.encode(combined.userLessons)
+                            let userLessonsJSON = String(data: userLessonsData, encoding: .utf8) ?? "[]"
+                            addedUser = try userLessonManager.importUserLessonsFromJSON(userLessonsJSON)
+                        } catch {
+                            print("❌ Error importing user lessons from combined format: \(error)")
                         }
+                        
+                        importResultMessage = "Imported \(addedBuiltIn) built-in lessons and \(addedUser) user lessons."
+                        importType = "Combined (JSON)"
+                    }
+                    // Try standard built-in lesson formats
+                    else if let root = try? decoder.decode(LessonRootJSON.self, from: data) {
+                        importedLessons = root.lessons.map { $0.toLesson() }
+                        importType = "Built-in Lessons (LessonRootJSON)"
+                    } else if let arr = try? decoder.decode([LessonJSON].self, from: data) {
+                        importedLessons = arr.map { $0.toLesson() }
+                        importType = "Built-in Lessons ([LessonJSON])"
+                    } else {
+                        throw NSError(domain: "Import", code: 1, userInfo: [NSLocalizedDescriptionKey: "Invalid JSON structure for lessons."])
                     }
                 } else {
-                    // Try CSV import
+                    // Try CSV import (for built-in lessons only - user lessons have different CSV structure)
                     if let csvString = String(data: data, encoding: .utf8) {
                         let rows = csvString.components(separatedBy: .newlines).filter { !$0.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines).isEmpty }
                         guard let header = rows.first else { throw NSError(domain: "Import", code: 2, userInfo: [NSLocalizedDescriptionKey: "CSV missing header row"]) }
-                        let columns = header.components(separatedBy: ",")
-                        let titleIdx = columns.firstIndex(of: "Title")
-                        let descIdx = columns.firstIndex(of: "Description")
-                        let levelIdx = columns.firstIndex(of: "Level")
-                        let catIdx = columns.firstIndex(of: "Category")
-                        let timeIdx = columns.firstIndex(of: "EstimatedTime")
-                        let diffIdx = columns.firstIndex(of: "Difficulty")
-                        // Only basic fields for CSV import
-                        for row in rows.dropFirst() {
-                            let fields = row.components(separatedBy: ",")
-                            func val(_ idx: Int?) -> String { idx != nil && idx! < fields.count ? fields[idx!].trimmingCharacters(in: CharacterSet.whitespacesAndNewlines) : "" }
-                            let lesson = Lesson(
-                                title: val(titleIdx),
-                                description: val(descIdx),
-                                vocabulary: [],
-                                exercises: []
-                            )
-                            var l = lesson
-                            l.level = val(levelIdx)
-                            l.category = val(catIdx)
-                            l.estimatedTime = Int(val(timeIdx)) ?? 0
-                            l.difficulty = val(diffIdx)
-                            importedLessons.append(l)
+                        
+                        // Check if this is a user lesson CSV by looking for user lesson specific columns
+                        if header.contains("Question Type") && header.contains("Created Date") {
+                            // Handle user lesson CSV import
+                            print("📥 Detected user lesson CSV format")
+                            try importUserLessonCSV(csvString: csvString, rows: rows)
+                            importType = "User Lessons (CSV)"
+                        } else {
+                            // Handle built-in lesson CSV import
+                            let columns = header.components(separatedBy: ",")
+                            let titleIdx = columns.firstIndex(of: "Title")
+                            let descIdx = columns.firstIndex(of: "Description")
+                            let levelIdx = columns.firstIndex(of: "Level")
+                            let catIdx = columns.firstIndex(of: "Category")
+                            let timeIdx = columns.firstIndex(of: "EstimatedTime")
+                            let diffIdx = columns.firstIndex(of: "Difficulty")
+                            
+                            for row in rows.dropFirst() {
+                                let fields = row.components(separatedBy: ",")
+                                func val(_ idx: Int?) -> String { idx != nil && idx! < fields.count ? fields[idx!].trimmingCharacters(in: CharacterSet.whitespacesAndNewlines) : "" }
+                                let lesson = Lesson(
+                                    title: val(titleIdx),
+                                    description: val(descIdx),
+                                    vocabulary: [],
+                                    exercises: []
+                                )
+                                var l = lesson
+                                l.level = val(levelIdx)
+                                l.category = val(catIdx)
+                                l.estimatedTime = Int(val(timeIdx)) ?? 0
+                                l.difficulty = val(diffIdx)
+                                importedLessons.append(l)
+                            }
+                            importType = "Built-in Lessons (CSV)"
                         }
-                        importType = "CSV"
                     } else {
                         throw NSError(domain: "Import", code: 3, userInfo: [NSLocalizedDescriptionKey: "Could not decode file as UTF-8 text."])
                     }
                 }
-                if importedLessons.isEmpty {
-                    importResultMessage = "No lessons found in import file."
-                } else {
+                
+                // Handle built-in lesson import
+                if !importedLessons.isEmpty {
                     LessonManager.shared.replaceLessons(with: importedLessons)
                     importResultMessage = "Imported \(importedLessons.count) lessons (\(importType))."
                 }
+                
+                if importResultMessage == nil {
+                    importResultMessage = "No lessons found in import file."
+                }
+                
                 showingImportAlert = true
             } catch {
+                print("❌ Import error: \(error)")
                 importResultMessage = "Failed to import: \(error.localizedDescription)"
                 showingImportAlert = true
             }
         case .failure(let error):
+            print("❌ File picker error: \(error)")
             importResultMessage = "Import failed: \(error.localizedDescription)"
             showingImportAlert = true
         }
+    }
+    
+    private func importUserLessonCSV(csvString: String, rows: [String]) throws {
+        guard let header = rows.first else {
+            throw NSError(domain: "Import", code: 5, userInfo: [NSLocalizedDescriptionKey: "CSV file is empty"])
+        }
+        
+        let columns = header.components(separatedBy: ",")
+        let titleIdx = columns.firstIndex(of: "Title")
+        let descriptionIdx = columns.firstIndex(of: "Description") 
+        let questionTypeIdx = columns.firstIndex(of: "Question Type")
+        let questionIdx = columns.firstIndex(of: "Question")
+        let allAnswersIdx = columns.firstIndex(of: "All Answers")
+        let hintIdx = columns.firstIndex(of: "Hint")
+        let createdDateIdx = columns.firstIndex(of: "Created Date")
+        let lastModifiedIdx = columns.firstIndex(of: "Last Modified")
+        
+        // Group rows by lesson title
+        var lessonGroups: [String: (description: String, questions: [UserQuestion], createdDate: Date, lastModified: Date)] = [:]
+        
+        for row in rows.dropFirst() {
+            let fields = parseCSVRow(row)
+            func val(_ idx: Int?) -> String { 
+                guard let idx = idx, idx < fields.count else { return "" }
+                return unescapeCSVField(fields[idx])
+            }
+            
+            let title = val(titleIdx)
+            let description = val(descriptionIdx)
+            let questionType = val(questionTypeIdx)
+            let question = val(questionIdx)
+            let allAnswers = val(allAnswersIdx)
+            let hint = val(hintIdx)
+            let createdDateString = val(createdDateIdx)
+            let lastModifiedString = val(lastModifiedIdx)
+            
+            // Parse dates
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateStyle = .medium
+            dateFormatter.timeStyle = .short
+            let createdDate = dateFormatter.date(from: createdDateString) ?? Date()
+            let lastModified = dateFormatter.date(from: lastModifiedString) ?? Date()
+            
+            // Parse answers from the "All Answers" field
+            let answers = parseAnswersFromCSV(allAnswers, questionType: questionType)
+            
+            let userQuestion = UserQuestion(
+                questionType: questionType,
+                question: question,
+                answers: answers,
+                hint: hint
+            )
+            
+            // Group by lesson title
+            if lessonGroups[title] == nil {
+                lessonGroups[title] = (description: description, questions: [], createdDate: createdDate, lastModified: lastModified)
+            }
+            lessonGroups[title]?.questions.append(userQuestion)
+        }
+        
+        // Create UserLesson objects and import them
+        var addedCount = 0
+        for (title, lessonData) in lessonGroups {
+            let userLesson = UserLesson(
+                title: title,
+                description: lessonData.description,
+                questions: lessonData.questions
+            )
+            
+            // Check for duplicates and add if not exists
+            if !userLessonManager.userLessons.contains(where: { $0.title.lowercased() == title.lowercased() }) {
+                userLessonManager.addLesson(userLesson)
+                addedCount += 1
+            }
+        }
+        
+        importResultMessage = "Imported \(addedCount) user lessons from CSV."
+    }
+    
+    private func parseAnswersFromCSV(_ allAnswersString: String, questionType: String) -> [UserAnswer] {
+        let answerStrings = allAnswersString.components(separatedBy: ";").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+        var answers: [UserAnswer] = []
+        
+        if questionType.lowercased() == "sentence building" {
+            // Parse sentence building format: "Ik (1); eet (2); kaas (3)"
+            for answerText in answerStrings {
+                if let match = answerText.range(of: #"\((\d+)\)$"#, options: .regularExpression) {
+                    let orderString = String(answerText[match]).replacingOccurrences(of: "(", with: "").replacingOccurrences(of: ")", with: "")
+                    let orderIndex = (Int(orderString) ?? 1) - 1 // Convert to 0-based
+                    let text = String(answerText[..<match.lowerBound]).trimmingCharacters(in: .whitespacesAndNewlines)
+                    
+                    answers.append(UserAnswer(text: text, isCorrect: false, orderIndex: orderIndex))
+                } else {
+                    answers.append(UserAnswer(text: answerText, isCorrect: false, orderIndex: nil))
+                }
+            }
+        } else {
+            // Parse multiple choice format: "Answer1 [CORRECT]; Answer2 [WRONG]"
+            for answerText in answerStrings {
+                let isCorrect = answerText.contains("[CORRECT]")
+                let text = answerText
+                    .replacingOccurrences(of: "[CORRECT]", with: "")
+                    .replacingOccurrences(of: "[WRONG]", with: "")
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                
+                answers.append(UserAnswer(text: text, isCorrect: isCorrect, orderIndex: nil))
+            }
+        }
+        
+        // Ensure at least one correct answer for non-sentence-building questions
+        if questionType.lowercased() != "sentence building" && !answers.contains(where: { $0.isCorrect }) {
+            if let firstAnswer = answers.first {
+                answers[0] = UserAnswer(text: firstAnswer.text, isCorrect: true, orderIndex: firstAnswer.orderIndex)
+            }
+        }
+        
+        return answers
+    }
+    
+    private func parseCSVRow(_ row: String) -> [String] {
+        var fields: [String] = []
+        var currentField = ""
+        var insideQuotes = false
+        var i = row.startIndex
+        
+        while i < row.endIndex {
+            let char = row[i]
+            
+            if char == "\"" {
+                if insideQuotes && i < row.index(before: row.endIndex) && row[row.index(after: i)] == "\"" {
+                    // Escaped quote
+                    currentField += "\""
+                    i = row.index(after: i)
+                } else {
+                    insideQuotes.toggle()
+                }
+            } else if char == "," && !insideQuotes {
+                fields.append(currentField)
+                currentField = ""
+            } else {
+                currentField += String(char)
+            }
+            
+            i = row.index(after: i)
+        }
+        
+        fields.append(currentField)
+        return fields
+    }
+    
+    private func unescapeCSVField(_ field: String) -> String {
+        var result = field.trimmingCharacters(in: .whitespacesAndNewlines)
+        if result.hasPrefix("\"") && result.hasSuffix("\"") {
+            result = String(result.dropFirst().dropLast())
+            result = result.replacingOccurrences(of: "\"\"", with: "\"")
+        }
+        return result
     }
 } 

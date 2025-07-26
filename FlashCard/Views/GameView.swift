@@ -431,30 +431,32 @@ struct GameView: View {
             ]
         }
         
-        // Shuffle the pairs (not individual cards)
+        // Shuffle the pairs (not individual cards) to randomize order
         let shuffledPairs = allPairs.shuffled()
         
-        // Flatten the pairs into a single array
+        // Take the first 5 pairs for initial display
+        let initialPairsCount = min(5, shuffledPairs.count)
+        let initialPairs = Array(shuffledPairs.prefix(initialPairsCount))
+        let remainingPairs = Array(shuffledPairs.dropFirst(initialPairsCount))
+        
+        // Flatten and shuffle the initial pairs for display
+        displayedCards = initialPairs.flatMap { $0 }.shuffled()
+        
+        // Keep remaining pairs organized as pairs and flatten them
+        remainingCards = remainingPairs.flatMap { $0 }
+        
+        // Create the complete gameCards array for scoring and state tracking
         gameCards = shuffledPairs.flatMap { $0 }
         
-        print("🧠 Created \(gameCards.count) game cards (\(gameCards.count / 2) pairs)")
-
-        // Take the first 5 complete pairs (10 cards) for initial display
-        let initialPairsCount = 5
-        let initialCardsCount = initialPairsCount * 2
-        
-        displayedCards = Array(gameCards.prefix(initialCardsCount))
-        remainingCards = Array(gameCards.dropFirst(initialCardsCount))
-        
-        // Shuffle the displayed cards to mix up words and definitions
-        displayedCards.shuffle()
+        print("🧠 Created \(gameCards.count) total game cards (\(gameCards.count / 2) pairs)")
+        print("🧠 Showing first \(initialPairsCount) pairs (\(displayedCards.count) cards)")
+        print("🧠 Remaining: \(remainingCards.count) cards (\(remainingCards.count / 2) pairs)")
         
         // Verify that we have complete pairs in displayed cards
         let displayedCardIds = Set(displayedCards.map { $0.originalCard.id })
         let hasCompletePairs = displayedCards.count % 2 == 0 && 
                               displayedCards.count == displayedCardIds.count * 2
         
-        print("🧠 Showing first \(displayedCards.count / 2) pairs (\(displayedCards.count) cards), \(remainingCards.count) remaining")
         print("🧠 Has complete pairs: \(hasCompletePairs)")
         print("🧠 Displayed card IDs: \(displayedCardIds)")
 
@@ -472,7 +474,7 @@ struct GameView: View {
         currentSession = statsManager.startSession(deckIds: deckIds, cardCount: cardsToUse.count)
         incorrectCards.removeAll()
         
-        // Set up timer based on difficulty and number of cards
+        // Set up timer based on difficulty and number of cards - use total cards for time calculation
         let timePerCardSet = difficulty.timePerCardSet
         timeRemaining = gameCards.count * timePerCardSet
 
@@ -643,7 +645,7 @@ struct GameView: View {
                     gameCards[currentGameIndex].isMatched = true
                 }
                 
-                // Also update displayedCards to reflect the matched state
+                // Mark both cards as matched in displayedCards
                 displayedCards[selectedDisplayIndex].isMatched = true
                 displayedCards[selectedDisplayIndex].isSelected = false
                 displayedCards[index].isMatched = true
@@ -651,9 +653,60 @@ struct GameView: View {
                 
                 selectedCard = nil
                 
-                // Check if game is complete
-                if displayedCards.allSatisfy({ $0.isMatched }) {
-                    endGame()
+                // NEW FEATURE: Replace matched pair with new cards from remainingCards
+                if remainingCards.count >= 2 {
+                    // Find the next complete pair in remainingCards
+                    var newCards: [Card] = []
+                    var cardsToRemove: [Card] = []
+                    
+                    // Look for a complete pair (word + definition from same original card)
+                    let remainingCardsByOriginal = Dictionary(grouping: remainingCards) { $0.originalCard.id }
+                    
+                    for (_, cardGroup) in remainingCardsByOriginal {
+                        if cardGroup.count == 2 {
+                            // Found a complete pair
+                            newCards = cardGroup
+                            cardsToRemove = cardGroup
+                            break
+                        }
+                    }
+                    
+                    // If we found a complete pair, replace the matched cards
+                    if newCards.count == 2 {
+                        // Remove the selected pair from remainingCards
+                        remainingCards.removeAll { card in
+                            cardsToRemove.contains { $0.id == card.id }
+                        }
+                        
+                        // Replace the matched cards with new ones after fade-out animation
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                            // Replace the matched cards with new cards
+                            displayedCards[selectedDisplayIndex] = newCards[0]
+                            displayedCards[index] = newCards[1]
+                            
+                            print("🧠 Replaced matched pair with new cards: \(newCards[0].content) & \(newCards[1].content)")
+                            print("🧠 Remaining cards: \(remainingCards.count)")
+                            
+                            // Animate the new cards fading in
+                            withAnimation(.easeInOut(duration: 0.6)) {
+                                // The new cards will automatically appear since they're not matched
+                            }
+                        }
+                    } else {
+                        // No complete pairs remaining - check if game is complete
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                            if displayedCards.allSatisfy({ $0.isMatched }) && remainingCards.isEmpty {
+                                endGame()
+                            }
+                        }
+                    }
+                } else {
+                    // No more cards to replace - check if game is complete
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                        if displayedCards.allSatisfy({ $0.isMatched }) && remainingCards.isEmpty {
+                            endGame()
+                        }
+                    }
                 }
             } else {
                 // Not a match

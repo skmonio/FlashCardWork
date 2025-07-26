@@ -569,6 +569,36 @@ struct TrueFalseView: View {
                 remainingCards = cards
             } else {
                 // Normal mode - end game
+                // End session tracking immediately
+                if var session = currentSession {
+                    session.knownCards = correctAnswers
+                    session.unknownCards = incorrectAnswers
+                    session.skippedCards = 0 // No skipped cards in True/False mode
+                    session.endTime = Date()
+                    session.duration = session.endTime!.timeIntervalSince(session.startTime)
+                    statsManager.endSession(
+                        session,
+                        knownCards: correctAnswers,
+                        unknownCards: incorrectAnswers,
+                        skippedCards: 0
+                    )
+                    currentSession = session
+                    
+                    // Check for perfect session (100% accuracy with at least 5 cards)
+                    if cards.count >= 5 && correctAnswers == cards.count {
+                        statsManager.recordPerfectSession(
+                            gameType: .truefalse,
+                            totalCards: cards.count,
+                            knownCards: correctAnswers,
+                            duration: session.endTime!.timeIntervalSince(session.startTime)
+                        )
+                    }
+                    
+                    print("🎮 True/False session complete! \(correctAnswers) correct, \(incorrectAnswers) incorrect")
+                }
+                
+                // Clear saved progress since game is complete
+                clearSavedProgress()
                 HapticManager.shared.gameComplete()
                 StreakManager.shared.recordGameCompletion(); showingResults = true
                 return
