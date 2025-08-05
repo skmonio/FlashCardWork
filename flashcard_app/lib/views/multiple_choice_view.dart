@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 import '../models/flash_card.dart';
-import '../components/unified_header.dart';
+import '../services/sound_manager.dart';
 
 class MultipleChoiceView extends StatefulWidget {
   final List<FlashCard> cards;
@@ -27,6 +27,13 @@ class _MultipleChoiceViewState extends State<MultipleChoiceView> {
   int? _correctAnswerIndex;
   List<String> _options = [];
   bool _isQuestionMode = true; // true = word to definition, false = definition to word
+  
+  // Track answered questions and their answers
+  Map<int, int> _answeredQuestions = {}; // question index -> selected answer index
+  Map<int, bool> _correctAnswersMap = {}; // question index -> is correct
+  Map<int, List<String>> _questionOptions = {}; // question index -> options
+  Map<int, int> _correctAnswerIndices = {}; // question index -> correct answer index
+  Map<int, bool> _questionModes = {}; // question index -> is question mode
 
   @override
   void initState() {
@@ -39,6 +46,19 @@ class _MultipleChoiceViewState extends State<MultipleChoiceView> {
       setState(() {
         _showingResults = true;
       });
+      // Play completion sound when test is finished
+      SoundManager().playCompleteSound();
+      return;
+    }
+
+    // Check if this question has already been answered
+    if (_answeredQuestions.containsKey(_currentIndex)) {
+      // Load existing question data
+      _isQuestionMode = _questionModes[_currentIndex]!;
+      _options = _questionOptions[_currentIndex]!;
+      _correctAnswerIndex = _correctAnswerIndices[_currentIndex]!;
+      _selectedAnswer = _answeredQuestions[_currentIndex]!;
+      _answered = true;
       return;
     }
 
@@ -79,6 +99,11 @@ class _MultipleChoiceViewState extends State<MultipleChoiceView> {
     // Find correct answer index
     _correctAnswerIndex = _options.indexOf(correctAnswer);
     
+    // Store question data for future reference
+    _questionOptions[_currentIndex] = List.from(_options);
+    _correctAnswerIndices[_currentIndex] = _correctAnswerIndex!;
+    _questionModes[_currentIndex] = _isQuestionMode;
+    
     setState(() {
       _answered = false;
       _selectedAnswer = null;
@@ -93,18 +118,17 @@ class _MultipleChoiceViewState extends State<MultipleChoiceView> {
       _answered = true;
       _totalAnswered++;
       
+      // Store the answer
+      _answeredQuestions[_currentIndex] = index;
+      _correctAnswersMap[_currentIndex] = (index == _correctAnswerIndex);
+      
       if (index == _correctAnswerIndex) {
         _correctAnswers++;
-      }
-    });
-    
-    // Show result for 1.5 seconds then move to next question
-    Future.delayed(const Duration(milliseconds: 1500), () {
-      if (mounted) {
-        setState(() {
-          _currentIndex++;
-        });
-        _generateQuestion();
+        // Play correct sound
+        SoundManager().playCorrectSound();
+      } else {
+        // Play wrong sound
+        SoundManager().playWrongSound();
       }
     });
   }
@@ -133,6 +157,99 @@ class _MultipleChoiceViewState extends State<MultipleChoiceView> {
     return Colors.grey.withValues(alpha: 0.3);
   }
 
+  // Generate consistent color based on card content (same as study view)
+  Color _getCardBorderColor(FlashCard card) {
+    final vibrantColors = [
+      const Color(0xFFFF6B35), // Coral/Orange-Red
+      const Color(0xFFFF9900), // Bright Orange
+      const Color(0xFFFFCC00), // Golden Yellow
+      const Color(0xFF33CC99), // Teal/Turquoise
+      const Color(0xFF00B3CC), // Cyan Blue
+      const Color(0xFF9966FF), // Purple
+      const Color(0xFFFF4D94), // Pink
+      const Color(0xFF66E64D), // Lime Green
+    ];
+    
+    if (card.word.isEmpty || card.definition.isEmpty) {
+      return vibrantColors[0];
+    }
+    
+    final hash = (card.word.hashCode + card.definition.hashCode).abs();
+    final index = hash % vibrantColors.length;
+    return vibrantColors[index];
+  }
+
+  void _goToPreviousQuestion() {
+    if (_currentIndex > 0) {
+      setState(() {
+        _currentIndex--;
+      });
+      _generateQuestion();
+    }
+  }
+
+  void _goToNextQuestion() {
+    if (_currentIndex < widget.cards.length - 1) {
+      setState(() {
+        _currentIndex++;
+      });
+      _generateQuestion();
+    }
+  }
+
+  void _editCurrentCard() {
+    final currentCard = widget.cards[_currentIndex];
+    final wordController = TextEditingController(text: currentCard.word);
+    final definitionController = TextEditingController(text: currentCard.definition);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edit Card'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: wordController,
+              decoration: const InputDecoration(
+                labelText: 'Word',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: definitionController,
+              decoration: const InputDecoration(
+                labelText: 'Definition',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              // Update the card
+              currentCard.word = wordController.text.trim();
+              currentCard.definition = definitionController.text.trim();
+              Navigator.of(context).pop();
+              setState(() {
+                // Regenerate question with updated card
+                _generateQuestion();
+              });
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (widget.cards.isEmpty) {
@@ -155,55 +272,151 @@ class _MultipleChoiceViewState extends State<MultipleChoiceView> {
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: Column(
         children: [
-          // Header
-          UnifiedHeader(
-            title: widget.title,
-            onBack: () => _showCloseConfirmation(),
+          // Small header with progress bar
+          SafeArea(
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        onPressed: () => _showCloseConfirmation(),
+                        icon: const Icon(Icons.arrow_back_ios),
+                        iconSize: 20,
+                      ),
+                      const Spacer(),
+                      Text(
+                        widget.title,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const Spacer(),
+                      const SizedBox(width: 48), // Balance the layout
+                    ],
+                  ),
+                ),
+                // Progress bar
+                _buildProgressBar(),
+              ],
+            ),
           ),
-          
-          // Progress bar
-          _buildProgressBar(),
           
           // Question area
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16), // Reduced top padding
               child: Column(
                 children: [
-                  // Question
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surfaceVariant,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
-                      ),
-                    ),
-                    child: Column(
-                      children: [
-                        Text(
-                          _isQuestionMode ? 'What does this word mean?' : 'What is this definition for?',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          question,
-                          style: const TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
+                  // Question text above card
+                  Text(
+                    'Choose the correct definition',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                   
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 16), // Reduced spacing
+                  
+                  // Card with white background and colored outline
+                  Container(
+                    width: double.infinity,
+                    height: 200, // Reduced height
+                    padding: const EdgeInsets.all(24), // Reduced padding
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20), // Slightly smaller radius
+                      border: Border.all(
+                        color: _getCardBorderColor(currentCard),
+                        width: 4, // Slightly thinner border
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: _getCardBorderColor(currentCard).withValues(alpha: 0.3),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.15),
+                          blurRadius: 15,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: Text(
+                        question,
+                        style: const TextStyle(
+                          fontSize: 32, // Smaller font size
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 16), // Reduced spacing
+                  
+                  // Navigation and Edit buttons row
+                  Row(
+                    children: [
+                      // Back button (only show if question is answered)
+                      if (_answered)
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: _currentIndex > 0 ? _goToPreviousQuestion : null,
+                            icon: const Icon(Icons.arrow_back, size: 16),
+                            label: const Text('Back'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: _currentIndex > 0 ? Colors.blue : Colors.grey,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                            ),
+                          ),
+                        ),
+                      
+                      const SizedBox(width: 12),
+                      
+                      // Edit button in center
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () => _editCurrentCard(),
+                          icon: const Icon(Icons.edit, size: 16),
+                          label: const Text('Edit'),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                        ),
+                      ),
+                      
+                      const SizedBox(width: 12),
+                      
+                      // Next button (only show if question is answered)
+                      if (_answered)
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: _currentIndex < widget.cards.length - 1 ? _goToNextQuestion : null,
+                            icon: const Icon(Icons.arrow_forward, size: 16),
+                            label: const Text('Next'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: _currentIndex < widget.cards.length - 1 ? Colors.green : Colors.grey,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  
+                  const SizedBox(height: 20), // Reduced spacing
                   
                   // Options
                   Expanded(
@@ -213,12 +426,14 @@ class _MultipleChoiceViewState extends State<MultipleChoiceView> {
                         final option = entry.value;
                         
                         return Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.only(bottom: 8), // Reduced spacing between options
                           child: _buildOptionButton(index, option),
                         );
                       }).toList(),
                     ),
                   ),
+                  
+
                 ],
               ),
             ),
@@ -261,12 +476,12 @@ class _MultipleChoiceViewState extends State<MultipleChoiceView> {
         color: Colors.transparent,
         child: InkWell(
           onTap: () => _selectAnswer(index),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(10),
           child: Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(12), // Reduced padding
             decoration: BoxDecoration(
               color: _getOptionColor(index),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(10),
               border: Border.all(
                 color: _getOptionBorderColor(index),
                 width: 2,
@@ -275,8 +490,8 @@ class _MultipleChoiceViewState extends State<MultipleChoiceView> {
             child: Row(
               children: [
                 Container(
-                  width: 32,
-                  height: 32,
+                  width: 28, // Smaller circle
+                  height: 28, // Smaller circle
                   decoration: BoxDecoration(
                     color: _getOptionBorderColor(index).withValues(alpha: 0.1),
                     shape: BoxShape.circle,
@@ -285,27 +500,27 @@ class _MultipleChoiceViewState extends State<MultipleChoiceView> {
                     child: Text(
                       String.fromCharCode(65 + index), // A, B, C, D
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 14, // Smaller font
                         fontWeight: FontWeight.bold,
                         color: _getOptionBorderColor(index),
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 12), // Reduced spacing
                 Expanded(
                   child: Text(
                     option,
                     style: const TextStyle(
-                      fontSize: 16,
+                      fontSize: 14, // Smaller font
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                 ),
                 if (_answered && index == _correctAnswerIndex)
-                  const Icon(Icons.check_circle, color: Colors.green, size: 24),
+                  const Icon(Icons.check_circle, color: Colors.green, size: 20), // Smaller icon
                 if (_answered && index == _selectedAnswer && index != _correctAnswerIndex)
-                  const Icon(Icons.cancel, color: Colors.red, size: 24),
+                  const Icon(Icons.cancel, color: Colors.red, size: 20), // Smaller icon
               ],
             ),
           ),
@@ -321,10 +536,30 @@ class _MultipleChoiceViewState extends State<MultipleChoiceView> {
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: Column(
         children: [
-          // Header
-          UnifiedHeader(
-            title: 'Test Complete',
-            onBack: () => Navigator.of(context).pop(),
+          // Small header - matching study view
+          SafeArea(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                children: [
+                  IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.arrow_back_ios),
+                    iconSize: 20,
+                  ),
+                  const Spacer(),
+                  const Text(
+                    'Test Complete',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const Spacer(),
+                  const SizedBox(width: 48), // Balance the layout
+                ],
+              ),
+            ),
           ),
           
           // Results content
@@ -379,6 +614,14 @@ class _MultipleChoiceViewState extends State<MultipleChoiceView> {
                               _correctAnswers = 0;
                               _totalAnswered = 0;
                               _showingResults = false;
+                              _answered = false;
+                              _selectedAnswer = null;
+                              // Reset all navigation state
+                              _answeredQuestions.clear();
+                              _correctAnswersMap.clear();
+                              _questionOptions.clear();
+                              _correctAnswerIndices.clear();
+                              _questionModes.clear();
                             });
                             _generateQuestion();
                           },

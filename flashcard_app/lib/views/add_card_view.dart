@@ -326,7 +326,7 @@ class _AddCardViewState extends State<AddCardView> {
   Widget _buildDeckSelection() {
     return Consumer<FlashcardProvider>(
       builder: (context, provider, child) {
-        final decks = provider.decks;
+        final decks = provider.getAllDecksHierarchical();
         
         if (decks.isEmpty) {
           return Container(
@@ -382,7 +382,23 @@ class _AddCardViewState extends State<AddCardView> {
     final isSelected = _selectedDeckIds.contains(deck.id);
     
     return CheckboxListTile(
-      title: Text(deck.name),
+      title: Row(
+        children: [
+          // Indentation for sub-decks
+          if (deck.isSubDeck) ...[
+            const SizedBox(width: 16),
+            Icon(
+              Icons.subdirectory_arrow_right,
+              color: Colors.grey[600],
+              size: 16,
+            ),
+            const SizedBox(width: 8),
+          ],
+          Expanded(
+            child: Text(deck.name),
+          ),
+        ],
+      ),
       subtitle: Text('${deck.cards.length} cards'),
       value: isSelected,
       onChanged: (value) {

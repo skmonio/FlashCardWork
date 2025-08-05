@@ -19,8 +19,10 @@ class _SettingsViewState extends State<SettingsView> {
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: Column(
         children: [
-          // Header
-          _buildHeader(context),
+          // Header - wrapped in SafeArea to avoid system UI
+          SafeArea(
+            child: _buildHeader(context),
+          ),
           
           // Main content
           Expanded(

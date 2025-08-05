@@ -62,7 +62,7 @@ class FlashcardApp extends StatelessWidget {
               minimumDisplayTime: const Duration(milliseconds: 200),
               isReadyCheck: () async {
                 // Add a timeout to prevent infinite loading
-                await Future.delayed(const Duration(seconds: 1));
+                await Future.delayed(const Duration(milliseconds: 500));
                 return true;
               },
               child: const MainNavigationView(),

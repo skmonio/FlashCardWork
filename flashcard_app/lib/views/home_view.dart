@@ -28,8 +28,10 @@ class _HomeViewState extends State<HomeView> {
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: Column(
         children: [
-          // Header with streak and title
-          _buildHeader(),
+          // Header with streak and title - wrapped in SafeArea to avoid system UI
+          SafeArea(
+            child: _buildHeader(),
+          ),
           
           // Main content
           Expanded(

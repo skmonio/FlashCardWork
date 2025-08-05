@@ -99,6 +99,20 @@ class FlashcardProvider extends ChangeNotifier {
     return _service.getSubDecks(parentDeckId);
   }
   
+  List<Deck> getAllDecksHierarchical() {
+    // Returns all decks organized hierarchically (parents first, then their children)
+    List<Deck> result = [];
+    final topLevel = getRootDecks()..sort((a, b) => a.name.compareTo(b.name));
+    
+    for (final deck in topLevel) {
+      result.add(deck);
+      final subDecks = getSubDecks(deck.id)..sort((a, b) => a.name.compareTo(b.name));
+      result.addAll(subDecks);
+    }
+    
+    return result;
+  }
+  
   // MARK: - Card Management
   
   Future<FlashCard?> createCard({

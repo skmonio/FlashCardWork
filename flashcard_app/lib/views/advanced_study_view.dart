@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'dart:math';
-import '../providers/flashcard_provider.dart';
 import '../models/flash_card.dart';
-import '../components/unified_header.dart';
 
 enum SwipeDirection {
   none,
@@ -44,22 +41,35 @@ class _AdvancedStudyViewState extends State<AdvancedStudyView>
   
   // Animation controllers
   late AnimationController _flipController;
+  late AnimationController _dealController;
+  late AnimationController _exitController;
   late Animation<double> _flipAnimation;
+  late Animation<Offset> _dealAnimation;
+  late Animation<Offset> _exitAnimation;
   
   // Session tracking
   DateTime _sessionStartTime = DateTime.now();
   int _sessionXP = 0;
   int _combo = 0;
   int _maxCombo = 0;
+  
+  // Card history for back functionality
+  List<int> _cardHistory = [];
+  Map<int, bool> _knownHistory = {};
+  Map<int, bool> _unknownHistory = {};
+  Map<int, bool> _skippedHistory = {};
+  
+  // Edit functionality
+  FlashCard? _selectedCardForEdit;
 
   @override
   void initState() {
     super.initState();
     _isShowingFront = !widget.startFlipped;
     
-    // Initialize flip animation
+    // Initialize flip animation - slower duration
     _flipController = AnimationController(
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 600),
       vsync: this,
     );
     _flipAnimation = Tween<double>(
@@ -69,11 +79,44 @@ class _AdvancedStudyViewState extends State<AdvancedStudyView>
       parent: _flipController,
       curve: Curves.easeInOut,
     ));
+    
+    // Initialize deal animation
+    _dealController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+    _dealAnimation = Tween<Offset>(
+      begin: const Offset(1.0, 0.0), // Start from right side
+      end: Offset.zero, // End at center
+    ).animate(CurvedAnimation(
+      parent: _dealController,
+      curve: Curves.easeOutCubic,
+    ));
+    
+    // Initialize exit animation
+    _exitController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _exitAnimation = Tween<Offset>(
+      begin: Offset.zero,
+      end: Offset.zero, // Will be set dynamically based on swipe direction
+    ).animate(CurvedAnimation(
+      parent: _exitController,
+      curve: Curves.easeOutCubic,
+    ));
+    
+    // Start initial deal animation
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _dealController.forward();
+    });
   }
 
   @override
   void dispose() {
     _flipController.dispose();
+    _dealController.dispose();
+    _exitController.dispose();
     super.dispose();
   }
 
@@ -81,7 +124,7 @@ class _AdvancedStudyViewState extends State<AdvancedStudyView>
   Widget build(BuildContext context) {
     if (widget.cards.isEmpty) {
       return Scaffold(
-        appBar: AppBar(title: Text(widget.title)),
+        appBar: AppBar(title: const Text('Study Your Cards')),
         body: const Center(
           child: Text('No cards available for study'),
         ),
@@ -96,18 +139,58 @@ class _AdvancedStudyViewState extends State<AdvancedStudyView>
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: Column(
         children: [
-          // Header
-          UnifiedHeader(
-            title: widget.title,
-            onBack: () => _showCloseConfirmation(),
+          // Small header with progress bar
+          SafeArea(
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        onPressed: () => _showCloseConfirmation(),
+                        icon: const Icon(Icons.arrow_back_ios),
+                        iconSize: 20,
+                      ),
+                      const Spacer(),
+                      const Text(
+                        'Study Your Cards',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const Spacer(),
+                      const SizedBox(width: 48), // Balance the layout
+                    ],
+                  ),
+                ),
+                // Progress bar
+                _buildProgressBar(),
+              ],
+            ),
           ),
           
-          // Progress bar
-          _buildProgressBar(),
-          
-          // Main card area
+          // Main card area with background color based on swipe direction
           Expanded(
-            child: _buildCardArea(),
+            child: Container(
+              color: _getSwipeBackgroundColor(),
+              child: Column(
+                children: [
+                  // Card area with directional labels behind
+                  Expanded(
+                    child: _buildCardAreaWithLabels(),
+                  ),
+                  
+                  const SizedBox(height: 20),
+                  
+                  // Navigation buttons under the card
+                  _buildNavigationButtons(),
+                  
+                  const SizedBox(height: 20),
+                ],
+              ),
+            ),
           ),
         ],
       ),
@@ -146,18 +229,173 @@ class _AdvancedStudyViewState extends State<AdvancedStudyView>
     return GestureDetector(
       onPanUpdate: _handlePanUpdate,
       onPanEnd: _handlePanEnd,
-      onTap: _handleCardTap,
+      onDoubleTap: _handleCardDoubleTap,
       child: Container(
         padding: const EdgeInsets.all(16),
         child: Center(
-          child: Transform.translate(
-            offset: _dragOffset,
-            child: Transform.rotate(
-              angle: _swipeIntensity * 0.1,
-              child: _buildCard(currentCard),
+          child: SlideTransition(
+            position: _dealAnimation,
+            child: SlideTransition(
+              position: _exitAnimation,
+              child: Transform.translate(
+                offset: _dragOffset,
+                child: Transform.rotate(
+                  angle: _swipeIntensity * 0.1,
+                  child: _buildCard(currentCard),
+                ),
+              ),
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildCardAreaWithLabels() {
+    return Stack(
+      children: [
+        // Directional label behind the card (only show relevant one)
+        if (_swipeDirection != SwipeDirection.none && _swipeIntensity > 0.3)
+          _buildDirectionalLabel(),
+        
+        // Card area
+        _buildCardArea(),
+      ],
+    );
+  }
+
+  Widget _buildDirectionalLabel() {
+    return Positioned.fill(
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        child: Center(
+          child: _buildDirectionalLabelForDirection(_swipeDirection),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDirectionalLabelForDirection(SwipeDirection direction) {
+    switch (direction) {
+      case SwipeDirection.left:
+        return Transform.rotate(
+          angle: -0.3,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.red.withValues(alpha: 0.8),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Text(
+              "Don't\nKnow",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        );
+        
+      case SwipeDirection.right:
+        return Transform.rotate(
+          angle: 0.3,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.green.withValues(alpha: 0.8),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Text(
+              "Known",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        );
+        
+      case SwipeDirection.up:
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.yellow.withValues(alpha: 0.8),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: const Text(
+            "Review",
+            style: TextStyle(
+              color: Colors.black,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        );
+        
+      case SwipeDirection.down:
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.blue.withValues(alpha: 0.8),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: const Text(
+            "Skip",
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        );
+        
+      default:
+        return const SizedBox.shrink();
+    }
+  }
+
+
+
+  Widget _buildNavigationButtons() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          // Back button
+          Expanded(
+            child: ElevatedButton.icon(
+              onPressed: _currentIndex > 0 ? _goToPreviousCard : null,
+              icon: const Icon(Icons.arrow_back, size: 16),
+              label: const Text('Back'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _currentIndex > 0 ? Colors.blue : Colors.grey,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 8),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          // Edit button in center
+          Expanded(
+            child: OutlinedButton.icon(
+              onPressed: () => _editCurrentCard(),
+              icon: const Icon(Icons.edit, size: 16),
+              label: const Text('Edit'),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -185,43 +423,41 @@ class _AdvancedStudyViewState extends State<AdvancedStudyView>
   }
 
   Widget _buildCardFront(FlashCard card) {
+    final borderColor = _getCardBorderColor(card);
+    
     return Container(
       width: double.infinity,
-      height: 400,
+      height: 450,
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
+            color: borderColor.withValues(alpha: 0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
           ),
         ],
         border: Border.all(
-          color: _getSwipeColor(),
-          width: 3,
+          color: borderColor,
+          width: 5,
         ),
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(17),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: _handleCardTap,
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Center(
-                child: Text(
-                  card.word,
-                  style: const TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Center(
+          child: Text(
+            card.word,
+            style: const TextStyle(
+              fontSize: 42,
+              fontWeight: FontWeight.bold,
             ),
+            textAlign: TextAlign.center,
           ),
         ),
       ),
@@ -229,43 +465,41 @@ class _AdvancedStudyViewState extends State<AdvancedStudyView>
   }
 
   Widget _buildCardBack(FlashCard card) {
+    final borderColor = _getCardBorderColor(card);
+    
     return Container(
       width: double.infinity,
-      height: 400,
+      height: 450,
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
+            color: borderColor.withValues(alpha: 0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
           ),
         ],
         border: Border.all(
-          color: _getSwipeColor(),
-          width: 3,
+          color: borderColor,
+          width: 5,
         ),
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(17),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: _handleCardTap,
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Center(
-                child: Text(
-                  card.definition,
-                  style: const TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Center(
+          child: Text(
+            card.definition,
+            style: const TextStyle(
+              fontSize: 36,
+              fontWeight: FontWeight.w600,
             ),
+            textAlign: TextAlign.center,
           ),
         ),
       ),
@@ -277,13 +511,24 @@ class _AdvancedStudyViewState extends State<AdvancedStudyView>
     
     setState(() {
       _dragOffset += details.delta;
-      _swipeIntensity = _dragOffset.distance / 100;
+      _swipeIntensity = (_dragOffset.distance / 150).clamp(0.0, 1.0);
       
-      // Determine swipe direction
-      if (_dragOffset.dx.abs() > _dragOffset.dy.abs()) {
+      // Determine swipe direction - strict cardinal directions only
+      final horizontalDistance = _dragOffset.dx.abs();
+      final verticalDistance = _dragOffset.dy.abs();
+      
+      // Only allow pure horizontal or vertical swipes (no diagonal)
+      if (horizontalDistance > verticalDistance * 2.0) {
+        // Horizontal swipe - left or right
         _swipeDirection = _dragOffset.dx > 0 ? SwipeDirection.right : SwipeDirection.left;
-      } else {
+      } else if (verticalDistance > horizontalDistance * 2.0) {
+        // Vertical swipe - up or down
         _swipeDirection = _dragOffset.dy > 0 ? SwipeDirection.down : SwipeDirection.up;
+      } else {
+        // Diagonal swipe - reset to none and don't allow movement
+        _swipeDirection = SwipeDirection.none;
+        _swipeIntensity = 0;
+        _dragOffset = Offset.zero;
       }
     });
   }
@@ -294,9 +539,11 @@ class _AdvancedStudyViewState extends State<AdvancedStudyView>
     final velocity = details.velocity.pixelsPerSecond;
     final distance = _dragOffset.distance;
     
-    if (distance > 100 || velocity.distance > 500) {
+    // Only process swipe if we have a valid direction and sufficient distance/velocity
+    if (_swipeDirection != SwipeDirection.none && (distance > 100 || velocity.distance > 500)) {
       _handleSwipe(_swipeDirection);
     } else {
+      // Reset card position if swipe wasn't valid
       setState(() {
         _dragOffset = Offset.zero;
         _swipeDirection = SwipeDirection.none;
@@ -305,7 +552,7 @@ class _AdvancedStudyViewState extends State<AdvancedStudyView>
     }
   }
 
-  void _handleCardTap() {
+  void _handleCardDoubleTap() {
     if (_nextCardActive) return;
     
     if (_flipController.status == AnimationStatus.completed) {
@@ -315,18 +562,179 @@ class _AdvancedStudyViewState extends State<AdvancedStudyView>
     }
   }
 
+  void _goToPreviousCard() {
+    if (_currentIndex > 0) {
+      setState(() {
+        _currentIndex--;
+        _dragOffset = Offset.zero;
+        _swipeDirection = SwipeDirection.none;
+        _swipeIntensity = 0;
+        _isShowingFront = !widget.startFlipped;
+        _flipController.reset();
+        // Reset exit animation for previous card
+        _exitController.reset();
+        // Start deal animation for previous card
+        _dealController.reset();
+        _dealController.forward();
+      });
+    }
+  }
+
+  void _editCurrentCard() {
+    _selectedCardForEdit = widget.cards[_currentIndex];
+    _showEditDialog();
+  }
+
+  void _showEditDialog() {
+    final card = _selectedCardForEdit;
+    if (card == null) return;
+
+    final wordController = TextEditingController(text: card.word);
+    final definitionController = TextEditingController(text: card.definition);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edit Card'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: wordController,
+              decoration: const InputDecoration(
+                labelText: 'Word',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: definitionController,
+              decoration: const InputDecoration(
+                labelText: 'Definition',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              // Update the card
+              card.word = wordController.text.trim();
+              card.definition = definitionController.text.trim();
+              Navigator.of(context).pop();
+              setState(() {
+                // Force refresh
+              });
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Generate consistent color based on card content
+  Color _getCardBorderColor(FlashCard card) {
+    final vibrantColors = [
+      const Color(0xFFFF6B35), // Coral/Orange-Red
+      const Color(0xFFFF9900), // Bright Orange
+      const Color(0xFFFFCC00), // Golden Yellow
+      const Color(0xFF33CC99), // Teal/Turquoise
+      const Color(0xFF00B3CC), // Cyan Blue
+      const Color(0xFF9966FF), // Purple
+      const Color(0xFFFF4D94), // Pink
+      const Color(0xFF66E64D), // Lime Green
+    ];
+    
+    if (card.word.isEmpty || card.definition.isEmpty) {
+      return vibrantColors[0];
+    }
+    
+    final hash = (card.word.hashCode + card.definition.hashCode).abs();
+    final index = hash % vibrantColors.length;
+    return vibrantColors[index];
+  }
+
+  Color _getSwipeColor() {
+    switch (_swipeDirection) {
+      case SwipeDirection.left: // Don't Know
+        return Colors.red;
+      case SwipeDirection.right: // Known
+        return Colors.green;
+      case SwipeDirection.up: // Review
+        return Colors.yellow;
+      case SwipeDirection.down: // Skip
+        return Colors.blue;
+      default:
+        return Colors.transparent;
+    }
+  }
+
+
+
+  Color _getSwipeBackgroundColor() {
+    if (_swipeDirection == SwipeDirection.none || _swipeIntensity < 0.3) {
+      return Colors.transparent;
+    }
+    
+    final baseColor = _getSwipeColor();
+    final intensity = (_swipeIntensity * 0.3).clamp(0.0, 0.3);
+    return baseColor.withValues(alpha: intensity);
+  }
+
+
+
+  void _setupExitAnimation() {
+    Offset exitOffset;
+    switch (_swipeDirection) {
+      case SwipeDirection.left:
+        exitOffset = const Offset(-2.0, 0.0); // Exit left
+        break;
+      case SwipeDirection.right:
+        exitOffset = const Offset(2.0, 0.0); // Exit right
+        break;
+      case SwipeDirection.up:
+        exitOffset = const Offset(0.0, -2.0); // Exit up
+        break;
+      case SwipeDirection.down:
+        exitOffset = const Offset(0.0, 2.0); // Exit down
+        break;
+      default:
+        exitOffset = const Offset(2.0, 0.0); // Default to right
+    }
+    
+    _exitAnimation = Tween<Offset>(
+      begin: Offset.zero,
+      end: exitOffset,
+    ).animate(CurvedAnimation(
+      parent: _exitController,
+      curve: Curves.easeOutCubic,
+    ));
+  }
+
   void _handleSwipe(SwipeDirection direction) {
     if (_nextCardActive) return;
     
     final currentCard = widget.cards[_currentIndex];
     
+    // Save to history
+    _cardHistory.add(_currentIndex);
+    
     switch (direction) {
       case SwipeDirection.left: // Don't Know
         _unknownCards.add(currentCard.id);
+        _unknownHistory[_currentIndex] = true;
         _combo = 0;
         break;
       case SwipeDirection.right: // Known
         _knownCards.add(currentCard.id);
+        _knownHistory[_currentIndex] = true;
         _combo++;
         if (_combo > _maxCombo) _maxCombo = _combo;
         break;
@@ -335,6 +743,7 @@ class _AdvancedStudyViewState extends State<AdvancedStudyView>
         break;
       case SwipeDirection.down: // Skip
         _skippedCards.add(currentCard.id);
+        _skippedHistory[_currentIndex] = true;
         _combo = 0;
         break;
       default:
@@ -347,58 +756,42 @@ class _AdvancedStudyViewState extends State<AdvancedStudyView>
   void _nextCard() {
     setState(() {
       _nextCardActive = true;
-      _dragOffset = Offset.zero;
-      _swipeDirection = SwipeDirection.none;
-      _swipeIntensity = 0;
+      // Keep the current swipe direction and intensity for the exit animation
     });
     
+    // Set up exit animation based on swipe direction
+    _setupExitAnimation();
+    
+    // Start exit animation
+    _exitController.forward();
+    
+    // Animate card off-screen in the swipe direction
     Future.delayed(const Duration(milliseconds: 300), () {
       if (mounted) {
         setState(() {
           _currentIndex++;
           _nextCardActive = false;
+          _dragOffset = Offset.zero;
+          _swipeDirection = SwipeDirection.none;
+          _swipeIntensity = 0;
           
           if (_currentIndex >= widget.cards.length) {
             _showingResults = true;
           } else {
             _isShowingFront = !widget.startFlipped;
             _flipController.reset();
+            // Reset exit animation for next card
+            _exitController.reset();
+            // Start deal animation for next card
+            _dealController.reset();
+            _dealController.forward();
           }
         });
       }
     });
   }
 
-  Color _getSwipeColor([SwipeDirection? direction]) {
-    final dir = direction ?? _swipeDirection;
-    switch (dir) {
-      case SwipeDirection.left:
-        return Colors.red;
-      case SwipeDirection.right:
-        return Colors.green;
-      case SwipeDirection.up:
-        return Colors.blue;
-      case SwipeDirection.down:
-        return Colors.orange;
-      default:
-        return Colors.grey;
-    }
-  }
 
-  IconData _getSwipeIcon(SwipeDirection direction) {
-    switch (direction) {
-      case SwipeDirection.left:
-        return Icons.close;
-      case SwipeDirection.right:
-        return Icons.check;
-      case SwipeDirection.up:
-        return Icons.refresh;
-      case SwipeDirection.down:
-        return Icons.skip_next;
-      default:
-        return Icons.help;
-    }
-  }
 
   void _showCloseConfirmation() {
     showDialog(
@@ -433,9 +826,29 @@ class _AdvancedStudyViewState extends State<AdvancedStudyView>
       body: Column(
         children: [
           // Header
-          UnifiedHeader(
-            title: 'Study Complete',
-            onBack: () => Navigator.of(context).pop(),
+          SafeArea(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                children: [
+                  IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.arrow_back_ios),
+                    iconSize: 20,
+                  ),
+                  const Spacer(),
+                  const Text(
+                    'Study Complete',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const Spacer(),
+                  const SizedBox(width: 48), // Balance the layout
+                ],
+              ),
+            ),
           ),
           
           // Results content

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 import '../models/flash_card.dart';
-import '../components/unified_header.dart';
+import '../services/sound_manager.dart';
 
 class WritingView extends StatefulWidget {
   final List<FlashCard> cards;
@@ -23,12 +23,18 @@ class _WritingViewState extends State<WritingView> {
   int _totalAnswered = 0;
   bool _showingResults = false;
   bool _answered = false;
-  String _userAnswer = '';
   String _correctAnswer = '';
-  String _hint = '';
+  String _displayWord = '';
   bool _isQuestionMode = true; // true = definition to word, false = word to definition
-  Set<int> _incorrectPositions = {};
-  final TextEditingController _textController = TextEditingController();
+  int _lives = 5;
+  Set<String> _guessedLetters = {};
+  Set<String> _wrongLetters = {};
+  
+  // Track answered questions and their answers
+  Map<int, String> _answeredQuestions = {}; // question index -> user answer
+  Map<int, bool> _correctAnswersMap = {}; // question index -> is correct
+  Map<int, String> _correctAnswersText = {}; // question index -> correct answer
+  Map<int, bool> _questionModes = {}; // question index -> is question mode
 
   @override
   void initState() {
@@ -38,7 +44,6 @@ class _WritingViewState extends State<WritingView> {
 
   @override
   void dispose() {
-    _textController.dispose();
     super.dispose();
   }
 
@@ -47,6 +52,18 @@ class _WritingViewState extends State<WritingView> {
       setState(() {
         _showingResults = true;
       });
+      // Play completion sound when test is finished
+      SoundManager().playCompleteSound();
+      return;
+    }
+
+    // Check if this question has already been answered
+    if (_answeredQuestions.containsKey(_currentIndex)) {
+      // Load existing question data
+      _isQuestionMode = _questionModes[_currentIndex]!;
+      _correctAnswer = _correctAnswersText[_currentIndex]!;
+      _displayWord = _answeredQuestions[_currentIndex]!;
+      _answered = true;
       return;
     }
 
@@ -59,127 +76,173 @@ class _WritingViewState extends State<WritingView> {
     // Get correct answer
     _correctAnswer = _isQuestionMode ? currentCard.word : currentCard.definition;
     
-    // Create hint with underscores
-    _hint = '_' * _correctAnswer.length;
+    // Create display word with underscores
+    _displayWord = _correctAnswer.replaceAll(RegExp(r'[a-zA-Z]'), '_');
+    
+    // Store question data for future reference
+    _correctAnswersText[_currentIndex] = _correctAnswer;
+    _questionModes[_currentIndex] = _isQuestionMode;
     
     setState(() {
       _answered = false;
-      _userAnswer = '';
-      _incorrectPositions.clear();
-      _textController.clear();
+      _lives = 5;
+      _guessedLetters.clear();
+      _wrongLetters.clear();
     });
   }
 
-  void _checkAnswer() {
-    if (_userAnswer.isEmpty) return;
+  Color _getCardBorderColor(FlashCard card) {
+    // Generate consistent vibrant colors based on card content
+    final vibrantColors = [
+      const Color(0xFFE91E63), // Pink
+      const Color(0xFF9C27B0), // Purple
+      const Color(0xFF673AB7), // Deep Purple
+      const Color(0xFF3F51B5), // Indigo
+      const Color(0xFF2196F3), // Blue
+      const Color(0xFF03A9F4), // Light Blue
+      const Color(0xFF00BCD4), // Cyan
+      const Color(0xFF009688), // Teal
+      const Color(0xFF4CAF50), // Green
+      const Color(0xFF8BC34A), // Light Green
+      const Color(0xFFCDDC39), // Lime
+      const Color(0xFFFFEB3B), // Yellow
+      const Color(0xFFFFC107), // Amber
+      const Color(0xFFFF9800), // Orange
+      const Color(0xFFFF5722), // Deep Orange
+      const Color(0xFF795548), // Brown
+    ];
+    
+    // Use card content to generate consistent index
+    final hash = card.word.hashCode + card.definition.hashCode;
+    final index = hash.abs() % vibrantColors.length;
+    return vibrantColors[index];
+  }
+
+  void _guessLetter(String letter) {
+    if (_answered || _guessedLetters.contains(letter)) return;
+    
+    final upperLetter = letter.toUpperCase();
+    final lowerLetter = letter.toLowerCase();
     
     setState(() {
-      _answered = true;
-      _totalAnswered++;
+      _guessedLetters.add(upperLetter);
       
-      // Check if answer is correct
-      final isCorrect = _userAnswer.toLowerCase().trim() == _correctAnswer.toLowerCase().trim();
-      
-      if (isCorrect) {
-        _correctAnswers++;
-      } else {
-        // Find incorrect positions
-        _incorrectPositions.clear();
-        final userLower = _userAnswer.toLowerCase();
-        final correctLower = _correctAnswer.toLowerCase();
-        
-        for (int i = 0; i < userLower.length && i < correctLower.length; i++) {
-          if (userLower[i] != correctLower[i]) {
-            _incorrectPositions.add(i);
+      if (_correctAnswer.toLowerCase().contains(lowerLetter)) {
+        // Correct guess - reveal letters
+        String newDisplay = '';
+        for (int i = 0; i < _correctAnswer.length; i++) {
+          if (_correctAnswer[i].toLowerCase() == lowerLetter) {
+            newDisplay += _correctAnswer[i];
+          } else if (_guessedLetters.contains(_correctAnswer[i].toUpperCase())) {
+            newDisplay += _correctAnswer[i];
+          } else if (_correctAnswer[i].toLowerCase().contains(RegExp(r'[a-z]'))) {
+            newDisplay += '_';
+          } else {
+            newDisplay += _correctAnswer[i]; // Keep spaces and punctuation
           }
         }
+        _displayWord = newDisplay;
         
-        // Add positions for extra or missing characters
-        for (int i = correctLower.length; i < userLower.length; i++) {
-          _incorrectPositions.add(i);
+        // Check if word is complete
+        if (!_displayWord.contains('_')) {
+          _answered = true;
+          _correctAnswers++;
+          _totalAnswered++;
+          _correctAnswersMap[_currentIndex] = true;
+          _answeredQuestions[_currentIndex] = _displayWord;
+          SoundManager().playCorrectSound();
+        }
+      } else {
+        // Wrong guess
+        _wrongLetters.add(upperLetter);
+        _lives--;
+        SoundManager().playWrongSound();
+        
+        // Check if game over
+        if (_lives <= 0) {
+          _answered = true;
+          _totalAnswered++;
+          _displayWord = _correctAnswer; // Show the correct answer
+          _correctAnswersMap[_currentIndex] = false;
+          _answeredQuestions[_currentIndex] = _displayWord;
         }
       }
     });
-    
-    // Show result for 2 seconds then move to next question
-    Future.delayed(const Duration(milliseconds: 2000), () {
-      if (mounted) {
-        setState(() {
-          _currentIndex++;
-        });
-        _generateQuestion();
-      }
-    });
   }
 
-  void _onTextChanged(String value) {
-    setState(() {
-      _userAnswer = value;
-    });
+  void _goToPreviousQuestion() {
+    if (_currentIndex > 0) {
+      setState(() {
+        _currentIndex--;
+      });
+      _generateQuestion();
+    }
   }
 
-  Widget _buildHintText() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: _hint.split('').map((char) {
-        return Container(
-          margin: const EdgeInsets.symmetric(horizontal: 2),
-          width: 30,
-          height: 40,
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey),
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Center(
-            child: Text(
-              char,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+  void _goToNextQuestion() {
+    if (_currentIndex < widget.cards.length - 1) {
+      setState(() {
+        _currentIndex++;
+      });
+      _generateQuestion();
+    }
+  }
+
+  Widget _buildKeyboard() {
+    final letters = [
+      ['A', 'B', 'C', 'D', 'E', 'F', 'G'],
+      ['H', 'I', 'J', 'K', 'L', 'M', 'N'],
+      ['O', 'P', 'Q', 'R', 'S', 'T', 'U'],
+      ['V', 'W', 'X', 'Y', 'Z'],
+    ];
+
+    return Column(
+      children: letters.map((row) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: row.map((letter) {
+              final isGuessed = _guessedLetters.contains(letter);
+              final isWrong = _wrongLetters.contains(letter);
+              
+              return Container(
+                margin: const EdgeInsets.symmetric(horizontal: 2),
+                child: ElevatedButton(
+                  onPressed: _answered || isGuessed ? null : () => _guessLetter(letter),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: isWrong 
+                        ? Colors.red.withValues(alpha: 0.3)
+                        : isGuessed 
+                            ? Colors.green.withValues(alpha: 0.3)
+                            : Theme.of(context).colorScheme.primary,
+                    foregroundColor: isWrong 
+                        ? Colors.red 
+                        : isGuessed 
+                            ? Colors.green 
+                            : Colors.white,
+                    minimumSize: const Size(35, 40),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: Text(
+                    letter,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
           ),
         );
       }).toList(),
     );
   }
 
-  Widget _buildUserAnswerText() {
-    if (_userAnswer.isEmpty) return const SizedBox.shrink();
-    
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: _userAnswer.split('').asMap().entries.map((entry) {
-        final index = entry.key;
-        final char = entry.value;
-        final isIncorrect = _incorrectPositions.contains(index);
-        
-        return Container(
-          margin: const EdgeInsets.symmetric(horizontal: 2),
-          width: 30,
-          height: 40,
-          decoration: BoxDecoration(
-            color: isIncorrect ? Colors.red.withValues(alpha: 0.2) : Colors.green.withValues(alpha: 0.2),
-            border: Border.all(
-              color: isIncorrect ? Colors.red : Colors.green,
-              width: 2,
-            ),
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Center(
-            child: Text(
-              char,
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: isIncorrect ? Colors.red : Colors.green,
-              ),
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -197,126 +260,212 @@ class _WritingViewState extends State<WritingView> {
     }
 
     final currentCard = widget.cards[_currentIndex];
-    final question = _isQuestionMode ? currentCard.definition : currentCard.word;
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: Column(
         children: [
-          // Header
-          UnifiedHeader(
-            title: widget.title,
-            onBack: () => _showCloseConfirmation(),
+          // Small header with progress bar
+          SafeArea(
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        onPressed: () => _showCloseConfirmation(),
+                        icon: const Icon(Icons.arrow_back_ios),
+                        iconSize: 20,
+                      ),
+                      const Spacer(),
+                      Text(
+                        widget.title,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const Spacer(),
+                      const SizedBox(width: 48), // Balance the layout
+                    ],
+                  ),
+                ),
+                // Progress bar
+                _buildProgressBar(),
+              ],
+            ),
           ),
-          
-          // Progress bar
-          _buildProgressBar(),
           
           // Question area
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16), // Reduced top padding
               child: Column(
                 children: [
-                  // Question
+                  // Question text above card
+                  Text(
+                    'Write the translation for',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 16), // Reduced spacing
+                  
+                  // Card with white background and colored outline
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(24),
+                    height: 200, // Reduced height
+                    padding: const EdgeInsets.all(24), // Reduced padding
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20), // Slightly smaller radius
+                      border: Border.all(
+                        color: _getCardBorderColor(currentCard),
+                        width: 4, // Slightly thinner border
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: _getCardBorderColor(currentCard).withValues(alpha: 0.3),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.15),
+                          blurRadius: 15,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: Text(
+                        _isQuestionMode ? currentCard.definition : currentCard.word,
+                        style: const TextStyle(
+                          fontSize: 32, // Smaller font size
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 20), // Reduced spacing
+                  
+                  // Lives indicator
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(5, (index) {
+                      return Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 4),
+                        width: 20,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          color: index < _lives ? Colors.red : Colors.grey.withValues(alpha: 0.3),
+                          shape: BoxShape.circle,
+                        ),
+                      );
+                    }),
+                  ),
+                  
+                  const SizedBox(height: 16),
+                  
+                  // Display word with underscores
+                  Container(
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: Theme.of(context).colorScheme.surfaceVariant,
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
                       ),
                     ),
-                    child: Column(
-                      children: [
-                        Text(
-                          _isQuestionMode ? 'Write the word for:' : 'Write the definition for:',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: _displayWord.split('').map((char) {
+                        return Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 2),
+                          width: 25,
+                          height: 35,
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey),
+                            borderRadius: BorderRadius.circular(4),
                           ),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          question,
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
+                          child: Center(
+                            child: Text(
+                              char,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
-                          textAlign: TextAlign.center,
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 16),
+                  
+                  // Wrong letters
+                  if (_wrongLetters.isNotEmpty)
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      child: Text(
+                        'Wrong: ${_wrongLetters.join(', ')}',
+                        style: const TextStyle(
+                          color: Colors.red,
+                          fontSize: 14,
                         ),
-                      ],
+                      ),
                     ),
+                  
+                  const SizedBox(height: 16),
+                  
+                  // Keyboard
+                  Expanded(
+                    child: _buildKeyboard(),
                   ),
                   
-                  const SizedBox(height: 32),
-                  
-                  // Hint
-                  Text(
-                    'Hint:',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  _buildHintText(),
-                  
-                  const SizedBox(height: 32),
-                  
-                  // Text input
-                  TextField(
-                    controller: _textController,
-                    onChanged: _onTextChanged,
-                    onSubmitted: (_) => _checkAnswer(),
-                    decoration: InputDecoration(
-                      hintText: 'Type your answer...',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      suffixIcon: IconButton(
-                        onPressed: _checkAnswer,
-                        icon: const Icon(Icons.check),
-                      ),
-                    ),
-                    textInputAction: TextInputAction.done,
-                  ),
-                  
-                  const SizedBox(height: 24),
-                  
-                  // User answer display
-                  if (_userAnswer.isNotEmpty) ...[
-                    Text(
-                      'Your answer:',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                  // Navigation buttons (only show if question is answered)
+                  if (_answered)
+                    Container(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      child: Row(
+                        children: [
+                          // Back button
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: _currentIndex > 0 ? _goToPreviousQuestion : null,
+                              icon: const Icon(Icons.arrow_back, size: 18),
+                              label: const Text('Back'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: _currentIndex > 0 ? Colors.blue : Colors.grey,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          // Next button
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: _currentIndex < widget.cards.length - 1 ? _goToNextQuestion : null,
+                              icon: const Icon(Icons.arrow_forward, size: 18),
+                              label: const Text('Next'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: _currentIndex < widget.cards.length - 1 ? Colors.green : Colors.grey,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    _buildUserAnswerText(),
-                  ],
-                  
-                  const SizedBox(height: 24),
-                  
-                  // Submit button
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _userAnswer.isNotEmpty ? _checkAnswer : null,
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      child: const Text(
-                        'Check Answer',
-                        style: TextStyle(fontSize: 18),
-                      ),
-                    ),
-                  ),
-                  
-                  const Spacer(),
                 ],
               ),
             ),
@@ -359,10 +508,30 @@ class _WritingViewState extends State<WritingView> {
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: Column(
         children: [
-          // Header
-          UnifiedHeader(
-            title: 'Writing Complete',
-            onBack: () => Navigator.of(context).pop(),
+          // Small header - matching study view
+          SafeArea(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                children: [
+                  IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.arrow_back_ios),
+                    iconSize: 20,
+                  ),
+                  const Spacer(),
+                  const Text(
+                    'Writing Complete',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const Spacer(),
+                  const SizedBox(width: 48), // Balance the layout
+                ],
+              ),
+            ),
           ),
           
           // Results content
@@ -417,6 +586,16 @@ class _WritingViewState extends State<WritingView> {
                               _correctAnswers = 0;
                               _totalAnswered = 0;
                               _showingResults = false;
+                              _answered = false;
+                              _displayWord = '';
+                              _lives = 5;
+                              _guessedLetters.clear();
+                              _wrongLetters.clear();
+                              // Reset all navigation state
+                              _answeredQuestions.clear();
+                              _correctAnswersMap.clear();
+                              _correctAnswersText.clear();
+                              _questionModes.clear();
                             });
                             _generateQuestion();
                           },
@@ -468,10 +647,9 @@ class _WritingViewState extends State<WritingView> {
           ),
           Text(
             value,
-            style: TextStyle(
-              fontSize: 18,
+            style: const TextStyle(
+              fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: color ?? Theme.of(context).colorScheme.primary,
             ),
           ),
         ],
@@ -483,19 +661,19 @@ class _WritingViewState extends State<WritingView> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('End Writing?'),
-        content: const Text('Are you sure you want to end this writing session?'),
+        title: const Text('Exit Writing Test'),
+        content: const Text('Are you sure you want to exit? Your progress will be lost.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
             child: const Text('Cancel'),
           ),
-          TextButton(
+          ElevatedButton(
             onPressed: () {
               Navigator.of(context).pop();
               Navigator.of(context).pop();
             },
-            child: const Text('End Session'),
+            child: const Text('Exit'),
           ),
         ],
       ),

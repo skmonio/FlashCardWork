@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:math';
 import '../models/flash_card.dart';
 import '../components/unified_header.dart';
+import '../services/sound_manager.dart';
 
 class WordScrambleView extends StatefulWidget {
   final List<FlashCard> cards;
@@ -78,19 +79,11 @@ class _WordScrambleViewState extends State<WordScrambleView> {
     }
   }
 
-  void _removeLetter() {
-    if (_answered || _userAnswer.isEmpty) return;
+  void _removeLetterAt(int index) {
+    if (_answered || index < 0 || index >= _userAnswer.length) return;
     
     setState(() {
-      _userAnswer.removeLast();
-    });
-  }
-
-  void _clearAnswer() {
-    if (_answered) return;
-    
-    setState(() {
-      _userAnswer.clear();
+      _userAnswer.removeAt(index);
     });
   }
 
@@ -106,18 +99,29 @@ class _WordScrambleViewState extends State<WordScrambleView> {
       
       if (isCorrect) {
         _correctAnswers++;
+        SoundManager().playCorrectSound();
+      } else {
+        SoundManager().playWrongSound();
       }
     });
-    
-    // Show result for 2 seconds then move to next question
-    Future.delayed(const Duration(milliseconds: 2000), () {
-      if (mounted) {
-        setState(() {
-          _currentIndex++;
-        });
-        _generateQuestion();
-      }
-    });
+  }
+
+  void _goToPreviousQuestion() {
+    if (_currentIndex > 0) {
+      setState(() {
+        _currentIndex--;
+      });
+      _generateQuestion();
+    }
+  }
+
+  void _goToNextQuestion() {
+    if (_currentIndex < widget.cards.length - 1) {
+      setState(() {
+        _currentIndex++;
+      });
+      _generateQuestion();
+    }
   }
 
   bool _isLetterUsed(String letter, int index) {
@@ -154,114 +158,117 @@ class _WordScrambleViewState extends State<WordScrambleView> {
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: Column(
         children: [
-          // Header
-          UnifiedHeader(
-            title: widget.title,
-            onBack: () => _showCloseConfirmation(),
+          // Small header with progress bar
+          SafeArea(
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        onPressed: () => _showCloseConfirmation(),
+                        icon: const Icon(Icons.arrow_back_ios),
+                        iconSize: 20,
+                      ),
+                      const Spacer(),
+                      Text(
+                        widget.title,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const Spacer(),
+                      const SizedBox(width: 48), // Balance the layout
+                    ],
+                  ),
+                ),
+                // Progress bar
+                _buildProgressBar(),
+              ],
+            ),
           ),
-          
-          // Progress bar
-          _buildProgressBar(),
           
           // Question area
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16), // Reduced top padding
               child: Column(
                 children: [
-                  // Question
+                  // Question text above card
+                  Text(
+                    'Arrange the letters to translate',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 16), // Reduced spacing
+                  
+                  // Card with white background and colored outline
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(24),
+                    height: 200, // Reduced height
+                    padding: const EdgeInsets.all(24), // Reduced padding
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20), // Slightly smaller radius
+                      border: Border.all(
+                        color: _getCardBorderColor(currentCard),
+                        width: 4, // Slightly thinner border
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: _getCardBorderColor(currentCard).withValues(alpha: 0.3),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.15),
+                          blurRadius: 15,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: Text(
+                        question,
+                        style: const TextStyle(
+                          fontSize: 32, // Smaller font size
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 16), // Reduced spacing
+                  
+                  // Answer box
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: Theme.of(context).colorScheme.surfaceVariant,
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
                       ),
                     ),
-                    child: Column(
-                      children: [
-                        Text(
-                          _isQuestionMode ? 'Unscramble the word for:' : 'Unscramble the definition for:',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          question,
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 32),
-                  
-                  // User answer area
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surfaceVariant,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: _answered 
-                            ? (_userAnswer.join('').toLowerCase() == _correctWord.toLowerCase() 
-                                ? Colors.green 
-                                : Colors.red)
-                            : Colors.grey.withValues(alpha: 0.3),
-                        width: 2,
-                      ),
-                    ),
-                    child: Column(
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Your answer:',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                              ),
+                    child: _userAnswer.isEmpty
+                        ? Text(
+                            'Tap pieces to build the word',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                             ),
-                            Text(
-                              '${_userAnswer.length}/${_correctWord.length}',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Theme.of(context).colorScheme.primary,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        _buildUserAnswerDisplay(),
-                        const SizedBox(height: 16),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            ElevatedButton.icon(
-                              onPressed: _answered ? null : _removeLetter,
-                              icon: const Icon(Icons.backspace),
-                              label: const Text('Delete'),
-                            ),
-                            ElevatedButton.icon(
-                              onPressed: _answered ? null : _clearAnswer,
-                              icon: const Icon(Icons.clear),
-                              label: const Text('Clear'),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+                            textAlign: TextAlign.center,
+                          )
+                        : _buildUserAnswerDisplay(),
                   ),
                   
                   const SizedBox(height: 32),
@@ -277,22 +284,44 @@ class _WordScrambleViewState extends State<WordScrambleView> {
                   const SizedBox(height: 16),
                   _buildScrambledLetters(),
                   
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
                   
-                  // Check answer button
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _userAnswer.isNotEmpty && !_answered && _userAnswer.length < _correctWord.length ? _checkAnswer : null,
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      child: Text(
-                        _userAnswer.length == _correctWord.length ? 'Auto-checking...' : 'Check Answer',
-                        style: const TextStyle(fontSize: 18),
+                  // Navigation buttons (only show if question is answered)
+                  if (_answered)
+                    Container(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      child: Row(
+                        children: [
+                          // Back button
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: _currentIndex > 0 ? _goToPreviousQuestion : null,
+                              icon: const Icon(Icons.arrow_back, size: 18),
+                              label: const Text('Back'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: _currentIndex > 0 ? Colors.blue : Colors.grey,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          // Next button
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: _currentIndex < widget.cards.length - 1 ? _goToNextQuestion : null,
+                              icon: const Icon(Icons.arrow_forward, size: 18),
+                              label: const Text('Next'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: _currentIndex < widget.cards.length - 1 ? Colors.green : Colors.grey,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
                   
                   const Spacer(),
                 ],
@@ -357,40 +386,48 @@ class _WordScrambleViewState extends State<WordScrambleView> {
               ),
             )
           else
-            ..._userAnswer.map((letter) => Container(
-              margin: const EdgeInsets.symmetric(horizontal: 2),
-              width: 30,
-              height: 40,
-              decoration: BoxDecoration(
-                color: _answered 
-                    ? (_userAnswer.join('').toLowerCase() == _correctWord.toLowerCase() 
-                        ? Colors.green.withValues(alpha: 0.2) 
-                        : Colors.red.withValues(alpha: 0.2))
-                    : Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                border: Border.all(
-                  color: _answered 
-                      ? (_userAnswer.join('').toLowerCase() == _correctWord.toLowerCase() 
-                          ? Colors.green 
-                          : Colors.red)
-                      : Theme.of(context).colorScheme.primary,
-                ),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Center(
-                child: Text(
-                  letter,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+            ..._userAnswer.asMap().entries.map((entry) {
+              final index = entry.key;
+              final letter = entry.value;
+              
+              return GestureDetector(
+                onTap: _answered ? null : () => _removeLetterAt(index),
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 2),
+                  width: 30,
+                  height: 40,
+                  decoration: BoxDecoration(
                     color: _answered 
                         ? (_userAnswer.join('').toLowerCase() == _correctWord.toLowerCase() 
-                            ? Colors.green 
-                            : Colors.red)
-                        : Theme.of(context).colorScheme.primary,
+                            ? Colors.green.withValues(alpha: 0.2) 
+                            : Colors.red.withValues(alpha: 0.2))
+                        : Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                    border: Border.all(
+                      color: _answered 
+                          ? (_userAnswer.join('').toLowerCase() == _correctWord.toLowerCase() 
+                              ? Colors.green 
+                              : Colors.red)
+                          : Theme.of(context).colorScheme.primary,
+                    ),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Center(
+                    child: Text(
+                      letter,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: _answered 
+                            ? (_userAnswer.join('').toLowerCase() == _correctWord.toLowerCase() 
+                                ? Colors.green 
+                                : Colors.red)
+                            : Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            )).toList(),
+              );
+            }).toList(),
         ],
       ),
     );
@@ -566,6 +603,22 @@ class _WordScrambleViewState extends State<WordScrambleView> {
         ],
       ),
     );
+  }
+
+  Color _getCardBorderColor(FlashCard card) {
+    // Generate a consistent color based on the card's ID
+    final hash = card.id.hashCode;
+    final colors = [
+      Colors.blue,
+      Colors.green,
+      Colors.orange,
+      Colors.purple,
+      Colors.red,
+      Colors.teal,
+      Colors.indigo,
+      Colors.pink,
+    ];
+    return colors[hash.abs() % colors.length];
   }
 
   void _showCloseConfirmation() {

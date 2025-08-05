@@ -26,8 +26,10 @@ class _CardsViewState extends State<CardsView> {
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: Column(
         children: [
-          // Header
-          _buildHeader(context),
+          // Header - wrapped in SafeArea to avoid system UI
+          SafeArea(
+            child: _buildHeader(context),
+          ),
           
           // Main content
           Expanded(
@@ -82,7 +84,7 @@ class _CardsViewState extends State<CardsView> {
   }
 
   Widget _buildContent(BuildContext context, FlashcardProvider provider) {
-    final rootDecks = provider.getRootDecks();
+    final allDecks = provider.getAllDecksHierarchical();
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -98,7 +100,7 @@ class _CardsViewState extends State<CardsView> {
           const SizedBox(height: 24),
           
           // Decks Section
-          _buildDecksSection(context, provider, rootDecks),
+          _buildDecksSection(context, provider, allDecks),
         ],
       ),
     );
@@ -360,6 +362,16 @@ class _CardsViewState extends State<CardsView> {
             children: [
               Row(
                 children: [
+                  // Indentation for sub-decks
+                  if (deck.isSubDeck) ...[
+                    const SizedBox(width: 16),
+                    Icon(
+                      Icons.subdirectory_arrow_right,
+                      color: Colors.grey[600],
+                      size: 16,
+                    ),
+                    const SizedBox(width: 8),
+                  ],
                   Icon(
                     Icons.folder,
                     color: Theme.of(context).colorScheme.primary,
