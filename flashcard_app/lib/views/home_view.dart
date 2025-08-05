@@ -9,6 +9,7 @@ import 'advanced_study_view.dart';
 import 'multiple_choice_view.dart';
 import 'true_false_view.dart';
 import 'writing_view.dart';
+import 'word_scramble_view.dart';
 import '../services/sample_data_service.dart';
 
 class HomeView extends StatefulWidget {
@@ -420,8 +421,9 @@ class _HomeViewState extends State<HomeView> {
     
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => StudyTypeSelectionView(
-          gameMode: GameMode.study,
+        builder: (context) => WordScrambleView(
+          cards: allCards,
+          title: 'Jumble Your Cards',
         ),
       ),
     );

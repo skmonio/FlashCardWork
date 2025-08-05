@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/theme_provider.dart';
 
 class SettingsView extends StatefulWidget {
   const SettingsView({super.key});
@@ -8,7 +10,6 @@ class SettingsView extends StatefulWidget {
 }
 
 class _SettingsViewState extends State<SettingsView> {
-  bool _isDarkMode = false;
   bool _soundEnabled = true;
   bool _hapticEnabled = true;
 
@@ -140,15 +141,16 @@ class _SettingsViewState extends State<SettingsView> {
         Card(
           child: Column(
             children: [
-              SwitchListTile(
-                title: const Text('Dark Mode'),
-                subtitle: const Text('Use dark theme'),
-                value: _isDarkMode,
-                onChanged: (value) {
-                  setState(() {
-                    _isDarkMode = value;
-                  });
-                  // TODO: Implement theme switching
+              Consumer<ThemeProvider>(
+                builder: (context, themeProvider, child) {
+                  return SwitchListTile(
+                    title: const Text('Dark Mode'),
+                    subtitle: const Text('Use dark theme'),
+                    value: themeProvider.isDarkMode,
+                    onChanged: (value) {
+                      themeProvider.toggleTheme();
+                    },
+                  );
                 },
               ),
               const Divider(height: 1),

@@ -113,6 +113,7 @@ class FlashcardProvider extends ChangeNotifier {
     String pastParticiple = '',
   }) async {
     try {
+      print('Provider: Creating card: $word');
       final card = await _service.createCard(
         word: word,
         definition: definition,
@@ -125,9 +126,11 @@ class FlashcardProvider extends ChangeNotifier {
         pastParticiple: pastParticiple,
       );
       _cards.add(card);
+      print('Provider: Card created and added. Total cards: ${_cards.length}');
       notifyListeners();
       return card;
     } catch (e) {
+      print('Provider: Error creating card: $e');
       _setError(e.toString());
       return null;
     }

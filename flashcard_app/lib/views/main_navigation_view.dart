@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/flashcard_provider.dart';
+import '../providers/theme_provider.dart';
 import '../services/sample_data_service.dart';
 import 'home_view.dart';
 import 'cards_view.dart';
@@ -21,8 +22,13 @@ class _MainNavigationViewState extends State<MainNavigationView> {
   @override
   void initState() {
     super.initState();
-    // Initialize the provider and load sample data when the app starts
+    // Initialize the providers when the app starts
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // Initialize theme provider
+      final themeProvider = context.read<ThemeProvider>();
+      await themeProvider.initialize();
+      
+      // Initialize flashcard provider
       final provider = context.read<FlashcardProvider>();
       await provider.initialize();
       
