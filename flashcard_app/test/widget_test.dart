@@ -17,5 +17,8 @@ void main() {
 
     // Verify that the app starts without crashing
     expect(find.byType(MaterialApp), findsOneWidget);
+    
+    // Wait a bit to let any animations settle
+    await tester.pump(const Duration(seconds: 5));
   });
 }

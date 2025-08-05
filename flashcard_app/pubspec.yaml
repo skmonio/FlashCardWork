@@ -43,6 +43,9 @@ dependencies:
   # HTTP and API
   http: ^1.1.0
   
+  # Audio
+  audioplayers: ^5.2.1
+  
   # Utilities
   uuid: ^4.2.1
   intl: ^0.19.0

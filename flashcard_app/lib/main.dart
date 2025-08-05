@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'providers/flashcard_provider.dart';
 import 'providers/theme_provider.dart';
 import 'views/main_navigation_view.dart';
+import 'views/loading_view.dart';
 
 void main() {
   runApp(const FlashcardApp());
@@ -57,7 +58,15 @@ class FlashcardApp extends StatelessWidget {
                 ),
               ),
             ),
-            home: const MainNavigationView(),
+            home: LoadingView(
+              minimumDisplayTime: const Duration(milliseconds: 200),
+              isReadyCheck: () async {
+                // Add a timeout to prevent infinite loading
+                await Future.delayed(const Duration(seconds: 1));
+                return true;
+              },
+              child: const MainNavigationView(),
+            ),
             debugShowCheckedModeBanner: false,
           );
         },
