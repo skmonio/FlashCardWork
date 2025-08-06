@@ -107,6 +107,7 @@ class _MemoryGameViewState extends State<MemoryGameView> {
                         icon: const Icon(Icons.home),
                         iconSize: 20,
                       ),
+                    ],
                   ),
                 ),
                 _buildProgressBar(),
