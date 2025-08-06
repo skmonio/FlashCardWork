@@ -29,6 +29,13 @@ class _WordScrambleViewState extends State<WordScrambleView> {
   List<String> _userAnswer = [];
   List<String> _originalLetters = [];
   bool _isQuestionMode = true; // true = definition to word, false = word to definition
+  
+  // Track answered questions and their answers
+  Map<int, List<String>> _answeredQuestions = {}; // question index -> user answer
+  Map<int, bool> _correctAnswersMap = {}; // question index -> is correct
+  Map<int, String> _correctWords = {}; // question index -> correct word
+  Map<int, List<String>> _scrambledLettersMap = {}; // question index -> scrambled letters
+  Map<int, bool> _questionModes = {}; // question index -> is question mode
 
   @override
   void initState() {
@@ -41,6 +48,17 @@ class _WordScrambleViewState extends State<WordScrambleView> {
       setState(() {
         _showingResults = true;
       });
+      return;
+    }
+
+    // Check if this question has already been answered
+    if (_answeredQuestions.containsKey(_currentIndex)) {
+      // Load existing question data
+      _isQuestionMode = _questionModes[_currentIndex]!;
+      _correctWord = _correctWords[_currentIndex]!;
+      _scrambledLetters = List<String>.from(_scrambledLettersMap[_currentIndex]!);
+      _userAnswer = List<String>.from(_answeredQuestions[_currentIndex]!);
+      _answered = true;
       return;
     }
 
@@ -59,6 +77,11 @@ class _WordScrambleViewState extends State<WordScrambleView> {
     
     // Shuffle the letters
     _scrambledLetters.shuffle(random);
+    
+    // Store question data for future reference
+    _correctWords[_currentIndex] = _correctWord;
+    _scrambledLettersMap[_currentIndex] = List<String>.from(_scrambledLetters);
+    _questionModes[_currentIndex] = _isQuestionMode;
     
     setState(() {
       _answered = false;
@@ -99,10 +122,15 @@ class _WordScrambleViewState extends State<WordScrambleView> {
       
       if (isCorrect) {
         _correctAnswers++;
+        _correctAnswersMap[_currentIndex] = true;
         SoundManager().playCorrectSound();
       } else {
+        _correctAnswersMap[_currentIndex] = false;
         SoundManager().playWrongSound();
       }
+      
+      // Store the answer for navigation
+      _answeredQuestions[_currentIndex] = List<String>.from(_userAnswer);
     });
   }
 
@@ -543,6 +571,14 @@ class _WordScrambleViewState extends State<WordScrambleView> {
                               _correctAnswers = 0;
                               _totalAnswered = 0;
                               _showingResults = false;
+                              _answered = false;
+                              _userAnswer = [];
+                              // Reset all navigation state
+                              _answeredQuestions.clear();
+                              _correctAnswersMap.clear();
+                              _correctWords.clear();
+                              _scrambledLettersMap.clear();
+                              _questionModes.clear();
                             });
                             _generateQuestion();
                           },
