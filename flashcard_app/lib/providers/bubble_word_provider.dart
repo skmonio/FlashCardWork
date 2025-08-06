@@ -85,7 +85,11 @@ class BubbleWordProvider extends ChangeNotifier {
     
     // Helper function to get node by word
     WordNode? getNodeByWord(String word) {
-      return allNodes.firstWhere((node) => node.word == word, orElse: () => null);
+      try {
+        return allNodes.firstWhere((node) => node.word == word);
+      } catch (e) {
+        return null;
+      }
     }
     
     // Add connections from current map
