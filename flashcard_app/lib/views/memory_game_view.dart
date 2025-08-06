@@ -148,41 +148,44 @@ class _MemoryGameViewState extends State<MemoryGameView> {
       width: double.infinity,
       height: double.infinity,
       child: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Left column - Words
-              SizedBox(
-                width: 150,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: _memoryCards
-                      .where((card) => card.type == MemoryCardType.word)
-                      .map((card) => Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: _buildMemoryCard(card),
-                          ))
-                      .toList(),
+        child: Transform.translate(
+          offset: const Offset(0, -40), // Move cards up by 40 pixels
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Left column - Words
+                SizedBox(
+                  width: 150,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: _memoryCards
+                        .where((card) => card.type == MemoryCardType.word)
+                        .map((card) => Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: _buildMemoryCard(card),
+                            ))
+                        .toList(),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 20),
-              // Right column - Definitions
-              SizedBox(
-                width: 150,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: _memoryCards
-                      .where((card) => card.type == MemoryCardType.definition)
-                      .map((card) => Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: _buildMemoryCard(card),
-                          ))
-                      .toList(),
+                const SizedBox(width: 20),
+                // Right column - Definitions
+                SizedBox(
+                  width: 150,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: _memoryCards
+                        .where((card) => card.type == MemoryCardType.definition)
+                        .map((card) => Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: _buildMemoryCard(card),
+                            ))
+                        .toList(),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
