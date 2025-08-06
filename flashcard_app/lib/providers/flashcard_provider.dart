@@ -52,7 +52,8 @@ class FlashcardProvider extends ChangeNotifier {
     try {
       final deck = await _service.createDeck(name, parentId: parentId);
       print('Deck created successfully: ${deck.name} (${deck.id})');
-      _decks.add(deck);
+      // Refresh the decks list from the service instead of trying to modify the unmodifiable list
+      _decks = _service.decks;
       notifyListeners();
       return deck;
     } catch (e) {
@@ -65,11 +66,9 @@ class FlashcardProvider extends ChangeNotifier {
   Future<bool> updateDeck(Deck deck) async {
     try {
       await _service.updateDeck(deck);
-      final index = _decks.indexWhere((d) => d.id == deck.id);
-      if (index != -1) {
-        _decks[index] = deck;
-        notifyListeners();
-      }
+      // Refresh the decks list from the service
+      _decks = _service.decks;
+      notifyListeners();
       return true;
     } catch (e) {
       _setError(e.toString());
@@ -80,8 +79,9 @@ class FlashcardProvider extends ChangeNotifier {
   Future<bool> deleteDeck(String deckId) async {
     try {
       await _service.deleteDeck(deckId);
-      _decks.removeWhere((deck) => deck.id == deckId);
-      _cards.removeWhere((card) => card.deckIds.contains(deckId));
+      // Refresh both lists from the service
+      _decks = _service.decks;
+      _cards = _service.cards;
       notifyListeners();
       return true;
     } catch (e) {
@@ -142,8 +142,9 @@ class FlashcardProvider extends ChangeNotifier {
         futureTense: futureTense,
         pastParticiple: pastParticiple,
       );
-      _cards.add(card);
-      print('Provider: Card created and added. Total cards: ${_cards.length}');
+      // Refresh the cards list from the service instead of trying to modify the unmodifiable list
+      _cards = _service.cards;
+      print('Provider: Card created and refreshed. Total cards: ${_cards.length}');
       notifyListeners();
       return card;
     } catch (e) {
@@ -156,11 +157,9 @@ class FlashcardProvider extends ChangeNotifier {
   Future<bool> updateCard(FlashCard card) async {
     try {
       await _service.updateCard(card);
-      final index = _cards.indexWhere((c) => c.id == card.id);
-      if (index != -1) {
-        _cards[index] = card;
-        notifyListeners();
-      }
+      // Refresh the cards list from the service
+      _cards = _service.cards;
+      notifyListeners();
       return true;
     } catch (e) {
       _setError(e.toString());
@@ -171,7 +170,8 @@ class FlashcardProvider extends ChangeNotifier {
   Future<bool> deleteCard(String cardId) async {
     try {
       await _service.deleteCard(cardId);
-      _cards.removeWhere((card) => card.id == cardId);
+      // Refresh the cards list from the service
+      _cards = _service.cards;
       notifyListeners();
       return true;
     } catch (e) {
