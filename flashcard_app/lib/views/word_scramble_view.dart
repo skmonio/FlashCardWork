@@ -169,7 +169,7 @@ class _WordScrambleViewState extends State<WordScrambleView> {
   List<String> _createPieces(List<String> letters, Random random) {
     final pieces = <String>[];
     
-    // Ensure we always have at least 2 pieces
+    // Ensure we always have at least 2 pieces for any word
     if (letters.length <= 3) {
       // For short words (3 letters or less), split into 2 pieces
       if (letters.length == 3) {
@@ -191,32 +191,43 @@ class _WordScrambleViewState extends State<WordScrambleView> {
         pieces.add('');
       }
     } else {
-      // For longer words, create pieces of 2-3 letters
-      int index = 0;
-      while (index < letters.length) {
-        // Determine piece size (2-3 letters)
-        int pieceSize;
-        if (index + 3 <= letters.length) {
-          // Can make a piece of 2 or 3 letters
-          pieceSize = random.nextBool() ? 2 : 3;
-        } else if (index + 2 <= letters.length) {
-          // Can make a piece of 2 letters
-          pieceSize = 2;
-        } else {
-          // Only 1 letter left, add it to the last piece
-          if (pieces.isNotEmpty) {
-            pieces[pieces.length - 1] += letters[index];
+      // For longer words (4+ letters), ensure at least 2 pieces
+      if (letters.length == 4) {
+        // "hond" -> ["ho", "nd"] or ["hon", "d"] or ["h", "ond"]
+        final options = [
+          [letters.sublist(0, 2).join(''), letters.sublist(2, 4).join('')], // "ho", "nd"
+          [letters.sublist(0, 3).join(''), letters[3]], // "hon", "d"
+          [letters[0], letters.sublist(1, 4).join('')], // "h", "ond"
+        ];
+        pieces.addAll(options[random.nextInt(options.length)]);
+      } else {
+        // For 5+ letters, create pieces of 2-3 letters but ensure at least 2 pieces
+        int index = 0;
+        while (index < letters.length) {
+          // Determine piece size (2-3 letters)
+          int pieceSize;
+          if (index + 3 <= letters.length) {
+            // Can make a piece of 2 or 3 letters
+            pieceSize = random.nextBool() ? 2 : 3;
+          } else if (index + 2 <= letters.length) {
+            // Can make a piece of 2 letters
+            pieceSize = 2;
           } else {
-            // This shouldn't happen with the minimum 2 pieces rule
-            pieces.add(letters[index]);
+            // Only 1 letter left, add it to the last piece
+            if (pieces.isNotEmpty) {
+              pieces[pieces.length - 1] += letters[index];
+            } else {
+              // This shouldn't happen with the minimum 2 pieces rule
+              pieces.add(letters[index]);
+            }
+            break;
           }
-          break;
+          
+          // Create the piece
+          final piece = letters.sublist(index, index + pieceSize).join('');
+          pieces.add(piece);
+          index += pieceSize;
         }
-        
-        // Create the piece
-        final piece = letters.sublist(index, index + pieceSize).join('');
-        pieces.add(piece);
-        index += pieceSize;
       }
     }
     
