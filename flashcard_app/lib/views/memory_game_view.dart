@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'dart:math';
 import '../providers/flashcard_provider.dart';
 import '../models/flash_card.dart';
-import '../components/unified_header.dart';
+import '../services/sound_manager.dart';
 
 class MemoryGameView extends StatefulWidget {
   final List<FlashCard> cards;
@@ -23,11 +23,11 @@ class _MemoryGameViewState extends State<MemoryGameView> {
   List<MemoryCard> _memoryCards = [];
   MemoryCard? _firstCard;
   MemoryCard? _secondCard;
-  bool _canFlip = true;
+  bool _canSelect = true;
   int _moves = 0;
   int _matches = 0;
   bool _gameComplete = false;
-  int _totalPairs = 0;
+  int _totalPairs = 5; // Fixed to 5 pairs
 
   @override
   void initState() {
@@ -36,12 +36,11 @@ class _MemoryGameViewState extends State<MemoryGameView> {
   }
 
   void _initializeGame() {
-    // Create pairs of cards (word and definition)
+    // Create 5 pairs of cards (word and definition)
     _memoryCards = [];
     
-    // Use up to 8 cards for 16 tiles (8 pairs)
-    final cardsToUse = widget.cards.take(8).toList();
-    _totalPairs = cardsToUse.length;
+    // Use exactly 5 cards for 10 tiles (5 pairs)
+    final cardsToUse = widget.cards.take(5).toList();
     
     for (final card in cardsToUse) {
       // Add word card
@@ -50,7 +49,9 @@ class _MemoryGameViewState extends State<MemoryGameView> {
         content: card.word,
         type: MemoryCardType.word,
         originalCard: card,
-        isFlipped: false,
+        isMatched: false,
+        isSelected: false,
+        isWrong: false,
       ));
       
       // Add definition card
@@ -59,7 +60,9 @@ class _MemoryGameViewState extends State<MemoryGameView> {
         content: card.definition,
         type: MemoryCardType.definition,
         originalCard: card,
-        isFlipped: false,
+        isMatched: false,
+        isSelected: false,
+        isWrong: false,
       ));
     }
     
@@ -73,14 +76,35 @@ class _MemoryGameViewState extends State<MemoryGameView> {
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: Column(
         children: [
-          // Header
-          UnifiedHeader(
-            title: 'Memory Game',
-            onBack: () => Navigator.of(context).pop(),
+          // Small header with progress bar
+          SafeArea(
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        icon: const Icon(Icons.arrow_back_ios),
+                        iconSize: 20,
+                      ),
+                      const Spacer(),
+                      Text(
+                        'Memory Game',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const Spacer(),
+                    ],
+                  ),
+                ),
+                _buildProgressBar(),
+              ],
+            ),
           ),
-          
-          // Game instructions
-          _buildInstructions(),
           
           // Game stats
           _buildGameStats(),
@@ -97,32 +121,28 @@ class _MemoryGameViewState extends State<MemoryGameView> {
     );
   }
 
-  Widget _buildInstructions() {
+  Widget _buildProgressBar() {
+    final progress = _matches / _totalPairs;
     return Container(
-      padding: const EdgeInsets.all(16),
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(
-                Icons.info_outline,
-                color: Theme.of(context).colorScheme.primary,
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'Find matching pairs: Word ↔ Definition',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
-                  ),
-                ),
-              ),
+              Text('Matches $_matches of $_totalPairs'),
+              Text('${(progress * 100).toInt()}%'),
             ],
           ),
-        ),
+          const SizedBox(height: 8),
+          LinearProgressIndicator(
+            value: progress,
+            backgroundColor: Colors.grey.withValues(alpha: 0.2),
+            valueColor: AlwaysStoppedAnimation<Color>(
+              Theme.of(context).colorScheme.primary,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -181,34 +201,37 @@ class _MemoryGameViewState extends State<MemoryGameView> {
   }
 
   Widget _buildMemoryCard(MemoryCard card) {
-    final isSelected = _firstCard == card || _secondCard == card;
+    Color cardColor;
+    Color borderColor;
+    
+    if (card.isMatched) {
+      cardColor = Colors.green.withValues(alpha: 0.1);
+      borderColor = Colors.green;
+    } else if (card.isWrong) {
+      cardColor = Colors.red.withValues(alpha: 0.1);
+      borderColor = Colors.red;
+    } else if (card.isSelected) {
+      cardColor = Colors.blue.withValues(alpha: 0.1);
+      borderColor = Colors.blue;
+    } else {
+      cardColor = Theme.of(context).colorScheme.surface;
+      borderColor = Colors.grey.withValues(alpha: 0.3);
+    }
     
     return GestureDetector(
-      onTap: () => _flipCard(card),
+      onTap: () => _selectCard(card),
       child: Card(
-        elevation: card.isMatched ? 0 : (isSelected ? 8 : 4),
-        color: card.isMatched 
-            ? Colors.green.withValues(alpha: 0.1)
-            : Theme.of(context).colorScheme.surface,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
+        elevation: card.isMatched ? 0 : 4,
+        color: cardColor,
+        child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
-            color: card.isFlipped || card.isMatched
-                ? Theme.of(context).colorScheme.surface
-                : Theme.of(context).colorScheme.primary,
-            border: isSelected && !card.isMatched
-                ? Border.all(
-                    color: Theme.of(context).colorScheme.primary,
-                    width: 3,
-                  )
-                : null,
+            border: Border.all(
+              color: borderColor,
+              width: card.isSelected || card.isMatched || card.isWrong ? 3 : 1,
+            ),
           ),
-          child: Center(
-            child: card.isFlipped || card.isMatched
-                ? _buildCardContent(card)
-                : _buildCardBack(),
-          ),
+          child: _buildCardContent(card),
         ),
       ),
     );
@@ -251,28 +274,6 @@ class _MemoryGameViewState extends State<MemoryGameView> {
     );
   }
 
-  Widget _buildCardBack() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(
-          Icons.question_mark,
-          size: 24,
-          color: Colors.white,
-        ),
-        const SizedBox(height: 4),
-        Text(
-          '?',
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildFooter() {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -284,21 +285,16 @@ class _MemoryGameViewState extends State<MemoryGameView> {
             icon: const Icon(Icons.refresh),
             label: const Text('Reset'),
           ),
-          ElevatedButton.icon(
-            onPressed: _showHint,
-            icon: const Icon(Icons.lightbulb),
-            label: const Text('Hint'),
-          ),
         ],
       ),
     );
   }
 
-  void _flipCard(MemoryCard card) {
-    if (!_canFlip || card.isFlipped || card.isMatched) return;
+  void _selectCard(MemoryCard card) {
+    if (!_canSelect || card.isMatched) return;
 
     setState(() {
-      card.isFlipped = true;
+      card.isSelected = true;
     });
 
     if (_firstCard == null) {
@@ -320,16 +316,12 @@ class _MemoryGameViewState extends State<MemoryGameView> {
         _firstCard!.isMatched = true;
         _secondCard!.isMatched = true;
         _matches++;
+        _firstCard!.isSelected = false;
+        _secondCard!.isSelected = false;
       });
 
-      // Show match feedback
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Match found: ${_firstCard!.originalCard.word}'),
-          backgroundColor: Colors.green,
-          duration: const Duration(milliseconds: 1000),
-        ),
-      );
+      // Play correct sound
+      SoundManager().playCorrectSound();
 
       // Check if game is complete
       if (_matches == _totalPairs) {
@@ -337,24 +329,25 @@ class _MemoryGameViewState extends State<MemoryGameView> {
         _showGameCompleteDialog();
       }
     } else {
-      // Show mismatch feedback
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No match - try again!'),
-          backgroundColor: Colors.red,
-          duration: Duration(milliseconds: 1000),
-        ),
-      );
+      setState(() {
+        _firstCard!.isWrong = true;
+        _secondCard!.isWrong = true;
+        _firstCard!.isSelected = false;
+        _secondCard!.isSelected = false;
+      });
 
-      // Hide cards after a delay
+      // Play wrong sound
+      SoundManager().playWrongSound();
+
+      // Reset wrong cards after a delay
       Future.delayed(const Duration(milliseconds: 1000), () {
         if (mounted) {
           setState(() {
-            _firstCard!.isFlipped = false;
-            _secondCard!.isFlipped = false;
+            _firstCard!.isWrong = false;
+            _secondCard!.isWrong = false;
             _firstCard = null;
             _secondCard = null;
-            _canFlip = true;
+            _canSelect = true;
           });
         }
       });
@@ -363,14 +356,14 @@ class _MemoryGameViewState extends State<MemoryGameView> {
     setState(() {
       _firstCard = null;
       _secondCard = null;
-      _canFlip = false;
+      _canSelect = false;
     });
 
-    // Re-enable flipping after a delay
+    // Re-enable selection after a delay
     Future.delayed(const Duration(milliseconds: 1200), () {
       if (mounted) {
         setState(() {
-          _canFlip = true;
+          _canSelect = true;
         });
       }
     });
@@ -381,32 +374,12 @@ class _MemoryGameViewState extends State<MemoryGameView> {
       _memoryCards.clear();
       _firstCard = null;
       _secondCard = null;
-      _canFlip = true;
+      _canSelect = true;
       _moves = 0;
       _matches = 0;
       _gameComplete = false;
       _initializeGame();
     });
-  }
-
-  void _showHint() {
-    // Find an unmatched card and show it briefly
-    final unmatchedCards = _memoryCards.where((card) => !card.isMatched && !card.isFlipped).toList();
-    if (unmatchedCards.isNotEmpty) {
-      final randomCard = unmatchedCards[Random().nextInt(unmatchedCards.length)];
-      
-      setState(() {
-        randomCard.isFlipped = true;
-      });
-      
-      Future.delayed(const Duration(milliseconds: 1500), () {
-        if (mounted && !randomCard.isMatched) {
-          setState(() {
-            randomCard.isFlipped = false;
-          });
-        }
-      });
-    }
   }
 
   void _showGameCompleteDialog() {
@@ -457,16 +430,18 @@ class MemoryCard {
   final String content;
   final MemoryCardType type;
   final FlashCard originalCard;
-  bool isFlipped;
   bool isMatched;
+  bool isSelected;
+  bool isWrong;
 
   MemoryCard({
     required this.id,
     required this.content,
     required this.type,
     required this.originalCard,
-    this.isFlipped = false,
     this.isMatched = false,
+    this.isSelected = false,
+    this.isWrong = false,
   });
 }
 
