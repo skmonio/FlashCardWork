@@ -155,14 +155,15 @@ class _BubbleWordViewState extends State<BubbleWordView> {
 
   Widget _buildCanvas(BubbleWordProvider provider) {
     return GestureDetector(
-      onPanUpdate: (details) {
-        final newOffset = provider.offset + details.delta;
-        provider.setOffset(newOffset);
-      },
       onScaleUpdate: (details) {
+        // Handle both scale and pan in the scale gesture
         if (details.scale != 1.0) {
           final newScale = provider.scale * details.scale;
           provider.setScale(newScale);
+        }
+        if (details.focalPointDelta != Offset.zero) {
+          final newOffset = provider.offset + details.focalPointDelta;
+          provider.setOffset(newOffset);
         }
       },
       onTapUp: (details) {
