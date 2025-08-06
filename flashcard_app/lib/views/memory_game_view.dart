@@ -106,16 +106,10 @@ class _MemoryGameViewState extends State<MemoryGameView> {
             ),
           ),
           
-          // Game stats
-          _buildGameStats(),
-          
           // Game board
           Expanded(
             child: _buildGameBoard(),
           ),
-          
-          // Footer
-          _buildFooter(),
         ],
       ),
     );
@@ -147,40 +141,7 @@ class _MemoryGameViewState extends State<MemoryGameView> {
     );
   }
 
-  Widget _buildGameStats() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildStatItem('Moves', '$_moves'),
-          _buildStatItem('Matches', '$_matches/$_totalPairs'),
-          _buildStatItem('Progress', '${((_matches / _totalPairs) * 100).toInt()}%'),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildStatItem(String label, String value) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-          ),
-        ),
-      ],
-    );
-  }
 
   Widget _buildGameBoard() {
     return Padding(
@@ -302,21 +263,7 @@ class _MemoryGameViewState extends State<MemoryGameView> {
     return vibrantColors[index];
   }
 
-  Widget _buildFooter() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          ElevatedButton.icon(
-            onPressed: _resetGame,
-            icon: const Icon(Icons.refresh),
-            label: const Text('Reset'),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   void _selectCard(MemoryCard card) {
     if (!_canSelect || card.isMatched) return;
