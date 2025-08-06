@@ -361,42 +361,41 @@ class _WordScrambleViewState extends State<WordScrambleView> {
                   
                   const SizedBox(height: 32), // More space between card and answer
                   
-                  // Navigation buttons (only show if question is answered) - positioned between card and answer
-                  if (_answered)
-                    Container(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      child: Row(
-                        children: [
-                          // Back button
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              onPressed: _currentIndex > 0 ? _goToPreviousQuestion : null,
-                              icon: const Icon(Icons.arrow_back, size: 18),
-                              label: const Text('Back'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: _currentIndex > 0 ? Colors.blue : Colors.grey,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 12),
-                              ),
+                  // Navigation buttons (always show, greyed out when not available)
+                  Container(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    child: Row(
+                      children: [
+                        // Back button (always show, greyed out when not available)
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: _currentIndex > 0 ? _goToPreviousQuestion : null,
+                            icon: const Icon(Icons.arrow_back, size: 16),
+                            label: const Text('Back'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: _currentIndex > 0 ? Colors.blue : Colors.grey,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 8),
                             ),
                           ),
-                          const SizedBox(width: 12),
-                          // Next button
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              onPressed: _currentIndex < widget.cards.length - 1 ? _goToNextQuestion : null,
-                              icon: const Icon(Icons.arrow_forward, size: 18),
-                              label: const Text('Next'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: _currentIndex < widget.cards.length - 1 ? Colors.green : Colors.grey,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 12),
-                              ),
+                        ),
+                        const SizedBox(width: 12),
+                        // Next button (always show, greyed out when not available)
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: (_answered && _currentIndex < widget.cards.length - 1) ? _goToNextQuestion : null,
+                            icon: const Icon(Icons.arrow_forward, size: 16),
+                            label: const Text('Next'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: (_answered && _currentIndex < widget.cards.length - 1) ? Colors.green : Colors.grey,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 8),
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
+                  ),
                   
                   const SizedBox(height: 16),
                   
