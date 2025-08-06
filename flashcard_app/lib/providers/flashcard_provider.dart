@@ -438,11 +438,17 @@ class FlashcardProvider extends ChangeNotifier {
         if (newDeck != null) {
           deckNameToId[deckName] = newDeck.id;
           print('Created deck: $deckName (${newDeck.id})');
+          // Refresh the decks list to include the new deck
+          _decks = _service.decks;
         } else {
+          print('ERROR: Failed to create deck "$deckName"');
           errors.add('Failed to create deck "$deckName"');
         }
       }
     }
+    
+    print('Final deckNameToId map: $deckNameToId');
+    print('Current decks in provider: ${_decks.map((d) => '${d.name} (${d.id})').toList()}');
     
     // Ensure Uncategorized deck exists
     Deck? uncategorizedDeck;
@@ -498,12 +504,16 @@ class FlashcardProvider extends ChangeNotifier {
         
         if (deckNames.isNotEmpty) {
           final deckNameList = deckNames.split(';').map((name) => name.trim()).toList();
+          print('Deck names from CSV: $deckNameList');
           for (final deckName in deckNameList) {
             if (deckName.isNotEmpty) {
               final deckId = deckNameToId[deckName];
+              print('Looking for deck "$deckName", found ID: $deckId');
               if (deckId != null) {
                 deckIds.add(deckId);
+                print('Added deck ID $deckId for deck "$deckName"');
               } else {
+                print('ERROR: Deck "$deckName" not found in deckNameToId map');
                 errors.add('Line $lineNumber: Deck "$deckName" not found or could not be created');
               }
             }
@@ -530,6 +540,7 @@ class FlashcardProvider extends ChangeNotifier {
           timesCorrect = int.tryParse(fields[11].trim()) ?? 0;
         }
         
+        print('Creating card with deckIds: $deckIds');
         // Create the card
         final newCard = await createCard(
           word: word,
@@ -556,6 +567,7 @@ class FlashcardProvider extends ChangeNotifier {
           print('Successfully created card: ${newCard.word}');
         } else {
           print('Failed to create card: $word');
+          errors.add('Line $lineNumber: Failed to create card "$word"');
         }
       } catch (e) {
         errors.add('Line $lineNumber: ${e.toString()}');
