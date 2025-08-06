@@ -144,51 +144,97 @@ class _MemoryGameViewState extends State<MemoryGameView> {
 
 
   Widget _buildGameBoard() {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          // Left column - Words
-          Expanded(
-            child: Column(
-              children: _memoryCards
-                  .where((card) => card.type == MemoryCardType.word)
-                  .map((card) => Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: _buildMemoryCard(card),
-                      ))
-                  .toList(),
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Left column - Words
+            SizedBox(
+              width: 150,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: _memoryCards
+                    .where((card) => card.type == MemoryCardType.word)
+                    .map((card) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: _buildMemoryCard(card),
+                        ))
+                    .toList(),
+              ),
             ),
-          ),
-          const SizedBox(width: 16),
-          // Right column - Definitions
-          Expanded(
-            child: Column(
-              children: _memoryCards
-                  .where((card) => card.type == MemoryCardType.definition)
-                  .map((card) => Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: _buildMemoryCard(card),
-                      ))
-                  .toList(),
+            const SizedBox(width: 20),
+            // Right column - Definitions
+            SizedBox(
+              width: 150,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: _memoryCards
+                    .where((card) => card.type == MemoryCardType.definition)
+                    .map((card) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: _buildMemoryCard(card),
+                        ))
+                    .toList(),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildMemoryCard(MemoryCard card) {
     Color borderColor;
+    Color backgroundColor;
+    List<BoxShadow> shadows;
     
     if (card.isMatched) {
       borderColor = Colors.green;
+      backgroundColor = Colors.white;
+      shadows = [
+        BoxShadow(
+          color: Colors.green.withValues(alpha: 0.3),
+          blurRadius: 8,
+          offset: const Offset(0, 4),
+        ),
+      ];
     } else if (card.isWrong) {
       borderColor = Colors.red;
+      backgroundColor = Colors.red.withValues(alpha: 0.1);
+      shadows = [
+        BoxShadow(
+          color: Colors.red.withValues(alpha: 0.3),
+          blurRadius: 8,
+          offset: const Offset(0, 4),
+        ),
+      ];
     } else if (card.isSelected) {
       borderColor = Colors.blue;
+      backgroundColor = Colors.blue.withValues(alpha: 0.1);
+      shadows = [
+        BoxShadow(
+          color: Colors.blue.withValues(alpha: 0.3),
+          blurRadius: 8,
+          offset: const Offset(0, 4),
+        ),
+      ];
     } else {
       borderColor = _getCardBorderColor(card.originalCard);
+      backgroundColor = Colors.white;
+      shadows = [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.15),
+          blurRadius: 6,
+          offset: const Offset(0, 3),
+        ),
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.05),
+          blurRadius: 2,
+          offset: const Offset(0, 1),
+        ),
+      ];
     }
     
     return GestureDetector(
@@ -196,23 +242,18 @@ class _MemoryGameViewState extends State<MemoryGameView> {
       child: AnimatedOpacity(
         opacity: card.isMatched ? 0.0 : 1.0,
         duration: const Duration(milliseconds: 500),
-        child: Container(
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
           width: double.infinity,
           height: 60,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: backgroundColor,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: borderColor,
               width: card.isSelected || card.isMatched || card.isWrong ? 3 : 2,
             ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
-              ),
-            ],
+            boxShadow: shadows,
           ),
           child: _buildCardContent(card),
         ),
