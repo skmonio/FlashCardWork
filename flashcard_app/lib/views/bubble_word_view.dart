@@ -203,39 +203,7 @@ class _BubbleWordViewState extends State<BubbleWordView> {
           
           const Spacer(),
           
-          // Connect mode toggle
-          Container(
-            decoration: BoxDecoration(
-              color: provider.isConnecting ? Colors.green.withOpacity(0.2) : Colors.grey.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: provider.isConnecting ? Colors.green : Colors.grey,
-                width: 2,
-              ),
-            ),
-            child: TextButton.icon(
-              onPressed: () {
-                if (provider.isConnecting) {
-                  provider.cancelConnection();
-                } else {
-                  provider.startConnectionMode();
-                }
-              },
-              icon: Icon(
-                provider.isConnecting ? Icons.link : Icons.link_off,
-                color: provider.isConnecting ? Colors.green : Colors.grey,
-              ),
-              label: Text(
-                provider.isConnecting ? 'Connecting...' : 'Connect',
-                style: TextStyle(
-                  color: provider.isConnecting ? Colors.green : Colors.grey,
-                  fontWeight: provider.isConnecting ? FontWeight.bold : FontWeight.normal,
-                ),
-              ),
-            ),
-          ),
-          
-          const SizedBox(width: 8),
+
           
           // Disconnect button (only show when a node is selected)
           if (provider.selectedNodeId != null)
@@ -296,22 +264,20 @@ class _BubbleWordViewState extends State<BubbleWordView> {
                   ),
                 ),
                 
-                // Connection mode instruction
-                if (provider.isConnecting)
+                // Simple connection instruction
+                if (provider.selectedNodeId != null)
                   Positioned(
                     top: 10,
                     right: 10,
                     child: Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.green.withOpacity(0.9),
+                        color: Colors.blue.withOpacity(0.9),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Text(
-                        provider.firstSelectedNodeId == null 
-                            ? 'Click first word to connect'
-                            : 'Click second word to complete',
-                        style: const TextStyle(
+                      child: const Text(
+                        'Tap another word to connect',
+                        style: TextStyle(
                           color: Colors.white, 
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
@@ -323,9 +289,7 @@ class _BubbleWordViewState extends State<BubbleWordView> {
                 // Word bubbles
                 ...provider.nodes.map((node) => _buildWordBubble(node, provider)),
                 
-                // Connection preview
-                if (provider.isConnecting && provider.firstSelectedNodeId != null)
-                  _buildConnectionPreview(provider),
+
               ],
             ),
           ),
@@ -350,24 +314,10 @@ class _BubbleWordViewState extends State<BubbleWordView> {
     );
   }
 
-  Widget _buildConnectionPreview(BubbleWordProvider provider) {
-    if (provider.firstSelectedNodeId == null) return const SizedBox.shrink();
-    
-    final firstNode = provider.nodes.firstWhere((node) => node.id == provider.firstSelectedNodeId);
-    
-    return CustomPaint(
-      size: Size.infinite,
-      painter: ConnectionPreviewPainter(
-        from: firstNode.position,
-        color: Colors.grey.withOpacity(0.5),
-      ),
-    );
-  }
+
 
   Widget _buildWordBubble(WordNode node, BubbleWordProvider provider) {
     final isSelected = provider.selectedNodeId == node.id;
-    final isFirstNode = provider.isConnecting && provider.firstSelectedNodeId == node.id;
-    final isInConnectionMode = provider.isConnecting;
     
     return Positioned(
       left: node.position.dx - node.size / 2,
@@ -385,13 +335,9 @@ class _BubbleWordViewState extends State<BubbleWordView> {
           decoration: BoxDecoration(
             color: node.color,
             borderRadius: BorderRadius.circular(20),
-            border: isFirstNode
-                ? Border.all(color: Colors.green, width: 4)
-                : isSelected
-                    ? Border.all(color: Colors.white, width: 3)
-                    : isInConnectionMode
-                        ? Border.all(color: Colors.blue.withOpacity(0.5), width: 2)
-                        : null,
+            border: isSelected
+                ? Border.all(color: Colors.white, width: 3)
+                : null,
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.2),
@@ -400,43 +346,21 @@ class _BubbleWordViewState extends State<BubbleWordView> {
               ),
             ],
           ),
-          child: Stack(
-            children: [
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    node.word,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                node.word,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
                 ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
-              // Connection indicator
-              if (isFirstNode)
-                Positioned(
-                  top: 4,
-                  right: 4,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(
-                      color: Colors.green,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.link,
-                      color: Colors.white,
-                      size: 12,
-                    ),
-                  ),
-                ),
-            ],
+            ),
           ),
         ),
       ),
@@ -446,23 +370,15 @@ class _BubbleWordViewState extends State<BubbleWordView> {
 
 
   void _handleNodeTap(WordNode node, BubbleWordProvider provider) {
-    if (provider.isConnecting) {
-      // In connection mode, select the first node or complete the connection
-      if (provider.firstSelectedNodeId == null) {
-        // First node selected
-        provider.selectFirstNodeForConnection(node.id);
-        print('First node selected for connection: ${node.word}');
-      } else if (provider.firstSelectedNodeId != node.id) {
-        // Second node selected - complete the connection
-        provider.completeConnection(node.id);
-        print('Connection completed between ${provider.firstSelectedNodeId} and ${node.id}');
-      } else {
-        // Same node clicked - cancel connection
-        provider.cancelConnection();
-        print('Connection cancelled - same node clicked');
-      }
+    // Simple tap-to-connect: if a node is already selected, connect to this one
+    if (provider.selectedNodeId != null && provider.selectedNodeId != node.id) {
+      // Connect the selected node to this one
+      provider.addConnection(provider.selectedNodeId!, node.id);
+      print('Connection created: ${provider.selectedNodeId} -> ${node.id}');
+      // Keep the new node selected
+      provider.selectNode(node.id);
     } else {
-      // Normal mode - just select the node
+      // Just select this node
       provider.selectNode(node.id);
     }
   }
@@ -933,28 +849,4 @@ class ConnectionPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
 
-class ConnectionPreviewPainter extends CustomPainter {
-  final Offset from;
-  final Color color;
-
-  ConnectionPreviewPainter({
-    required this.from,
-    required this.color,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = 2
-      ..style = PaintingStyle.stroke;
-
-    // Draw a dashed line from the first node to the current mouse position
-    // For now, just draw a line to the center of the screen
-    final center = Offset(size.width / 2, size.height / 2);
-    canvas.drawLine(from, center, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
-} 
+ 
