@@ -39,14 +39,8 @@ class _HomeViewState extends State<HomeView> {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  // Lessons Section
-                  _buildLessonsSection(),
-                  
-                  // Study Modes Section
-                  _buildStudyModesSection(),
-                  
-                  // Games Section
-                  _buildGamesSection(),
+                  // Flash Card Studies Section
+                  _buildFlashCardStudiesSection(),
                   
                   // Resources Section
                   _buildResourcesSection(),
@@ -112,12 +106,12 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
-  Widget _buildLessonsSection() {
+  Widget _buildFlashCardStudiesSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Lessons',
+          'Flash Card Studies',
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w600,
@@ -126,83 +120,35 @@ class _HomeViewState extends State<HomeView> {
         ),
         const SizedBox(height: 16),
         _buildMenuButton(
-          'Dutch Lessons',
-          Icons.book,
-          Colors.blue,
-          () => _navigateToLessons(context),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStudyModesSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 24),
-        Text(
-          'Study Modes',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-          ),
-        ),
-        const SizedBox(height: 16),
-        _buildMenuButton(
-          'Study Your Cards',
+          'Study your cards',
           Icons.school,
           Colors.teal,
           () => _navigateToStudy(context),
         ),
         const SizedBox(height: 12),
         _buildMenuButton(
-          'Test Your Cards',
+          'Test your cards',
           Icons.quiz,
           Colors.orange,
           () => _navigateToTest(context),
         ),
         const SizedBox(height: 12),
         _buildMenuButton(
-          'True or False',
+          'True or false',
           Icons.help_outline,
           const Color(0xFFFF6B4D),
           () => _navigateToTrueFalse(context),
         ),
         const SizedBox(height: 12),
         _buildMenuButton(
-          'Write Your Card',
-          Icons.edit,
-          const Color(0xFFFF9800),
-          () => _navigateToWriting(context),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildGamesSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 24),
-        Text(
-          'Games',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-          ),
-        ),
-        const SizedBox(height: 16),
-        _buildMenuButton(
-          'Remember Your Cards',
+          'Remember your cards',
           Icons.psychology,
           Colors.orange,
           () => _navigateToMemoryGame(context),
         ),
         const SizedBox(height: 12),
         _buildMenuButton(
-          'Jumble Your Cards',
+          'Jumble your cards',
           Icons.text_fields,
           const Color(0xFFFF6B4D),
           () => _navigateToWordScramble(context),
@@ -210,6 +156,8 @@ class _HomeViewState extends State<HomeView> {
       ],
     );
   }
+
+
 
   Widget _buildResourcesSection() {
     return Column(
@@ -226,10 +174,10 @@ class _HomeViewState extends State<HomeView> {
         ),
         const SizedBox(height: 16),
         _buildMenuButton(
-          'Bubble Word',
-          Icons.bubble_chart,
-          Colors.purple,
-          () => _navigateToBubbleWord(context),
+          'Dutch Lessons',
+          Icons.book,
+          Colors.blue,
+          () => _navigateToLessons(context),
         ),
         const SizedBox(height: 12),
         _buildMenuButton(
@@ -237,6 +185,13 @@ class _HomeViewState extends State<HomeView> {
           Icons.language,
           Colors.indigo,
           () => _navigateToGrammar(context),
+        ),
+        const SizedBox(height: 12),
+        _buildMenuButton(
+          'Bubble Word',
+          Icons.bubble_chart,
+          Colors.purple,
+          () => _navigateToBubbleWord(context),
         ),
       ],
     );
