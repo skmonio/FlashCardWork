@@ -46,19 +46,30 @@ class FlashcardService {
   }
   
   Future<void> _saveData() async {
-    final prefs = await SharedPreferences.getInstance();
-    
-    // Save decks
-    final decksJson = _decks
-        .map((deck) => jsonEncode(deck.toJson()))
-        .toList();
-    await prefs.setStringList(_decksKey, decksJson);
-    
-    // Save cards
-    final cardsJson = _cards
-        .map((card) => jsonEncode(card.toJson()))
-        .toList();
-    await prefs.setStringList(_cardsKey, cardsJson);
+    print('Service: Starting _saveData...');
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      print('Service: SharedPreferences instance obtained');
+      
+      // Save decks
+      final decksJson = _decks
+          .map((deck) => jsonEncode(deck.toJson()))
+          .toList();
+      print('Service: Saving ${decksJson.length} decks');
+      await prefs.setStringList(_decksKey, decksJson);
+      print('Service: Decks saved successfully');
+      
+      // Save cards
+      final cardsJson = _cards
+          .map((card) => jsonEncode(card.toJson()))
+          .toList();
+      print('Service: Saving ${cardsJson.length} cards');
+      await prefs.setStringList(_cardsKey, cardsJson);
+      print('Service: Cards saved successfully');
+    } catch (e) {
+      print('Service: Error in _saveData: $e');
+      rethrow;
+    }
   }
   
   Future<void> _loadSettings() async {
@@ -77,14 +88,25 @@ class FlashcardService {
   // MARK: - Deck Management
   
   Future<Deck> createDeck(String name, {String? parentId}) async {
-    final deck = Deck(
-      name: name,
-      parentId: parentId,
-    );
-    
-    _decks.add(deck);
-    await _saveData();
-    return deck;
+    print('Service: Creating deck: $name');
+    try {
+      final deck = Deck(
+        name: name,
+        parentId: parentId,
+      );
+      
+      print('Service: Deck object created: ${deck.name} (${deck.id})');
+      _decks.add(deck);
+      print('Service: Deck added to list. Total decks: ${_decks.length}');
+      
+      await _saveData();
+      print('Service: Data saved successfully');
+      
+      return deck;
+    } catch (e) {
+      print('Service: Error creating deck "$name": $e');
+      rethrow;
+    }
   }
   
   Future<void> updateDeck(Deck deck) async {
