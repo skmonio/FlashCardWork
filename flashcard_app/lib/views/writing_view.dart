@@ -27,8 +27,8 @@ class _WritingViewState extends State<WritingView> {
   String _displayWord = '';
   bool _isQuestionMode = true; // true = definition to word, false = word to definition
   int _lives = 5;
-  Set<String> _guessedLetters = {};
-  Set<String> _wrongLetters = {};
+  String _userAnswer = '';
+  final TextEditingController _textController = TextEditingController();
   
   // Track answered questions and their answers
   Map<int, String> _answeredQuestions = {}; // question index -> user answer
@@ -44,6 +44,7 @@ class _WritingViewState extends State<WritingView> {
 
   @override
   void dispose() {
+    _textController.dispose();
     super.dispose();
   }
 
@@ -63,7 +64,9 @@ class _WritingViewState extends State<WritingView> {
       _isQuestionMode = _questionModes[_currentIndex]!;
       _correctAnswer = _correctAnswersText[_currentIndex]!;
       _displayWord = _answeredQuestions[_currentIndex]!;
+      _userAnswer = _answeredQuestions[_currentIndex]!;
       _answered = true;
+      _textController.text = _userAnswer;
       return;
     }
 
@@ -86,8 +89,8 @@ class _WritingViewState extends State<WritingView> {
     setState(() {
       _answered = false;
       _lives = 5;
-      _guessedLetters.clear();
-      _wrongLetters.clear();
+      _userAnswer = '';
+      _textController.clear();
     });
   }
 
@@ -118,43 +121,28 @@ class _WritingViewState extends State<WritingView> {
     return vibrantColors[index];
   }
 
-  void _guessLetter(String letter) {
-    if (_answered || _guessedLetters.contains(letter)) return;
+  void _checkAnswer() {
+    if (_answered) return;
     
-    final upperLetter = letter.toUpperCase();
-    final lowerLetter = letter.toLowerCase();
+    final userInput = _textController.text.trim();
+    if (userInput.isEmpty) return;
     
     setState(() {
-      _guessedLetters.add(upperLetter);
+      _userAnswer = userInput;
       
-      if (_correctAnswer.toLowerCase().contains(lowerLetter)) {
-        // Correct guess - reveal letters
-        String newDisplay = '';
-        for (int i = 0; i < _correctAnswer.length; i++) {
-          if (_correctAnswer[i].toLowerCase() == lowerLetter) {
-            newDisplay += _correctAnswer[i];
-          } else if (_guessedLetters.contains(_correctAnswer[i].toUpperCase())) {
-            newDisplay += _correctAnswer[i];
-          } else if (_correctAnswer[i].toLowerCase().contains(RegExp(r'[a-z]'))) {
-            newDisplay += '_';
-          } else {
-            newDisplay += _correctAnswer[i]; // Keep spaces and punctuation
-          }
-        }
-        _displayWord = newDisplay;
-        
-        // Check if word is complete
-        if (!_displayWord.contains('_')) {
-          _answered = true;
-          _correctAnswers++;
-          _totalAnswered++;
-          _correctAnswersMap[_currentIndex] = true;
-          _answeredQuestions[_currentIndex] = _displayWord;
-          SoundManager().playCorrectSound();
-        }
+      // Check if answer is correct (case-insensitive)
+      final isCorrect = userInput.toLowerCase() == _correctAnswer.toLowerCase();
+      
+      if (isCorrect) {
+        _answered = true;
+        _correctAnswers++;
+        _totalAnswered++;
+        _correctAnswersMap[_currentIndex] = true;
+        _answeredQuestions[_currentIndex] = userInput;
+        _displayWord = _correctAnswer; // Show the full correct answer
+        SoundManager().playCorrectSound();
       } else {
-        // Wrong guess
-        _wrongLetters.add(upperLetter);
+        // Wrong answer - lose a life
         _lives--;
         SoundManager().playWrongSound();
         
@@ -164,7 +152,7 @@ class _WritingViewState extends State<WritingView> {
           _totalAnswered++;
           _displayWord = _correctAnswer; // Show the correct answer
           _correctAnswersMap[_currentIndex] = false;
-          _answeredQuestions[_currentIndex] = _displayWord;
+          _answeredQuestions[_currentIndex] = userInput;
         }
       }
     });
@@ -188,59 +176,7 @@ class _WritingViewState extends State<WritingView> {
     }
   }
 
-  Widget _buildKeyboard() {
-    final letters = [
-      ['A', 'B', 'C', 'D', 'E', 'F', 'G'],
-      ['H', 'I', 'J', 'K', 'L', 'M', 'N'],
-      ['O', 'P', 'Q', 'R', 'S', 'T', 'U'],
-      ['V', 'W', 'X', 'Y', 'Z'],
-    ];
 
-    return Column(
-      children: letters.map((row) {
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: row.map((letter) {
-              final isGuessed = _guessedLetters.contains(letter);
-              final isWrong = _wrongLetters.contains(letter);
-              
-              return Container(
-                margin: const EdgeInsets.symmetric(horizontal: 2),
-                child: ElevatedButton(
-                  onPressed: _answered || isGuessed ? null : () => _guessLetter(letter),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: isWrong 
-                        ? Colors.red.withValues(alpha: 0.3)
-                        : isGuessed 
-                            ? Colors.green.withValues(alpha: 0.3)
-                            : Theme.of(context).colorScheme.primary,
-                    foregroundColor: isWrong 
-                        ? Colors.red 
-                        : isGuessed 
-                            ? Colors.green 
-                            : Colors.white,
-                    minimumSize: const Size(35, 40),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: Text(
-                    letter,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        );
-      }).toList(),
-    );
-  }
 
 
 
@@ -410,24 +346,48 @@ class _WritingViewState extends State<WritingView> {
                   
                   const SizedBox(height: 16),
                   
-                  // Wrong letters
-                  if (_wrongLetters.isNotEmpty)
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      child: Text(
-                        'Wrong: ${_wrongLetters.join(', ')}',
-                        style: const TextStyle(
-                          color: Colors.red,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                  
                   const SizedBox(height: 16),
                   
-                  // Keyboard
-                  Expanded(
-                    child: _buildKeyboard(),
+                  // System keyboard input
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surfaceVariant,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Your answer:',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: _textController,
+                          enabled: !_answered,
+                          decoration: InputDecoration(
+                            hintText: 'Type your answer here...',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            suffixIcon: _answered ? null : IconButton(
+                              onPressed: _checkAnswer,
+                              icon: const Icon(Icons.check),
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                          onSubmitted: (_) => _checkAnswer(),
+                        ),
+                      ],
+                    ),
                   ),
                   
                   // Navigation buttons (only show if question is answered)
@@ -589,8 +549,8 @@ class _WritingViewState extends State<WritingView> {
                               _answered = false;
                               _displayWord = '';
                               _lives = 5;
-                              _guessedLetters.clear();
-                              _wrongLetters.clear();
+                              _userAnswer = '';
+                              _textController.clear();
                               // Reset all navigation state
                               _answeredQuestions.clear();
                               _correctAnswersMap.clear();
