@@ -317,104 +317,50 @@ class _HomeViewState extends State<HomeView> {
   }
 
   void _navigateToTest(BuildContext context) {
-    final provider = context.read<FlashcardProvider>();
-    final allCards = provider.cards;
-    
-    if (allCards.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No cards available. Please add some cards first.')),
-      );
-      return;
-    }
-    
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => MultipleChoiceView(
-          cards: allCards,
-          title: 'Test Your Cards',
+        builder: (context) => StudyTypeSelectionView(
+          gameMode: GameMode.test,
         ),
       ),
     );
   }
 
   void _navigateToTrueFalse(BuildContext context) {
-    final provider = context.read<FlashcardProvider>();
-    final allCards = provider.cards;
-    
-    if (allCards.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No cards available. Please add some cards first.')),
-      );
-      return;
-    }
-    
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => TrueFalseView(
-          cards: allCards,
-          title: 'True or False',
+        builder: (context) => StudyTypeSelectionView(
+          gameMode: GameMode.trueFalse,
         ),
       ),
     );
   }
 
   void _navigateToWriting(BuildContext context) {
-    final provider = context.read<FlashcardProvider>();
-    final allCards = provider.cards;
-    
-    if (allCards.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No cards available. Please add some cards first.')),
-      );
-      return;
-    }
-    
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => WritingView(
-          cards: allCards,
-          title: 'Write Your Card',
+        builder: (context) => StudyTypeSelectionView(
+          gameMode: GameMode.write,
         ),
       ),
     );
   }
 
   void _navigateToMemoryGame(BuildContext context) {
-    final provider = context.read<FlashcardProvider>();
-    final allCards = provider.cards;
-    
-    if (allCards.length < 3) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Need at least 3 cards for memory game.')),
-      );
-      return;
-    }
-    
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => MemoryGameView(
-          cards: allCards,
+        builder: (context) => StudyTypeSelectionView(
+          gameMode: GameMode.game,
         ),
       ),
     );
   }
 
   void _navigateToWordScramble(BuildContext context) {
-    final provider = context.read<FlashcardProvider>();
-    final allCards = provider.cards;
-    
-    if (allCards.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No cards available. Please add some cards first.')),
-      );
-      return;
-    }
-    
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => WordScrambleView(
-          cards: allCards,
-          title: 'Jumble Your Cards',
+        builder: (context) => StudyTypeSelectionView(
+          gameMode: GameMode.bubbleWord,
         ),
       ),
     );

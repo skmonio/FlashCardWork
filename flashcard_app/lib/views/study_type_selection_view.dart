@@ -5,10 +5,17 @@ import '../components/unified_header.dart';
 import '../models/flash_card.dart';
 import 'study_view.dart';
 import 'advanced_study_view.dart';
+import 'multiple_choice_view.dart';
+import 'true_false_view.dart';
+import 'writing_view.dart';
+import 'memory_game_view.dart';
+import 'word_scramble_view.dart';
 
 enum GameMode {
   study,
   test,
+  trueFalse,
+  write,
   game,
   bubbleWord,
 }
@@ -113,12 +120,11 @@ class _StudyTypeSelectionViewState extends State<StudyTypeSelectionView> {
         ),
         const SizedBox(height: 20),
         
-        // Card count selector (only for study mode)
-        if (widget.gameMode == GameMode.study)
-          _buildCardCountSelector(),
+        // Card count selector (for all modes)
+        _buildCardCountSelector(),
         
-        // Start Flipped toggle (only for study mode)
-        if (widget.gameMode == GameMode.study || widget.gameMode == GameMode.test)
+        // Start Flipped toggle (for study and test modes)
+        if (widget.gameMode == GameMode.study || widget.gameMode == GameMode.test || widget.gameMode == GameMode.trueFalse)
           _buildStartFlippedToggle(),
       ],
     );
@@ -308,15 +314,70 @@ class _StudyTypeSelectionViewState extends State<StudyTypeSelectionView> {
     final shuffledCards = List<FlashCard>.from(allCards)..shuffle();
     final studyCards = shuffledCards.take(_selectedCardCount).toList();
     
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => AdvancedStudyView(
-          cards: studyCards,
-          startFlipped: _startFlipped,
-          title: 'Quick Study',
-        ),
-      ),
-    );
+    // Navigate based on game mode
+    switch (widget.gameMode) {
+      case GameMode.study:
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => AdvancedStudyView(
+              cards: studyCards,
+              startFlipped: _startFlipped,
+              title: 'Quick Study',
+            ),
+          ),
+        );
+        break;
+      case GameMode.test:
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => MultipleChoiceView(
+              cards: studyCards,
+              title: 'Quick Test',
+            ),
+          ),
+        );
+        break;
+      case GameMode.trueFalse:
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => TrueFalseView(
+              cards: studyCards,
+              title: 'Quick True or False',
+            ),
+          ),
+        );
+        break;
+      case GameMode.write:
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => WritingView(
+              cards: studyCards,
+              title: 'Quick Write',
+            ),
+          ),
+        );
+        break;
+      case GameMode.game:
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => MemoryGameView(
+              cards: studyCards,
+              startFlipped: _startFlipped,
+            ),
+          ),
+        );
+        break;
+      case GameMode.bubbleWord:
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => WordScrambleView(
+              cards: studyCards,
+              title: 'Quick Jumble',
+            ),
+          ),
+        );
+        break;
+    }
   }
 
 
@@ -356,15 +417,71 @@ class _StudyTypeSelectionViewState extends State<StudyTypeSelectionView> {
                     return;
                   }
                   Navigator.of(context).pop();
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => AdvancedStudyView(
-                        cards: deckCards,
-                        startFlipped: _startFlipped,
-                        title: deck.name,
-                      ),
-                    ),
-                  );
+                  
+                  // Navigate based on game mode
+                  switch (widget.gameMode) {
+                    case GameMode.study:
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => AdvancedStudyView(
+                            cards: deckCards,
+                            startFlipped: _startFlipped,
+                            title: deck.name,
+                          ),
+                        ),
+                      );
+                      break;
+                    case GameMode.test:
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => MultipleChoiceView(
+                            cards: deckCards,
+                            title: deck.name,
+                          ),
+                        ),
+                      );
+                      break;
+                    case GameMode.trueFalse:
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => TrueFalseView(
+                            cards: deckCards,
+                            title: deck.name,
+                          ),
+                        ),
+                      );
+                      break;
+                    case GameMode.write:
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => WritingView(
+                            cards: deckCards,
+                            title: deck.name,
+                          ),
+                        ),
+                      );
+                      break;
+                    case GameMode.game:
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => MemoryGameView(
+                            cards: deckCards,
+                            startFlipped: _startFlipped,
+                          ),
+                        ),
+                      );
+                      break;
+                    case GameMode.bubbleWord:
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => WordScrambleView(
+                            cards: deckCards,
+                            title: deck.name,
+                          ),
+                        ),
+                      );
+                      break;
+                  }
                 },
               );
             },
@@ -391,15 +508,23 @@ class _StudyTypeSelectionViewState extends State<StudyTypeSelectionView> {
         break;
       case GameMode.test:
         title = 'Test Mode';
-        content = 'Challenge yourself with various test formats to assess your knowledge.';
+        content = 'Challenge yourself with multiple choice questions to assess your knowledge.';
+        break;
+      case GameMode.trueFalse:
+        title = 'True or False Mode';
+        content = 'Test your knowledge with true or false questions about translations.';
+        break;
+      case GameMode.write:
+        title = 'Write Mode';
+        content = 'Practice writing translations with a hangman-style game.';
         break;
       case GameMode.game:
         title = 'Memory Game';
         content = 'Match pairs of cards to improve your memory and recognition.';
         break;
       case GameMode.bubbleWord:
-        title = 'Bubble Word';
-        content = 'Interactive word bubble game to learn vocabulary in context.';
+        title = 'Jumble Mode';
+        content = 'Arrange scrambled letters to form the correct translation.';
         break;
     }
 
