@@ -1,67 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:math';
-import '../providers/flashcard_provider.dart';
-import '../models/flash_card.dart';
+import '../providers/bubble_word_provider.dart';
+import '../models/bubble_word_models.dart';
 import '../components/unified_header.dart';
-
-class WordNode {
-  final String id;
-  final String word;
-  final String definition;
-  final Color color;
-  final Offset position;
-  final double size;
-  bool isSelected;
-  bool isDragging;
-
-  WordNode({
-    required this.id,
-    required this.word,
-    required this.definition,
-    required this.color,
-    required this.position,
-    this.size = 80,
-    this.isSelected = false,
-    this.isDragging = false,
-  });
-
-  WordNode copyWith({
-    String? id,
-    String? word,
-    String? definition,
-    Color? color,
-    Offset? position,
-    double? size,
-    bool? isSelected,
-    bool? isDragging,
-  }) {
-    return WordNode(
-      id: id ?? this.id,
-      word: word ?? this.word,
-      definition: definition ?? this.definition,
-      color: color ?? this.color,
-      position: position ?? this.position,
-      size: size ?? this.size,
-      isSelected: isSelected ?? this.isSelected,
-      isDragging: isDragging ?? this.isDragging,
-    );
-  }
-}
-
-class WordConnection {
-  final String id;
-  final String fromNodeId;
-  final String toNodeId;
-  final Color color;
-
-  WordConnection({
-    required this.id,
-    required this.fromNodeId,
-    required this.toNodeId,
-    required this.color,
-  });
-}
 
 class BubbleWordView extends StatefulWidget {
   const BubbleWordView({super.key});
@@ -71,384 +13,325 @@ class BubbleWordView extends StatefulWidget {
 }
 
 class _BubbleWordViewState extends State<BubbleWordView> {
-  final List<WordNode> _nodes = [];
-  final List<WordConnection> _connections = [];
-  final Random _random = Random();
-  
-  Offset _panOffset = Offset.zero;
-  double _scale = 1.0;
-  String? _selectedNodeId;
-  String? _firstSelectedNodeId;
-  bool _isConnecting = false;
-  
-  final List<Color> _bubbleColors = [
-    Colors.blue,
-    Colors.green,
-    Colors.orange,
-    Colors.purple,
-    Colors.red,
-    Colors.pink,
-    Colors.yellow,
-    Colors.teal,
-    Colors.indigo,
-  ];
+  final TextEditingController _wordController = TextEditingController();
+  final TextEditingController _definitionController = TextEditingController();
+  bool _showingAddWord = false;
+  bool _showingEditWord = false;
+  WordNode? _editingNode;
 
   @override
   void initState() {
     super.initState();
-    _loadSampleData();
-  }
-
-  void _loadSampleData() {
-    // Add some sample word nodes
-    _addWordNode('huis', 'house', const Offset(100, 100));
-    _addWordNode('auto', 'car', const Offset(300, 150));
-    _addWordNode('boek', 'book', const Offset(200, 300));
-    _addWordNode('hond', 'dog', const Offset(400, 250));
-    _addWordNode('kat', 'cat', const Offset(150, 400));
-  }
-
-  void _addWordNode(String word, String definition, Offset position) {
-    final node = WordNode(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      word: word,
-      definition: definition,
-      color: _bubbleColors[_random.nextInt(_bubbleColors.length)],
-      position: position,
-    );
-    setState(() {
-      _nodes.add(node);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<BubbleWordProvider>().initialize();
     });
   }
 
   @override
+  void dispose() {
+    _wordController.dispose();
+    _definitionController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      body: Column(
+    return Consumer<BubbleWordProvider>(
+      builder: (context, provider, child) {
+        return Scaffold(
+          backgroundColor: Theme.of(context).colorScheme.surface,
+          body: Stack(
+            children: [
+              // Main content
+              Column(
+                children: [
+                  // Header
+                  UnifiedHeader(
+                    title: provider.currentMap?.name ?? 'Bubble Word',
+                    onBack: () => _showSavePrompt(context),
+                    trailing: _buildTrailingMenu(context, provider),
+                  ),
+                  
+                  // Action buttons
+                  _buildActionButtons(provider),
+                  
+                  // Canvas
+                  Expanded(
+                    child: _buildCanvas(provider),
+                  ),
+                ],
+              ),
+              
+              // Zoom controls
+              _buildZoomControls(provider),
+            ],
+          ),
+          
+          // Floating action button for adding words
+          floatingActionButton: FloatingActionButton(
+            onPressed: () => _showAddWordDialog(context),
+            backgroundColor: Colors.green,
+            child: const Icon(Icons.add, color: Colors.white),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildTrailingMenu(BuildContext context, BubbleWordProvider provider) {
+    return PopupMenuButton<String>(
+      onSelected: (value) => _handleMenuAction(value, context, provider),
+      itemBuilder: (context) => [
+        const PopupMenuItem(
+          value: 'add',
+          child: Row(
+            children: [
+              Icon(Icons.add),
+              SizedBox(width: 8),
+              Text('Add Word'),
+            ],
+          ),
+        ),
+        const PopupMenuItem(
+          value: 'reset',
+          child: Row(
+            children: [
+              Icon(Icons.refresh),
+              SizedBox(width: 8),
+              Text('Reset View'),
+            ],
+          ),
+        ),
+        const PopupMenuItem(
+          value: 'clear',
+          child: Row(
+            children: [
+              Icon(Icons.clear_all, color: Colors.red),
+              SizedBox(width: 8),
+              Text('Clear All', style: TextStyle(color: Colors.red)),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionButtons(BubbleWordProvider provider) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
         children: [
-          // Header
-          UnifiedHeader(
-            title: 'Bubble Word',
-            onBack: () => Navigator.of(context).pop(),
-            trailing: PopupMenuButton<String>(
-              onSelected: _handleMenuAction,
-              itemBuilder: (context) => [
-                const PopupMenuItem(
-                  value: 'add',
-                  child: Row(
-                    children: [
-                      Icon(Icons.add),
-                      SizedBox(width: 8),
-                      Text('Add Word'),
-                    ],
-                  ),
-                ),
-                const PopupMenuItem(
-                  value: 'reset',
-                  child: Row(
-                    children: [
-                      Icon(Icons.refresh),
-                      SizedBox(width: 8),
-                      Text('Reset View'),
-                    ],
-                  ),
-                ),
-                const PopupMenuItem(
-                  value: 'clear',
-                  child: Row(
-                    children: [
-                      Icon(Icons.clear_all, color: Colors.red),
-                      SizedBox(width: 8),
-                      Text('Clear All', style: TextStyle(color: Colors.red)),
-                    ],
-                  ),
-                ),
+          // Undo button
+          IconButton(
+            onPressed: provider.canUndo ? provider.undo : null,
+            icon: Icon(
+              Icons.undo,
+              color: provider.canUndo ? Colors.orange : Colors.grey,
+            ),
+          ),
+          
+          // Redo button
+          IconButton(
+            onPressed: provider.canRedo ? provider.redo : null,
+            icon: Icon(
+              Icons.redo,
+              color: provider.canRedo ? Colors.purple : Colors.grey,
+            ),
+          ),
+          
+          const Spacer(),
+          
+          // Disconnect button (only show when a node is selected)
+          if (provider.selectedNodeId != null)
+            TextButton.icon(
+              onPressed: () => _showDisconnectDialog(context, provider),
+              icon: const Icon(Icons.link_off),
+              label: const Text('Disconnect'),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCanvas(BubbleWordProvider provider) {
+    return GestureDetector(
+      onPanUpdate: (details) {
+        final newOffset = provider.offset + details.delta;
+        provider.setOffset(newOffset);
+      },
+      onScaleUpdate: (details) {
+        if (details.scale != 1.0) {
+          final newScale = provider.scale * details.scale;
+          provider.setScale(newScale);
+        }
+      },
+      onTapUp: (details) {
+        // Deselect if tapping on empty space
+        if (provider.selectedNodeId != null) {
+          provider.selectNode(null);
+        }
+      },
+      child: Container(
+        color: Theme.of(context).colorScheme.surface,
+        child: Transform.scale(
+          scale: provider.scale,
+          child: Transform.translate(
+            offset: provider.offset,
+            child: Stack(
+              children: [
+                // Connections
+                ...provider.connections.map((connection) => _buildConnection(connection, provider)),
+                
+                // Word bubbles
+                ...provider.nodes.map((node) => _buildWordBubble(node, provider)),
+                
+                // Connection preview
+                if (provider.isConnecting && provider.firstSelectedNodeId != null)
+                  _buildConnectionPreview(provider),
               ],
             ),
           ),
-          
-          // Toolbar
-          _buildToolbar(),
-          
-          // Canvas
-          Expanded(
-            child: GestureDetector(
-              onPanUpdate: _handlePanUpdate,
-              onScaleUpdate: _handleScaleUpdate,
-              onTapUp: _handleCanvasTap,
-              child: Container(
-                color: Theme.of(context).colorScheme.surface,
-                child: Stack(
-                  children: [
-                    // Connections
-                    ..._buildConnections(),
-                    
-                    // Word bubbles
-                    ..._buildWordBubbles(),
-                    
-                    // Connection preview
-                    if (_isConnecting && _firstSelectedNodeId != null)
-                      _buildConnectionPreview(),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddWordDialog(),
-        backgroundColor: Colors.green,
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
-    );
-  }
-
-  Widget _buildToolbar() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          IconButton(
-            onPressed: _zoomIn,
-            icon: const Icon(Icons.zoom_in),
-            tooltip: 'Zoom In',
-          ),
-          IconButton(
-            onPressed: _zoomOut,
-            icon: const Icon(Icons.zoom_out),
-            tooltip: 'Zoom Out',
-          ),
-          IconButton(
-            onPressed: _resetView,
-            icon: const Icon(Icons.center_focus_strong),
-            tooltip: 'Reset View',
-          ),
-          IconButton(
-            onPressed: _undo,
-            icon: const Icon(Icons.undo),
-            tooltip: 'Undo',
-          ),
-          IconButton(
-            onPressed: _redo,
-            icon: const Icon(Icons.redo),
-            tooltip: 'Redo',
-          ),
-        ],
-      ),
-    );
-  }
-
-  List<Widget> _buildConnections() {
-    return _connections.map((connection) {
-      final fromNode = _nodes.firstWhere((node) => node.id == connection.fromNodeId);
-      final toNode = _nodes.firstWhere((node) => node.id == connection.toNodeId);
-      
-      return CustomPaint(
-        painter: ConnectionPainter(
-          from: fromNode.position + _panOffset,
-          to: toNode.position + _panOffset,
-          color: connection.color,
-          scale: _scale,
-        ),
-      );
-    }).toList();
-  }
-
-  List<Widget> _buildWordBubbles() {
-    return _nodes.map((node) {
-      return Positioned(
-        left: (node.position.dx + _panOffset.dx) * _scale,
-        top: (node.position.dy + _panOffset.dy) * _scale,
-        child: GestureDetector(
-          onPanUpdate: (details) => _handleNodeDrag(node, details),
-          onTap: () => _handleNodeTap(node),
-          onDoubleTap: () => _handleNodeDoubleTap(node),
-          child: Transform.scale(
-            scale: _scale,
-            child: _buildWordBubble(node),
-          ),
-        ),
-      );
-    }).toList();
-  }
-
-  Widget _buildWordBubble(WordNode node) {
-    return Container(
-      width: node.size,
-      height: node.size,
-      decoration: BoxDecoration(
-        color: node.color.withValues(alpha: node.isSelected ? 0.8 : 0.6),
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: node.isSelected ? Colors.white : Colors.transparent,
-          width: 3,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: node.color.withValues(alpha: 0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              node.word,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            if (node.isSelected) ...[
-              const SizedBox(height: 4),
-              Text(
-                node.definition,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ],
         ),
       ),
     );
   }
 
-  Widget _buildConnectionPreview() {
-    if (_firstSelectedNodeId == null) return const SizedBox.shrink();
+  Widget _buildConnection(WordConnection connection, BubbleWordProvider provider) {
+    final fromNode = provider.nodes.firstWhere((node) => node.id == connection.fromNodeId);
+    final toNode = provider.nodes.firstWhere((node) => node.id == connection.toNodeId);
     
-    final firstNode = _nodes.firstWhere((node) => node.id == _firstSelectedNodeId);
+    return CustomPaint(
+      painter: ConnectionPainter(
+        from: fromNode.position,
+        to: toNode.position,
+        color: connection.color,
+      ),
+    );
+  }
+
+  Widget _buildConnectionPreview(BubbleWordProvider provider) {
+    if (provider.firstSelectedNodeId == null) return const SizedBox.shrink();
+    
+    final firstNode = provider.nodes.firstWhere((node) => node.id == provider.firstSelectedNodeId);
+    
+    return CustomPaint(
+      painter: ConnectionPreviewPainter(
+        from: firstNode.position,
+        color: Colors.grey.withOpacity(0.5),
+      ),
+    );
+  }
+
+  Widget _buildWordBubble(WordNode node, BubbleWordProvider provider) {
+    final isSelected = provider.selectedNodeId == node.id;
+    final isConnecting = provider.isConnecting && provider.firstSelectedNodeId == node.id;
     
     return Positioned(
-      left: (firstNode.position.dx + _panOffset.dx) * _scale,
-      top: (firstNode.position.dy + _panOffset.dy) * _scale,
-      child: Transform.scale(
-        scale: _scale,
+      left: node.position.dx - node.size / 2,
+      top: node.position.dy - node.size / 2,
+      child: GestureDetector(
+        onTap: () => _handleNodeTap(node, provider),
+        onDoubleTap: () => _showEditWordDialog(context, node),
+        onPanUpdate: (details) {
+          final newPosition = node.position + details.delta;
+          provider.updateNode(node.id, position: newPosition);
+        },
         child: Container(
-          width: 20,
-          height: 20,
+          width: node.size,
+          height: node.size,
           decoration: BoxDecoration(
-            color: Colors.orange,
-            shape: BoxShape.circle,
-            border: Border.all(color: Colors.white, width: 2),
+            color: node.color,
+            borderRadius: BorderRadius.circular(20),
+            border: isSelected || isConnecting
+                ? Border.all(color: Colors.white, width: 3)
+                : null,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-          child: const Icon(
-            Icons.link,
-            color: Colors.white,
-            size: 12,
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                node.word,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ),
         ),
       ),
     );
   }
 
-  void _handlePanUpdate(DragUpdateDetails details) {
-    setState(() {
-      _panOffset += details.delta;
-    });
-  }
-
-  void _handleScaleUpdate(ScaleUpdateDetails details) {
-    setState(() {
-      _scale = (_scale * details.scale).clamp(0.5, 3.0);
-    });
-  }
-
-  void _handleCanvasTap(TapUpDetails details) {
-    // Clear selection when tapping empty space
-    setState(() {
-      _selectedNodeId = null;
-      _isConnecting = false;
-      _firstSelectedNodeId = null;
-      
-      // Clear all node selections
-      for (int i = 0; i < _nodes.length; i++) {
-        _nodes[i] = _nodes[i].copyWith(isSelected: false);
-      }
-    });
-  }
-
-  void _handleNodeDrag(WordNode node, DragUpdateDetails details) {
-    setState(() {
-      final index = _nodes.indexWhere((n) => n.id == node.id);
-      if (index != -1) {
-        _nodes[index] = node.copyWith(
-          position: node.position + details.delta / _scale,
-          isDragging: true,
-        );
-      }
-    });
-  }
-
-  void _handleNodeTap(WordNode node) {
-    setState(() {
-      // Clear other selections
-      for (int i = 0; i < _nodes.length; i++) {
-        _nodes[i] = _nodes[i].copyWith(isSelected: false);
-      }
-      
-      // Select this node
-      final index = _nodes.indexWhere((n) => n.id == node.id);
-      if (index != -1) {
-        _nodes[index] = _nodes[index].copyWith(isSelected: true);
-        _selectedNodeId = node.id;
-      }
-      
-      // Handle connection logic
-      if (_isConnecting && _firstSelectedNodeId != null && _firstSelectedNodeId != node.id) {
-        _createConnection(_firstSelectedNodeId!, node.id);
-        _isConnecting = false;
-        _firstSelectedNodeId = null;
-      } else if (!_isConnecting) {
-        _firstSelectedNodeId = node.id;
-        _isConnecting = true;
-      }
-    });
-  }
-
-  void _handleNodeDoubleTap(WordNode node) {
-    _showEditWordDialog(node);
-  }
-
-  void _createConnection(String fromId, String toId) {
-    final connection = WordConnection(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      fromNodeId: fromId,
-      toNodeId: toId,
-      color: Colors.blue,
+  Widget _buildZoomControls(BubbleWordProvider provider) {
+    return Positioned(
+      bottom: 32,
+      right: 20,
+      child: Column(
+        children: [
+          // Zoom in
+          FloatingActionButton.small(
+            onPressed: () {
+              final newScale = (provider.scale * 1.2).clamp(0.5, 3.0);
+              provider.setScale(newScale);
+            },
+            backgroundColor: Colors.white,
+            child: const Icon(Icons.zoom_in, color: Colors.blue),
+          ),
+          
+          const SizedBox(height: 8),
+          
+          // Zoom out
+          FloatingActionButton.small(
+            onPressed: () {
+              final newScale = (provider.scale / 1.2).clamp(0.5, 3.0);
+              provider.setScale(newScale);
+            },
+            backgroundColor: Colors.white,
+            child: const Icon(Icons.zoom_out, color: Colors.blue),
+          ),
+        ],
+      ),
     );
-    setState(() {
-      _connections.add(connection);
-    });
   }
 
-  void _handleMenuAction(String action) {
+  void _handleNodeTap(WordNode node, BubbleWordProvider provider) {
+    if (provider.isConnecting) {
+      provider.completeConnection(node.id);
+    } else {
+      provider.selectNode(node.id);
+    }
+  }
+
+  void _handleMenuAction(String action, BuildContext context, BubbleWordProvider provider) {
     switch (action) {
       case 'add':
-        _showAddWordDialog();
+        _showAddWordDialog(context);
         break;
       case 'reset':
-        _resetView();
+        provider.resetView();
         break;
       case 'clear':
-        _showClearAllDialog();
+        _showClearAllDialog(context, provider);
         break;
     }
   }
 
-  void _showAddWordDialog() {
-    final wordController = TextEditingController();
-    final definitionController = TextEditingController();
+  void _showAddWordDialog(BuildContext context) {
+    _wordController.clear();
+    _definitionController.clear();
+    _showingAddWord = true;
     
     showDialog(
       context: context,
@@ -458,19 +341,20 @@ class _BubbleWordViewState extends State<BubbleWordView> {
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
-              controller: wordController,
+              controller: _wordController,
               decoration: const InputDecoration(
-                labelText: 'Dutch Word',
-                hintText: 'e.g., huis',
+                labelText: 'Word',
+                border: OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16),
             TextField(
-              controller: definitionController,
+              controller: _definitionController,
               decoration: const InputDecoration(
                 labelText: 'Definition',
-                hintText: 'e.g., house',
+                border: OutlineInputBorder(),
               ),
+              maxLines: 3,
             ),
           ],
         ),
@@ -481,29 +365,33 @@ class _BubbleWordViewState extends State<BubbleWordView> {
           ),
           ElevatedButton(
             onPressed: () {
-              if (wordController.text.isNotEmpty && definitionController.text.isNotEmpty) {
+              if (_wordController.text.isNotEmpty) {
+                final provider = context.read<BubbleWordProvider>();
+                final random = Random();
                 final position = Offset(
-                  100 + _random.nextDouble() * 200,
-                  100 + _random.nextDouble() * 200,
+                  random.nextDouble() * 300 + 100,
+                  random.nextDouble() * 300 + 100,
                 );
-                _addWordNode(
-                  wordController.text.trim(),
-                  definitionController.text.trim(),
+                provider.addNode(
+                  _wordController.text.trim(),
+                  _definitionController.text.trim(),
                   position,
                 );
                 Navigator.of(context).pop();
               }
             },
-            child: const Text('Add'),
+            child: const Text('Add Word'),
           ),
         ],
       ),
     );
   }
 
-  void _showEditWordDialog(WordNode node) {
-    final wordController = TextEditingController(text: node.word);
-    final definitionController = TextEditingController(text: node.definition);
+  void _showEditWordDialog(BuildContext context, WordNode node) {
+    _wordController.text = node.word;
+    _definitionController.text = node.definition;
+    _editingNode = node;
+    _showingEditWord = true;
     
     showDialog(
       context: context,
@@ -513,17 +401,20 @@ class _BubbleWordViewState extends State<BubbleWordView> {
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
-              controller: wordController,
+              controller: _wordController,
               decoration: const InputDecoration(
-                labelText: 'Dutch Word',
+                labelText: 'Word',
+                border: OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16),
             TextField(
-              controller: definitionController,
+              controller: _definitionController,
               decoration: const InputDecoration(
                 labelText: 'Definition',
+                border: OutlineInputBorder(),
               ),
+              maxLines: 3,
             ),
           ],
         ),
@@ -534,16 +425,13 @@ class _BubbleWordViewState extends State<BubbleWordView> {
           ),
           ElevatedButton(
             onPressed: () {
-              if (wordController.text.isNotEmpty && definitionController.text.isNotEmpty) {
-                setState(() {
-                  final index = _nodes.indexWhere((n) => n.id == node.id);
-                  if (index != -1) {
-                    _nodes[index] = _nodes[index].copyWith(
-                      word: wordController.text.trim(),
-                      definition: definitionController.text.trim(),
-                    );
-                  }
-                });
+              if (_wordController.text.isNotEmpty && _editingNode != null) {
+                final provider = context.read<BubbleWordProvider>();
+                provider.updateNode(
+                  _editingNode!.id,
+                  word: _wordController.text.trim(),
+                  definition: _definitionController.text.trim(),
+                );
                 Navigator.of(context).pop();
               }
             },
@@ -554,12 +442,12 @@ class _BubbleWordViewState extends State<BubbleWordView> {
     );
   }
 
-  void _showClearAllDialog() {
+  void _showDisconnectDialog(BuildContext context, BubbleWordProvider provider) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Clear All'),
-        content: const Text('Are you sure you want to clear all words and connections?'),
+        title: const Text('Disconnect Node'),
+        content: const Text('Are you sure you want to disconnect all connections for this node?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -567,13 +455,33 @@ class _BubbleWordViewState extends State<BubbleWordView> {
           ),
           ElevatedButton(
             onPressed: () {
-              setState(() {
-                _nodes.clear();
-                _connections.clear();
-                _selectedNodeId = null;
-                _isConnecting = false;
-                _firstSelectedNodeId = null;
-              });
+              if (provider.selectedNodeId != null) {
+                provider.deleteConnectionsForNode(provider.selectedNodeId!);
+                Navigator.of(context).pop();
+              }
+            },
+            style: ElevatedButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Disconnect'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showClearAllDialog(BuildContext context, BubbleWordProvider provider) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Clear All'),
+        content: const Text('Are you sure you want to clear all words and connections? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              provider.clearAll();
               Navigator.of(context).pop();
             },
             style: ElevatedButton.styleFrom(foregroundColor: Colors.red),
@@ -584,61 +492,79 @@ class _BubbleWordViewState extends State<BubbleWordView> {
     );
   }
 
-  void _zoomIn() {
-    setState(() {
-      _scale = (_scale * 1.2).clamp(0.5, 3.0);
-    });
-  }
-
-  void _zoomOut() {
-    setState(() {
-      _scale = (_scale / 1.2).clamp(0.5, 3.0);
-    });
-  }
-
-  void _resetView() {
-    setState(() {
-      _panOffset = Offset.zero;
-      _scale = 1.0;
-    });
-  }
-
-  void _undo() {
-    // TODO: Implement undo functionality
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Undo coming soon!')),
-    );
-  }
-
-  void _redo() {
-    // TODO: Implement redo functionality
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Redo coming soon!')),
+  void _showSavePrompt(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Save Changes?'),
+        content: const Text('Do you want to save your changes before leaving?'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              Navigator.of(context).pop();
+            },
+            child: const Text('Don\'t Save'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              Navigator.of(context).pop();
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
     );
   }
 }
 
+// Custom painters for connections
 class ConnectionPainter extends CustomPainter {
   final Offset from;
   final Offset to;
   final Color color;
-  final double scale;
 
   ConnectionPainter({
     required this.from,
     required this.to,
     required this.color,
-    required this.scale,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..color = color
-      ..strokeWidth = 2 * scale
-      ..strokeCap = StrokeCap.round;
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke;
 
     canvas.drawLine(from, to, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+}
+
+class ConnectionPreviewPainter extends CustomPainter {
+  final Offset from;
+  final Color color;
+
+  ConnectionPreviewPainter({
+    required this.from,
+    required this.color,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke;
+
+    // Draw a dashed line from the first node to the current mouse position
+    // For now, just draw a line to the center of the screen
+    final center = Offset(size.width / 2, size.height / 2);
+    canvas.drawLine(from, center, paint);
   }
 
   @override
