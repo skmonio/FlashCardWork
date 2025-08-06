@@ -344,6 +344,13 @@ class _MemoryGameViewState extends State<MemoryGameView> {
         _gameComplete = true;
         _showGameCompleteDialog();
       }
+
+      // Reset selection state
+      setState(() {
+        _firstCard = null;
+        _secondCard = null;
+        _canSelect = true;
+      });
     } else {
       setState(() {
         _firstCard!.isWrong = true;
@@ -368,21 +375,6 @@ class _MemoryGameViewState extends State<MemoryGameView> {
         }
       });
     }
-
-    setState(() {
-      _firstCard = null;
-      _secondCard = null;
-      _canSelect = false;
-    });
-
-    // Re-enable selection after a delay
-    Future.delayed(const Duration(milliseconds: 1200), () {
-      if (mounted) {
-        setState(() {
-          _canSelect = true;
-        });
-      }
-    });
   }
 
   void _resetGame() {
