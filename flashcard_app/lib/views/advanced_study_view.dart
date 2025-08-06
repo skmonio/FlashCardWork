@@ -73,12 +73,17 @@ class _AdvancedStudyViewState extends State<AdvancedStudyView>
       vsync: this,
     );
     _flipAnimation = Tween<double>(
-      begin: widget.startFlipped ? 1.0 : 0.0, // Start flipped if startFlipped is true
+      begin: 0,
       end: 1,
     ).animate(CurvedAnimation(
       parent: _flipController,
       curve: Curves.easeInOut,
     ));
+    
+    // Set initial position based on startFlipped
+    if (widget.startFlipped) {
+      _flipController.value = 1.0;
+    }
     
     // Initialize deal animation
     _dealController = AnimationController(
@@ -555,9 +560,14 @@ class _AdvancedStudyViewState extends State<AdvancedStudyView>
   void _handleCardDoubleTap() {
     if (_nextCardActive) return;
     
-    if (_flipController.status == AnimationStatus.completed) {
+    // Toggle the flip state
+    _isShowingFront = !_isShowingFront;
+    
+    if (_isShowingFront) {
+      // Going to front (word) - animate to 0.0
       _flipController.reverse();
     } else {
+      // Going to back (definition) - animate to 1.0
       _flipController.forward();
     }
   }
@@ -571,6 +581,9 @@ class _AdvancedStudyViewState extends State<AdvancedStudyView>
         _swipeIntensity = 0;
         _isShowingFront = !widget.startFlipped;
         _flipController.reset();
+        if (widget.startFlipped) {
+          _flipController.value = 1.0;
+        }
         // Reset exit animation for previous card
         _exitController.reset();
         // Start deal animation for previous card
@@ -889,6 +902,9 @@ class _AdvancedStudyViewState extends State<AdvancedStudyView>
                               _showingResults = false;
                               _isShowingFront = !widget.startFlipped;
                               _flipController.reset();
+                              if (widget.startFlipped) {
+                                _flipController.value = 1.0;
+                              }
                             });
                           },
                           child: const Text('Study Again'),
