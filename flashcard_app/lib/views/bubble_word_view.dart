@@ -203,6 +203,40 @@ class _BubbleWordViewState extends State<BubbleWordView> {
           
           const Spacer(),
           
+          // Connect mode toggle
+          Container(
+            decoration: BoxDecoration(
+              color: provider.isConnecting ? Colors.green.withOpacity(0.2) : Colors.grey.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: provider.isConnecting ? Colors.green : Colors.grey,
+                width: 2,
+              ),
+            ),
+            child: TextButton.icon(
+              onPressed: () {
+                if (provider.isConnecting) {
+                  provider.cancelConnection();
+                } else {
+                  provider.startConnectionMode();
+                }
+              },
+              icon: Icon(
+                provider.isConnecting ? Icons.link : Icons.link_off,
+                color: provider.isConnecting ? Colors.green : Colors.grey,
+              ),
+              label: Text(
+                provider.isConnecting ? 'Connecting...' : 'Connect',
+                style: TextStyle(
+                  color: provider.isConnecting ? Colors.green : Colors.grey,
+                  fontWeight: provider.isConnecting ? FontWeight.bold : FontWeight.normal,
+                ),
+              ),
+            ),
+          ),
+          
+          const SizedBox(width: 8),
+          
           // Disconnect button (only show when a node is selected)
           if (provider.selectedNodeId != null)
             TextButton.icon(
@@ -262,6 +296,30 @@ class _BubbleWordViewState extends State<BubbleWordView> {
                   ),
                 ),
                 
+                // Connection mode instruction
+                if (provider.isConnecting)
+                  Positioned(
+                    top: 10,
+                    right: 10,
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withOpacity(0.9),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        provider.firstSelectedNodeId == null 
+                            ? 'Click first word to connect'
+                            : 'Click second word to complete',
+                        style: const TextStyle(
+                          color: Colors.white, 
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                
                 // Word bubbles
                 ...provider.nodes.map((node) => _buildWordBubble(node, provider)),
                 
@@ -308,7 +366,8 @@ class _BubbleWordViewState extends State<BubbleWordView> {
 
   Widget _buildWordBubble(WordNode node, BubbleWordProvider provider) {
     final isSelected = provider.selectedNodeId == node.id;
-    final isConnecting = provider.isConnecting && provider.firstSelectedNodeId == node.id;
+    final isFirstNode = provider.isConnecting && provider.firstSelectedNodeId == node.id;
+    final isInConnectionMode = provider.isConnecting;
     
     return Positioned(
       left: node.position.dx - node.size / 2,
@@ -326,9 +385,13 @@ class _BubbleWordViewState extends State<BubbleWordView> {
           decoration: BoxDecoration(
             color: node.color,
             borderRadius: BorderRadius.circular(20),
-            border: isSelected || isConnecting
-                ? Border.all(color: Colors.white, width: 3)
-                : null,
+            border: isFirstNode
+                ? Border.all(color: Colors.green, width: 4)
+                : isSelected
+                    ? Border.all(color: Colors.white, width: 3)
+                    : isInConnectionMode
+                        ? Border.all(color: Colors.blue.withOpacity(0.5), width: 2)
+                        : null,
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.2),
@@ -337,21 +400,43 @@ class _BubbleWordViewState extends State<BubbleWordView> {
               ),
             ],
           ),
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(
-                node.word,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
+          child: Stack(
+            children: [
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    node.word,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
               ),
-            ),
+              // Connection indicator
+              if (isFirstNode)
+                Positioned(
+                  top: 4,
+                  right: 4,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Colors.green,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.link,
+                      color: Colors.white,
+                      size: 12,
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
       ),
@@ -362,8 +447,22 @@ class _BubbleWordViewState extends State<BubbleWordView> {
 
   void _handleNodeTap(WordNode node, BubbleWordProvider provider) {
     if (provider.isConnecting) {
-      provider.completeConnection(node.id);
+      // In connection mode, select the first node or complete the connection
+      if (provider.firstSelectedNodeId == null) {
+        // First node selected
+        provider.selectFirstNodeForConnection(node.id);
+        print('First node selected for connection: ${node.word}');
+      } else if (provider.firstSelectedNodeId != node.id) {
+        // Second node selected - complete the connection
+        provider.completeConnection(node.id);
+        print('Connection completed between ${provider.firstSelectedNodeId} and ${node.id}');
+      } else {
+        // Same node clicked - cancel connection
+        provider.cancelConnection();
+        print('Connection cancelled - same node clicked');
+      }
     } else {
+      // Normal mode - just select the node
       provider.selectNode(node.id);
     }
   }

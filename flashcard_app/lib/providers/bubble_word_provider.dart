@@ -340,6 +340,19 @@ class BubbleWordProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void startConnectionMode() {
+    _isConnecting = true;
+    _firstSelectedNodeId = null;
+    _selectedNodeId = null;
+    notifyListeners();
+  }
+
+  void selectFirstNodeForConnection(String nodeId) {
+    _firstSelectedNodeId = nodeId;
+    _selectedNodeId = nodeId;
+    notifyListeners();
+  }
+
   void cancelConnection() {
     _isConnecting = false;
     _firstSelectedNodeId = null;
