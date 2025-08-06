@@ -121,7 +121,6 @@ class Deck {
     return {
       'id': id,
       'name': name,
-      'cards': cards.map((card) => card.toJson()).toList(),
       'parentId': parentId,
       'subDeckIds': subDeckIds.toList(),
       'dateCreated': dateCreated.toIso8601String(),
@@ -134,9 +133,6 @@ class Deck {
     return Deck(
       id: json['id'],
       name: json['name'] ?? '',
-      cards: (json['cards'] as List<dynamic>?)
-          ?.map((cardJson) => FlashCard.fromJson(cardJson))
-          .toList() ?? [],
       parentId: json['parentId'],
       subDeckIds: Set<String>.from(json['subDeckIds'] ?? []),
       dateCreated: json['dateCreated'] != null 
