@@ -48,12 +48,15 @@ class FlashcardProvider extends ChangeNotifier {
   // MARK: - Deck Management
   
   Future<Deck?> createDeck(String name, {String? parentId}) async {
+    print('Creating deck: $name');
     try {
       final deck = await _service.createDeck(name, parentId: parentId);
+      print('Deck created successfully: ${deck.name} (${deck.id})');
       _decks.add(deck);
       notifyListeners();
       return deck;
     } catch (e) {
+      print('Error creating deck "$name": $e');
       _setError(e.toString());
       return null;
     }
@@ -390,9 +393,11 @@ class FlashcardProvider extends ChangeNotifier {
   }
   
   Future<Map<String, dynamic>> importFromCSV(String csvContent) async {
+    print('Starting CSV import...');
     final lines = csvContent.split('\n')
         .where((line) => line.trim().isNotEmpty)
         .toList();
+    print('CSV has ${lines.length} non-empty lines');
     
     if (lines.length < 2) {
       return {
@@ -405,15 +410,18 @@ class FlashcardProvider extends ChangeNotifier {
     final errors = <String>[];
     
     // Ensure Uncategorized deck exists
-    Deck uncategorizedDeck;
+    Deck? uncategorizedDeck;
     try {
       uncategorizedDeck = _decks.firstWhere((d) => d.name == 'Uncategorized');
     } catch (e) {
-      final newDeck = await createDeck('Uncategorized');
-      if (newDeck != null) {
-        uncategorizedDeck = newDeck;
-      } else {
-        throw Exception('Failed to create Uncategorized deck');
+      // Try to create the Uncategorized deck
+      uncategorizedDeck = await createDeck('Uncategorized');
+      if (uncategorizedDeck == null) {
+        errors.add('Failed to create Uncategorized deck. Please try again.');
+        return {
+          'success': 0,
+          'errors': errors,
+        };
       }
     }
     
@@ -458,6 +466,9 @@ class FlashcardProvider extends ChangeNotifier {
                 final newDeck = await createDeck(deckName);
                 if (newDeck != null) {
                   deckIds.add(newDeck.id);
+                } else {
+                  errors.add('Line $lineNumber: Failed to create deck "$deckName"');
+                  continue;
                 }
               }
             }
@@ -465,7 +476,7 @@ class FlashcardProvider extends ChangeNotifier {
         }
         
         // If no decks specified, add to Uncategorized
-        if (deckIds.isEmpty) {
+        if (deckIds.isEmpty && uncategorizedDeck != null) {
           deckIds.add(uncategorizedDeck.id);
         }
         
