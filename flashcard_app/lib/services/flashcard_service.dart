@@ -161,21 +161,32 @@ class FlashcardService {
     String futureTense = '',
     String pastParticiple = '',
   }) async {
-    final card = FlashCard(
-      word: word,
-      definition: definition,
-      example: example,
-      deckIds: deckIds ?? {},
-      article: article,
-      plural: plural,
-      pastTense: pastTense,
-      futureTense: futureTense,
-      pastParticiple: pastParticiple,
-    );
-    
-    _cards.add(card);
-    await _saveData();
-    return card;
+    print('Service: Creating card: $word with deckIds: $deckIds');
+    try {
+      final card = FlashCard(
+        word: word,
+        definition: definition,
+        example: example,
+        deckIds: deckIds ?? {},
+        article: article,
+        plural: plural,
+        pastTense: pastTense,
+        futureTense: futureTense,
+        pastParticiple: pastParticiple,
+      );
+      
+      print('Service: Card object created: ${card.word} (${card.id})');
+      _cards.add(card);
+      print('Service: Card added to list. Total cards: ${_cards.length}');
+      
+      await _saveData();
+      print('Service: Card data saved successfully');
+      
+      return card;
+    } catch (e) {
+      print('Service: Error creating card "$word": $e');
+      rethrow;
+    }
   }
   
   Future<void> updateCard(FlashCard card) async {
