@@ -57,31 +57,73 @@ class BubbleWordProvider extends ChangeNotifier {
   }
 
   List<WordNode> get nodes {
-    final nodes = <WordNode>[];
+    final mergedNodes = <String, WordNode>{};
+    
     // Add nodes from current map
     if (currentMap != null) {
-      nodes.addAll(currentMap!.nodes);
+      for (final node in currentMap!.nodes) {
+        mergedNodes[node.word] = node;
+      }
     }
-    // Add nodes from overlay maps
+    
+    // Add nodes from overlay maps (merge duplicates by word)
     for (final mapId in _overlayMapIds) {
       final overlayMap = _maps.firstWhere((map) => map.id == mapId);
-      nodes.addAll(overlayMap.nodes);
+      for (final node in overlayMap.nodes) {
+        if (!mergedNodes.containsKey(node.word)) {
+          mergedNodes[node.word] = node;
+        }
+      }
     }
-    return nodes;
+    
+    return mergedNodes.values.toList();
   }
   
   List<WordConnection> get connections {
-    final connections = <WordConnection>[];
+    final mergedConnections = <String, WordConnection>{};
+    final allNodes = nodes; // This will give us the merged nodes
+    
+    // Helper function to get node by word
+    WordNode? getNodeByWord(String word) {
+      return allNodes.firstWhere((node) => node.word == word, orElse: () => null);
+    }
+    
     // Add connections from current map
     if (currentMap != null) {
-      connections.addAll(currentMap!.connections);
+      for (final connection in currentMap!.connections) {
+        final fromNode = currentMap!.nodes.firstWhere((node) => node.id == connection.fromNodeId);
+        final toNode = currentMap!.nodes.firstWhere((node) => node.id == connection.toNodeId);
+        
+        // Create merged connection using word-based IDs
+        final mergedConnection = WordConnection(
+          id: '${fromNode.word}_${toNode.word}',
+          fromNodeId: fromNode.word,
+          toNodeId: toNode.word,
+          color: connection.color,
+        );
+        mergedConnections[mergedConnection.id] = mergedConnection;
+      }
     }
+    
     // Add connections from overlay maps
     for (final mapId in _overlayMapIds) {
       final overlayMap = _maps.firstWhere((map) => map.id == mapId);
-      connections.addAll(overlayMap.connections);
+      for (final connection in overlayMap.connections) {
+        final fromNode = overlayMap.nodes.firstWhere((node) => node.id == connection.fromNodeId);
+        final toNode = overlayMap.nodes.firstWhere((node) => node.id == connection.toNodeId);
+        
+        // Create merged connection using word-based IDs
+        final mergedConnection = WordConnection(
+          id: '${fromNode.word}_${toNode.word}',
+          fromNodeId: fromNode.word,
+          toNodeId: toNode.word,
+          color: connection.color,
+        );
+        mergedConnections[mergedConnection.id] = mergedConnection;
+      }
     }
-    return connections;
+    
+    return mergedConnections.values.toList();
   }
 
   bool get canUndo => _undoStack.isNotEmpty;

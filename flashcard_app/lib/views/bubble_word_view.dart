@@ -244,10 +244,30 @@ class _BubbleWordViewState extends State<BubbleWordView> {
             offset: provider.offset,
             child: Stack(
               children: [
-                // Connections
+                                // Connections
                 ...provider.connections.map((connection) => _buildConnection(connection, provider)),
                 
-
+                // Overlay indicator
+                if (provider.overlayMapIds.isNotEmpty)
+                  Positioned(
+                    top: 10,
+                    left: 10,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withOpacity(0.9),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '${provider.overlayMapIds.length} overlay${provider.overlayMapIds.length == 1 ? '' : 's'} active',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
                 
                 // Word bubbles
                 ...provider.nodes.map((node) => _buildWordBubble(node, provider)),
@@ -262,10 +282,21 @@ class _BubbleWordViewState extends State<BubbleWordView> {
   }
 
   Widget _buildConnection(WordConnection connection, BubbleWordProvider provider) {
-    final fromNode = provider.nodes.firstWhere((node) => node.id == connection.fromNodeId);
-    final toNode = provider.nodes.firstWhere((node) => node.id == connection.toNodeId);
+    // Find nodes by word (for merged connections) or by ID (for regular connections)
+    WordNode? fromNode;
+    WordNode? toNode;
     
-
+    if (connection.fromNodeId.length < 20) {
+      // Word-based ID (merged connection)
+      fromNode = provider.nodes.firstWhere((node) => node.word == connection.fromNodeId);
+      toNode = provider.nodes.firstWhere((node) => node.word == connection.toNodeId);
+    } else {
+      // Regular node ID
+      fromNode = provider.nodes.firstWhere((node) => node.id == connection.fromNodeId);
+      toNode = provider.nodes.firstWhere((node) => node.id == connection.toNodeId);
+    }
+    
+    if (fromNode == null || toNode == null) return const SizedBox.shrink();
     
     return CustomPaint(
       size: Size.infinite,
@@ -676,7 +707,7 @@ class _BubbleWordViewState extends State<BubbleWordView> {
           child: Column(
             children: [
               Text(
-                'Select maps to overlay on top of the current map:',
+                'Select maps to overlay. Duplicate words will be merged automatically:',
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               const SizedBox(height: 16),
@@ -690,7 +721,7 @@ class _BubbleWordViewState extends State<BubbleWordView> {
                     
                     return ListTile(
                       title: Text(map.name),
-                      subtitle: Text('${map.nodes.length} nodes, ${map.connections.length} connections'),
+                      subtitle: Text('${map.nodes.length} words, ${map.connections.length} connections'),
                       leading: isCurrentMap 
                         ? const Icon(Icons.radio_button_checked, color: Colors.blue)
                         : const Icon(Icons.radio_button_unchecked, color: Colors.grey),
