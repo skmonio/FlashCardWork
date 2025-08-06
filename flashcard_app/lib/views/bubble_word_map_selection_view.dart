@@ -17,8 +17,13 @@ class _BubbleWordMapSelectionViewState extends State<BubbleWordMapSelectionView>
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<BubbleWordProvider>().initialize();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final provider = context.read<BubbleWordProvider>();
+      await provider.initialize();
+      print('BubbleWordMapSelectionView: Maps loaded: ${provider.maps.length}');
+      for (final map in provider.maps) {
+        print('Map: ${map.name} (${map.id}) - ${map.nodes.length} nodes, ${map.connections.length} connections');
+      }
     });
   }
 
@@ -48,6 +53,21 @@ class _BubbleWordMapSelectionViewState extends State<BubbleWordMapSelectionView>
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     children: [
+                      // Debug info
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                        ),
+                        child: Text(
+                          'Debug: ${provider.maps.length} maps loaded, Selected: ${provider.selectedMapId ?? "none"}',
+                          style: const TextStyle(fontSize: 12, color: Colors.blue),
+                        ),
+                      ),
+                      
                       // Welcome message
                       if (provider.maps.isEmpty) ...[
                         const SizedBox(height: 40),

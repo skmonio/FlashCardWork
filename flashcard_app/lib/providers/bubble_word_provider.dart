@@ -91,13 +91,22 @@ class BubbleWordProvider extends ChangeNotifier {
 
   // Initialize
   Future<void> initialize() async {
+    print('BubbleWordProvider: Initializing...');
     await loadData();
+    print('BubbleWordProvider: After loadData, maps count: ${_maps.length}');
+    
     if (_maps.isEmpty) {
+      print('BubbleWordProvider: No maps found, creating default map');
       createDefaultMap();
     }
+    
     if (_selectedMapId == null && _maps.isNotEmpty) {
       _selectedMapId = _maps.first.id;
+      print('BubbleWordProvider: Set selected map to first map: $_selectedMapId');
     }
+    
+    print('BubbleWordProvider: Initialization complete. Maps: ${_maps.length}, Selected: $_selectedMapId');
+    notifyListeners();
   }
 
   // Map Management
@@ -417,17 +426,23 @@ class BubbleWordProvider extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     
     final mapsString = prefs.getString('BubbleWordMaps');
+    print('BubbleWordProvider: Loading data, mapsString: ${mapsString?.substring(0, mapsString.length > 100 ? 100 : mapsString.length)}...');
+    
     if (mapsString != null) {
       try {
         final mapsJson = jsonDecode(mapsString) as List<dynamic>;
         _maps = mapsJson.map((json) => BubbleWordMap.fromJson(json)).toList();
+        print('BubbleWordProvider: Successfully loaded ${_maps.length} maps');
       } catch (e) {
         print('Error loading bubble word maps: $e');
         _maps = [];
       }
+    } else {
+      print('BubbleWordProvider: No saved maps found');
     }
 
     _selectedMapId = prefs.getString('BubbleWordSelectedMap');
+    print('BubbleWordProvider: Selected map ID: $_selectedMapId');
     
     final overlayMaps = prefs.getStringList('BubbleWordOverlayMaps');
     if (overlayMaps != null) {
