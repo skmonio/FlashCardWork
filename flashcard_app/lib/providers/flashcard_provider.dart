@@ -409,6 +409,41 @@ class FlashcardProvider extends ChangeNotifier {
     var successCount = 0;
     final errors = <String>[];
     
+    // Pre-process to collect all unique deck names
+    final allDeckNames = <String>{};
+    for (int i = 1; i < lines.length; i++) {
+      final line = lines[i];
+      final fields = _parseCSVLine(line);
+      if (fields.length > 8) {
+        final deckNames = fields[8].trim();
+        if (deckNames.isNotEmpty) {
+          final deckNameList = deckNames.split(';').map((name) => name.trim()).toList();
+          allDeckNames.addAll(deckNameList.where((name) => name.isNotEmpty));
+        }
+      }
+    }
+    
+    print('Found deck names: $allDeckNames');
+    
+    // Pre-create all decks
+    final deckNameToId = <String, String>{};
+    for (final deckName in allDeckNames) {
+      try {
+        final existingDeck = _decks.firstWhere((d) => d.name == deckName);
+        deckNameToId[deckName] = existingDeck.id;
+        print('Found existing deck: $deckName (${existingDeck.id})');
+      } catch (e) {
+        print('Creating new deck: $deckName');
+        final newDeck = await createDeck(deckName);
+        if (newDeck != null) {
+          deckNameToId[deckName] = newDeck.id;
+          print('Created deck: $deckName (${newDeck.id})');
+        } else {
+          errors.add('Failed to create deck "$deckName"');
+        }
+      }
+    }
+    
     // Ensure Uncategorized deck exists
     Deck? uncategorizedDeck;
     try {
@@ -457,7 +492,7 @@ class FlashcardProvider extends ChangeNotifier {
         final futureTense = fields.length > 6 ? fields[6].trim() : '';
         final pastParticiple = fields.length > 7 ? fields[7].trim() : '';
         
-        // Handle deck assignment
+        // Handle deck assignment using pre-created decks
         final deckNames = fields.length > 8 ? fields[8].trim() : '';
         final deckIds = <String>{};
         
@@ -465,18 +500,11 @@ class FlashcardProvider extends ChangeNotifier {
           final deckNameList = deckNames.split(';').map((name) => name.trim()).toList();
           for (final deckName in deckNameList) {
             if (deckName.isNotEmpty) {
-              try {
-                final deck = _decks.firstWhere((d) => d.name == deckName);
-                deckIds.add(deck.id);
-              } catch (e) {
-                // Create deck if it doesn't exist
-                final newDeck = await createDeck(deckName);
-                if (newDeck != null) {
-                  deckIds.add(newDeck.id);
-                } else {
-                  errors.add('Line $lineNumber: Failed to create deck "$deckName"');
-                  continue;
-                }
+              final deckId = deckNameToId[deckName];
+              if (deckId != null) {
+                deckIds.add(deckId);
+              } else {
+                errors.add('Line $lineNumber: Deck "$deckName" not found or could not be created');
               }
             }
           }
@@ -488,12 +516,12 @@ class FlashcardProvider extends ChangeNotifier {
         }
         
         // Handle statistics
-        int successCount = 0;
+        int cardSuccessCount = 0;
         int timesShown = 0;
         int timesCorrect = 0;
         
         if (fields.length > 9) {
-          successCount = int.tryParse(fields[9].trim()) ?? 0;
+          cardSuccessCount = int.tryParse(fields[9].trim()) ?? 0;
         }
         if (fields.length > 10) {
           timesShown = int.tryParse(fields[10].trim()) ?? 0;
@@ -517,7 +545,7 @@ class FlashcardProvider extends ChangeNotifier {
         
         if (newCard != null) {
           // Update statistics if provided
-          newCard.successCount = successCount;
+          newCard.successCount = cardSuccessCount;
           newCard.timesShown = timesShown;
           newCard.timesCorrect = timesCorrect;
           
@@ -525,6 +553,9 @@ class FlashcardProvider extends ChangeNotifier {
           await _service.updateCard(newCard);
           
           successCount++;
+          print('Successfully created card: ${newCard.word}');
+        } else {
+          print('Failed to create card: $word');
         }
       } catch (e) {
         errors.add('Line $lineNumber: ${e.toString()}');
