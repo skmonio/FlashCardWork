@@ -263,11 +263,13 @@ class _BubbleWordViewState extends State<BubbleWordView> {
     final fromNode = provider.nodes.firstWhere((node) => node.id == connection.fromNodeId);
     final toNode = provider.nodes.firstWhere((node) => node.id == connection.toNodeId);
     
-    return CustomPaint(
-      painter: ConnectionPainter(
-        from: fromNode.position,
-        to: toNode.position,
-        color: connection.color,
+    return Positioned.fill(
+      child: CustomPaint(
+        painter: ConnectionPainter(
+          from: fromNode.position,
+          to: toNode.position,
+          color: connection.color,
+        ),
       ),
     );
   }
@@ -277,10 +279,12 @@ class _BubbleWordViewState extends State<BubbleWordView> {
     
     final firstNode = provider.nodes.firstWhere((node) => node.id == provider.firstSelectedNodeId);
     
-    return CustomPaint(
-      painter: ConnectionPreviewPainter(
-        from: firstNode.position,
-        color: Colors.grey.withOpacity(0.5),
+    return Positioned.fill(
+      child: CustomPaint(
+        painter: ConnectionPreviewPainter(
+          from: firstNode.position,
+          color: Colors.grey.withOpacity(0.5),
+        ),
       ),
     );
   }
@@ -675,27 +679,56 @@ class _BubbleWordViewState extends State<BubbleWordView> {
         content: SizedBox(
           width: double.maxFinite,
           height: 300,
-          child: ListView.builder(
-            itemCount: provider.maps.length,
-            itemBuilder: (context, index) {
-              final map = provider.maps[index];
-              final isSelected = provider.selectedMapId == map.id;
-              return ListTile(
-                title: Text(map.name),
-                subtitle: Text('${map.nodes.length} nodes, ${map.connections.length} connections'),
-                trailing: isSelected ? const Icon(Icons.check, color: Colors.green) : null,
-                onTap: () {
-                  provider.selectMap(map.id);
-                  Navigator.of(context).pop();
-                },
-              );
-            },
+          child: Column(
+            children: [
+              Text(
+                'Select maps to overlay on top of the current map:',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 16),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: provider.maps.length,
+                  itemBuilder: (context, index) {
+                    final map = provider.maps[index];
+                    final isCurrentMap = provider.selectedMapId == map.id;
+                    final isOverlayed = provider.overlayMapIds.contains(map.id);
+                    
+                    return ListTile(
+                      title: Text(map.name),
+                      subtitle: Text('${map.nodes.length} nodes, ${map.connections.length} connections'),
+                      leading: isCurrentMap 
+                        ? const Icon(Icons.radio_button_checked, color: Colors.blue)
+                        : const Icon(Icons.radio_button_unchecked, color: Colors.grey),
+                      trailing: isCurrentMap 
+                        ? const Text('Current', style: TextStyle(color: Colors.blue))
+                        : Checkbox(
+                            value: isOverlayed,
+                            onChanged: (value) {
+                              provider.toggleOverlay(map.id);
+                            },
+                          ),
+                      onTap: isCurrentMap ? null : () {
+                        provider.toggleOverlay(map.id);
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
         ),
         actions: [
           TextButton(
+            onPressed: () {
+              provider.clearOverlays();
+              Navigator.of(context).pop();
+            },
+            child: const Text('Clear All'),
+          ),
+          TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
+            child: const Text('Done'),
           ),
         ],
       ),

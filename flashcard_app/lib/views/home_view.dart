@@ -5,6 +5,7 @@ import '../models/deck.dart';
 import 'study_type_selection_view.dart';
 import 'memory_game_view.dart';
 import 'bubble_word_view.dart';
+import 'bubble_word_map_selection_view.dart';
 import 'advanced_study_view.dart';
 import 'multiple_choice_view.dart';
 import 'true_false_view.dart';
@@ -324,7 +325,7 @@ class _HomeViewState extends State<HomeView> {
   void _navigateToBubbleWord(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => const BubbleWordView(),
+        builder: (context) => const BubbleWordMapSelectionView(),
       ),
     );
   }

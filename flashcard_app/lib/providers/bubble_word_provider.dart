@@ -17,6 +17,9 @@ class BubbleWordProvider extends ChangeNotifier {
   Offset _lastOffset = Offset.zero;
   bool _isConnecting = false;
   String? _firstSelectedNodeId;
+  
+  // Overlay functionality
+  Set<String> _overlayMapIds = {};
 
   // Undo/Redo functionality
   List<BubbleWordMap> _undoStack = [];
@@ -53,11 +56,38 @@ class BubbleWordProvider extends ChangeNotifier {
     );
   }
 
-  List<WordNode> get nodes => currentMap?.nodes ?? [];
-  List<WordConnection> get connections => currentMap?.connections ?? [];
+  List<WordNode> get nodes {
+    final nodes = <WordNode>[];
+    // Add nodes from current map
+    if (currentMap != null) {
+      nodes.addAll(currentMap!.nodes);
+    }
+    // Add nodes from overlay maps
+    for (final mapId in _overlayMapIds) {
+      final overlayMap = _maps.firstWhere((map) => map.id == mapId);
+      nodes.addAll(overlayMap.nodes);
+    }
+    return nodes;
+  }
+  
+  List<WordConnection> get connections {
+    final connections = <WordConnection>[];
+    // Add connections from current map
+    if (currentMap != null) {
+      connections.addAll(currentMap!.connections);
+    }
+    // Add connections from overlay maps
+    for (final mapId in _overlayMapIds) {
+      final overlayMap = _maps.firstWhere((map) => map.id == mapId);
+      connections.addAll(overlayMap.connections);
+    }
+    return connections;
+  }
 
   bool get canUndo => _undoStack.isNotEmpty;
   bool get canRedo => _redoStack.isNotEmpty;
+  
+  Set<String> get overlayMapIds => _overlayMapIds;
 
   // Initialize
   Future<void> initialize() async {
@@ -100,6 +130,22 @@ class BubbleWordProvider extends ChangeNotifier {
     _selectedNodeId = null;
     _isConnecting = false;
     _firstSelectedNodeId = null;
+    saveData();
+    notifyListeners();
+  }
+
+  void toggleOverlay(String mapId) {
+    if (_overlayMapIds.contains(mapId)) {
+      _overlayMapIds.remove(mapId);
+    } else {
+      _overlayMapIds.add(mapId);
+    }
+    saveData();
+    notifyListeners();
+  }
+
+  void clearOverlays() {
+    _overlayMapIds.clear();
     saveData();
     notifyListeners();
   }
@@ -362,6 +408,7 @@ class BubbleWordProvider extends ChangeNotifier {
     final mapsJson = _maps.map((map) => map.toJson()).toList();
     await prefs.setString('BubbleWordMaps', jsonEncode(mapsJson));
     await prefs.setString('BubbleWordSelectedMap', _selectedMapId ?? '');
+    await prefs.setStringList('BubbleWordOverlayMaps', _overlayMapIds.toList());
   }
 
   Future<void> loadData() async {
@@ -379,6 +426,11 @@ class BubbleWordProvider extends ChangeNotifier {
     }
 
     _selectedMapId = prefs.getString('BubbleWordSelectedMap');
+    
+    final overlayMaps = prefs.getStringList('BubbleWordOverlayMaps');
+    if (overlayMaps != null) {
+      _overlayMapIds = overlayMaps.toSet();
+    }
   }
 
   // Clear all data
