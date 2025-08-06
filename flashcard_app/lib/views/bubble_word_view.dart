@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:math';
 import '../providers/bubble_word_provider.dart';
+import '../providers/flashcard_provider.dart';
 import '../models/bubble_word_models.dart';
 import '../components/unified_header.dart';
 
@@ -40,38 +41,69 @@ class _BubbleWordViewState extends State<BubbleWordView> {
       builder: (context, provider, child) {
         return Scaffold(
           backgroundColor: Theme.of(context).colorScheme.surface,
-          body: Stack(
+          body: Column(
             children: [
-              // Main content
-              Column(
-                children: [
-                  // Header
-                  UnifiedHeader(
-                    title: provider.currentMap?.name ?? 'Bubble Word',
-                    onBack: () => _showSavePrompt(context),
-                    trailing: _buildTrailingMenu(context, provider),
-                  ),
-                  
-                  // Action buttons
-                  _buildActionButtons(provider),
-                  
-                  // Canvas
-                  Expanded(
-                    child: _buildCanvas(provider),
-                  ),
-                ],
+              // Header
+              UnifiedHeader(
+                title: provider.currentMap?.name ?? 'Bubble Word',
+                onBack: () => _showSavePrompt(context),
+                trailing: _buildTrailingMenu(context, provider),
               ),
               
-              // Zoom controls
-              _buildZoomControls(provider),
+              // Action buttons
+              _buildActionButtons(provider),
+              
+              // Canvas
+              Expanded(
+                child: Stack(
+                  children: [
+                    _buildCanvas(provider),
+                    
+                    // Zoom controls - positioned in bottom right
+                    Positioned(
+                      bottom: 32,
+                      right: 20,
+                      child: Column(
+                        children: [
+                          // Zoom in
+                          FloatingActionButton.small(
+                            onPressed: () {
+                              final newScale = (provider.scale * 1.2).clamp(0.5, 3.0);
+                              provider.setScale(newScale);
+                            },
+                            backgroundColor: Colors.white,
+                            child: const Icon(Icons.zoom_in, color: Colors.blue),
+                          ),
+                          
+                          const SizedBox(height: 8),
+                          
+                          // Zoom out
+                          FloatingActionButton.small(
+                            onPressed: () {
+                              final newScale = (provider.scale / 1.2).clamp(0.5, 3.0);
+                              provider.setScale(newScale);
+                            },
+                            backgroundColor: Colors.white,
+                            child: const Icon(Icons.zoom_out, color: Colors.blue),
+                          ),
+                        ],
+                      ),
+                    ),
+                    
+                    // Floating action button for adding words - positioned in top right
+                    Positioned(
+                      top: 20,
+                      right: 20,
+                      child: FloatingActionButton(
+                        onPressed: () => _showAddWordOptions(context),
+                        backgroundColor: Colors.green,
+                        child: const Icon(Icons.add, color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
-          ),
-          
-          // Floating action button for adding words
-          floatingActionButton: FloatingActionButton(
-            onPressed: () => _showAddWordDialog(context),
-            backgroundColor: Colors.green,
-            child: const Icon(Icons.add, color: Colors.white),
           ),
         );
       },
@@ -89,6 +121,36 @@ class _BubbleWordViewState extends State<BubbleWordView> {
               Icon(Icons.add),
               SizedBox(width: 8),
               Text('Add Word'),
+            ],
+          ),
+        ),
+        const PopupMenuItem(
+          value: 'new_map',
+          child: Row(
+            children: [
+              Icon(Icons.map),
+              SizedBox(width: 8),
+              Text('New Map'),
+            ],
+          ),
+        ),
+        const PopupMenuItem(
+          value: 'save_map',
+          child: Row(
+            children: [
+              Icon(Icons.save),
+              SizedBox(width: 8),
+              Text('Save Map'),
+            ],
+          ),
+        ),
+        const PopupMenuItem(
+          value: 'overlay',
+          child: Row(
+            children: [
+              Icon(Icons.layers),
+              SizedBox(width: 8),
+              Text('Overlay Maps'),
             ],
           ),
         ),
@@ -275,37 +337,7 @@ class _BubbleWordViewState extends State<BubbleWordView> {
     );
   }
 
-  Widget _buildZoomControls(BubbleWordProvider provider) {
-    return Positioned(
-      bottom: 32,
-      right: 20,
-      child: Column(
-        children: [
-          // Zoom in
-          FloatingActionButton.small(
-            onPressed: () {
-              final newScale = (provider.scale * 1.2).clamp(0.5, 3.0);
-              provider.setScale(newScale);
-            },
-            backgroundColor: Colors.white,
-            child: const Icon(Icons.zoom_in, color: Colors.blue),
-          ),
-          
-          const SizedBox(height: 8),
-          
-          // Zoom out
-          FloatingActionButton.small(
-            onPressed: () {
-              final newScale = (provider.scale / 1.2).clamp(0.5, 3.0);
-              provider.setScale(newScale);
-            },
-            backgroundColor: Colors.white,
-            child: const Icon(Icons.zoom_out, color: Colors.blue),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   void _handleNodeTap(WordNode node, BubbleWordProvider provider) {
     if (provider.isConnecting) {
@@ -318,7 +350,16 @@ class _BubbleWordViewState extends State<BubbleWordView> {
   void _handleMenuAction(String action, BuildContext context, BubbleWordProvider provider) {
     switch (action) {
       case 'add':
-        _showAddWordDialog(context);
+        _showAddWordOptions(context);
+        break;
+      case 'new_map':
+        _showNewMapDialog(context, provider);
+        break;
+      case 'save_map':
+        _showSaveMapDialog(context, provider);
+        break;
+      case 'overlay':
+        _showOverlayMapsDialog(context, provider);
         break;
       case 'reset':
         provider.resetView();
@@ -329,6 +370,44 @@ class _BubbleWordViewState extends State<BubbleWordView> {
     }
   }
 
+  void _showAddWordOptions(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Add Word'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.add_circle_outline),
+              title: const Text('New Word'),
+              subtitle: const Text('Create a new word'),
+              onTap: () {
+                Navigator.of(context).pop();
+                _showAddWordDialog(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.list),
+              title: const Text('Existing Word'),
+              subtitle: const Text('Choose from your flashcards'),
+              onTap: () {
+                Navigator.of(context).pop();
+                _showExistingWordsDialog(context);
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showAddWordDialog(BuildContext context) {
     _wordController.clear();
     _definitionController.clear();
@@ -337,7 +416,7 @@ class _BubbleWordViewState extends State<BubbleWordView> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Add Word'),
+        title: const Text('Add New Word'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -382,6 +461,52 @@ class _BubbleWordViewState extends State<BubbleWordView> {
               }
             },
             child: const Text('Add Word'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showExistingWordsDialog(BuildContext context) {
+    final flashcardProvider = context.read<FlashcardProvider>();
+    final cards = flashcardProvider.cards;
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Select Existing Word'),
+        content: SizedBox(
+          width: double.maxFinite,
+          height: 400,
+          child: ListView.builder(
+            itemCount: cards.length,
+            itemBuilder: (context, index) {
+              final card = cards[index];
+              return ListTile(
+                title: Text(card.word),
+                subtitle: Text(card.definition),
+                onTap: () {
+                  final bubbleProvider = context.read<BubbleWordProvider>();
+                  final random = Random();
+                  final position = Offset(
+                    random.nextDouble() * 300 + 100,
+                    random.nextDouble() * 300 + 100,
+                  );
+                  bubbleProvider.addNode(
+                    card.word,
+                    card.definition,
+                    position,
+                  );
+                  Navigator.of(context).pop();
+                },
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
           ),
         ],
       ),
@@ -493,6 +618,90 @@ class _BubbleWordViewState extends State<BubbleWordView> {
     );
   }
 
+  void _showNewMapDialog(BuildContext context, BubbleWordProvider provider) {
+    final nameController = TextEditingController(text: 'New Map ${provider.maps.length + 1}');
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Create New Map'),
+        content: TextField(
+          controller: nameController,
+          decoration: const InputDecoration(
+            labelText: 'Map Name',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (nameController.text.isNotEmpty) {
+                provider.createMap(nameController.text.trim());
+                Navigator.of(context).pop();
+              }
+            },
+            child: const Text('Create'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSaveMapDialog(BuildContext context, BubbleWordProvider provider) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Save Map'),
+        content: const Text('Map has been saved automatically.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showOverlayMapsDialog(BuildContext context, BubbleWordProvider provider) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Overlay Maps'),
+        content: SizedBox(
+          width: double.maxFinite,
+          height: 300,
+          child: ListView.builder(
+            itemCount: provider.maps.length,
+            itemBuilder: (context, index) {
+              final map = provider.maps[index];
+              final isSelected = provider.selectedMapId == map.id;
+              return ListTile(
+                title: Text(map.name),
+                subtitle: Text('${map.nodes.length} nodes, ${map.connections.length} connections'),
+                trailing: isSelected ? const Icon(Icons.check, color: Colors.green) : null,
+                onTap: () {
+                  provider.selectMap(map.id);
+                  Navigator.of(context).pop();
+                },
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showSavePrompt(BuildContext context) {
     showDialog(
       context: context,
@@ -534,12 +743,32 @@ class ConnectionPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    // Draw a thicker, more visible connection line
     final paint = Paint()
       ..color = color
-      ..strokeWidth = 2
-      ..style = PaintingStyle.stroke;
+      ..strokeWidth = 4
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
 
+    // Draw the main line
     canvas.drawLine(from, to, paint);
+    
+    // Draw arrow at the end
+    final direction = (to - from).direction;
+    final arrowLength = 15.0;
+    final arrowAngle = 0.5;
+    
+    final arrowPoint1 = to - Offset(
+      arrowLength * cos(direction - arrowAngle),
+      arrowLength * sin(direction - arrowAngle),
+    );
+    final arrowPoint2 = to - Offset(
+      arrowLength * cos(direction + arrowAngle),
+      arrowLength * sin(direction + arrowAngle),
+    );
+    
+    canvas.drawLine(to, arrowPoint1, paint);
+    canvas.drawLine(to, arrowPoint2, paint);
   }
 
   @override
