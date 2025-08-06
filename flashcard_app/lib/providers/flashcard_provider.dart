@@ -409,7 +409,12 @@ class FlashcardProvider extends ChangeNotifier {
     try {
       uncategorizedDeck = _decks.firstWhere((d) => d.name == 'Uncategorized');
     } catch (e) {
-      uncategorizedDeck = await createDeck(name: 'Uncategorized');
+      final newDeck = await createDeck('Uncategorized');
+      if (newDeck != null) {
+        uncategorizedDeck = newDeck;
+      } else {
+        throw Exception('Failed to create Uncategorized deck');
+      }
     }
     
     // Skip header row
@@ -450,8 +455,10 @@ class FlashcardProvider extends ChangeNotifier {
                 deckIds.add(deck.id);
               } catch (e) {
                 // Create deck if it doesn't exist
-                final newDeck = await createDeck(name: deckName);
-                deckIds.add(newDeck.id);
+                final newDeck = await createDeck(deckName);
+                if (newDeck != null) {
+                  deckIds.add(newDeck.id);
+                }
               }
             }
           }
