@@ -71,8 +71,8 @@ class _WordScrambleViewState extends State<WordScrambleView> {
     // Get correct word
     _correctWord = _isQuestionMode ? currentCard.word : currentCard.definition;
     
-    // Create scrambled letters
-    _originalLetters = _correctWord.split('');
+    // Create scrambled letters (excluding spaces)
+    _originalLetters = _correctWord.split('').where((char) => char != ' ').toList();
     _scrambledLetters = List<String>.from(_originalLetters);
     
     // Shuffle the letters
@@ -114,7 +114,8 @@ class _WordScrambleViewState extends State<WordScrambleView> {
     if (_answered || _userAnswer.isEmpty) return;
     
     final userWord = _userAnswer.join('');
-    final isCorrect = userWord.toLowerCase() == _correctWord.toLowerCase();
+    final correctWordWithoutSpaces = _correctWord.replaceAll(' ', '').toLowerCase();
+    final isCorrect = userWord.toLowerCase() == correctWordWithoutSpaces;
     
     setState(() {
       _answered = true;
@@ -312,7 +313,7 @@ class _WordScrambleViewState extends State<WordScrambleView> {
                   const SizedBox(height: 16),
                   _buildScrambledLetters(),
                   
-                  const SizedBox(height: 16),
+                  const Spacer(),
                   
                   // Navigation buttons (only show if question is answered)
                   if (_answered)
@@ -350,8 +351,6 @@ class _WordScrambleViewState extends State<WordScrambleView> {
                         ],
                       ),
                     ),
-                  
-                  const Spacer(),
                 ],
               ),
             ),
@@ -425,18 +424,18 @@ class _WordScrambleViewState extends State<WordScrambleView> {
                   width: 30,
                   height: 40,
                   decoration: BoxDecoration(
+                                      color: _answered 
+                      ? (_userAnswer.join('').toLowerCase() == _correctWord.replaceAll(' ', '').toLowerCase() 
+                          ? Colors.green.withValues(alpha: 0.2) 
+                          : Colors.red.withValues(alpha: 0.2))
+                      : Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                  border: Border.all(
                     color: _answered 
-                        ? (_userAnswer.join('').toLowerCase() == _correctWord.toLowerCase() 
-                            ? Colors.green.withValues(alpha: 0.2) 
-                            : Colors.red.withValues(alpha: 0.2))
-                        : Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                    border: Border.all(
-                      color: _answered 
-                          ? (_userAnswer.join('').toLowerCase() == _correctWord.toLowerCase() 
-                              ? Colors.green 
-                              : Colors.red)
-                          : Theme.of(context).colorScheme.primary,
-                    ),
+                        ? (_userAnswer.join('').toLowerCase() == _correctWord.replaceAll(' ', '').toLowerCase() 
+                            ? Colors.green 
+                            : Colors.red)
+                        : Theme.of(context).colorScheme.primary,
+                  ),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Center(
@@ -445,11 +444,11 @@ class _WordScrambleViewState extends State<WordScrambleView> {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: _answered 
-                            ? (_userAnswer.join('').toLowerCase() == _correctWord.toLowerCase() 
-                                ? Colors.green 
-                                : Colors.red)
-                            : Theme.of(context).colorScheme.primary,
+                                              color: _answered 
+                          ? (_userAnswer.join('').toLowerCase() == _correctWord.replaceAll(' ', '').toLowerCase() 
+                              ? Colors.green 
+                              : Colors.red)
+                          : Theme.of(context).colorScheme.primary,
                       ),
                     ),
                   ),
