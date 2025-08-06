@@ -307,21 +307,10 @@ class _HomeViewState extends State<HomeView> {
   }
 
   void _navigateToStudy(BuildContext context) {
-    final provider = context.read<FlashcardProvider>();
-    final allCards = provider.cards;
-    
-    if (allCards.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No cards available. Please add some cards first.')),
-      );
-      return;
-    }
-    
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => AdvancedStudyView(
-          cards: allCards,
-          title: 'Study Your Cards',
+        builder: (context) => StudyTypeSelectionView(
+          gameMode: GameMode.study,
         ),
       ),
     );

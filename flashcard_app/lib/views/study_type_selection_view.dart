@@ -100,19 +100,7 @@ class _StudyTypeSelectionViewState extends State<StudyTypeSelectionView> {
           Colors.orange,
           () => _navigateToQuickStudy(),
         ),
-        const SizedBox(height: 20),
-        
-        // Progressive Study Option (hide for memory game)
-        if (widget.gameMode != GameMode.game)
-          _buildStudyTypeCard(
-            'Progressive Study',
-            '3 levels of increasing difficulty',
-            'Start easy, build up to challenging content',
-            Icons.trending_up,
-            Colors.purple,
-            () => _navigateToProgressiveStudy(),
-          ),
-        if (widget.gameMode != GameMode.game) const SizedBox(height: 20),
+
         
         // Normal Study Option
         _buildStudyTypeCard(
@@ -124,6 +112,10 @@ class _StudyTypeSelectionViewState extends State<StudyTypeSelectionView> {
           () => _navigateToNormalStudy(),
         ),
         const SizedBox(height: 20),
+        
+        // Card count selector (only for study mode)
+        if (widget.gameMode == GameMode.study)
+          _buildCardCountSelector(),
         
         // Start Flipped toggle (only for study mode)
         if (widget.gameMode == GameMode.study || widget.gameMode == GameMode.test)
@@ -201,6 +193,61 @@ class _StudyTypeSelectionViewState extends State<StudyTypeSelectionView> {
     );
   }
 
+  Widget _buildCardCountSelector() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceVariant,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.format_list_numbered, size: 20),
+              const SizedBox(width: 12),
+              const Text(
+                'Number of Cards',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: Slider(
+                  value: _selectedCardCount.toDouble(),
+                  min: 5,
+                  max: 50,
+                  divisions: 9,
+                  label: '$_selectedCardCount',
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedCardCount = value.round();
+                    });
+                  },
+                ),
+              ),
+              const SizedBox(width: 16),
+              Text(
+                '$_selectedCardCount',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildStartFlippedToggle() {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -257,14 +304,14 @@ class _StudyTypeSelectionViewState extends State<StudyTypeSelectionView> {
       return;
     }
     
-    // Take a subset of cards for quick study
-    final studyCards = allCards.take(_selectedCardCount).toList();
+    // Shuffle and take a subset of cards for quick study
+    final shuffledCards = List<FlashCard>.from(allCards)..shuffle();
+    final studyCards = shuffledCards.take(_selectedCardCount).toList();
     
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => StudyView(
+        builder: (context) => AdvancedStudyView(
           cards: studyCards,
-          studyMode: StudyMode.multipleChoice,
           startFlipped: _startFlipped,
           title: 'Quick Study',
         ),
@@ -272,51 +319,56 @@ class _StudyTypeSelectionViewState extends State<StudyTypeSelectionView> {
     );
   }
 
-  void _navigateToProgressiveStudy() {
-    final provider = context.read<FlashcardProvider>();
-    final allCards = provider.cards;
-    
-    if (allCards.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No cards available. Please add some cards first.')),
-      );
-      return;
-    }
-    
-    // For progressive study, we'll use different study modes
-    final studyCards = allCards.take(10).toList();
-    
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => StudyView(
-          cards: studyCards,
-          studyMode: StudyMode.wordScramble,
-          startFlipped: _startFlipped,
-          title: 'Progressive Study',
-        ),
-      ),
-    );
-  }
+
 
   void _navigateToNormalStudy() {
     final provider = context.read<FlashcardProvider>();
-    final allCards = provider.cards;
+    final decks = provider.getAllDecksHierarchical();
     
-    if (allCards.isEmpty) {
+    if (decks.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No cards available. Please add some cards first.')),
+        const SnackBar(content: Text('No decks available. Please create some decks first.')),
       );
       return;
     }
     
-    // For normal study, use all cards
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => AdvancedStudyView(
-          cards: allCards,
-          startFlipped: _startFlipped,
-          title: 'Normal Study',
+    // Show deck selection dialog
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Select Deck'),
+        content: SizedBox(
+          width: double.maxFinite,
+          height: 300,
+          child: ListView.builder(
+            itemCount: decks.length,
+            itemBuilder: (context, index) {
+              final deck = decks[index];
+              return ListTile(
+                title: Text(deck.name),
+                subtitle: Text('${deck.cards.length} cards'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => AdvancedStudyView(
+                        cards: deck.cards,
+                        startFlipped: _startFlipped,
+                        title: deck.name,
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+        ],
       ),
     );
   }
