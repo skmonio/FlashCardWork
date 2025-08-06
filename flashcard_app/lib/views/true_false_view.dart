@@ -365,17 +365,56 @@ class _TrueFalseViewState extends State<TrueFalseView> {
                   
                   const SizedBox(height: 16), // Reduced spacing
                   
-                  // Edit button below card
-                  OutlinedButton.icon(
-                    onPressed: () => _editCurrentCard(),
-                    icon: const Icon(Icons.edit, size: 16), // Smaller icon
-                    label: const Text('Edit'),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8), // Smaller padding
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                  // Navigation and Edit buttons row
+                  Row(
+                    children: [
+                      // Back button (always show, greyed out when not available)
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: _currentIndex > 0 ? _goToPreviousQuestion : null,
+                          icon: const Icon(Icons.arrow_back, size: 16),
+                          label: const Text('Back'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _currentIndex > 0 ? Colors.blue : Colors.grey,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                          ),
+                        ),
                       ),
-                    ),
+                      
+                      const SizedBox(width: 12),
+                      
+                      // Edit button in center
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () => _editCurrentCard(),
+                          icon: const Icon(Icons.edit, size: 16),
+                          label: const Text('Edit'),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                        ),
+                      ),
+                      
+                      const SizedBox(width: 12),
+                      
+                      // Next button (always show, greyed out when not available)
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: (_answered && _currentIndex < widget.cards.length - 1) ? _goToNextQuestion : null,
+                          icon: const Icon(Icons.arrow_forward, size: 16),
+                          label: const Text('Next'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: (_answered && _currentIndex < widget.cards.length - 1) ? Colors.green : Colors.grey,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   
                   const SizedBox(height: 20), // Reduced spacing
@@ -428,41 +467,7 @@ class _TrueFalseViewState extends State<TrueFalseView> {
                     ],
                   ),
                   
-                  // Navigation buttons (always show, greyed out when not available)
-                  Container(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    child: Row(
-                      children: [
-                        // Back button
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: _currentIndex > 0 ? _goToPreviousQuestion : null,
-                            icon: const Icon(Icons.arrow_back, size: 18),
-                            label: const Text('Back'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: _currentIndex > 0 ? Colors.blue : Colors.grey,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        // Next button
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: (_answered && _currentIndex < widget.cards.length - 1) ? _goToNextQuestion : null,
-                            icon: const Icon(Icons.arrow_forward, size: 18),
-                            label: const Text('Next'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: (_answered && _currentIndex < widget.cards.length - 1) ? Colors.green : Colors.grey,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+
                 ],
               ),
             ),
