@@ -73,7 +73,7 @@ class _AdvancedStudyViewState extends State<AdvancedStudyView>
       vsync: this,
     );
     _flipAnimation = Tween<double>(
-      begin: 0,
+      begin: widget.startFlipped ? 1.0 : 0.0, // Start flipped if startFlipped is true
       end: 1,
     ).animate(CurvedAnimation(
       parent: _flipController,

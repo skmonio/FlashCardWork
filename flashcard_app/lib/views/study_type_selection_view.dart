@@ -344,15 +344,22 @@ class _StudyTypeSelectionViewState extends State<StudyTypeSelectionView> {
             itemCount: decks.length,
             itemBuilder: (context, index) {
               final deck = decks[index];
+              final deckCards = provider.getCardsForDeck(deck.id);
               return ListTile(
                 title: Text(deck.name),
-                subtitle: Text('${deck.cards.length} cards'),
+                subtitle: Text('${deckCards.length} cards'),
                 onTap: () {
+                  if (deckCards.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('No cards in deck "${deck.name}". Please add some cards first.')),
+                    );
+                    return;
+                  }
                   Navigator.of(context).pop();
                   Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (context) => AdvancedStudyView(
-                        cards: deck.cards,
+                        cards: deckCards,
                         startFlipped: _startFlipped,
                         title: deck.name,
                       ),
