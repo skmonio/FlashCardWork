@@ -245,6 +245,23 @@ class _BubbleWordViewState extends State<BubbleWordView> {
                 // Connections
                 ...provider.connections.map((connection) => _buildConnection(connection, provider)),
                 
+                // Debug: Show connection count
+                Positioned(
+                  top: 10,
+                  left: 10,
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.7),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      'Connections: ${provider.connections.length}',
+                      style: const TextStyle(color: Colors.white, fontSize: 12),
+                    ),
+                  ),
+                ),
+                
                 // Word bubbles
                 ...provider.nodes.map((node) => _buildWordBubble(node, provider)),
                 
@@ -263,13 +280,14 @@ class _BubbleWordViewState extends State<BubbleWordView> {
     final fromNode = provider.nodes.firstWhere((node) => node.id == connection.fromNodeId);
     final toNode = provider.nodes.firstWhere((node) => node.id == connection.toNodeId);
     
-    return Positioned.fill(
-      child: CustomPaint(
-        painter: ConnectionPainter(
-          from: fromNode.position,
-          to: toNode.position,
-          color: connection.color,
-        ),
+    print('Rendering connection: ${connection.id} from ${fromNode.position} to ${toNode.position}');
+    
+    return CustomPaint(
+      size: Size.infinite,
+      painter: ConnectionPainter(
+        from: fromNode.position,
+        to: toNode.position,
+        color: connection.color,
       ),
     );
   }
@@ -279,12 +297,11 @@ class _BubbleWordViewState extends State<BubbleWordView> {
     
     final firstNode = provider.nodes.firstWhere((node) => node.id == provider.firstSelectedNodeId);
     
-    return Positioned.fill(
-      child: CustomPaint(
-        painter: ConnectionPreviewPainter(
-          from: firstNode.position,
-          color: Colors.grey.withOpacity(0.5),
-        ),
+    return CustomPaint(
+      size: Size.infinite,
+      painter: ConnectionPreviewPainter(
+        from: firstNode.position,
+        color: Colors.grey.withOpacity(0.5),
       ),
     );
   }
@@ -776,10 +793,10 @@ class ConnectionPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    // Draw a thicker, more visible connection line
+    // Draw a very thick, highly visible connection line
     final paint = Paint()
-      ..color = color
-      ..strokeWidth = 4
+      ..color = Colors.red // Use bright red for maximum visibility
+      ..strokeWidth = 8 // Much thicker line
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
@@ -788,8 +805,8 @@ class ConnectionPainter extends CustomPainter {
     
     // Draw arrow at the end
     final direction = (to - from).direction;
-    final arrowLength = 15.0;
-    final arrowAngle = 0.5;
+    final arrowLength = 20.0;
+    final arrowAngle = 0.6;
     
     final arrowPoint1 = to - Offset(
       arrowLength * cos(direction - arrowAngle),
@@ -802,6 +819,15 @@ class ConnectionPainter extends CustomPainter {
     
     canvas.drawLine(to, arrowPoint1, paint);
     canvas.drawLine(to, arrowPoint2, paint);
+    
+    // Add a shadow for extra visibility
+    final shadowPaint = Paint()
+      ..color = Colors.black.withOpacity(0.3)
+      ..strokeWidth = 10
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+    
+    canvas.drawLine(from, to, shadowPaint);
   }
 
   @override

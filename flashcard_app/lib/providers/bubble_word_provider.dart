@@ -257,7 +257,7 @@ class BubbleWordProvider extends ChangeNotifier {
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       fromNodeId: fromNodeId,
       toNodeId: toNodeId,
-      color: Colors.grey,
+      color: Colors.red, // Use bright red for visibility
     );
 
     final updatedMap = currentMap!.copyWith(
@@ -266,6 +266,8 @@ class BubbleWordProvider extends ChangeNotifier {
     );
 
     _updateMap(updatedMap);
+    print('Connection created: ${connection.id} from $fromNodeId to $toNodeId');
+    print('Total connections: ${updatedMap.connections.length}');
     saveData();
     notifyListeners();
   }
