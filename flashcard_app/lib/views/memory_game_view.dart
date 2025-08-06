@@ -185,51 +185,73 @@ class _MemoryGameViewState extends State<MemoryGameView> {
   Widget _buildGameBoard() {
     return Padding(
       padding: const EdgeInsets.all(16),
-      child: GridView.builder(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 4,
-          crossAxisSpacing: 8,
-          mainAxisSpacing: 8,
-          childAspectRatio: 0.8,
-        ),
-        itemCount: _memoryCards.length,
-        itemBuilder: (context, index) {
-          return _buildMemoryCard(_memoryCards[index]);
-        },
+      child: Row(
+        children: [
+          // Left column - Words
+          Expanded(
+            child: Column(
+              children: _memoryCards
+                  .where((card) => card.type == MemoryCardType.word)
+                  .map((card) => Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: _buildMemoryCard(card),
+                      ))
+                  .toList(),
+            ),
+          ),
+          const SizedBox(width: 16),
+          // Right column - Definitions
+          Expanded(
+            child: Column(
+              children: _memoryCards
+                  .where((card) => card.type == MemoryCardType.definition)
+                  .map((card) => Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: _buildMemoryCard(card),
+                      ))
+                  .toList(),
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildMemoryCard(MemoryCard card) {
-    Color cardColor;
     Color borderColor;
     
     if (card.isMatched) {
-      cardColor = Colors.green.withValues(alpha: 0.1);
       borderColor = Colors.green;
     } else if (card.isWrong) {
-      cardColor = Colors.red.withValues(alpha: 0.1);
       borderColor = Colors.red;
     } else if (card.isSelected) {
-      cardColor = Colors.blue.withValues(alpha: 0.1);
       borderColor = Colors.blue;
     } else {
-      cardColor = Theme.of(context).colorScheme.surface;
-      borderColor = Colors.grey.withValues(alpha: 0.3);
+      borderColor = _getCardBorderColor(card.originalCard);
     }
     
     return GestureDetector(
       onTap: () => _selectCard(card),
-      child: Card(
-        elevation: card.isMatched ? 0 : 4,
-        color: cardColor,
+      child: AnimatedOpacity(
+        opacity: card.isMatched ? 0.0 : 1.0,
+        duration: const Duration(milliseconds: 500),
         child: Container(
+          width: double.infinity,
+          height: 60,
           decoration: BoxDecoration(
+            color: Colors.white,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: borderColor,
-              width: card.isSelected || card.isMatched || card.isWrong ? 3 : 1,
+              width: card.isSelected || card.isMatched || card.isWrong ? 3 : 2,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
           child: _buildCardContent(card),
         ),
@@ -238,40 +260,46 @@ class _MemoryGameViewState extends State<MemoryGameView> {
   }
 
   Widget _buildCardContent(MemoryCard card) {
-    return Padding(
-      padding: const EdgeInsets.all(8),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: card.type == MemoryCardType.word 
-                  ? Colors.blue.withValues(alpha: 0.1)
-                  : Colors.orange.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Icon(
-              card.type == MemoryCardType.word ? Icons.text_fields : Icons.translate,
-              size: 16,
-              color: card.type == MemoryCardType.word ? Colors.blue : Colors.orange,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            card.content,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-              color: card.type == MemoryCardType.word ? Colors.blue : Colors.orange,
-            ),
-            textAlign: TextAlign.center,
-            maxLines: 3,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
+    return Center(
+      child: Text(
+        card.content,
+        style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w500,
+          color: Colors.black87,
+        ),
+        textAlign: TextAlign.center,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
       ),
     );
+  }
+
+  Color _getCardBorderColor(FlashCard card) {
+    // Generate consistent vibrant colors based on card content
+    final vibrantColors = [
+      const Color(0xFFE91E63), // Pink
+      const Color(0xFF9C27B0), // Purple
+      const Color(0xFF673AB7), // Deep Purple
+      const Color(0xFF3F51B5), // Indigo
+      const Color(0xFF2196F3), // Blue
+      const Color(0xFF03A9F4), // Light Blue
+      const Color(0xFF00BCD4), // Cyan
+      const Color(0xFF009688), // Teal
+      const Color(0xFF4CAF50), // Green
+      const Color(0xFF8BC34A), // Light Green
+      const Color(0xFFCDDC39), // Lime
+      const Color(0xFFFFEB3B), // Yellow
+      const Color(0xFFFFC107), // Amber
+      const Color(0xFFFF9800), // Orange
+      const Color(0xFFFF5722), // Deep Orange
+      const Color(0xFF795548), // Brown
+    ];
+    
+    // Use card content to generate consistent index
+    final hash = card.word.hashCode + card.definition.hashCode;
+    final index = hash.abs() % vibrantColors.length;
+    return vibrantColors[index];
   }
 
   Widget _buildFooter() {
