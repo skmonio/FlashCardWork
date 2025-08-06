@@ -90,14 +90,16 @@ class _WordScrambleViewState extends State<WordScrambleView> {
   }
 
   void _addPiece(String piece) {
-    if (_answered) return;
+    if (_answered || piece.isEmpty) return;
     
     setState(() {
       _userAnswer.add(piece);
     });
     
-    // Auto-check answer if we have used all pieces
-    if (_userAnswer.length == _scrambledLetters.length) {
+    // Auto-check answer if we have used all non-empty pieces
+    final nonEmptyPieces = _scrambledLetters.where((p) => p.isNotEmpty).length;
+    final nonEmptyUserAnswer = _userAnswer.where((p) => p.isNotEmpty).length;
+    if (nonEmptyUserAnswer == nonEmptyPieces) {
       _checkAnswer();
     }
   }
@@ -155,31 +157,56 @@ class _WordScrambleViewState extends State<WordScrambleView> {
   
   List<String> _createPieces(List<String> letters, Random random) {
     final pieces = <String>[];
-    int index = 0;
     
-    while (index < letters.length) {
-      // Determine piece size (2-3 letters)
-      int pieceSize;
-      if (index + 3 <= letters.length) {
-        // Can make a piece of 2 or 3 letters
-        pieceSize = random.nextBool() ? 2 : 3;
-      } else if (index + 2 <= letters.length) {
-        // Can make a piece of 2 letters
-        pieceSize = 2;
-      } else {
-        // Only 1 letter left, add it to the last piece if possible
-        if (pieces.isNotEmpty) {
-          pieces[pieces.length - 1] += letters[index];
+    // Ensure we always have at least 2 pieces
+    if (letters.length <= 3) {
+      // For short words (3 letters or less), split into 2 pieces
+      if (letters.length == 3) {
+        // "dog" -> ["do", "g"] or ["d", "og"]
+        if (random.nextBool()) {
+          pieces.add(letters.sublist(0, 2).join('')); // "do"
+          pieces.add(letters[2]); // "g"
         } else {
-          pieces.add(letters[index]);
+          pieces.add(letters[0]); // "d"
+          pieces.add(letters.sublist(1, 3).join('')); // "og"
         }
-        break;
+      } else if (letters.length == 2) {
+        // "hi" -> ["h", "i"]
+        pieces.add(letters[0]);
+        pieces.add(letters[1]);
+      } else if (letters.length == 1) {
+        // Single letter, create two pieces with one empty (edge case)
+        pieces.add(letters[0]);
+        pieces.add('');
       }
-      
-      // Create the piece
-      final piece = letters.sublist(index, index + pieceSize).join('');
-      pieces.add(piece);
-      index += pieceSize;
+    } else {
+      // For longer words, create pieces of 2-3 letters
+      int index = 0;
+      while (index < letters.length) {
+        // Determine piece size (2-3 letters)
+        int pieceSize;
+        if (index + 3 <= letters.length) {
+          // Can make a piece of 2 or 3 letters
+          pieceSize = random.nextBool() ? 2 : 3;
+        } else if (index + 2 <= letters.length) {
+          // Can make a piece of 2 letters
+          pieceSize = 2;
+        } else {
+          // Only 1 letter left, add it to the last piece
+          if (pieces.isNotEmpty) {
+            pieces[pieces.length - 1] += letters[index];
+          } else {
+            // This shouldn't happen with the minimum 2 pieces rule
+            pieces.add(letters[index]);
+          }
+          break;
+        }
+        
+        // Create the piece
+        final piece = letters.sublist(index, index + pieceSize).join('');
+        pieces.add(piece);
+        index += pieceSize;
+      }
     }
     
     // Shuffle the pieces
@@ -188,6 +215,9 @@ class _WordScrambleViewState extends State<WordScrambleView> {
   }
 
   bool _isPieceUsed(String piece, int index) {
+    // Empty pieces are always considered "used"
+    if (piece.isEmpty) return true;
+    
     int usedCount = 0;
     for (int i = 0; i < index; i++) {
       if (_scrambledLetters[i] == piece) {
@@ -495,16 +525,16 @@ class _WordScrambleViewState extends State<WordScrambleView> {
         final isUsed = _isPieceUsed(piece, index);
         
         return GestureDetector(
-          onTap: _answered || isUsed ? null : () => _addPiece(piece),
+          onTap: _answered || isUsed || piece.isEmpty ? null : () => _addPiece(piece),
           child: Container(
             width: piece.length > 2 ? 70 : 60, // Wider for longer pieces
             height: 50,
             decoration: BoxDecoration(
-              color: isUsed 
+              color: isUsed || piece.isEmpty
                   ? Colors.grey.withValues(alpha: 0.3)
                   : Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
               border: Border.all(
-                color: isUsed 
+                color: isUsed || piece.isEmpty
                     ? Colors.grey.withValues(alpha: 0.5)
                     : Theme.of(context).colorScheme.primary,
                 width: 2,
@@ -513,11 +543,11 @@ class _WordScrambleViewState extends State<WordScrambleView> {
             ),
             child: Center(
               child: Text(
-                piece,
+                piece.isEmpty ? '•' : piece, // Show dot for empty pieces
                 style: TextStyle(
                   fontSize: piece.length > 2 ? 16 : 18, // Smaller font for longer pieces
                   fontWeight: FontWeight.bold,
-                  color: isUsed 
+                  color: isUsed || piece.isEmpty
                       ? Colors.grey.withValues(alpha: 0.5)
                       : Theme.of(context).colorScheme.primary,
                 ),
