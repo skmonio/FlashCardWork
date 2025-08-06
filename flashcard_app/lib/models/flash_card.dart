@@ -67,7 +67,9 @@ class FlashCard {
   // Computed property for learning percentage
   int? get learningPercentage {
     if (timesShown == 0) return null;
-    return ((timesCorrect / timesShown) * 100).round();
+    // Ensure timesCorrect doesn't exceed timesShown to prevent percentages over 100%
+    final correctCount = timesCorrect.clamp(0, timesShown);
+    return ((correctCount / timesShown) * 100).round();
   }
   
   // Check if card is fully learned (5+ correct answers)

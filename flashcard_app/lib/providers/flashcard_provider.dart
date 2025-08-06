@@ -544,6 +544,12 @@ class FlashcardProvider extends ChangeNotifier {
           timesCorrect = int.tryParse(fields[11].trim()) ?? 0;
         }
         
+        // Validate statistics to prevent invalid learning percentages
+        if (timesCorrect > timesShown) {
+          print('Warning: timesCorrect ($timesCorrect) > timesShown ($timesShown), clamping to valid values');
+          timesCorrect = timesShown; // Clamp to prevent percentages over 100%
+        }
+        
         print('Creating card with deckIds: $deckIds');
         // Create the card
         final newCard = await createCard(
