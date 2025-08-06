@@ -198,8 +198,13 @@ class FlashcardService {
   }
   
   Future<void> deleteCard(String cardId) async {
+    print('Service: Deleting card: $cardId');
+    final initialCount = _cards.length;
     _cards.removeWhere((card) => card.id == cardId);
+    final finalCount = _cards.length;
+    print('Service: Cards before deletion: $initialCount, after: $finalCount');
     await _saveData();
+    print('Service: Card deletion completed');
   }
   
   FlashCard? getCard(String cardId) {

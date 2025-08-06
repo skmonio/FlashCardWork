@@ -168,13 +168,17 @@ class FlashcardProvider extends ChangeNotifier {
   }
   
   Future<bool> deleteCard(String cardId) async {
+    print('Provider: Deleting card: $cardId');
     try {
       await _service.deleteCard(cardId);
       // Refresh the cards list from the service
       _cards = _service.cards;
+      print('Provider: Cards after deletion: ${_cards.length}');
       notifyListeners();
+      print('Provider: Notified listeners of card deletion');
       return true;
     } catch (e) {
+      print('Provider: Error deleting card: $e');
       _setError(e.toString());
       return false;
     }

@@ -582,11 +582,22 @@ class _AllCardsViewState extends State<AllCardsView> {
   }
 
   void _deleteCard(FlashCard card, FlashcardProvider provider) async {
-    await provider.deleteCard(card.id);
+    print('AllCardsView: Deleting card: ${card.word} (${card.id})');
+    final success = await provider.deleteCard(card.id);
+    print('AllCardsView: Delete result: $success');
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Deleted card: ${card.word}')),
-      );
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Deleted card: ${card.word}')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to delete card: ${card.word}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
