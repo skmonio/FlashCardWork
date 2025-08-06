@@ -591,6 +591,7 @@ class FlashcardProvider extends ChangeNotifier {
   }
   
   List<String> _parseCSVLine(String line) {
+    print('Parsing CSV line: "$line"');
     final fields = <String>[];
     var currentField = '';
     var inQuotes = false;
@@ -619,6 +620,7 @@ class FlashcardProvider extends ChangeNotifier {
     // Add the last field
     fields.add(currentField);
     
+    print('Parsed fields: $fields');
     return fields;
   }
   
