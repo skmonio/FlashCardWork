@@ -247,44 +247,7 @@ class _BubbleWordViewState extends State<BubbleWordView> {
                 // Connections
                 ...provider.connections.map((connection) => _buildConnection(connection, provider)),
                 
-                // Debug: Show connection count
-                Positioned(
-                  top: 10,
-                  left: 10,
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.7),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      'Connections: ${provider.connections.length}',
-                      style: const TextStyle(color: Colors.white, fontSize: 12),
-                    ),
-                  ),
-                ),
-                
-                // Simple connection instruction
-                if (provider.selectedNodeId != null)
-                  Positioned(
-                    top: 10,
-                    right: 10,
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.withOpacity(0.9),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Text(
-                        'Tap another word to connect',
-                        style: TextStyle(
-                          color: Colors.white, 
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
+
                 
                 // Word bubbles
                 ...provider.nodes.map((node) => _buildWordBubble(node, provider)),
@@ -302,7 +265,7 @@ class _BubbleWordViewState extends State<BubbleWordView> {
     final fromNode = provider.nodes.firstWhere((node) => node.id == connection.fromNodeId);
     final toNode = provider.nodes.firstWhere((node) => node.id == connection.toNodeId);
     
-    print('Rendering connection: ${connection.id} from ${fromNode.position} to ${toNode.position}');
+
     
     return CustomPaint(
       size: Size.infinite,
@@ -374,7 +337,6 @@ class _BubbleWordViewState extends State<BubbleWordView> {
     if (provider.selectedNodeId != null && provider.selectedNodeId != node.id) {
       // Connect the selected node to this one
       provider.addConnection(provider.selectedNodeId!, node.id);
-      print('Connection created: ${provider.selectedNodeId} -> ${node.id}');
       // Keep the new node selected
       provider.selectNode(node.id);
     } else {

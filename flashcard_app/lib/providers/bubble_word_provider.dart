@@ -275,8 +275,6 @@ class BubbleWordProvider extends ChangeNotifier {
     );
 
     _updateMap(updatedMap);
-    print('Connection created: ${connection.id} from $fromNodeId to $toNodeId');
-    print('Total connections: ${updatedMap.connections.length}');
     saveData();
     notifyListeners();
   }
