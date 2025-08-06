@@ -71,12 +71,12 @@ class _WordScrambleViewState extends State<WordScrambleView> {
     // Get correct word
     _correctWord = _isQuestionMode ? currentCard.word : currentCard.definition;
     
-    // Create scrambled letters (excluding spaces)
-    _originalLetters = _correctWord.split('').where((char) => char != ' ').toList();
-    _scrambledLetters = List<String>.from(_originalLetters);
+    // Create scrambled pieces (2-3 letters each, excluding spaces)
+    final letters = _correctWord.split('').where((char) => char != ' ').toList();
+    _scrambledLetters = _createPieces(letters, random);
     
-    // Shuffle the letters
-    _scrambledLetters.shuffle(random);
+    // Store original letters for comparison
+    _originalLetters = letters;
     
     // Store question data for future reference
     _correctWords[_currentIndex] = _correctWord;
@@ -89,15 +89,15 @@ class _WordScrambleViewState extends State<WordScrambleView> {
     });
   }
 
-  void _addLetter(String letter) {
+  void _addPiece(String piece) {
     if (_answered) return;
     
     setState(() {
-      _userAnswer.add(letter);
+      _userAnswer.add(piece);
     });
     
-    // Auto-check answer if we have the correct number of letters
-    if (_userAnswer.length == _correctWord.length) {
+    // Auto-check answer if we have used all pieces
+    if (_userAnswer.length == _scrambledLetters.length) {
       _checkAnswer();
     }
   }
@@ -152,16 +152,50 @@ class _WordScrambleViewState extends State<WordScrambleView> {
       _generateQuestion();
     }
   }
+  
+  List<String> _createPieces(List<String> letters, Random random) {
+    final pieces = <String>[];
+    int index = 0;
+    
+    while (index < letters.length) {
+      // Determine piece size (2-3 letters)
+      int pieceSize;
+      if (index + 3 <= letters.length) {
+        // Can make a piece of 2 or 3 letters
+        pieceSize = random.nextBool() ? 2 : 3;
+      } else if (index + 2 <= letters.length) {
+        // Can make a piece of 2 letters
+        pieceSize = 2;
+      } else {
+        // Only 1 letter left, add it to the last piece if possible
+        if (pieces.isNotEmpty) {
+          pieces[pieces.length - 1] += letters[index];
+        } else {
+          pieces.add(letters[index]);
+        }
+        break;
+      }
+      
+      // Create the piece
+      final piece = letters.sublist(index, index + pieceSize).join('');
+      pieces.add(piece);
+      index += pieceSize;
+    }
+    
+    // Shuffle the pieces
+    pieces.shuffle(random);
+    return pieces;
+  }
 
-  bool _isLetterUsed(String letter, int index) {
+  bool _isPieceUsed(String piece, int index) {
     int usedCount = 0;
     for (int i = 0; i < index; i++) {
-      if (_scrambledLetters[i] == letter) {
+      if (_scrambledLetters[i] == piece) {
         usedCount++;
       }
     }
     
-    int userCount = _userAnswer.where((l) => l == letter).length;
+    int userCount = _userAnswer.where((p) => p == piece).length;
     return userCount >= usedCount + 1;
   }
 
@@ -280,6 +314,7 @@ class _WordScrambleViewState extends State<WordScrambleView> {
                   // Answer box
                   Container(
                     width: double.infinity,
+                    height: 80, // Fixed height for consistency
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: Theme.of(context).colorScheme.surfaceVariant,
@@ -289,31 +324,20 @@ class _WordScrambleViewState extends State<WordScrambleView> {
                       ),
                     ),
                     child: _userAnswer.isEmpty
-                        ? Text(
-                            'Tap pieces to build the word',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                        ? Center(
+                            child: Text(
+                              'Tap pieces to build the word',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                              ),
+                              textAlign: TextAlign.center,
                             ),
-                            textAlign: TextAlign.center,
                           )
                         : _buildUserAnswerDisplay(),
                   ),
                   
-                  const SizedBox(height: 32),
-                  
-                  // Scrambled letters
-                  Text(
-                    'Available letters:',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                    ),
-                  ),
                   const SizedBox(height: 16),
-                  _buildScrambledLetters(),
-                  
-                  const Spacer(),
                   
                   // Navigation buttons (only show if question is answered)
                   if (_answered)
@@ -351,6 +375,21 @@ class _WordScrambleViewState extends State<WordScrambleView> {
                         ],
                       ),
                     ),
+                  
+                  const SizedBox(height: 32),
+                  
+                  // Scrambled letters
+                  Text(
+                    'Available pieces:',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildScrambledLetters(),
+                  
+                  const Spacer(),
                 ],
               ),
             ),
@@ -387,44 +426,30 @@ class _WordScrambleViewState extends State<WordScrambleView> {
   }
 
   Widget _buildUserAnswerDisplay() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: _answered 
-              ? (_userAnswer.join('').toLowerCase() == _correctWord.toLowerCase() 
-                  ? Colors.green 
-                  : Colors.red)
-              : Colors.grey.withValues(alpha: 0.3),
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          if (_userAnswer.isEmpty)
-            Text(
-              'Tap letters to build your answer',
-              style: TextStyle(
-                color: Colors.grey[500],
-                fontStyle: FontStyle.italic,
-              ),
-            )
-          else
-            ..._userAnswer.asMap().entries.map((entry) {
-              final index = entry.key;
-              final letter = entry.value;
-              
-              return GestureDetector(
-                onTap: _answered ? null : () => _removeLetterAt(index),
-                child: Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 2),
-                  width: 30,
-                  height: 40,
-                  decoration: BoxDecoration(
-                                      color: _answered 
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        if (_userAnswer.isEmpty)
+          Text(
+            'Tap pieces to build your answer',
+            style: TextStyle(
+              color: Colors.grey[500],
+              fontStyle: FontStyle.italic,
+            ),
+          )
+        else
+          ..._userAnswer.asMap().entries.map((entry) {
+            final index = entry.key;
+            final piece = entry.value;
+            
+            return GestureDetector(
+              onTap: _answered ? null : () => _removeLetterAt(index),
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 2),
+                width: piece.length > 2 ? 50 : 40, // Wider for longer pieces
+                height: 40,
+                decoration: BoxDecoration(
+                  color: _answered 
                       ? (_userAnswer.join('').toLowerCase() == _correctWord.replaceAll(' ', '').toLowerCase() 
                           ? Colors.green.withValues(alpha: 0.2) 
                           : Colors.red.withValues(alpha: 0.2))
@@ -436,27 +461,26 @@ class _WordScrambleViewState extends State<WordScrambleView> {
                             : Colors.red)
                         : Theme.of(context).colorScheme.primary,
                   ),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Center(
-                    child: Text(
-                      letter,
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                                              color: _answered 
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Center(
+                  child: Text(
+                    piece,
+                    style: TextStyle(
+                      fontSize: piece.length > 2 ? 14 : 16, // Smaller font for longer pieces
+                      fontWeight: FontWeight.bold,
+                      color: _answered 
                           ? (_userAnswer.join('').toLowerCase() == _correctWord.replaceAll(' ', '').toLowerCase() 
                               ? Colors.green 
                               : Colors.red)
                           : Theme.of(context).colorScheme.primary,
-                      ),
                     ),
                   ),
                 ),
-              );
-            }).toList(),
-        ],
-      ),
+              ),
+            );
+          }).toList(),
+      ],
     );
   }
 
@@ -467,13 +491,13 @@ class _WordScrambleViewState extends State<WordScrambleView> {
       alignment: WrapAlignment.center,
       children: _scrambledLetters.asMap().entries.map((entry) {
         final index = entry.key;
-        final letter = entry.value;
-        final isUsed = _isLetterUsed(letter, index);
+        final piece = entry.value;
+        final isUsed = _isPieceUsed(piece, index);
         
         return GestureDetector(
-          onTap: _answered || isUsed ? null : () => _addLetter(letter),
+          onTap: _answered || isUsed ? null : () => _addPiece(piece),
           child: Container(
-            width: 50,
+            width: piece.length > 2 ? 70 : 60, // Wider for longer pieces
             height: 50,
             decoration: BoxDecoration(
               color: isUsed 
@@ -489,9 +513,9 @@ class _WordScrambleViewState extends State<WordScrambleView> {
             ),
             child: Center(
               child: Text(
-                letter,
+                piece,
                 style: TextStyle(
-                  fontSize: 20,
+                  fontSize: piece.length > 2 ? 16 : 18, // Smaller font for longer pieces
                   fontWeight: FontWeight.bold,
                   color: isUsed 
                       ? Colors.grey.withValues(alpha: 0.5)
