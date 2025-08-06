@@ -496,9 +496,149 @@ class _AllCardsViewState extends State<AllCardsView> {
   }
 
   void _editCard(FlashCard card) {
-    // TODO: Navigate to edit card view
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Edit card: ${card.word}')),
+    final wordController = TextEditingController(text: card.word);
+    final definitionController = TextEditingController(text: card.definition);
+    final exampleController = TextEditingController(text: card.example);
+    final articleController = TextEditingController(text: card.article);
+    final pluralController = TextEditingController(text: card.plural);
+    final pastTenseController = TextEditingController(text: card.pastTense);
+    final futureTenseController = TextEditingController(text: card.futureTense);
+    final pastParticipleController = TextEditingController(text: card.pastParticiple);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edit Card'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: wordController,
+                decoration: const InputDecoration(
+                  labelText: 'Word',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: definitionController,
+                decoration: const InputDecoration(
+                  labelText: 'Definition',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 3,
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: exampleController,
+                decoration: const InputDecoration(
+                  labelText: 'Example',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 2,
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: articleController,
+                      decoration: const InputDecoration(
+                        labelText: 'Article',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextField(
+                      controller: pluralController,
+                      decoration: const InputDecoration(
+                        labelText: 'Plural',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: pastTenseController,
+                      decoration: const InputDecoration(
+                        labelText: 'Past Tense',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextField(
+                      controller: futureTenseController,
+                      decoration: const InputDecoration(
+                        labelText: 'Future Tense',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: pastParticipleController,
+                decoration: const InputDecoration(
+                  labelText: 'Past Participle',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              // Update the card
+              card.word = wordController.text.trim();
+              card.definition = definitionController.text.trim();
+              card.example = exampleController.text.trim();
+              card.article = articleController.text.trim();
+              card.plural = pluralController.text.trim();
+              card.pastTense = pastTenseController.text.trim();
+              card.futureTense = futureTenseController.text.trim();
+              card.pastParticiple = pastParticipleController.text.trim();
+              
+              // Save the updated card
+              final provider = context.read<FlashcardProvider>();
+              final success = await provider.updateCard(card);
+              
+              Navigator.of(context).pop();
+              
+              if (mounted) {
+                if (success) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Updated card: ${card.word}')),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Failed to update card'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
     );
   }
 
