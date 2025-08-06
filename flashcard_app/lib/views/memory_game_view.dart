@@ -85,7 +85,7 @@ class _MemoryGameViewState extends State<MemoryGameView> {
                   child: Row(
                     children: [
                       IconButton(
-                        onPressed: () => Navigator.of(context).pop(),
+                        onPressed: () => _showCloseConfirmation(),
                         icon: const Icon(Icons.arrow_back_ios),
                         iconSize: 20,
                       ),
@@ -144,42 +144,46 @@ class _MemoryGameViewState extends State<MemoryGameView> {
 
 
   Widget _buildGameBoard() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Left column - Words
-            SizedBox(
-              width: 150,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: _memoryCards
-                    .where((card) => card.type == MemoryCardType.word)
-                    .map((card) => Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: _buildMemoryCard(card),
-                        ))
-                    .toList(),
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Left column - Words
+              SizedBox(
+                width: 150,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: _memoryCards
+                      .where((card) => card.type == MemoryCardType.word)
+                      .map((card) => Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: _buildMemoryCard(card),
+                          ))
+                      .toList(),
+                ),
               ),
-            ),
-            const SizedBox(width: 20),
-            // Right column - Definitions
-            SizedBox(
-              width: 150,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: _memoryCards
-                    .where((card) => card.type == MemoryCardType.definition)
-                    .map((card) => Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: _buildMemoryCard(card),
-                        ))
-                    .toList(),
+              const SizedBox(width: 20),
+              // Right column - Definitions
+              SizedBox(
+                width: 150,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: _memoryCards
+                      .where((card) => card.type == MemoryCardType.definition)
+                      .map((card) => Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: _buildMemoryCard(card),
+                          ))
+                      .toList(),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -375,6 +379,29 @@ class _MemoryGameViewState extends State<MemoryGameView> {
         }
       });
     }
+  }
+
+  void _showCloseConfirmation() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Leave Memory Game?'),
+        content: const Text('Are you sure you want to leave? Your progress will be lost.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              Navigator.of(context).pop();
+            },
+            child: const Text('Leave'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _resetGame() {
