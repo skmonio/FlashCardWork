@@ -365,20 +365,19 @@ class _MultipleChoiceViewState extends State<MultipleChoiceView> {
                   // Navigation and Edit buttons row
                   Row(
                     children: [
-                      // Back button (only show if question is answered)
-                      if (_answered)
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: _currentIndex > 0 ? _goToPreviousQuestion : null,
-                            icon: const Icon(Icons.arrow_back, size: 16),
-                            label: const Text('Back'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: _currentIndex > 0 ? Colors.blue : Colors.grey,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 8),
-                            ),
+                      // Back button (always show, greyed out when not available)
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: (_answered && _currentIndex > 0) ? _goToPreviousQuestion : null,
+                          icon: const Icon(Icons.arrow_back, size: 16),
+                          label: const Text('Back'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: (_answered && _currentIndex > 0) ? Colors.blue : Colors.grey,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 8),
                           ),
                         ),
+                      ),
                       
                       const SizedBox(width: 12),
                       
@@ -399,20 +398,19 @@ class _MultipleChoiceViewState extends State<MultipleChoiceView> {
                       
                       const SizedBox(width: 12),
                       
-                      // Next button (only show if question is answered)
-                      if (_answered)
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: _currentIndex < widget.cards.length - 1 ? _goToNextQuestion : null,
-                            icon: const Icon(Icons.arrow_forward, size: 16),
-                            label: const Text('Next'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: _currentIndex < widget.cards.length - 1 ? Colors.green : Colors.grey,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 8),
-                            ),
+                      // Next button (always show, greyed out when not available)
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: (_answered && _currentIndex < widget.cards.length - 1) ? _goToNextQuestion : null,
+                          icon: const Icon(Icons.arrow_forward, size: 16),
+                          label: const Text('Next'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: (_answered && _currentIndex < widget.cards.length - 1) ? Colors.green : Colors.grey,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 8),
                           ),
                         ),
+                      ),
                     ],
                   ),
                   
