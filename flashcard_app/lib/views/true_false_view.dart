@@ -87,9 +87,19 @@ class _TrueFalseViewState extends State<TrueFalseView> {
       if (otherCards.isNotEmpty) {
         final randomCard = otherCards[random.nextInt(otherCards.length)];
         final wrongAnswer = _isQuestionMode ? randomCard.definition : randomCard.word;
-        _question = _isQuestionMode 
-            ? '${currentCard.word} means "${wrongAnswer}"'
-            : '"${wrongAnswer}" means ${currentCard.word}';
+        
+        // Ensure the wrong answer is actually different from the correct answer
+        final correctAnswer = _isQuestionMode ? currentCard.definition : currentCard.word;
+        if (wrongAnswer.toLowerCase().trim() == correctAnswer.toLowerCase().trim()) {
+          // If the random answer is the same as correct, use a fallback
+          _question = _isQuestionMode 
+              ? '${currentCard.word} means "something else"'
+              : '"something else" means ${currentCard.word}';
+        } else {
+          _question = _isQuestionMode 
+              ? '${currentCard.word} means "${wrongAnswer}"'
+              : '"${wrongAnswer}" means ${currentCard.word}';
+        }
       } else {
         // Fallback for false question
         _question = _isQuestionMode 
