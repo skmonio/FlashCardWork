@@ -361,35 +361,7 @@ class _WordScrambleViewState extends State<WordScrambleView> {
                   
                   const SizedBox(height: 32), // More space between card and answer
                   
-                  // Answer box
-                  Container(
-                    width: double.infinity,
-                    height: 80, // Fixed height for consistency
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surfaceVariant,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
-                      ),
-                    ),
-                    child: _userAnswer.isEmpty
-                        ? Center(
-                            child: Text(
-                              'Tap pieces to build the word',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          )
-                        : _buildUserAnswerDisplay(),
-                  ),
-                  
-                  const SizedBox(height: 16),
-                  
-                  // Navigation buttons (only show if question is answered)
+                  // Navigation buttons (only show if question is answered) - positioned between card and answer
                   if (_answered)
                     Container(
                       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -426,17 +398,37 @@ class _WordScrambleViewState extends State<WordScrambleView> {
                       ),
                     ),
                   
+                  const SizedBox(height: 16),
+                  
+                  // Answer box
+                  Container(
+                    width: double.infinity,
+                    height: 80, // Fixed height for consistency
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surfaceVariant,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                      ),
+                    ),
+                    child: _userAnswer.isEmpty
+                        ? Center(
+                            child: Text(
+                              'Tap pieces to build the word',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          )
+                        : _buildUserAnswerDisplay(),
+                  ),
+                  
                   const SizedBox(height: 32),
                   
                   // Scrambled letters
-                  Text(
-                    'Available pieces:',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
                   _buildScrambledLetters(),
                   
                   const Spacer(),
