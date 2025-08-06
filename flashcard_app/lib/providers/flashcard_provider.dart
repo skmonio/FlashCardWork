@@ -413,15 +413,20 @@ class FlashcardProvider extends ChangeNotifier {
     Deck? uncategorizedDeck;
     try {
       uncategorizedDeck = _decks.firstWhere((d) => d.name == 'Uncategorized');
+      print('Found existing Uncategorized deck: ${uncategorizedDeck.name}');
     } catch (e) {
+      print('Uncategorized deck not found, creating new one...');
       // Try to create the Uncategorized deck
       uncategorizedDeck = await createDeck('Uncategorized');
       if (uncategorizedDeck == null) {
+        print('ERROR: Failed to create Uncategorized deck');
         errors.add('Failed to create Uncategorized deck. Please try again.');
         return {
           'success': 0,
           'errors': errors,
         };
+      } else {
+        print('Successfully created Uncategorized deck: ${uncategorizedDeck.name}');
       }
     }
     
@@ -431,7 +436,9 @@ class FlashcardProvider extends ChangeNotifier {
       final lineNumber = i + 1; // 1-based indexing
       
       try {
+        print('Processing line $lineNumber: $line');
         final fields = _parseCSVLine(line);
+        print('Parsed fields: $fields');
         
         // Validate minimum required fields
         if (fields.length < 2 || 
