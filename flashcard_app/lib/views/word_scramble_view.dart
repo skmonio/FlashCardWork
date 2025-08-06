@@ -311,7 +311,11 @@ class _WordScrambleViewState extends State<WordScrambleView> {
                         ),
                       ),
                       const Spacer(),
-                      const SizedBox(width: 48), // Balance the layout
+                      IconButton(
+                        onPressed: () => _showHomeConfirmation(),
+                        icon: const Icon(Icons.home),
+                        iconSize: 20,
+                      ),
                     ],
                   ),
                 ),
@@ -759,6 +763,29 @@ class _WordScrambleViewState extends State<WordScrambleView> {
               Navigator.of(context).pop();
             },
             child: const Text('End Session'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showHomeConfirmation() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Return to Home?'),
+        content: const Text('Are you sure you want to return to the home screen? This will end your current word scramble session.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              Navigator.of(context).popUntil((route) => route.isFirst);
+            },
+            child: const Text('Go Home'),
           ),
         ],
       ),

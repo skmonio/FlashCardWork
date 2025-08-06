@@ -102,7 +102,11 @@ class _MemoryGameViewState extends State<MemoryGameView> {
                         ),
                       ),
                       const Spacer(),
-                    ],
+                      IconButton(
+                        onPressed: () => _showHomeConfirmation(),
+                        icon: const Icon(Icons.home),
+                        iconSize: 20,
+                      ),
                   ),
                 ),
                 _buildProgressBar(),
@@ -408,6 +412,29 @@ class _MemoryGameViewState extends State<MemoryGameView> {
               Navigator.of(context).pop();
             },
             child: const Text('Leave'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showHomeConfirmation() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Return to Home?'),
+        content: const Text('Are you sure you want to return to the home screen? This will end your current memory game.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              Navigator.of(context).popUntil((route) => route.isFirst);
+            },
+            child: const Text('Go Home'),
           ),
         ],
       ),
