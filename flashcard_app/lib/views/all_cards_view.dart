@@ -1027,7 +1027,6 @@ class _AllCardsViewState extends State<AllCardsView> {
           MaterialPageRoute(
             builder: (context) => MultipleChoiceView(
               cards: [card],
-              startFlipped: false,
               title: 'Test "${card.word}"',
             ),
           ),
