@@ -29,6 +29,7 @@ class _WordScrambleViewState extends State<WordScrambleView> {
   List<String> _userAnswer = [];
   List<String> _originalLetters = [];
   bool _isQuestionMode = true; // true = definition to word, false = word to definition
+  bool _isCardFlipped = false;
   
   // Track answered questions and their answers
   Map<int, List<String>> _answeredQuestions = {}; // question index -> user answer
@@ -86,6 +87,7 @@ class _WordScrambleViewState extends State<WordScrambleView> {
     setState(() {
       _answered = false;
       _userAnswer = [];
+      _isCardFlipped = false;
     });
   }
 
@@ -94,12 +96,13 @@ class _WordScrambleViewState extends State<WordScrambleView> {
     
     setState(() {
       _userAnswer.add(piece);
+      // Remove the piece from available pieces
+      _scrambledLetters.remove(piece);
     });
     
     // Auto-check answer if we have used all non-empty pieces
     final nonEmptyPieces = _scrambledLetters.where((p) => p.isNotEmpty).length;
-    final nonEmptyUserAnswer = _userAnswer.where((p) => p.isNotEmpty).length;
-    if (nonEmptyUserAnswer == nonEmptyPieces) {
+    if (nonEmptyPieces == 0) {
       _checkAnswer();
     }
   }
@@ -108,7 +111,9 @@ class _WordScrambleViewState extends State<WordScrambleView> {
     if (_answered || index < 0 || index >= _userAnswer.length) return;
     
     setState(() {
-      _userAnswer.removeAt(index);
+      final removedPiece = _userAnswer.removeAt(index);
+      // Add the piece back to available pieces
+      _scrambledLetters.add(removedPiece);
     });
   }
 
@@ -153,6 +158,12 @@ class _WordScrambleViewState extends State<WordScrambleView> {
       });
       _generateQuestion();
     }
+  }
+  
+  void _flipCard() {
+    setState(() {
+      _isCardFlipped = !_isCardFlipped;
+    });
   }
   
   List<String> _createPieces(List<String> letters, Random random) {
@@ -218,15 +229,8 @@ class _WordScrambleViewState extends State<WordScrambleView> {
     // Empty pieces are always considered "used"
     if (piece.isEmpty) return true;
     
-    int usedCount = 0;
-    for (int i = 0; i < index; i++) {
-      if (_scrambledLetters[i] == piece) {
-        usedCount++;
-      }
-    }
-    
-    int userCount = _userAnswer.where((p) => p == piece).length;
-    return userCount >= usedCount + 1;
+    // If the piece is not in the scrambled letters list, it's been used
+    return !_scrambledLetters.contains(piece);
   }
 
   @override
@@ -302,44 +306,49 @@ class _WordScrambleViewState extends State<WordScrambleView> {
                   const SizedBox(height: 16), // Reduced spacing
                   
                   // Card with white background and colored outline
-                  Container(
-                    width: double.infinity,
-                    height: 200, // Reduced height
-                    padding: const EdgeInsets.all(24), // Reduced padding
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20), // Slightly smaller radius
-                      border: Border.all(
-                        color: _getCardBorderColor(currentCard),
-                        width: 4, // Slightly thinner border
+                  GestureDetector(
+                    onDoubleTap: _flipCard,
+                    child: Container(
+                      width: double.infinity,
+                      height: 200, // Reduced height
+                      padding: const EdgeInsets.all(24), // Reduced padding
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20), // Slightly smaller radius
+                        border: Border.all(
+                          color: _getCardBorderColor(currentCard),
+                          width: 4, // Slightly thinner border
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: _getCardBorderColor(currentCard).withValues(alpha: 0.3),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.15),
+                            blurRadius: 15,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: _getCardBorderColor(currentCard).withValues(alpha: 0.3),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
+                      child: Center(
+                        child: Text(
+                          _isCardFlipped 
+                              ? (_isQuestionMode ? currentCard.word : currentCard.definition)
+                              : question,
+                          style: const TextStyle(
+                            fontSize: 32, // Smaller font size
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                          textAlign: TextAlign.center,
                         ),
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.15),
-                          blurRadius: 15,
-                          offset: const Offset(0, 6),
-                        ),
-                      ],
-                    ),
-                    child: Center(
-                      child: Text(
-                        question,
-                        style: const TextStyle(
-                          fontSize: 32, // Smaller font size
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
-                        textAlign: TextAlign.center,
                       ),
                     ),
                   ),
                   
-                  const SizedBox(height: 16), // Reduced spacing
+                  const SizedBox(height: 32), // More space between card and answer
                   
                   // Answer box
                   Container(
