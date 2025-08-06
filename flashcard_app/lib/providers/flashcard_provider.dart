@@ -334,6 +334,236 @@ class FlashcardProvider extends ChangeNotifier {
     }
   }
   
+  // MARK: - CSV Export/Import
+  
+  String exportDecksToCSV(Set<String> deckIds) {
+    final headers = [
+      'Word', 'Definition', 'Example', 'Article', 'Plural', 
+      'Past Tense', 'Future Tense', 'Past Participle', 'Decks', 
+      'Success Count', 'Times Shown', 'Times Correct'
+    ];
+    
+    var csvContent = headers.join(',') + '\n';
+    
+    // Collect all cards from selected decks (including hierarchy)
+    final allCards = <FlashCard>{};
+    
+    for (final deckId in deckIds) {
+      final deck = _decks.firstWhere((d) => d.id == deckId);
+      final deckCards = getCardsForDeck(deck.id);
+      allCards.addAll(deckCards);
+      
+      // Add cards from sub-decks
+      final subDecks = getSubDecks(deck.id);
+      for (final subDeck in subDecks) {
+        final subDeckCards = getCardsForDeck(subDeck.id);
+        allCards.addAll(subDeckCards);
+      }
+    }
+    
+    // Convert to sorted list for consistent output
+    final sortedCards = allCards.toList()
+      ..sort((a, b) => a.word.toLowerCase().compareTo(b.word.toLowerCase()));
+    
+    for (final card in sortedCards) {
+      final deckNames = getDeckNamesForCard(card).join('; ');
+      
+      final row = [
+        _escapeCSVField(card.word),
+        _escapeCSVField(card.definition),
+        _escapeCSVField(card.example),
+        _escapeCSVField(card.article),
+        _escapeCSVField(card.plural),
+        _escapeCSVField(card.pastTense),
+        _escapeCSVField(card.futureTense),
+        _escapeCSVField(card.pastParticiple),
+        _escapeCSVField(deckNames),
+        card.successCount.toString(),
+        card.timesShown.toString(),
+        card.timesCorrect.toString(),
+      ];
+      
+      csvContent += row.join(',') + '\n';
+    }
+    
+    return csvContent;
+  }
+  
+  Future<Map<String, dynamic>> importFromCSV(String csvContent) async {
+    final lines = csvContent.split('\n')
+        .where((line) => line.trim().isNotEmpty)
+        .toList();
+    
+    if (lines.length < 2) {
+      return {
+        'success': 0,
+        'errors': ['CSV file appears to be empty or invalid']
+      };
+    }
+    
+    var successCount = 0;
+    final errors = <String>[];
+    
+    // Ensure Uncategorized deck exists
+    Deck uncategorizedDeck;
+    try {
+      uncategorizedDeck = _decks.firstWhere((d) => d.name == 'Uncategorized');
+    } catch (e) {
+      uncategorizedDeck = await createDeck(name: 'Uncategorized');
+    }
+    
+    // Skip header row
+    for (int i = 1; i < lines.length; i++) {
+      final line = lines[i];
+      final lineNumber = i + 1; // 1-based indexing
+      
+      try {
+        final fields = _parseCSVLine(line);
+        
+        // Validate minimum required fields
+        if (fields.length < 2 || 
+            fields[0].trim().isEmpty || 
+            fields[1].trim().isEmpty) {
+          errors.add('Line $lineNumber: Missing required word or definition');
+          continue;
+        }
+        
+        final word = fields[0].trim();
+        final definition = fields[1].trim();
+        final example = fields.length > 2 ? fields[2].trim() : '';
+        final article = fields.length > 3 ? fields[3].trim() : '';
+        final plural = fields.length > 4 ? fields[4].trim() : '';
+        final pastTense = fields.length > 5 ? fields[5].trim() : '';
+        final futureTense = fields.length > 6 ? fields[6].trim() : '';
+        final pastParticiple = fields.length > 7 ? fields[7].trim() : '';
+        
+        // Handle deck assignment
+        final deckNames = fields.length > 8 ? fields[8].trim() : '';
+        final deckIds = <String>{};
+        
+        if (deckNames.isNotEmpty) {
+          final deckNameList = deckNames.split(';').map((name) => name.trim()).toList();
+          for (final deckName in deckNameList) {
+            if (deckName.isNotEmpty) {
+              try {
+                final deck = _decks.firstWhere((d) => d.name == deckName);
+                deckIds.add(deck.id);
+              } catch (e) {
+                // Create deck if it doesn't exist
+                final newDeck = await createDeck(name: deckName);
+                deckIds.add(newDeck.id);
+              }
+            }
+          }
+        }
+        
+        // If no decks specified, add to Uncategorized
+        if (deckIds.isEmpty) {
+          deckIds.add(uncategorizedDeck.id);
+        }
+        
+        // Handle statistics
+        int successCount = 0;
+        int timesShown = 0;
+        int timesCorrect = 0;
+        
+        if (fields.length > 9) {
+          successCount = int.tryParse(fields[9].trim()) ?? 0;
+        }
+        if (fields.length > 10) {
+          timesShown = int.tryParse(fields[10].trim()) ?? 0;
+        }
+        if (fields.length > 11) {
+          timesCorrect = int.tryParse(fields[11].trim()) ?? 0;
+        }
+        
+        // Create the card
+        final newCard = await createCard(
+          word: word,
+          definition: definition,
+          example: example,
+          deckIds: deckIds,
+          article: article,
+          plural: plural,
+          pastTense: pastTense,
+          futureTense: futureTense,
+          pastParticiple: pastParticiple,
+        );
+        
+        if (newCard != null) {
+          // Update statistics if provided
+          newCard.successCount = successCount;
+          newCard.timesShown = timesShown;
+          newCard.timesCorrect = timesCorrect;
+          
+          // Update the card in the service
+          await _service.updateCard(newCard);
+          
+          successCount++;
+        }
+      } catch (e) {
+        errors.add('Line $lineNumber: ${e.toString()}');
+      }
+    }
+    
+    // Refresh data after import
+    refresh();
+    
+    return {
+      'success': successCount,
+      'errors': errors,
+    };
+  }
+  
+  String _escapeCSVField(String field) {
+    if (field.contains(',') || field.contains('"') || field.contains('\n')) {
+      return '"${field.replaceAll('"', '""')}"';
+    }
+    return field;
+  }
+  
+  List<String> _parseCSVLine(String line) {
+    final fields = <String>[];
+    var currentField = '';
+    var inQuotes = false;
+    
+    for (int i = 0; i < line.length; i++) {
+      final char = line[i];
+      
+      if (char == '"') {
+        if (inQuotes && i + 1 < line.length && line[i + 1] == '"') {
+          // Escaped quote
+          currentField += '"';
+          i++; // Skip next quote
+        } else {
+          // Toggle quote state
+          inQuotes = !inQuotes;
+        }
+      } else if (char == ',' && !inQuotes) {
+        // End of field
+        fields.add(currentField);
+        currentField = '';
+      } else {
+        currentField += char;
+      }
+    }
+    
+    // Add the last field
+    fields.add(currentField);
+    
+    return fields;
+  }
+  
+  List<String> getDeckNamesForCard(FlashCard card) {
+    return card.deckIds.map((deckId) {
+      try {
+        return _decks.firstWhere((d) => d.id == deckId).name;
+      } catch (e) {
+        return 'Unknown Deck';
+      }
+    }).toList();
+  }
+  
   // MARK: - Utility Methods
   
   void clearError() {

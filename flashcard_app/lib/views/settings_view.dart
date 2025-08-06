@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
+import '../providers/flashcard_provider.dart';
+import '../services/sample_data_service.dart';
+import 'export_import_view.dart';
 
 class SettingsView extends StatefulWidget {
   const SettingsView({super.key});
@@ -255,27 +258,15 @@ class _SettingsViewState extends State<SettingsView> {
           child: Column(
             children: [
               ListTile(
-                leading: const Icon(Icons.cloud_upload),
-                title: const Text('Export Data'),
-                subtitle: const Text('Backup your flashcards'),
+                leading: const Icon(Icons.file_download),
+                title: const Text('Export & Import'),
+                subtitle: const Text('Backup and restore flashcards'),
                 trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                 onTap: () {
-                  // TODO: Implement export
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Export feature coming soon!')),
-                  );
-                },
-              ),
-              const Divider(height: 1),
-              ListTile(
-                leading: const Icon(Icons.cloud_download),
-                title: const Text('Import Data'),
-                subtitle: const Text('Restore from backup'),
-                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                onTap: () {
-                  // TODO: Implement import
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Import feature coming soon!')),
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const ExportImportView(),
+                    ),
                   );
                 },
               ),
