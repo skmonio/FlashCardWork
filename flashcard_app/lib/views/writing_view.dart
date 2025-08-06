@@ -29,6 +29,8 @@ class _WritingViewState extends State<WritingView> {
   int _lives = 5;
   String _userAnswer = '';
   final TextEditingController _textController = TextEditingController();
+  Set<String> _guessedLetters = {};
+  Set<String> _revealedLetters = {};
   
   // Track answered questions and their answers
   Map<int, String> _answeredQuestions = {}; // question index -> user answer
@@ -91,6 +93,8 @@ class _WritingViewState extends State<WritingView> {
       _lives = 5;
       _userAnswer = '';
       _textController.clear();
+      _guessedLetters.clear();
+      _revealedLetters.clear();
     });
   }
 
@@ -121,28 +125,39 @@ class _WritingViewState extends State<WritingView> {
     return vibrantColors[index];
   }
 
-  void _checkAnswer() {
+  void _guessLetter(String letter) {
     if (_answered) return;
     
-    final userInput = _textController.text.trim();
-    if (userInput.isEmpty) return;
+    final upperLetter = letter.toUpperCase();
+    final lowerLetter = letter.toLowerCase();
+    
+    // Check if letter was already guessed
+    if (_guessedLetters.contains(upperLetter) || _revealedLetters.contains(upperLetter)) {
+      return;
+    }
     
     setState(() {
-      _userAnswer = userInput;
+      _guessedLetters.add(upperLetter);
       
-      // Check if answer is correct (case-insensitive)
-      final isCorrect = userInput.toLowerCase() == _correctAnswer.toLowerCase();
-      
-      if (isCorrect) {
-        _answered = true;
-        _correctAnswers++;
-        _totalAnswered++;
-        _correctAnswersMap[_currentIndex] = true;
-        _answeredQuestions[_currentIndex] = userInput;
-        _displayWord = _correctAnswer; // Show the full correct answer
+      // Check if letter is in the word
+      if (_correctAnswer.toLowerCase().contains(lowerLetter)) {
+        // Correct guess - reveal all instances of this letter
+        _revealedLetters.add(upperLetter);
         SoundManager().playCorrectSound();
+        
+        // Update display word
+        _updateDisplayWord();
+        
+        // Check if word is complete
+        if (_isWordComplete()) {
+          _answered = true;
+          _correctAnswers++;
+          _totalAnswered++;
+          _correctAnswersMap[_currentIndex] = true;
+          _answeredQuestions[_currentIndex] = _displayWord;
+        }
       } else {
-        // Wrong answer - lose a life
+        // Wrong guess
         _lives--;
         SoundManager().playWrongSound();
         
@@ -152,10 +167,43 @@ class _WritingViewState extends State<WritingView> {
           _totalAnswered++;
           _displayWord = _correctAnswer; // Show the correct answer
           _correctAnswersMap[_currentIndex] = false;
-          _answeredQuestions[_currentIndex] = userInput;
+          _answeredQuestions[_currentIndex] = _displayWord;
         }
       }
     });
+  }
+  
+  void _updateDisplayWord() {
+    String newDisplay = '';
+    for (int i = 0; i < _correctAnswer.length; i++) {
+      final char = _correctAnswer[i];
+      if (char == ' ') {
+        newDisplay += ' '; // Keep spaces as spaces
+      } else {
+        final upperChar = char.toUpperCase();
+        if (_revealedLetters.contains(upperChar) || _guessedLetters.contains(upperChar)) {
+          newDisplay += char; // Show revealed/guessed letters
+        } else if (RegExp(r'[a-zA-Z]').hasMatch(char)) {
+          newDisplay += '_'; // Show underscore for unguessed letters
+        } else {
+          newDisplay += char; // Keep punctuation and other characters
+        }
+      }
+    }
+    _displayWord = newDisplay;
+  }
+  
+  bool _isWordComplete() {
+    for (int i = 0; i < _correctAnswer.length; i++) {
+      final char = _correctAnswer[i];
+      if (RegExp(r'[a-zA-Z]').hasMatch(char)) {
+        final upperChar = char.toUpperCase();
+        if (!_revealedLetters.contains(upperChar) && !_guessedLetters.contains(upperChar)) {
+          return false; // Found an unguessed letter
+        }
+      }
+    }
+    return true; // All letters have been guessed
   }
 
   void _goToPreviousQuestion() {
@@ -310,85 +358,72 @@ class _WritingViewState extends State<WritingView> {
                   const SizedBox(height: 16),
                   
                   // Display word with underscores
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surfaceVariant,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                  GestureDetector(
+                    onTap: () {
+                      if (!_answered) {
+                        FocusScope.of(context).requestFocus(FocusNode());
+                        _textController.clear();
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surfaceVariant,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                        ),
                       ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: _displayWord.split('').map((char) {
-                        return Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 2),
-                          width: 25,
-                          height: 35,
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Center(
-                            child: Text(
-                              char,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: _displayWord.split('').map((char) {
+                          return Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 2),
+                            width: 25,
+                            height: 35,
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.grey),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Center(
+                              child: Text(
+                                char,
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 16),
-                  
-                  const SizedBox(height: 16),
-                  
-                  // System keyboard input
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surfaceVariant,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                          );
+                        }).toList(),
                       ),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Your answer:',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        TextField(
-                          controller: _textController,
-                          enabled: !_answered,
-                          decoration: InputDecoration(
-                            hintText: 'Type your answer here...',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            suffixIcon: _answered ? null : IconButton(
-                              onPressed: _checkAnswer,
-                              icon: const Icon(Icons.check),
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                          ),
-                          onSubmitted: (_) => _checkAnswer(),
-                        ),
-                      ],
-                    ),
                   ),
+                  
+                  const SizedBox(height: 16),
+                  
+                  const SizedBox(height: 16),
+                  
+                  // Hidden text field for keyboard input (like Swift app)
+                  if (!_answered)
+                    Opacity(
+                      opacity: 0,
+                      child: TextField(
+                        controller: _textController,
+                        autofocus: true,
+                        onChanged: (value) {
+                          // Process each character typed
+                          if (value.isNotEmpty) {
+                            final lastChar = value[value.length - 1];
+                            if (RegExp(r'[a-zA-Z]').hasMatch(lastChar)) {
+                              _guessLetter(lastChar);
+                            }
+                            // Clear the text field after processing
+                            _textController.clear();
+                          }
+                        },
+                      ),
+                    ),
                   
                   // Navigation buttons (only show if question is answered)
                   if (_answered)
@@ -551,6 +586,8 @@ class _WritingViewState extends State<WritingView> {
                               _lives = 5;
                               _userAnswer = '';
                               _textController.clear();
+                              _guessedLetters.clear();
+                              _revealedLetters.clear();
                               // Reset all navigation state
                               _answeredQuestions.clear();
                               _correctAnswersMap.clear();
