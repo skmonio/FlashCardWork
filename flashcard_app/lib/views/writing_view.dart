@@ -221,6 +221,13 @@ class _WritingViewState extends State<WritingView> {
         _currentIndex++;
       });
       _generateQuestion();
+    } else {
+      // Show results when on last question and clicking next
+      setState(() {
+        _showingResults = true;
+      });
+      // Play completion sound when test is finished
+      SoundManager().playCompleteSound();
     }
   }
 
@@ -445,14 +452,14 @@ class _WritingViewState extends State<WritingView> {
                             ),
                           ),
                           const SizedBox(width: 12),
-                          // Next button
+                          // Next/Finish button
                           Expanded(
                             child: ElevatedButton.icon(
-                              onPressed: _currentIndex < widget.cards.length - 1 ? _goToNextQuestion : null,
+                              onPressed: _goToNextQuestion,
                               icon: const Icon(Icons.arrow_forward, size: 18),
-                              label: const Text('Next'),
+                              label: Text(_currentIndex == widget.cards.length - 1 ? 'Finish' : 'Next'),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: _currentIndex < widget.cards.length - 1 ? Colors.green : Colors.grey,
+                                backgroundColor: Colors.green,
                                 foregroundColor: Colors.white,
                                 padding: const EdgeInsets.symmetric(vertical: 12),
                               ),

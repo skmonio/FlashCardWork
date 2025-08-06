@@ -156,6 +156,13 @@ class _WordScrambleViewState extends State<WordScrambleView> {
         _currentIndex++;
       });
       _generateQuestion();
+    } else {
+      // Show results when on last question and clicking next
+      setState(() {
+        _showingResults = true;
+      });
+      // Play completion sound when test is finished
+      SoundManager().playCompleteSound();
     }
   }
   
@@ -394,14 +401,14 @@ class _WordScrambleViewState extends State<WordScrambleView> {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      // Next button (always show, greyed out when not available)
+                      // Next/Finish button (always show, greyed out when not available)
                       Expanded(
                         child: ElevatedButton.icon(
-                          onPressed: (_answered && _currentIndex < widget.cards.length - 1) ? _goToNextQuestion : null,
+                          onPressed: _answered ? _goToNextQuestion : null,
                           icon: const Icon(Icons.arrow_forward, size: 16),
-                          label: const Text('Next'),
+                          label: Text(_currentIndex == widget.cards.length - 1 ? 'Finish' : 'Next'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: (_answered && _currentIndex < widget.cards.length - 1) ? Colors.green : Colors.grey,
+                            backgroundColor: _answered ? Colors.green : Colors.grey,
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 8),
                           ),

@@ -72,6 +72,10 @@ class _MemoryGameViewState extends State<MemoryGameView> {
 
   @override
   Widget build(BuildContext context) {
+    if (_gameComplete) {
+      return _buildResultsView();
+    }
+
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: Column(
@@ -348,8 +352,11 @@ class _MemoryGameViewState extends State<MemoryGameView> {
 
       // Check if game is complete
       if (_matches == _totalPairs) {
-        _gameComplete = true;
-        _showGameCompleteDialog();
+        setState(() {
+          _gameComplete = true;
+        });
+        // Play completion sound when game is finished
+        SoundManager().playCompleteSound();
       }
 
       // Reset selection state
@@ -420,42 +427,126 @@ class _MemoryGameViewState extends State<MemoryGameView> {
     });
   }
 
-  void _showGameCompleteDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Text('🎉 Memory Game Complete!'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.celebration,
-              size: 64,
-              color: Colors.green,
+  Widget _buildResultsView() {
+    final efficiency = _totalPairs > 0 ? ((_totalPairs / _moves) * 100).toInt() : 0;
+    
+    return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      body: Column(
+        children: [
+          // Header
+          SafeArea(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                children: [
+                  IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.arrow_back_ios),
+                    iconSize: 20,
+                  ),
+                  const Spacer(),
+                  const Text(
+                    'Memory Game Complete',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const Spacer(),
+                  const SizedBox(width: 48), // Balance the layout
+                ],
+              ),
             ),
-            const SizedBox(height: 16),
-            Text('You found all $_totalPairs pairs!'),
-            const SizedBox(height: 8),
-            Text('Total moves: $_moves'),
-            const SizedBox(height: 8),
-            Text('Efficiency: ${_totalPairs > 0 ? ((_totalPairs / _moves) * 100).toInt() : 0}%'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              Navigator.of(context).pop();
-            },
-            child: const Text('Done'),
           ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              _resetGame();
-            },
-            child: const Text('Play Again'),
+          
+          // Results content
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Celebration icon
+                  const Icon(
+                    Icons.celebration,
+                    size: 64,
+                    color: Colors.green,
+                  ),
+                  const SizedBox(height: 24),
+                  
+                  // Session stats
+                  _buildStatCard('Pairs Found', '$_totalPairs', Icons.check_circle, Colors.green),
+                  const SizedBox(height: 16),
+                  _buildStatCard('Total Moves', '$_moves', Icons.touch_app, Colors.blue),
+                  const SizedBox(height: 16),
+                  _buildStatCard('Efficiency', '$efficiency%', Icons.analytics, Colors.orange),
+                  const SizedBox(height: 32),
+                  
+                  // Action buttons
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              _gameComplete = false;
+                              _resetGame();
+                            });
+                          },
+                          child: const Text('Play Again'),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text('Done'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatCard(String title, String value, IconData icon, [Color? color]) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceVariant,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            color: color ?? Theme.of(context).colorScheme.primary,
+            size: 24,
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              title,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: color ?? Theme.of(context).colorScheme.primary,
+            ),
           ),
         ],
       ),
