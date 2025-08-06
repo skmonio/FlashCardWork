@@ -440,8 +440,9 @@ class _WordScrambleViewState extends State<WordScrambleView> {
                   
                   const SizedBox(height: 32),
                   
-                  // Scrambled letters
-                  _buildScrambledLetters(),
+                  // Scrambled letters (only show if question is not answered)
+                  if (!_answered)
+                    _buildScrambledLetters(),
                   
                   const Spacer(),
                 ],
