@@ -72,12 +72,11 @@ class _WordScrambleViewState extends State<WordScrambleView> {
     // Get correct word
     _correctWord = _isQuestionMode ? currentCard.word : currentCard.definition;
     
-    // Create scrambled pieces (2-3 letters each, excluding spaces)
-    final letters = _correctWord.split('').where((char) => char != ' ').toList();
-    _scrambledLetters = _createPieces(letters, random);
+    // Create scrambled pieces (2-3 letters each, handling multi-word phrases)
+    _scrambledLetters = _createPiecesFromWords(_correctWord, random);
     
-    // Store original letters for comparison
-    _originalLetters = letters;
+    // Store original letters for comparison (all letters without spaces)
+    _originalLetters = _correctWord.split('').where((char) => char != ' ').toList();
     
     // Store question data for future reference
     _correctWords[_currentIndex] = _correctWord;
@@ -166,6 +165,25 @@ class _WordScrambleViewState extends State<WordScrambleView> {
     });
   }
   
+  List<String> _createPiecesFromWords(String phrase, Random random) {
+    final pieces = <String>[];
+    
+    // Split the phrase into words
+    final words = phrase.split(' ');
+    
+    for (final word in words) {
+      if (word.isEmpty) continue;
+      
+      final letters = word.split('');
+      final wordPieces = _createPieces(letters, random);
+      pieces.addAll(wordPieces);
+    }
+    
+    // Shuffle all pieces together
+    pieces.shuffle(random);
+    return pieces;
+  }
+  
   List<String> _createPieces(List<String> letters, Random random) {
     final pieces = <String>[];
     
@@ -231,8 +249,6 @@ class _WordScrambleViewState extends State<WordScrambleView> {
       }
     }
     
-    // Shuffle the pieces
-    pieces.shuffle(random);
     return pieces;
   }
 
