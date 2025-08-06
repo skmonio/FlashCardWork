@@ -368,11 +368,11 @@ class _MultipleChoiceViewState extends State<MultipleChoiceView> {
                       // Back button (always show, greyed out when not available)
                       Expanded(
                         child: ElevatedButton.icon(
-                          onPressed: (_answered && _currentIndex > 0) ? _goToPreviousQuestion : null,
+                          onPressed: _currentIndex > 0 ? _goToPreviousQuestion : null,
                           icon: const Icon(Icons.arrow_back, size: 16),
                           label: const Text('Back'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: (_answered && _currentIndex > 0) ? Colors.blue : Colors.grey,
+                            backgroundColor: _currentIndex > 0 ? Colors.blue : Colors.grey,
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 8),
                           ),

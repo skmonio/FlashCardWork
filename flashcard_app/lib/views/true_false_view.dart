@@ -436,11 +436,11 @@ class _TrueFalseViewState extends State<TrueFalseView> {
                         // Back button
                         Expanded(
                           child: ElevatedButton.icon(
-                            onPressed: (_answered && _currentIndex > 0) ? _goToPreviousQuestion : null,
+                            onPressed: _currentIndex > 0 ? _goToPreviousQuestion : null,
                             icon: const Icon(Icons.arrow_back, size: 18),
                             label: const Text('Back'),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: (_answered && _currentIndex > 0) ? Colors.blue : Colors.grey,
+                              backgroundColor: _currentIndex > 0 ? Colors.blue : Colors.grey,
                               foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(vertical: 12),
                             ),
