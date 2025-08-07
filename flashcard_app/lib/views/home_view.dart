@@ -12,6 +12,7 @@ import 'true_false_view.dart';
 import 'writing_view.dart';
 import 'word_scramble_view.dart';
 import 'dutch_words_view.dart';
+import 'user_profile_view.dart';
 import '../services/sample_data_service.dart';
 
 class HomeView extends StatefulWidget {
@@ -58,51 +59,65 @@ class _HomeViewState extends State<HomeView> {
   Widget _buildHeader() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
+      child: Stack(
         children: [
-          // Streak indicator
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: _currentStreak > 0 ? Colors.orange.withValues(alpha: 0.1) : Colors.grey.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(20),
+          // Centered Title
+          Center(
+            child: const Text(
+              'Taal Trek',
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.local_fire_department,
-                  size: 20,
-                  color: _currentStreak > 0 ? Colors.orange : Colors.grey,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  '$_currentStreak',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+          ),
+          
+          // Left side - Streak indicator
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: _currentStreak > 0 ? Colors.orange.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.local_fire_department,
+                    size: 20,
                     color: _currentStreak > 0 ? Colors.orange : Colors.grey,
                   ),
-                ),
-              ],
+                  const SizedBox(width: 4),
+                  Text(
+                    '$_currentStreak',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: _currentStreak > 0 ? Colors.orange : Colors.grey,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           
-          const Spacer(),
-          
-          // Title
-          const Text(
-            'Taal Trek',
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
+          // Right side - Profile button
+          Align(
+            alignment: Alignment.centerRight,
+            child: IconButton(
+              icon: const Icon(Icons.person),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const UserProfileView(),
+                  ),
+                );
+              },
             ),
           ),
-          
-          const Spacer(),
-          
-          // Empty space to balance the layout
-          const SizedBox(width: 48),
         ],
       ),
     );
@@ -117,7 +132,7 @@ class _HomeViewState extends State<HomeView> {
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w600,
-            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
           ),
         ),
         const SizedBox(height: 16),
@@ -171,7 +186,7 @@ class _HomeViewState extends State<HomeView> {
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w600,
-            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
           ),
         ),
         const SizedBox(height: 16),
@@ -221,7 +236,7 @@ class _HomeViewState extends State<HomeView> {
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: color.withValues(alpha: 0.2),
+                  color: color.withOpacity(0.2),
                   blurRadius: 3,
                   offset: const Offset(0, 1),
                 ),
@@ -232,7 +247,7 @@ class _HomeViewState extends State<HomeView> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.1),
+                    color: color.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
@@ -254,7 +269,7 @@ class _HomeViewState extends State<HomeView> {
                 Icon(
                   Icons.arrow_forward_ios,
                   size: 16,
-                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
                 ),
               ],
             ),

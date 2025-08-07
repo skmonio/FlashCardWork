@@ -4,6 +4,7 @@ import 'providers/flashcard_provider.dart';
 import 'providers/theme_provider.dart';
 import 'providers/bubble_word_provider.dart';
 import 'providers/dutch_word_exercise_provider.dart';
+import 'providers/user_profile_provider.dart';
 import 'views/main_navigation_view.dart';
 import 'views/loading_view.dart';
 
@@ -22,6 +23,7 @@ class FlashcardApp extends StatelessWidget {
         ChangeNotifierProvider(create: (context) => ThemeProvider()),
         ChangeNotifierProvider(create: (context) => BubbleWordProvider()),
         ChangeNotifierProvider(create: (context) => DutchWordExerciseProvider()),
+        ChangeNotifierProvider(create: (context) => UserProfileProvider()),
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {
