@@ -11,6 +11,7 @@ import 'multiple_choice_view.dart';
 import 'true_false_view.dart';
 import 'writing_view.dart';
 import 'word_scramble_view.dart';
+import 'dutch_words_view.dart';
 import '../services/sample_data_service.dart';
 
 class HomeView extends StatefulWidget {
@@ -194,6 +195,13 @@ class _HomeViewState extends State<HomeView> {
           Colors.purple,
           () => _navigateToBubbleWord(context),
         ),
+        const SizedBox(height: 12),
+        _buildMenuButton(
+          'Dutch Words',
+          Icons.text_fields,
+          Colors.green,
+          () => _navigateToDutchWords(context),
+        ),
       ],
     );
   }
@@ -333,6 +341,14 @@ class _HomeViewState extends State<HomeView> {
   void _navigateToGrammar(BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Dutch Grammar guide coming soon!')),
+    );
+  }
+
+  void _navigateToDutchWords(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const DutchWordsView(),
+      ),
     );
   }
 
