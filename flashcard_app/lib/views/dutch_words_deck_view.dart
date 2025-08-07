@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/dutch_word_exercise.dart';
+import '../providers/dutch_word_exercise_provider.dart';
 import 'dutch_word_exercise_detail_view.dart';
 import 'dutch_words_practice_view.dart';
 
@@ -25,6 +27,18 @@ class _DutchWordsDeckViewState extends State<DutchWordsDeckView> {
   @override
   Widget build(BuildContext context) {
     final filteredExercises = _getFilteredExercises();
+
+    // If no exercises in deck, show empty state
+    if (widget.exercises.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(widget.deckName),
+          backgroundColor: Colors.blue,
+          foregroundColor: Colors.white,
+        ),
+        body: _buildEmptyState(),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -108,7 +122,16 @@ class _DutchWordsDeckViewState extends State<DutchWordsDeckView> {
                 ),
               ],
             ),
-            trailing: const Icon(Icons.arrow_forward_ios),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.red),
+                  onPressed: () => _showDeleteWordDialog(context, exercise),
+                ),
+                const Icon(Icons.arrow_forward_ios),
+              ],
+            ),
             onTap: () {
               Navigator.push(
                 context,
@@ -166,6 +189,46 @@ class _DutchWordsDeckViewState extends State<DutchWordsDeckView> {
       return exercise.targetWord.toLowerCase().contains(_searchQuery.toLowerCase()) ||
              exercise.wordTranslation.toLowerCase().contains(_searchQuery.toLowerCase());
     }).toList();
+  }
+
+  void _showDeleteWordDialog(BuildContext context, DutchWordExercise exercise) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Word'),
+        content: Text(
+          'Are you sure you want to delete "${exercise.targetWord}"?\n\n'
+          'This will permanently delete ${exercise.exercises.length} exercises.\n\n'
+          'This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _deleteWord(exercise);
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _deleteWord(DutchWordExercise exercise) {
+    final provider = context.read<DutchWordExerciseProvider>();
+    provider.deleteWordExercise(exercise.id);
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('"${exercise.targetWord}" deleted successfully'),
+        backgroundColor: Colors.green,
+      ),
+    );
   }
 
   void _showPracticeModeDialog() {

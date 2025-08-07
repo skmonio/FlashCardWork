@@ -2,11 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:convert';
+import 'dart:io';
 import '../providers/dutch_word_exercise_provider.dart';
-import 'dart:io' show Platform;
 
 class ImportWordExercisesView extends StatefulWidget {
-  const ImportWordExercisesView({super.key});
+  final VoidCallback? onImportComplete;
+  
+  const ImportWordExercisesView({
+    super.key,
+    this.onImportComplete,
+  });
 
   @override
   State<ImportWordExercisesView> createState() => _ImportWordExercisesViewState();
@@ -27,7 +32,7 @@ class _ImportWordExercisesViewState extends State<ImportWordExercisesView> {
         backgroundColor: Colors.green,
         foregroundColor: Colors.white,
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -49,7 +54,7 @@ class _ImportWordExercisesViewState extends State<ImportWordExercisesView> {
                     const SizedBox(height: 16),
                     _buildInstructionRow(
                       '1',
-                      'Select a JSON file containing Dutch word exercises'
+                      'Select a JSON or CSV file containing Dutch word exercises'
                     ),
                     _buildInstructionRow(
                       '2',
@@ -280,7 +285,8 @@ class _ImportWordExercisesViewState extends State<ImportWordExercisesView> {
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['json'],
+        allowedExtensions: ['json', 'csv'],
+        withData: true, // Ensure we get the file data
       );
 
       if (result != null && result.files.isNotEmpty) {
@@ -304,29 +310,194 @@ class _ImportWordExercisesViewState extends State<ImportWordExercisesView> {
 
   Future<void> _parseFile(PlatformFile file) async {
     try {
-      if (file.bytes == null) {
-        throw Exception('File is empty or could not be read');
+      String fileContent;
+      
+      // Try to read from bytes first
+      if (file.bytes != null && file.bytes!.isNotEmpty) {
+        fileContent = String.fromCharCodes(file.bytes!);
+      } else if (file.path != null) {
+        // If bytes are empty, try reading from file path
+        final fileObj = File(file.path!);
+        if (await fileObj.exists()) {
+          fileContent = await fileObj.readAsString();
+        } else {
+          throw Exception('File does not exist at path: ${file.path}');
+        }
+      } else {
+        throw Exception('File has no content and no path available');
+      }
+      
+      if (fileContent.trim().isEmpty) {
+        throw Exception('File content is empty after reading');
       }
 
-      final jsonString = String.fromCharCodes(file.bytes!);
-      final data = json.decode(jsonString);
-
-      // Validate the import data structure
-      if (data is! Map<String, dynamic> || 
-          !data.containsKey('metadata') || 
-          !data.containsKey('exercises')) {
-        throw Exception('Invalid file format. Expected JSON with metadata and exercises.');
+      // Determine file type and parse accordingly
+      if (file.name.toLowerCase().endsWith('.json')) {
+        await _parseJsonFile(fileContent);
+      } else if (file.name.toLowerCase().endsWith('.csv')) {
+        await _parseCsvFile(fileContent);
+      } else {
+        throw Exception('Unsupported file format. Please use JSON or CSV files.');
       }
-
-      setState(() {
-        _importData = data;
-      });
 
     } catch (e) {
       setState(() {
-        _error = 'Failed to parse file: $e';
+        _error = 'Failed to parse file: $e\nFile size: ${file.bytes?.length ?? 0} bytes\nPath: ${file.path ?? 'No path'}';
         _selectedFileName = null;
       });
+    }
+  }
+
+  Future<void> _parseJsonFile(String fileContent) async {
+    final data = json.decode(fileContent);
+
+    // Validate the import data structure
+    if (data is! Map<String, dynamic> || 
+        !data.containsKey('metadata') || 
+        !data.containsKey('exercises')) {
+      throw Exception('Invalid JSON format. Expected JSON with metadata and exercises.');
+    }
+
+    setState(() {
+      _importData = data;
+    });
+  }
+
+  Future<void> _parseCsvFile(String fileContent) async {
+    final lines = fileContent.split('\n');
+    if (lines.length < 2) {
+      throw Exception('CSV file is empty or has no data rows. Found ${lines.length} lines.');
+    }
+
+    // Debug: Show first few lines
+    print('CSV Debug - First 3 lines:');
+    for (int i = 0; i < lines.length && i < 3; i++) {
+      print('Line $i: "${lines[i]}"');
+    }
+
+    // Parse header
+    final headers = lines[0].split(',').map((h) => h.trim().replaceAll('"', '')).toList();
+    
+    // Expected headers for CSV import
+    final expectedHeaders = ['Deck', 'Word', 'Translation', 'Exercise Type', 'Question', 'Correct Answer', 'Options', 'Explanation'];
+    
+    // Validate headers
+    for (final expectedHeader in expectedHeaders) {
+      if (!headers.contains(expectedHeader)) {
+        throw Exception('Invalid CSV format. Missing required header: $expectedHeader');
+      }
+    }
+
+    // Parse data rows and group by word
+    final Map<String, Map<String, dynamic>> wordMap = {};
+
+    for (int i = 1; i < lines.length; i++) {
+      final line = lines[i].trim();
+      if (line.isEmpty) continue;
+
+      final values = _parseCsvLine(line);
+      if (values.length < headers.length) continue;
+
+      final deckName = values[headers.indexOf('Deck')].trim();
+      final word = values[headers.indexOf('Word')].trim();
+      final translation = values[headers.indexOf('Translation')].trim();
+      final exerciseType = values[headers.indexOf('Exercise Type')].trim();
+      final question = values[headers.indexOf('Question')].trim();
+      final correctAnswer = values[headers.indexOf('Correct Answer')].trim();
+      final options = values[headers.indexOf('Options')].trim();
+      final explanation = values[headers.indexOf('Explanation')].trim();
+
+      // Create unique key for each word
+      final wordKey = '${deckName}_${word}';
+      
+      // Create word if it doesn't exist
+      if (!wordMap.containsKey(wordKey)) {
+        wordMap[wordKey] = {
+          'id': '${DateTime.now().millisecondsSinceEpoch}_${wordMap.length}',
+          'targetWord': word,
+          'wordTranslation': translation,
+          'deckId': deckName.toLowerCase().replaceAll(' ', '_'),
+          'deckName': deckName,
+          'category': 'common',
+          'difficulty': 'beginner',
+          'exercises': <Map<String, dynamic>>[],
+          'createdAt': DateTime.now().toIso8601String(),
+          'isUserCreated': true,
+        };
+      }
+
+      // Add exercise to word
+      wordMap[wordKey]!['exercises'].add({
+        'id': '${DateTime.now().millisecondsSinceEpoch}_${wordMap.length}_${wordMap[wordKey]!['exercises'].length}',
+        'type': _convertExerciseType(exerciseType),
+        'prompt': question,
+        'options': _parseOptions(options),
+        'correctAnswer': correctAnswer,
+        'explanation': explanation,
+        'difficulty': 'beginner',
+      });
+    }
+
+    // Convert to the expected format
+    final importData = {
+      'metadata': {
+        'exportDate': DateTime.now().toIso8601String(),
+        'version': '1.0',
+        'format': 'csv',
+      },
+      'exercises': wordMap.values.toList(),
+    };
+
+    setState(() {
+      _importData = importData;
+    });
+  }
+
+  List<String> _parseCsvLine(String line) {
+    final List<String> result = [];
+    bool inQuotes = false;
+    String current = '';
+    
+    for (int i = 0; i < line.length; i++) {
+      final char = line[i];
+      
+      if (char == '"') {
+        inQuotes = !inQuotes;
+      } else if (char == ',' && !inQuotes) {
+        result.add(current.trim());
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    
+    result.add(current.trim());
+    return result;
+  }
+
+  String _convertExerciseType(String csvType) {
+    switch (csvType.toLowerCase()) {
+      case 'sentence building':
+        return 'sentenceBuilding';
+      case 'multiple choice':
+        return 'multipleChoice';
+      case 'fill in the blank':
+      case 'fill in blank':
+        return 'fillInBlank';
+      default:
+        return 'multipleChoice'; // Default fallback
+    }
+  }
+
+  List<String> _parseOptions(String options) {
+    if (options.isEmpty) return [];
+    // Handle both semicolon and pipe separators
+    if (options.contains(';')) {
+      return options.split(';').map((opt) => opt.trim()).toList();
+    } else if (options.contains('|')) {
+      return options.split('|').map((opt) => opt.trim()).toList();
+    } else {
+      return [options.trim()];
     }
   }
 
@@ -358,6 +529,11 @@ class _ImportWordExercisesViewState extends State<ImportWordExercisesView> {
           backgroundColor: Colors.green,
         ),
       );
+
+      // Notify parent to refresh
+      if (widget.onImportComplete != null) {
+        widget.onImportComplete!();
+      }
 
     } catch (e) {
       setState(() {

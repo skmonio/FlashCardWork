@@ -138,7 +138,12 @@ class _DutchWordsViewState extends State<DutchWordsView> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const ImportWordExercisesView(),
+                    builder: (context) => ImportWordExercisesView(
+                      onImportComplete: () {
+                        // Refresh the view when import is complete
+                        setState(() {});
+                      },
+                    ),
                   ),
                 );
               },
@@ -217,12 +222,15 @@ class _DutchWordsViewState extends State<DutchWordsView> {
     }
 
     final deckIds = deckGroups.keys.toList()..sort();
+    
+    // Filter out empty decks
+    final nonEmptyDeckIds = deckIds.where((deckId) => deckGroups[deckId]!.isNotEmpty).toList();
 
     return ListView.builder(
       padding: const EdgeInsets.all(16),
-      itemCount: deckIds.length,
+      itemCount: nonEmptyDeckIds.length,
       itemBuilder: (context, index) {
-        final deckId = deckIds[index];
+        final deckId = nonEmptyDeckIds[index];
         final deckExercises = deckGroups[deckId]!;
         final deckName = deckExercises.first.deckName;
         final totalExercises = deckExercises.fold<int>(0, (sum, exercise) => sum + exercise.exercises.length);
@@ -254,7 +262,16 @@ class _DutchWordsViewState extends State<DutchWordsView> {
                 color: Colors.grey[600],
               ),
             ),
-            trailing: const Icon(Icons.arrow_forward_ios),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.red),
+                  onPressed: () => _showDeleteDeckDialog(context, deckId, deckName, deckExercises),
+                ),
+                const Icon(Icons.arrow_forward_ios),
+              ],
+            ),
             onTap: () {
               Navigator.push(
                 context,
@@ -270,6 +287,50 @@ class _DutchWordsViewState extends State<DutchWordsView> {
           ),
         );
       },
+    );
+  }
+
+  void _showDeleteDeckDialog(BuildContext context, String deckId, String deckName, List<DutchWordExercise> deckExercises) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Deck'),
+        content: Text(
+          'Are you sure you want to delete the deck "$deckName"?\n\n'
+          'This will permanently delete ${deckExercises.length} words and ${deckExercises.fold<int>(0, (sum, exercise) => sum + exercise.exercises.length)} exercises.\n\n'
+          'This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _deleteDeck(deckId);
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _deleteDeck(String deckId) {
+    final provider = context.read<DutchWordExerciseProvider>();
+    final exercisesToDelete = provider.getExercisesByDeck(deckId);
+    
+    for (final exercise in exercisesToDelete) {
+      provider.deleteWordExercise(exercise.id);
+    }
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Deck deleted successfully'),
+        backgroundColor: Colors.green,
+      ),
     );
   }
 

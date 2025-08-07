@@ -68,6 +68,10 @@ class _DutchWordExerciseDetailViewState extends State<DutchWordExerciseDetailVie
             onPressed: () => _editWordExercise(context),
           ),
           IconButton(
+            icon: const Icon(Icons.delete, color: Colors.red),
+            onPressed: () => _showDeleteWordDialog(context),
+          ),
+          IconButton(
             icon: const Icon(Icons.info),
             onPressed: () => _showWordInfo(context),
           ),
@@ -819,6 +823,49 @@ class _DutchWordExerciseDetailViewState extends State<DutchWordExerciseDetailVie
     _selectedAnswers.clear();
     _sentenceAnswers.clear();
     _sentenceAvailable.clear();
+  }
+
+  void _showDeleteWordDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Word'),
+        content: Text(
+          'Are you sure you want to delete "${_wordExercise.targetWord}"?\n\n'
+          'This will permanently delete ${_wordExercise.exercises.length} exercises.\n\n'
+          'This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _deleteWord();
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _deleteWord() {
+    final provider = context.read<DutchWordExerciseProvider>();
+    provider.deleteWordExercise(_wordExercise.id);
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('"${_wordExercise.targetWord}" deleted successfully'),
+        backgroundColor: Colors.green,
+      ),
+    );
+    
+    // Navigate back to the previous screen
+    Navigator.of(context).pop();
   }
 
   void _editWordExercise(BuildContext context) {
