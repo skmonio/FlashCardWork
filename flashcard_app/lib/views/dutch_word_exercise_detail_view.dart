@@ -557,7 +557,7 @@ class _DutchWordExerciseDetailViewState extends State<DutchWordExerciseDetailVie
   }
 
   bool _canCheckAnswer() {
-    final currentExercise = widget.wordExercise.exercises[_currentExerciseIndex];
+    final currentExercise = _wordExercise.exercises[_currentExerciseIndex];
     
     if (currentExercise.type == ExerciseType.sentenceBuilding) {
       // For sentence building, check if all words are used
@@ -725,7 +725,7 @@ class _DutchWordExerciseDetailViewState extends State<DutchWordExerciseDetailVie
     
     // Update learning progress for the word exercise
     final dutchProvider = context.read<DutchWordExerciseProvider>();
-    await dutchProvider.updateLearningProgress(widget.wordExercise.id, isCorrect);
+    await dutchProvider.updateLearningProgress(_wordExercise.id, isCorrect);
     
     // Sync progress to main FlashCard
     await _syncProgressToFlashCard(isCorrect);
@@ -758,7 +758,7 @@ class _DutchWordExerciseDetailViewState extends State<DutchWordExerciseDetailVie
       
       // Find the corresponding FlashCard
       final flashCard = flashcardProvider.cards.firstWhere(
-        (card) => card.word.toLowerCase() == widget.wordExercise.targetWord.toLowerCase(),
+        (card) => card.word.toLowerCase() == _wordExercise.targetWord.toLowerCase(),
         orElse: () => FlashCard(
           id: '',
           word: '',
@@ -768,7 +768,7 @@ class _DutchWordExerciseDetailViewState extends State<DutchWordExerciseDetailVie
       );
       
       if (flashCard.id.isEmpty) {
-        print('🔍 FlashCard not found for word: ${widget.wordExercise.targetWord}');
+        print('🔍 FlashCard not found for word: ${_wordExercise.targetWord}');
         return;
       }
       
