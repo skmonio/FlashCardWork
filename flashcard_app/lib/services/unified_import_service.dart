@@ -78,6 +78,11 @@ class UnifiedImportService {
             'deckNames': deckName,
             'exercises': <Map<String, dynamic>>[],
           };
+          print('🔍 Created new word entry for "$word" with deck "$deckName"');
+        } else {
+          // Update existing word entry
+          wordMap[word]!['deckNames'] = deckName;
+          print('🔍 Updated existing word entry for "$word" with deck "$deckName"');
         }
 
         // Add exercise if provided and valid
@@ -91,7 +96,7 @@ class UnifiedImportService {
           final correctAnswerFromOptions = _extractCorrectAnswerFromOptions(options);
           
           wordMap[word]!['exercises'].add({
-            'type': _convertExerciseType(exerciseType),
+            'type': _convertExerciseTypeToEnum(exerciseType),
             'prompt': question,
             'options': parsedOptions,
             'correctAnswer': correctAnswerFromOptions.isNotEmpty ? correctAnswerFromOptions : correctAnswer,
@@ -134,7 +139,7 @@ class UnifiedImportService {
           print('Creating exercise: ${ex['type']} - ${ex['prompt']}');
           wordExercises.add(WordExercise(
             id: DateTime.now().millisecondsSinceEpoch.toString(),
-            type: _convertExerciseTypeToEnum(ex['type']),
+            type: ex['type'], // Already an enum
             prompt: ex['prompt'],
             options: List<String>.from(ex['options']),
             correctAnswer: ex['correctAnswer'],
@@ -143,13 +148,17 @@ class UnifiedImportService {
           ));
         }
         
+        final deckId = _getPrimaryDeckId(wordData['deckNames']);
+        final deckName = _getPrimaryDeckName(wordData['deckNames']);
+        print('🔍 Creating DutchWordExercise for "${wordData['word']}" with deckId: "$deckId", deckName: "$deckName"');
+        
         final exercise = DutchWordExercise(
           id: DateTime.now().millisecondsSinceEpoch.toString(),
           targetWord: wordData['word'],
           wordTranslation: wordData['definition'],
           exercises: wordExercises,
-          deckId: _getPrimaryDeckId(wordData['deckNames']),
-          deckName: _getPrimaryDeckName(wordData['deckNames']),
+          deckId: deckId,
+          deckName: deckName,
           category: WordCategory.common,
           difficulty: ExerciseDifficulty.beginner,
           createdAt: DateTime.now(),
