@@ -28,6 +28,7 @@ class UnifiedImportService {
     
     // Counter for unique ID generation
     int idCounter = 0;
+    int cardIdCounter = 0;
 
     for (int i = 0; i < data.length; i++) {
       final line = data[i].trim();
@@ -103,7 +104,7 @@ class UnifiedImportService {
         print('🔍 Creating card for "${wordData['word']}" with deckIds: $deckIds');
         
         final card = FlashCard(
-          id: DateTime.now().millisecondsSinceEpoch.toString(),
+          id: 'card_${cardIdCounter++}',
           word: wordData['word'],
           definition: wordData['definition'],
           example: wordData['example'] ?? '', // Optional field
@@ -124,7 +125,7 @@ class UnifiedImportService {
         for (final ex in wordData['exercises']) {
           print('Creating exercise: ${ex['type']} - ${ex['prompt']}');
           individualExercises.add(WordExercise(
-            id: DateTime.now().millisecondsSinceEpoch.toString(),
+            id: 'word_exercise_${idCounter++}',
             type: ex['type'], // Already an enum
             prompt: ex['prompt'],
             options: List<String>.from(ex['options']),
@@ -140,7 +141,7 @@ class UnifiedImportService {
         print('🔍 Creating DutchWordExercise for "${wordData['word']}" with deckId: "$deckId", deckName: "$deckName"');
         
         final dutchWordExercise = DutchWordExercise(
-          id: '${DateTime.now().millisecondsSinceEpoch}_${idCounter++}',
+          id: 'exercise_${idCounter++}',
           targetWord: wordData['word'],
           wordTranslation: wordData['definition'],
           deckId: deckId,
