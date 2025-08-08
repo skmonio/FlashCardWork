@@ -47,9 +47,9 @@ class _DutchWordExerciseDetailViewState extends State<DutchWordExerciseDetailVie
 
   @override
   Widget build(BuildContext context) {
-    // Get the latest word exercise from provider
+    // Get the latest word exercise from provider using word name instead of ID
     final provider = context.watch<DutchWordExerciseProvider>();
-    _wordExercise = provider.getWordExercise(widget.wordExercise.id) ?? widget.wordExercise;
+    _wordExercise = provider.getWordExerciseByWord(widget.wordExercise.targetWord) ?? widget.wordExercise;
     
     // Debug logging
     print('🔍 DutchWordExerciseDetailView: Displaying word "${_wordExercise.targetWord}" with ${_wordExercise.exercises.length} exercises');
