@@ -120,10 +120,10 @@ class UnifiedImportService {
       // Create DutchWordExercise if exercises exist
       if (wordData['exercises'].isNotEmpty) {
         print('Creating ${wordData['exercises'].length} exercises for word: ${wordData['word']}');
-        final wordExercises = <WordExercise>[];
+        final individualExercises = <WordExercise>[];
         for (final ex in wordData['exercises']) {
           print('Creating exercise: ${ex['type']} - ${ex['prompt']}');
-          wordExercises.add(WordExercise(
+          individualExercises.add(WordExercise(
             id: DateTime.now().millisecondsSinceEpoch.toString(),
             type: ex['type'], // Already an enum
             prompt: ex['prompt'],
@@ -147,7 +147,7 @@ class UnifiedImportService {
           deckName: deckName,
           category: WordCategory.common,
           difficulty: ExerciseDifficulty.beginner,
-          exercises: wordExercises,
+          exercises: individualExercises,
           createdAt: DateTime.now(),
           isUserCreated: false,
           learningProgress: LearningProgress(),
