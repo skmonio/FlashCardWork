@@ -6,8 +6,13 @@ import '../models/dutch_word_exercise.dart';
 class UnifiedImportService {
   // Actual CSV format: Deck,Word,Definition,Exercise Type,Question,Correct Answer,Options,Explanation
   static const List<String> csvHeaders = [
-    'Deck', 'Word', 'Definition', 'Exercise Type', 'Question', 
-    'Correct Answer', 'Options', 'Explanation'
+    'Deck',
+    'Word',
+    'Definition',
+    'Exercise Type',
+    'Question',
+    'Options',
+    'Explanation',
   ];
 
   static Future<Map<String, dynamic>> parseUnifiedCSV(String csvContent) async {
@@ -58,7 +63,6 @@ class UnifiedImportService {
         final definition = values[headers.indexOf('Definition')].trim();
         final exerciseType = values[headers.indexOf('Exercise Type')].trim();
         final question = values[headers.indexOf('Question')].trim();
-        final correctAnswer = values[headers.indexOf('Correct Answer')].trim();
         final options = values[headers.indexOf('Options')].trim();
         final explanation = values[headers.indexOf('Explanation')].trim();
         
@@ -85,21 +89,21 @@ class UnifiedImportService {
           print('🔍 Updated existing word entry for "$word" with deck "$deckName"');
         }
 
-        // Add exercise if provided and valid
+        // Only add exercise if it has valid data
         if (exerciseType.isNotEmpty && 
             exerciseType.toLowerCase() != 'basic' &&
             question.isNotEmpty && 
-            correctAnswer.isNotEmpty) {
+            options.isNotEmpty) {
           
-          // Parse options and find the correct answer
+          // Parse options - first option is always correct
           final parsedOptions = _parseOptions(options, exerciseType);
-          final correctAnswerFromOptions = _extractCorrectAnswerFromOptions(options);
+          final correctAnswer = parsedOptions.first; // Correct answer is always option 1
           
           wordMap[word]!['exercises'].add({
             'type': _convertExerciseTypeToEnum(exerciseType),
             'prompt': question,
             'options': parsedOptions,
-            'correctAnswer': correctAnswerFromOptions.isNotEmpty ? correctAnswerFromOptions : correctAnswer,
+            'correctAnswer': correctAnswer,
             'explanation': explanation,
           });
         }
@@ -178,31 +182,44 @@ class UnifiedImportService {
   }
 
   static String exportUnifiedCSV(List<FlashCard> cards, List<DutchWordExercise> exercises) {
-    final lines = <String>[csvHeaders.join(',')];
-
-    // Create a map of exercises by word for easy lookup
+    final lines = <String>[];
+    
+    // Add header
+    lines.add(csvHeaders.join(','));
+    
+    // Group exercises by word for easier lookup
     final exerciseMap = <String, DutchWordExercise>{};
     for (final exercise in exercises) {
-      exerciseMap[exercise.targetWord.toLowerCase()] = exercise;
+      exerciseMap[exercise.targetWord] = exercise;
     }
-
+    
+    // Export each card
     for (final card in cards) {
-      final exercise = exerciseMap[card.word.toLowerCase()];
+      final exercise = exerciseMap[card.word];
       
       if (exercise != null && exercise.exercises.isNotEmpty) {
-        // Export each exercise as a separate row
-        for (final wordExercise in exercise.exercises) {
-          final row = [
+        // Add word data
+        lines.add([
+          _escapeCSVField(_getDeckNames(card.deckIds)),
+          _escapeCSVField(card.word),
+          _escapeCSVField(card.definition),
+          '', // No exercise type
+          '', // No question
+          '', // No options
+          '', // No explanation
+        ].join(','));
+        
+        // Add exercises
+        for (final ex in exercise.exercises) {
+          lines.add([
             _escapeCSVField(_getDeckNames(card.deckIds)),
             _escapeCSVField(card.word),
             _escapeCSVField(card.definition),
-            _escapeCSVField(_convertExerciseTypeToCSV(wordExercise.type)),
-            _escapeCSVField(wordExercise.prompt),
-            _escapeCSVField(wordExercise.correctAnswer),
-            _escapeCSVField(wordExercise.options.join(';')),
-            _escapeCSVField(wordExercise.explanation),
-          ];
-          lines.add(row.join(','));
+            _escapeCSVField(_convertExerciseTypeToCSV(ex.type)),
+            _escapeCSVField(ex.prompt),
+            _escapeCSVField(ex.options.join(';')),
+            _escapeCSVField(ex.explanation),
+          ].join(','));
         }
       } else {
         // Export as basic flashcard (no exercises)
@@ -212,7 +229,6 @@ class UnifiedImportService {
           _escapeCSVField(card.definition),
           '', // No exercise type
           '', // No question
-          '', // No correct answer
           '', // No options
           '', // No explanation
         ];
@@ -249,60 +265,15 @@ class UnifiedImportService {
   static List<String> _parseOptions(String options, String exerciseType) {
     if (options.isEmpty) return [];
     
-    final rawOptions = options.split(';').map((o) => o.trim()).toList();
+    // Split by semicolon and trim each option
+    final optionList = options.split(';').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
     
+    // For sentence building, we might have more options than needed
     if (exerciseType.toLowerCase() == 'sentence building') {
-      // For sentence building, extract just the words without numbers
-      return rawOptions.map((option) {
-        // Remove the (number) part, e.g., "ik (1)" becomes "ik"
-        final match = RegExp(r'^(.+?)\s*\(\d+\)$').firstMatch(option);
-        return match?.group(1)?.trim() ?? option;
-      }).toList();
-    } else {
-      // For multiple choice and fill in blank, extract just the text without numbers
-      return rawOptions.map((option) {
-        // Remove the (number) part, e.g., "Lay on (1)" becomes "Lay on"
-        final match = RegExp(r'^(.+?)\s*\(\d+\)$').firstMatch(option);
-        return match?.group(1)?.trim() ?? option;
-      }).toList();
-    }
-  }
-
-  static String _extractCorrectAnswerFromOptions(String options) {
-    if (options.isEmpty) return '';
-    
-    final rawOptions = options.split(';').map((o) => o.trim()).toList();
-    
-    for (final option in rawOptions) {
-      // Look for option with (1) which indicates the correct answer
-      final match = RegExp(r'^(.+?)\s*\(1\)$').firstMatch(option);
-      if (match != null) {
-        return match.group(1)?.trim() ?? '';
-      }
+      return optionList;
     }
     
-    // Fallback: if no (1) found, return the first option without number
-    if (rawOptions.isNotEmpty) {
-      final firstOption = rawOptions.first;
-      final match = RegExp(r'^(.+?)\s*\(\d+\)$').firstMatch(firstOption);
-      return match?.group(1)?.trim() ?? firstOption;
-    }
-    
-    return '';
-  }
-
-  static String _convertExerciseType(String csvType) {
-    switch (csvType.toLowerCase()) {
-      case 'sentence building':
-        return 'sentenceBuilding';
-      case 'multiple choice':
-        return 'multipleChoice';
-      case 'fill in the blank':
-      case 'fill in blank':
-        return 'fillInBlank';
-      default:
-        return 'multipleChoice';
-    }
+    return optionList;
   }
 
   static ExerciseType _convertExerciseTypeToEnum(String csvType) {
