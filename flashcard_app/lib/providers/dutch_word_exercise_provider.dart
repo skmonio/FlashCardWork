@@ -93,11 +93,26 @@ class DutchWordExerciseProvider extends ChangeNotifier {
     print('🔍 Provider: getWordExercise called with ID: "$id"');
     print('🔍 Provider: Total exercises in provider: ${_wordExercises.length}');
     
-    // List all exercises to debug ID mapping
-    for (final exercise in _wordExercises) {
-      print('🔍 Provider: Exercise - Word: "${exercise.targetWord}", ID: "${exercise.id}"');
+    // Find all exercises with this ID to check for collisions
+    final matchingExercises = _wordExercises.where((e) => e.id == id).toList();
+    print('🔍 Provider: Found ${matchingExercises.length} exercises with ID "$id"');
+    
+    if (matchingExercises.length > 1) {
+      print('⚠️  WARNING: ID collision detected! Multiple exercises have the same ID:');
+      for (int i = 0; i < matchingExercises.length; i++) {
+        final exercise = matchingExercises[i];
+        print('⚠️  Collision $i: Word="${exercise.targetWord}", ID="${exercise.id}", Deck="${exercise.deckName}"');
+      }
     }
     
+    // List all exercises to debug ID mapping (only first 10 to avoid spam)
+    print('🔍 Provider: First 10 exercises in list:');
+    for (int i = 0; i < _wordExercises.length && i < 10; i++) {
+      final exercise = _wordExercises[i];
+      print('🔍 Provider: Exercise $i - Word: "${exercise.targetWord}", ID: "${exercise.id}", Deck: "${exercise.deckName}"');
+    }
+    
+    // Use firstWhere but with better error handling
     final exercise = _wordExercises.firstWhere(
       (e) => e.id == id,
       orElse: () => DutchWordExercise(
@@ -116,12 +131,33 @@ class DutchWordExerciseProvider extends ChangeNotifier {
     );
     
     if (exercise.id.isNotEmpty) {
-      print('🔍 Provider: Found exercise for word "${exercise.targetWord}" with ID "$id"');
+      print('🔍 Provider: Returning exercise for word "${exercise.targetWord}" with ID "$id"');
+      print('🔍 Provider: Exercise details - Deck: "${exercise.deckName}", Exercises count: ${exercise.exercises.length}');
     } else {
       print('🔍 Provider: No exercise found for ID "$id"');
     }
     
     return exercise.id.isNotEmpty ? exercise : null;
+  }
+
+  // Get a specific word exercise by word name (backup method for ID collisions)
+  DutchWordExercise? getWordExerciseByWord(String word) {
+    print('🔍 Provider: getWordExerciseByWord called with word: "$word"');
+    
+    final matchingExercises = _wordExercises.where((e) => 
+      e.targetWord.toLowerCase() == word.toLowerCase()
+    ).toList();
+    
+    print('🔍 Provider: Found ${matchingExercises.length} exercises for word "$word"');
+    
+    if (matchingExercises.isNotEmpty) {
+      final exercise = matchingExercises.first;
+      print('🔍 Provider: Returning exercise for word "${exercise.targetWord}" with ID "${exercise.id}"');
+      return exercise;
+    }
+    
+    print('🔍 Provider: No exercise found for word "$word"');
+    return null;
   }
 
   // Get all decks
