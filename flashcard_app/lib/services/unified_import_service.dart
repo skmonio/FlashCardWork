@@ -36,7 +36,6 @@ class UnifiedImportService {
       try {
         final values = _parseCSVLine(line);
         if (values.length < headers.length) {
-          errors.add('Line ${i + 1}: Insufficient data');
           continue;
         }
 
@@ -90,7 +89,8 @@ class UnifiedImportService {
           });
         }
       } catch (e) {
-        errors.add('Line ${i + 1}: ${e.toString()}');
+        print('Error parsing line ${i + 1}: ${e.toString()}');
+        continue;
       }
     }
 
