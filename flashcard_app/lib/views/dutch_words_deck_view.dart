@@ -183,14 +183,30 @@ class _DutchWordsDeckViewState extends State<DutchWordsDeckView> {
             ),
             onTap: () {
               print('🔍 DutchWordsDeckView: Tapped on word "${exercise.targetWord}" with ID "${exercise.id}"');
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => DutchWordExerciseDetailView(
-                    wordExercise: exercise,
+              
+              // Use word name lookup instead of ID to avoid collisions
+              final provider = context.read<DutchWordExerciseProvider>();
+              final wordExercise = provider.getWordExerciseByWord(exercise.targetWord);
+              
+              if (wordExercise != null) {
+                print('🔍 DutchWordsDeckView: Found exercise by word name: "${wordExercise.targetWord}" with ID "${wordExercise.id}"');
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => DutchWordExerciseDetailView(
+                      wordExercise: wordExercise,
+                    ),
                   ),
-                ),
-              );
+                );
+              } else {
+                print('🔍 DutchWordsDeckView: No exercise found for word "${exercise.targetWord}"');
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Could not find exercises for "${exercise.targetWord}"'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
             },
           ),
         );
