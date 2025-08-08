@@ -115,7 +115,15 @@ class DutchWordExerciseProvider extends ChangeNotifier {
 
   // Get exercises by deck
   List<DutchWordExercise> getExercisesByDeck(String deckId) {
-    return _wordExercises.where((e) => e.deckId == deckId).toList();
+    print('🔍 Provider: getExercisesByDeck called with deckId: "$deckId"');
+    print('🔍 Provider: Total exercises available: ${_wordExercises.length}');
+    for (final exercise in _wordExercises) {
+      print('🔍 Provider: Exercise "${exercise.targetWord}" has deckId: "${exercise.deckId}"');
+    }
+    
+    final filteredExercises = _wordExercises.where((e) => e.deckId == deckId).toList();
+    print('🔍 Provider: Found ${filteredExercises.length} exercises for deckId: "$deckId"');
+    return filteredExercises;
   }
 
   // Search word exercises

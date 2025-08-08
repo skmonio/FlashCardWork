@@ -29,6 +29,12 @@ class _DutchWordsDeckViewState extends State<DutchWordsDeckView> {
     return Consumer<DutchWordExerciseProvider>(
       builder: (context, provider, child) {
         final exercises = provider.getExercisesByDeck(widget.deckId);
+        print('🔍 DutchWordsDeckView: Fetching exercises for deckId: "${widget.deckId}", deckName: "${widget.deckName}"');
+        print('🔍 DutchWordsDeckView: Found ${exercises.length} exercises');
+        for (final exercise in exercises) {
+          print('🔍 DutchWordsDeckView: Exercise - Word: "${exercise.targetWord}", DeckId: "${exercise.deckId}", DeckName: "${exercise.deckName}"');
+        }
+        
         final filteredExercises = _getFilteredExercises(exercises);
 
         // If no exercises in deck, show empty state
