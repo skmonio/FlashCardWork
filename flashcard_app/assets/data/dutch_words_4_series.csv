@@ -1,24 +1,24 @@
-Deck,Word,Definition,Exercise Type,Question,Options,Explanation
-4.4,aanleggen,Lay on,Multiple Choice,What does "aanleggen" mean in Dutch?,Lay on;to lay out;to walk;to recommend,"Aanleggen" means to lay on or moor, often used for boats or laying out plans.
-4.4,aanleggen,Lay on,Fill in Blank,De boot gaat _____ aan de kade.,aanleggen;aanlopen;aanraden;besteden,The boat is going to moor at the quay.
-4.6,aanlopen,Drop in,Multiple Choice,What does "aanlopen" mean?,Drop in;to lay out;to recommend;to spend,"Aanlopen" means to drop in or walk up to something or someone.
-4.6,aanlopen,Drop in,Sentence Building,Translate "I drop in at the house",ik;loop;aan;het;huis,You drop in at the house.
-4.3,aanraden,Recommend/Suggest,Multiple Choice,What does "aanraden" mean?,Recommend/Suggest;to lay out;to walk;to spend,"Aanraden" means to recommend or suggest something.
-4.3,aanraden,Recommend/Suggest,Fill in Blank,Ik _____ deze film aan.,aanraden;raden;raad;aanraad,I recommend this film.
-4.1,Balen,Annoyed / Disappointed,Multiple Choice,What does "Balen" mean?,Annoyed / Disappointed;to be limited;to realize;to spend,"Balen" means to be annoyed or disappointed about something.
-4.1,Balen,Annoyed / Disappointed,Sentence Building,Translate "I am annoyed about the weather",ik;baal;van;het;weer,I'm annoyed about the weather.
-4.3,beperkt,Limited,Multiple Choice,What does "beperkt" mean?,Limited;annoyed;realized;spent,"Beperkt" means limited or restricted.
-4.3,beperkt,Limited,Fill in Blank,De mogelijkheden zijn _____.,beperkt;beperken;beperking;beperkte,The possibilities are limited.
-4.1,beseffen,Realize/Be aware of,Multiple Choice,What does "beseffen" mean?,Realize/Be aware of;to be annoyed;to be limited;to spend,"Beseffen" means to realize or become aware of something.
-4.1,beseffen,Realize/Be aware of,Sentence Building,Translate "I realize it now",ik;besef;het;nu,I realize it now.
-4.4,besteden,Spend,Multiple Choice,What does "besteden" mean?,Spend;to be annoyed;to be limited;to realize,"Besteden" means to spend time or money on something.
-4.4,besteden,Spend,Fill in Blank,Ik _____ veel tijd aan werk.,besteden;besteed;bestede;bested,I spend a lot of time on work.
-4.6,bevalt me,I like it / it pleases me,Multiple Choice,What does "bevalt me" mean?,I like it / it pleases me;I confirm it;I realize it;I spend it,"Bevalt me" means "I like it" or "it pleases me."
-4.6,bevalt me,I like it / it pleases me,Sentence Building,Translate "I like it here",het;bevalt;me;hier,I like it here.
-4.3,bevestigen,Confirm,Multiple Choice,What does "bevestigen" mean?,Confirm;to like;to realize;to spend,"Bevestigen" means to confirm or verify something.
-4.3,bevestigen,Confirm,Fill in Blank,Ik _____ de afspraak.,bevestigen;bevestig;bevestige;bevestigt,I confirm the appointment.
-4.3,opgelucht,Relieved,Multiple Choice,What does "opgelucht" mean?,Relieved;annoyed;limited;spent,"Opgelucht" means relieved or feeling better after a worry.
-4.3,opgelucht,Relieved,Sentence Building,Translate "I am relieved",ik;ben;opgelucht,I am relieved.
+Deck,Word,Definition,Exercise Type,Question,Options,Explanation,ID
+4.4,aanleggen,Lay on,Multiple Choice,What does "aanleggen" mean in Dutch?,Lay on;to lay out;to walk;to recommend,"Aanleggen" means to lay on or moor, often used for boats or laying out plans.,aanleggen_001
+4.4,aanleggen,Lay on,Fill in Blank,De boot gaat _____ aan de kade.,aanleggen;aanlopen;aanraden;besteden,The boat is going to moor at the quay.,aanleggen_002
+4.6,aanlopen,Drop in,Multiple Choice,What does "aanlopen" mean?,Drop in;to lay out;to recommend;to spend,"Aanlopen" means to drop in or walk up to something or someone.,aanlopen_001
+4.6,aanlopen,Drop in,Sentence Building,Translate "I drop in at the house",ik;loop;aan;het;huis,You drop in at the house.,aanlopen_002
+4.3,aanraden,Recommend/Suggest,Multiple Choice,What does "aanraden" mean?,Recommend/Suggest;to lay out;to walk;to spend,"Aanraden" means to recommend or suggest something.,aanraden_001
+4.3,aanraden,Recommend/Suggest,Fill in Blank,Ik _____ deze film aan.,aanraden;raden;raad;aanraad,I recommend this film.,aanraden_002
+4.1,Balen,Annoyed / Disappointed,Multiple Choice,What does "Balen" mean?,Annoyed / Disappointed;to be limited;to realize;to spend,"Balen" means to be annoyed or disappointed about something.,balen_001
+4.1,Balen,Annoyed / Disappointed,Sentence Building,Translate "I am annoyed about the weather",ik;baal;van;het;weer,I'm annoyed about the weather.,balen_002
+4.3,beperkt,Limited,Multiple Choice,What does "beperkt" mean?,Limited;annoyed;realized;spent,"Beperkt" means limited or restricted.,beperkt_001
+4.3,beperkt,Limited,Fill in Blank,De mogelijkheden zijn _____.,beperkt;beperken;beperking;beperkte,The possibilities are limited.,beperkt_002
+4.1,beseffen,Realize/Be aware of,Multiple Choice,What does "beseffen" mean?,Realize/Be aware of;to be annoyed;to be limited;to spend,"Beseffen" means to realize or become aware of something.,beseffen_001
+4.1,beseffen,Realize/Be aware of,Sentence Building,Translate "I realize it now",ik;besef;het;nu,I realize it now.,beseffen_002
+4.4,besteden,Spend,Multiple Choice,What does "besteden" mean?,Spend;to be annoyed;to be limited;to realize,"Besteden" means to spend time or money on something.,besteden_001
+4.4,besteden,Spend,Fill in Blank,Ik _____ veel tijd aan werk.,besteden;besteed;bestede;bested,I spend a lot of time on work.,besteden_002
+4.6,bevalt me,I like it / it pleases me,Multiple Choice,What does "bevalt me" mean?,I like it / it pleases me;I confirm it;I realize it;I spend it,"Bevalt me" means "I like it" or "it pleases me.",bevalt_me_001
+4.6,bevalt me,I like it / it pleases me,Sentence Building,Translate "I like it here",het;bevalt;me;hier,I like it here.,bevalt_me_002
+4.3,bevestigen,Confirm,Multiple Choice,What does "bevestigen" mean?,Confirm;to like;to realize;to spend,"Bevestigen" means to confirm or verify something.,bevestigen_001
+4.3,bevestigen,Confirm,Fill in Blank,Ik _____ de afspraak.,bevestigen;bevestig;bevestige;bevestigt,I confirm the appointment.,bevestigen_002
+4.3,opgelucht,Relieved,Multiple Choice,What does "opgelucht" mean?,Relieved;annoyed;limited;spent,"Opgelucht" means relieved or feeling better after a worry.,opgelucht_001
+4.3,opgelucht,Relieved,Sentence Building,Translate "I am relieved",ik;ben;opgelucht,I am relieved.,opgelucht_002
 4.1,verbaasd,surprised,Multiple Choice,What does "verbaasd" mean?,surprised;relieved;limited;spent,"Verbaasd" means surprised or amazed.
 4.1,verbaasd,surprised,Fill in Blank,Ik ben _____ door het nieuws.,verbaasd;verbaas;verbazen;verbaast,I am surprised by the news.
 4.3,verdacht,suspicious,Multiple Choice,What does "verdacht" mean?,suspicious;surprised;relieved;limited,"Verdacht" means suspicious or suspect.

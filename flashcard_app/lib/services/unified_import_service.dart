@@ -7,12 +7,13 @@ class UnifiedImportService {
   // Actual CSV format: Deck,Word,Definition,Exercise Type,Question,Correct Answer,Options,Explanation
   static const List<String> csvHeaders = [
     'Deck',
-    'Word',
+    'Word', 
     'Definition',
     'Exercise Type',
     'Question',
     'Options',
     'Explanation',
+    'ID', // Optional ID column
   ];
 
   static Future<Map<String, dynamic>> parseUnifiedCSV(String csvContent) async {
@@ -47,7 +48,14 @@ class UnifiedImportService {
         final options = values[headers.indexOf('Options')].trim();
         final explanation = values[headers.indexOf('Explanation')].trim();
         
-        print('🔍 CSV parsing: Word="$word", DeckName="$deckName"');
+        // Handle optional ID column
+        String? customId;
+        if (headers.contains('ID') && values.length > headers.indexOf('ID')) {
+          customId = values[headers.indexOf('ID')].trim();
+          if (customId.isEmpty) customId = null;
+        }
+        
+        print('🔍 CSV parsing: Word="$word", DeckName="$deckName", CustomID="$customId"');
 
         // Create or update word entry
         if (!wordMap.containsKey(word)) {
@@ -61,13 +69,17 @@ class UnifiedImportService {
             'futureTense': '', // Optional field - empty for this CSV
             'pastParticiple': '', // Optional field - empty for this CSV
             'deckNames': deckName,
+            'customId': customId, // Store custom ID if provided
             'exercises': <Map<String, dynamic>>[],
           };
-          print('🔍 Created new word entry for "$word" with deck "$deckName"');
+          print('🔍 Created new word entry for "$word" with deck "$deckName" and custom ID "$customId"');
         } else {
           // Update existing word entry
           wordMap[word]!['deckNames'] = deckName;
-          print('🔍 Updated existing word entry for "$word" with deck "$deckName"');
+          if (customId != null) {
+            wordMap[word]!['customId'] = customId;
+          }
+          print('🔍 Updated existing word entry for "$word" with deck "$deckName" and custom ID "$customId"');
         }
 
         // Only add exercise if it has valid data
@@ -137,10 +149,15 @@ class UnifiedImportService {
         // Create DutchWordExercise
         final deckId = _getPrimaryDeckId(wordData['deckNames']);
         final deckName = _getPrimaryDeckName(wordData['deckNames']);
-        print('🔍 Creating DutchWordExercise for "${wordData['word']}" with deckId: "$deckId", deckName: "$deckName"');
+        final customId = wordData['customId'] as String?;
+        
+        // Use custom ID if provided, otherwise generate timestamp-based ID
+        final exerciseId = customId ?? '${DateTime.now().millisecondsSinceEpoch}_${idCounter++}';
+        
+        print('🔍 Creating DutchWordExercise for "${wordData['word']}" with deckId: "$deckId", deckName: "$deckName", ID: "$exerciseId"');
         
         final dutchWordExercise = DutchWordExercise(
-          id: '${DateTime.now().millisecondsSinceEpoch}_${idCounter++}',
+          id: exerciseId,
           targetWord: wordData['word'],
           wordTranslation: wordData['definition'],
           deckId: deckId,
