@@ -97,6 +97,13 @@ class _DutchWordsDeckViewState extends State<DutchWordsDeckView> {
   }
 
   Widget _buildWordsList(List<DutchWordExercise> exercises) {
+    // Debug logging
+    print('🔍 DutchWordsDeckView: Building list with ${exercises.length} exercises');
+    for (int i = 0; i < exercises.length; i++) {
+      final exercise = exercises[i];
+      print('🔍 DutchWordsDeckView: Exercise $i - Word: "${exercise.targetWord}", ID: "${exercise.id}"');
+    }
+    
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: exercises.length,
@@ -175,6 +182,7 @@ class _DutchWordsDeckViewState extends State<DutchWordsDeckView> {
               ],
             ),
             onTap: () {
+              print('🔍 DutchWordsDeckView: Tapped on word "${exercise.targetWord}" with ID "${exercise.id}"');
               Navigator.push(
                 context,
                 MaterialPageRoute(
