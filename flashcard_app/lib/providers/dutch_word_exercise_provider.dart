@@ -88,13 +88,40 @@ class DutchWordExerciseProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Get a word exercise by ID
+  // Get a specific word exercise by ID
   DutchWordExercise? getWordExercise(String id) {
-    try {
-      return _wordExercises.firstWhere((e) => e.id == id);
-    } catch (e) {
-      return null;
+    print('🔍 Provider: getWordExercise called with ID: "$id"');
+    print('🔍 Provider: Total exercises in provider: ${_wordExercises.length}');
+    
+    // List all exercises to debug ID mapping
+    for (final exercise in _wordExercises) {
+      print('🔍 Provider: Exercise - Word: "${exercise.targetWord}", ID: "${exercise.id}"');
     }
+    
+    final exercise = _wordExercises.firstWhere(
+      (e) => e.id == id,
+      orElse: () => DutchWordExercise(
+        id: '',
+        targetWord: '',
+        wordTranslation: '',
+        deckId: '',
+        deckName: '',
+        category: WordCategory.common,
+        difficulty: ExerciseDifficulty.beginner,
+        exercises: [],
+        createdAt: DateTime.now(),
+        isUserCreated: false,
+        learningProgress: LearningProgress(),
+      ),
+    );
+    
+    if (exercise.id.isNotEmpty) {
+      print('🔍 Provider: Found exercise for word "${exercise.targetWord}" with ID "$id"');
+    } else {
+      print('🔍 Provider: No exercise found for ID "$id"');
+    }
+    
+    return exercise.id.isNotEmpty ? exercise : null;
   }
 
   // Get all decks
