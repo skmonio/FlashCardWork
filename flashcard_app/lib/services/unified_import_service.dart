@@ -16,39 +16,21 @@ class UnifiedImportService {
   ];
 
   static Future<Map<String, dynamic>> parseUnifiedCSV(String csvContent) async {
-    final lines = csvContent.split('\n')
-        .where((line) => line.trim().isNotEmpty)
-        .toList();
+    final lines = csvContent.trim().split('\n');
+    if (lines.isEmpty) return {'cards': [], 'exercises': []};
 
-    if (lines.length < 2) {
-      return {
-        'success': false,
-        'errors': ['CSV file appears to be empty or invalid']
-      };
-    }
-
-    // Parse header
-    final headers = lines[0].split(',').map((h) => h.trim().replaceAll('"', '')).toList();
-    
-    // Validate headers
-    for (final requiredHeader in csvHeaders) {
-      if (!headers.contains(requiredHeader)) {
-        return {
-          'success': false,
-          'errors': ['Missing required header: $requiredHeader']
-        };
-      }
-    }
+    final headers = lines[0].split(',').map((h) => h.trim()).toList();
+    final data = lines.skip(1).where((line) => line.trim().isNotEmpty).toList();
 
     final cards = <FlashCard>[];
-    final exercises = <DutchWordExercise>[];
-    final errors = <String>[];
-
-    // Group by word to handle multiple exercises per word
+    final wordExercises = <DutchWordExercise>[];
     final wordMap = <String, Map<String, dynamic>>{};
+    
+    // Counter for unique ID generation
+    int idCounter = 0;
 
-    for (int i = 1; i < lines.length; i++) {
-      final line = lines[i].trim();
+    for (int i = 0; i < data.length; i++) {
+      final line = data[i].trim();
       if (line.isEmpty) continue;
 
       try {
@@ -152,32 +134,32 @@ class UnifiedImportService {
           ));
         }
         
+        // Create DutchWordExercise
         final deckId = _getPrimaryDeckId(wordData['deckNames']);
         final deckName = _getPrimaryDeckName(wordData['deckNames']);
         print('🔍 Creating DutchWordExercise for "${wordData['word']}" with deckId: "$deckId", deckName: "$deckName"');
         
-        final exercise = DutchWordExercise(
-          id: DateTime.now().millisecondsSinceEpoch.toString(),
+        final dutchWordExercise = DutchWordExercise(
+          id: '${DateTime.now().millisecondsSinceEpoch}_${idCounter++}',
           targetWord: wordData['word'],
           wordTranslation: wordData['definition'],
-          exercises: wordExercises,
           deckId: deckId,
           deckName: deckName,
           category: WordCategory.common,
           difficulty: ExerciseDifficulty.beginner,
+          exercises: wordExercises,
           createdAt: DateTime.now(),
-          isUserCreated: true,
+          isUserCreated: false,
+          learningProgress: LearningProgress(),
         );
-        exercises.add(exercise);
+        wordExercises.add(dutchWordExercise);
       }
     }
 
-    print('Import completed: ${cards.length} cards, ${exercises.length} exercises, ${errors.length} errors');
+    print('Import completed: ${cards.length} cards, ${wordExercises.length} exercises');
     return {
-      'success': true,
       'cards': cards,
-      'exercises': exercises,
-      'errors': errors,
+      'exercises': wordExercises,
     };
   }
 
