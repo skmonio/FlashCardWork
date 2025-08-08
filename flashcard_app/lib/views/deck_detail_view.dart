@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../providers/flashcard_provider.dart';
 import '../components/unified_header.dart';
 import '../models/deck.dart';
@@ -274,7 +275,14 @@ class _DeckDetailViewState extends State<DeckDetailView> {
                 ),
               ),
             ],
-
+            const SizedBox(height: 4),
+            Text(
+              'Added: ${_formatDate(card.dateCreated)}',
+              style: TextStyle(
+                fontSize: 11,
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+              ),
+            ),
           ],
         ),
         trailing: PopupMenuButton<String>(
@@ -287,16 +295,6 @@ class _DeckDetailViewState extends State<DeckDetailView> {
                   Icon(Icons.edit, size: 16),
                   SizedBox(width: 8),
                   Text('Edit'),
-                ],
-              ),
-            ),
-            const PopupMenuItem(
-              value: 'study',
-              child: Row(
-                children: [
-                  Icon(Icons.school, size: 16),
-                  SizedBox(width: 8),
-                  Text('Study This Card'),
                 ],
               ),
             ),
@@ -399,9 +397,6 @@ class _DeckDetailViewState extends State<DeckDetailView> {
       case 'edit':
         _editCard(card);
         break;
-      case 'study':
-        _studySingleCard(card);
-        break;
       case 'delete':
         _deleteCard(card);
         break;
@@ -457,14 +452,13 @@ class _DeckDetailViewState extends State<DeckDetailView> {
   }
 
   void _studyDeck() {
-    final provider = context.read<FlashcardProvider>();
-    final deckCards = provider.cards.where((card) => 
-      card.deckIds.contains(widget.deck.id)
-    ).toList();
+    final deckCards = context.read<FlashcardProvider>().cards
+        .where((card) => card.deckIds.contains(widget.deck.id))
+        .toList();
     
     if (deckCards.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No cards in this deck to study')),
+        const SnackBar(content: Text('No cards in this deck to study!')),
       );
       return;
     }
@@ -475,18 +469,6 @@ class _DeckDetailViewState extends State<DeckDetailView> {
           cards: deckCards,
           studyMode: StudyMode.multipleChoice,
           title: 'Study ${widget.deck.name}',
-        ),
-      ),
-    );
-  }
-
-  void _studySingleCard(FlashCard card) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => StudyView(
-          cards: [card],
-          studyMode: StudyMode.lookCoverCheck,
-          title: 'Study Card',
         ),
       ),
     );
@@ -641,15 +623,12 @@ class _DeckDetailViewState extends State<DeckDetailView> {
             onPressed: () => Navigator.of(context).pop(),
             child: const Text('Close'),
           ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              _studySingleCard(card);
-            },
-            child: const Text('Study This Card'),
-          ),
         ],
       ),
     );
+  }
+
+  String _formatDate(DateTime date) {
+    return DateFormat('MM/dd/yyyy').format(date);
   }
 } 

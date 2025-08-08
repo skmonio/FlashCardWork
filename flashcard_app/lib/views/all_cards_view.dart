@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../providers/flashcard_provider.dart';
 import '../components/unified_header.dart';
 import '../models/flash_card.dart';
@@ -332,7 +333,14 @@ class _AllCardsViewState extends State<AllCardsView> {
                     ),
                   ),
                 ],
-
+                const SizedBox(height: 4),
+                Text(
+                  'Added: ${_formatDate(card.dateCreated)}',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                  ),
+                ),
               ],
             ),
             trailing: _isSelectionMode ? null : PopupMenuButton<String>(
@@ -866,6 +874,10 @@ class _AllCardsViewState extends State<AllCardsView> {
         ],
       ),
     );
+  }
+
+  String _formatDate(DateTime date) {
+    return DateFormat('MM/dd/yyyy').format(date);
   }
 
 
