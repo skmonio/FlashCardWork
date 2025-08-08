@@ -51,6 +51,13 @@ class _DutchWordExerciseDetailViewState extends State<DutchWordExerciseDetailVie
     final provider = context.watch<DutchWordExerciseProvider>();
     _wordExercise = provider.getWordExercise(widget.wordExercise.id) ?? widget.wordExercise;
     
+    // Debug logging
+    print('🔍 DutchWordExerciseDetailView: Displaying word "${_wordExercise.targetWord}" with ${_wordExercise.exercises.length} exercises');
+    for (int i = 0; i < _wordExercise.exercises.length; i++) {
+      final exercise = _wordExercise.exercises[i];
+      print('🔍 DutchWordExerciseDetailView: Exercise $i - Type: ${exercise.type}, Prompt: "${exercise.prompt}", Correct: "${exercise.correctAnswer}"');
+    }
+    
     // Check if exercise data has changed and reset state if needed
     _checkAndResetStateIfNeeded();
     
@@ -698,8 +705,14 @@ class _DutchWordExerciseDetailViewState extends State<DutchWordExerciseDetailVie
   }
 
   Future<void> _checkAnswer() async {
-    final currentExercise = widget.wordExercise.exercises[_currentExerciseIndex];
-    bool isCorrect;
+    final currentExercise = _wordExercise.exercises[_currentExerciseIndex];
+    
+    // Debug logging
+    print('🔍 DutchWordExerciseDetailView: Checking answer for word "${_wordExercise.targetWord}", exercise $_currentExerciseIndex');
+    print('🔍 DutchWordExerciseDetailView: Exercise prompt: "${currentExercise.prompt}"');
+    print('🔍 DutchWordExerciseDetailView: Correct answer: "${currentExercise.correctAnswer}"');
+    
+    bool isCorrect = false;
     
     if (currentExercise.type == ExerciseType.sentenceBuilding) {
       // For sentence building, check if the answer words form the correct sentence
