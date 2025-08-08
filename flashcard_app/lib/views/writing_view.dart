@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'dart:math';
 import '../models/flash_card.dart';
 import '../services/sound_manager.dart';
+import '../providers/flashcard_provider.dart';
+import '../providers/dutch_word_exercise_provider.dart';
+import '../models/dutch_word_exercise.dart';
 
 class WritingView extends StatefulWidget {
   final List<FlashCard> cards;
@@ -155,6 +159,9 @@ class _WritingViewState extends State<WritingView> {
           _totalAnswered++;
           _correctAnswersMap[_currentIndex] = true;
           _answeredQuestions[_currentIndex] = _displayWord;
+          
+          // Update learning progress - marked as correct
+          _updateCardLearningProgress(true);
         }
       } else {
         // Wrong guess
@@ -168,6 +175,9 @@ class _WritingViewState extends State<WritingView> {
           _displayWord = _correctAnswer; // Show the correct answer
           _correctAnswersMap[_currentIndex] = false;
           _answeredQuestions[_currentIndex] = _displayWord;
+          
+          // Update learning progress - marked as incorrect
+          _updateCardLearningProgress(false);
         }
       }
     });
@@ -204,6 +214,81 @@ class _WritingViewState extends State<WritingView> {
       }
     }
     return true; // All letters have been guessed
+  }
+
+  Future<void> _updateCardLearningProgress(bool wasCorrect) async {
+    try {
+      final currentCard = widget.cards[_currentIndex];
+      final provider = context.read<FlashcardProvider>();
+      
+      // Update the card's learning progress
+      final updatedCard = FlashCard(
+        id: currentCard.id,
+        word: currentCard.word,
+        definition: currentCard.definition,
+        example: currentCard.example,
+        deckIds: currentCard.deckIds,
+        successCount: currentCard.successCount,
+        dateCreated: currentCard.dateCreated,
+        lastModified: DateTime.now(),
+        cloudKitRecordName: currentCard.cloudKitRecordName,
+        timesShown: currentCard.timesShown + 1,
+        timesCorrect: currentCard.timesCorrect + (wasCorrect ? 1 : 0),
+        srsLevel: currentCard.srsLevel,
+        nextReviewDate: currentCard.nextReviewDate,
+        consecutiveCorrect: wasCorrect ? currentCard.consecutiveCorrect + 1 : 0,
+        consecutiveIncorrect: wasCorrect ? 0 : currentCard.consecutiveIncorrect + 1,
+        easeFactor: currentCard.easeFactor,
+        lastReviewDate: DateTime.now(),
+        totalReviews: currentCard.totalReviews + 1,
+        article: currentCard.article,
+        plural: currentCard.plural,
+        pastTense: currentCard.pastTense,
+        futureTense: currentCard.futureTense,
+        pastParticiple: currentCard.pastParticiple,
+      );
+      
+      await provider.updateCard(updatedCard);
+      print('🔍 WritingView: Updated learning progress for "${currentCard.word}" - wasCorrect: $wasCorrect, new percentage: ${updatedCard.learningPercentage}%');
+      
+      // Also sync to Dutch words if this card exists there
+      await _syncToDutchWords(currentCard, wasCorrect);
+      
+    } catch (e) {
+      print('🔍 WritingView: Error updating learning progress: $e');
+    }
+  }
+
+  Future<void> _syncToDutchWords(FlashCard card, bool wasCorrect) async {
+    try {
+      // Import the DutchWordExerciseProvider
+      final dutchProvider = context.read<DutchWordExerciseProvider>();
+      
+      // Find the corresponding Dutch word exercise
+      final wordExercise = dutchProvider.wordExercises.firstWhere(
+        (exercise) => exercise.targetWord.toLowerCase() == card.word.toLowerCase(),
+        orElse: () => DutchWordExercise(
+          id: '',
+          targetWord: '',
+          wordTranslation: '',
+          deckId: '',
+          deckName: '',
+          category: WordCategory.common,
+          difficulty: ExerciseDifficulty.beginner,
+          exercises: [],
+          createdAt: DateTime.now(),
+          isUserCreated: true,
+        ),
+      );
+      
+      if (wordExercise.id.isNotEmpty) {
+        // Update the Dutch word exercise learning progress
+        await dutchProvider.updateLearningProgress(wordExercise.id, wasCorrect);
+        print('🔍 WritingView: Synced progress to Dutch word exercise "${wordExercise.targetWord}"');
+      }
+    } catch (e) {
+      print('🔍 WritingView: Error syncing to Dutch words: $e');
+    }
   }
 
   void _goToPreviousQuestion() {

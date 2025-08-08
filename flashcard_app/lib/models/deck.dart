@@ -69,18 +69,44 @@ class Deck {
   
   // Calculate overall learning percentage
   double get learningPercentage {
-    if (cards.isEmpty) return 0.0;
-    
-    int totalShown = 0;
-    int totalCorrect = 0;
-    
-    for (final card in cards) {
-      totalShown += card.timesShown;
-      totalCorrect += card.timesCorrect;
+    print('🔍 Deck calculation: Deck "$name" has ${cards.length} cards');
+    if (cards.isEmpty) {
+      print('🔍 Deck calculation: No cards, returning 0%');
+      return 0.0;
     }
     
-    if (totalShown == 0) return 0.0;
-    return (totalCorrect / totalShown) * 100;
+    // Use the new learning percentage system for each card
+    double totalPercentage = 0.0;
+    
+    for (final card in cards) {
+      print('🔍 Deck calculation: Card "${card.word}" has ${card.learningPercentage}%');
+      totalPercentage += card.learningPercentage;
+    }
+    
+    final result = totalPercentage / cards.length;
+    print('🔍 Deck calculation: Total: $totalPercentage, Count: ${cards.length}, Average: $result%');
+    return result;
+  }
+  
+  // Calculate learning percentage with provided cards
+  static double calculateLearningPercentage(String deckName, List<FlashCard> cards) {
+    print('🔍 Static Deck calculation: Deck "$deckName" has ${cards.length} cards');
+    if (cards.isEmpty) {
+      print('🔍 Static Deck calculation: No cards, returning 0%');
+      return 0.0;
+    }
+    
+    // Use the new learning percentage system for each card
+    double totalPercentage = 0.0;
+    
+    for (final card in cards) {
+      print('🔍 Static Deck calculation: Card "${card.word}" has ${card.learningPercentage}%');
+      totalPercentage += card.learningPercentage;
+    }
+    
+    final result = totalPercentage / cards.length;
+    print('🔍 Static Deck calculation: Total: $totalPercentage, Count: ${cards.length}, Average: $result%');
+    return result;
   }
   
   // MARK: - Card Management

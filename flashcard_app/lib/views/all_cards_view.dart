@@ -280,13 +280,21 @@ class _AllCardsViewState extends State<AllCardsView> {
                     value: isSelected,
                     onChanged: (value) => _toggleCardSelection(card.id),
                   ),
-                CircleAvatar(
-                  backgroundColor: _getSRSColor(card.srsLevel),
-                  child: Text(
-                    card.srsLevel.toString(),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
+                Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(25),
+                  ),
+                  child: Center(
+                    child: Text(
+                      '${card.learningPercentage}%',
+                      style: TextStyle(
+                        color: Colors.blue[700],
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
                 ),
@@ -324,20 +332,7 @@ class _AllCardsViewState extends State<AllCardsView> {
                     ),
                   ),
                 ],
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    _buildProgressIndicator(card),
-                    const SizedBox(width: 8),
-                    Text(
-                      '${card.learningPercentage ?? 0}% learned',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                      ),
-                    ),
-                  ],
-                ),
+
               ],
             ),
             trailing: _isSelectionMode ? null : PopupMenuButton<String>(
@@ -384,7 +379,7 @@ class _AllCardsViewState extends State<AllCardsView> {
   Widget _buildProgressIndicator(FlashCard card) {
     return Expanded(
       child: LinearProgressIndicator(
-        value: (card.learningPercentage ?? 0) / 100.0,
+        value: card.learningPercentage / 100.0,
         backgroundColor: Colors.grey.withValues(alpha: 0.2),
         valueColor: AlwaysStoppedAnimation<Color>(_getSRSColor(card.srsLevel)),
       ),

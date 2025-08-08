@@ -26,62 +26,67 @@ class _DutchWordsDeckViewState extends State<DutchWordsDeckView> {
 
   @override
   Widget build(BuildContext context) {
-    final filteredExercises = _getFilteredExercises();
+    return Consumer<DutchWordExerciseProvider>(
+      builder: (context, provider, child) {
+        final exercises = provider.getExercisesByDeck(widget.deckId);
+        final filteredExercises = _getFilteredExercises(exercises);
 
-    // If no exercises in deck, show empty state
-    if (widget.exercises.isEmpty) {
-      return Scaffold(
-        appBar: AppBar(
-          title: Text(widget.deckName),
-          backgroundColor: Colors.blue,
-          foregroundColor: Colors.white,
-        ),
-        body: _buildEmptyState(),
-      );
-    }
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.deckName),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.play_arrow),
-            onPressed: () {
-              // TODO: Start practice mode for all words in deck
-              _showPracticeModeDialog();
-            },
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // Search bar
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: TextField(
-              decoration: const InputDecoration(
-                hintText: 'Search words in this deck...',
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
-              ),
-              onChanged: (value) {
-                setState(() {
-                  _searchQuery = value;
-                });
-              },
+        // If no exercises in deck, show empty state
+        if (exercises.isEmpty) {
+          return Scaffold(
+            appBar: AppBar(
+              title: Text(widget.deckName),
+              backgroundColor: Colors.blue,
+              foregroundColor: Colors.white,
             ),
+            body: _buildEmptyState(),
+          );
+        }
+
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(widget.deckName),
+            backgroundColor: Colors.blue,
+            foregroundColor: Colors.white,
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.play_arrow),
+                onPressed: () {
+                  // TODO: Start practice mode for all words in deck
+                  _showPracticeModeDialog(exercises);
+                },
+              ),
+            ],
           ),
-          
-          // Words list
-          Expanded(
-            child: filteredExercises.isEmpty
-                ? _buildEmptyState()
-                : _buildWordsList(filteredExercises),
+          body: Column(
+            children: [
+              // Search bar
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: TextField(
+                  decoration: const InputDecoration(
+                    hintText: 'Search words in this deck...',
+                    prefixIcon: Icon(Icons.search),
+                    border: OutlineInputBorder(),
+                  ),
+                  onChanged: (value) {
+                    setState(() {
+                      _searchQuery = value;
+                    });
+                  },
+                ),
+              ),
+              
+              // Words list
+              Expanded(
+                child: filteredExercises.isEmpty
+                    ? _buildEmptyState()
+                    : _buildWordsList(filteredExercises),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -94,13 +99,21 @@ class _DutchWordsDeckViewState extends State<DutchWordsDeckView> {
         return Card(
           margin: const EdgeInsets.only(bottom: 12),
           child: ListTile(
-            leading: CircleAvatar(
-              backgroundColor: Colors.blue,
-              child: Text(
-                exercise.targetWord[0].toUpperCase(),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
+            leading: Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: Colors.blue.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(25),
+              ),
+              child: Center(
+                child: Text(
+                  '${_calculateWordLearningPercentage(exercise)}%',
+                  style: TextStyle(
+                    color: Colors.blue[700],
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
                 ),
               ),
             ),
@@ -113,12 +126,35 @@ class _DutchWordsDeckViewState extends State<DutchWordsDeckView> {
               children: [
                 Text(exercise.wordTranslation),
                 const SizedBox(height: 4),
-                Text(
-                  '${exercise.exercises.length} exercises',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      '${exercise.exercises.length} exercises',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    _buildMasteryIndicator(exercise.learningProgress.masteryLevel),
+                    if (exercise.learningProgress.nextReviewDate.isBefore(DateTime.now()))
+                      Container(
+                        margin: const EdgeInsets.only(left: 4),
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.orange,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text(
+                          'Review',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ],
             ),
@@ -180,15 +216,50 @@ class _DutchWordsDeckViewState extends State<DutchWordsDeckView> {
     );
   }
 
-  List<DutchWordExercise> _getFilteredExercises() {
+  List<DutchWordExercise> _getFilteredExercises(List<DutchWordExercise> exercises) {
     if (_searchQuery.isEmpty) {
-      return widget.exercises;
+      return exercises;
     }
     
-    return widget.exercises.where((exercise) {
+    return exercises.where((exercise) {
       return exercise.targetWord.toLowerCase().contains(_searchQuery.toLowerCase()) ||
              exercise.wordTranslation.toLowerCase().contains(_searchQuery.toLowerCase());
     }).toList();
+  }
+
+  int _calculateWordLearningPercentage(DutchWordExercise exercise) {
+    // Use real learning progress data
+    final percentage = exercise.learningProgress.learningPercentage.round();
+    print('🔍 Deck view: Word "${exercise.targetWord}" has ${percentage}% (correct: ${exercise.learningProgress.correctAnswers}, total: ${exercise.learningProgress.totalAttempts})');
+    return percentage;
+  }
+
+  Widget _buildMasteryIndicator(int masteryLevel) {
+    final colors = [
+      Colors.grey,    // Level 0
+      Colors.red,     // Level 1
+      Colors.orange,  // Level 2
+      Colors.yellow,  // Level 3
+      Colors.lightGreen, // Level 4
+      Colors.green,   // Level 5
+    ];
+    
+    final color = colors[masteryLevel.clamp(0, 5)];
+    
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(5, (index) {
+        return Container(
+          width: 8,
+          height: 8,
+          margin: const EdgeInsets.only(right: 1),
+          decoration: BoxDecoration(
+            color: index < masteryLevel ? color : Colors.grey.shade300,
+            borderRadius: BorderRadius.circular(4),
+          ),
+        );
+      }),
+    );
   }
 
   void _showDeleteWordDialog(BuildContext context, DutchWordExercise exercise) {
@@ -231,12 +302,12 @@ class _DutchWordsDeckViewState extends State<DutchWordsDeckView> {
     );
   }
 
-  void _showPracticeModeDialog() {
+  void _showPracticeModeDialog(List<DutchWordExercise> exercises) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Practice Mode'),
-        content: Text('Practice all ${widget.exercises.length} words in "${widget.deckName}"?'),
+        content: Text('Practice all ${exercises.length} words in "${widget.deckName}"?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -251,7 +322,7 @@ class _DutchWordsDeckViewState extends State<DutchWordsDeckView> {
                   builder: (context) => DutchWordsPracticeView(
                     deckId: widget.deckId,
                     deckName: widget.deckName,
-                    exercises: widget.exercises,
+                    exercises: exercises,
                   ),
                 ),
               );

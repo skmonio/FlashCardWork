@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'dart:math';
 import '../models/dutch_word_exercise.dart';
 import '../providers/dutch_word_exercise_provider.dart';
+import '../providers/flashcard_provider.dart';
 
 class CreateWordExerciseView extends StatefulWidget {
   final DutchWordExercise? editingExercise;
@@ -23,6 +24,8 @@ class _CreateWordExerciseViewState extends State<CreateWordExerciseView> {
   final _deckNameController = TextEditingController();
   String? _selectedDeckId;
   bool _isCreatingNewDeck = false;
+  bool _isPickingExistingWord = false;
+  String? _selectedWordId;
   
   final List<WordExercise> _exercises = [];
   final List<TextEditingController> _promptControllers = [];
@@ -125,39 +128,128 @@ class _CreateWordExerciseViewState extends State<CreateWordExerciseView> {
             ),
             const SizedBox(height: 16),
             
-            // Target word
-            TextFormField(
-              controller: _targetWordController,
-              decoration: const InputDecoration(
-                labelText: 'Dutch Word',
-                hintText: 'e.g., terecht',
-                border: OutlineInputBorder(),
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter a Dutch word';
-                }
-                return null;
-              },
+            // Word selection options
+            Row(
+              children: [
+                Expanded(
+                  child: RadioListTile<bool>(
+                    title: const Text('Enter New Word'),
+                    value: false,
+                    groupValue: _isPickingExistingWord,
+                    onChanged: (value) {
+                      setState(() {
+                        _isPickingExistingWord = false;
+                        _selectedWordId = null;
+                        _targetWordController.clear();
+                        _translationController.clear();
+                      });
+                    },
+                  ),
+                ),
+                Expanded(
+                  child: RadioListTile<bool>(
+                    title: const Text('Pick Existing Word'),
+                    value: true,
+                    groupValue: _isPickingExistingWord,
+                    onChanged: (value) {
+                      setState(() {
+                        _isPickingExistingWord = true;
+                        _targetWordController.clear();
+                        _translationController.clear();
+                      });
+                    },
+                  ),
+                ),
+              ],
             ),
             
             const SizedBox(height: 16),
             
-            // Translation
-            TextFormField(
-              controller: _translationController,
-              decoration: const InputDecoration(
-                labelText: 'Translation',
-                hintText: 'e.g., justified',
-                border: OutlineInputBorder(),
+            if (!_isPickingExistingWord) ...[
+              // Target word
+              TextFormField(
+                controller: _targetWordController,
+                decoration: const InputDecoration(
+                  labelText: 'Dutch Word',
+                  hintText: 'e.g., terecht',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a Dutch word';
+                  }
+                  return null;
+                },
               ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter a translation';
-                }
-                return null;
-              },
-            ),
+              
+              const SizedBox(height: 16),
+              
+              // Translation
+              TextFormField(
+                controller: _translationController,
+                decoration: const InputDecoration(
+                  labelText: 'Translation',
+                  hintText: 'e.g., justified',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a translation';
+                  }
+                  return null;
+                },
+              ),
+            ] else ...[
+              // Existing word selection
+              Consumer<FlashcardProvider>(
+                builder: (context, flashcardProvider, child) {
+                  final cards = flashcardProvider.cards;
+                  
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Select Existing Word',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        height: 200,
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: ListView.builder(
+                          itemCount: cards.length,
+                          itemBuilder: (context, index) {
+                            final card = cards[index];
+                            final isSelected = _selectedWordId == card.id;
+                            
+                            return ListTile(
+                              title: Text(card.word),
+                              subtitle: Text(card.definition),
+                              trailing: isSelected 
+                                ? const Icon(Icons.check, color: Colors.green)
+                                : null,
+                              onTap: () {
+                                setState(() {
+                                  _selectedWordId = card.id;
+                                  _targetWordController.text = card.word;
+                                  _translationController.text = card.definition;
+                                });
+                              },
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ],
             
             const SizedBox(height: 16),
             
@@ -658,6 +750,27 @@ class _CreateWordExerciseViewState extends State<CreateWordExerciseView> {
 
   void _saveExercise() {
     if (!_formKey.currentState!.validate()) {
+      return;
+    }
+    
+    // Validate word selection
+    if (_isPickingExistingWord && _selectedWordId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select an existing word'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+    
+    if (!_isPickingExistingWord && (_targetWordController.text.isEmpty || _translationController.text.isEmpty)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter both Dutch word and translation'),
+          backgroundColor: Colors.red,
+        ),
+      );
       return;
     }
 

@@ -228,4 +228,72 @@ class DutchWordExerciseProvider extends ChangeNotifier {
     _error = null;
     notifyListeners();
   }
+
+  // Update learning progress for a word exercise
+  Future<void> updateLearningProgress(String exerciseId, bool wasCorrect) async {
+    print('🔍 Provider: updateLearningProgress called for ID: $exerciseId, wasCorrect: $wasCorrect');
+    final index = _wordExercises.indexWhere((e) => e.id == exerciseId);
+    print('🔍 Provider: Found exercise at index: $index');
+    if (index != -1) {
+      final oldProgress = _wordExercises[index].learningProgress;
+      print('🔍 Provider: Old progress - correct: ${oldProgress.correctAnswers}, total: ${oldProgress.totalAttempts}, percentage: ${oldProgress.learningPercentage}');
+      
+      final updatedExercise = _wordExercises[index].updateProgress(wasCorrect: wasCorrect);
+      _wordExercises[index] = updatedExercise;
+      
+      final newProgress = updatedExercise.learningProgress;
+      print('🔍 Provider: New progress - correct: ${newProgress.correctAnswers}, total: ${newProgress.totalAttempts}, percentage: ${newProgress.learningPercentage}');
+      
+      await _saveToStorage();
+      notifyListeners();
+      print('🔍 Provider: Progress updated and saved successfully');
+    } else {
+      print('🔍 Provider: ERROR - Exercise not found with ID: $exerciseId');
+    }
+  }
+
+  // Get words that need review (spaced repetition)
+  List<DutchWordExercise> getWordsForReview() {
+    final now = DateTime.now();
+    return _wordExercises.where((exercise) {
+      return exercise.learningProgress.nextReviewDate.isBefore(now);
+    }).toList();
+  }
+
+  // Get learning statistics for a deck
+  Map<String, dynamic> getDeckLearningStats(String deckId) {
+    final deckExercises = getExercisesByDeck(deckId);
+    if (deckExercises.isEmpty) {
+      return {
+        'totalWords': 0,
+        'averageProgress': 0.0,
+        'masteredWords': 0,
+        'needsReview': 0,
+      };
+    }
+
+    int masteredWords = 0;
+    int needsReview = 0;
+    double totalProgress = 0.0;
+    final now = DateTime.now();
+
+    for (final exercise in deckExercises) {
+      totalProgress += exercise.learningProgress.learningPercentage;
+      
+      if (exercise.learningProgress.masteryLevel >= 4) {
+        masteredWords++;
+      }
+      
+      if (exercise.learningProgress.nextReviewDate.isBefore(now)) {
+        needsReview++;
+      }
+    }
+
+    return {
+      'totalWords': deckExercises.length,
+      'averageProgress': totalProgress / deckExercises.length,
+      'masteredWords': masteredWords,
+      'needsReview': needsReview,
+    };
+  }
 } 

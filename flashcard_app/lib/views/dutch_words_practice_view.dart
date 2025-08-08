@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/dutch_word_exercise.dart';
 import '../providers/dutch_word_exercise_provider.dart';
+import '../providers/flashcard_provider.dart';
+import '../models/flash_card.dart';
 
 class DutchWordsPracticeView extends StatefulWidget {
   final String deckId;
@@ -21,6 +24,7 @@ class DutchWordsPracticeView extends StatefulWidget {
 class _DutchWordsPracticeViewState extends State<DutchWordsPracticeView> {
   late List<WordExercise> _allExercises;
   late List<WordExercise> _shuffledExercises;
+  late List<String> _exerciseToWordExerciseId; // Maps exercise index to DutchWordExercise ID
   int _currentExerciseIndex = 0;
   String? _selectedAnswer;
   bool _showAnswer = false;
@@ -48,16 +52,22 @@ class _DutchWordsPracticeViewState extends State<DutchWordsPracticeView> {
   }
 
   void _initializePractice() {
-    // Collect all exercises from all words in the deck
-    _allExercises = [];
+    // Collect all exercises from all words in the deck with their word exercise IDs
+    final List<MapEntry<WordExercise, String>> exerciseEntries = [];
+    
     for (final wordExercise in widget.exercises) {
       for (final exercise in wordExercise.exercises) {
-        _allExercises.add(exercise);
+        exerciseEntries.add(MapEntry(exercise, wordExercise.id));
       }
     }
     
-    // Shuffle the exercises for random practice
-    _shuffledExercises = List<WordExercise>.from(_allExercises)..shuffle();
+    // Shuffle the entries
+    exerciseEntries.shuffle();
+    
+    // Extract the shuffled exercises and their corresponding word exercise IDs
+    _allExercises = exerciseEntries.map((entry) => entry.key).toList();
+    _shuffledExercises = List<WordExercise>.from(_allExercises);
+    _exerciseToWordExerciseId = exerciseEntries.map((entry) => entry.value).toList();
     
     // Initialize first exercise
     if (_shuffledExercises.isNotEmpty) {
@@ -255,9 +265,17 @@ class _DutchWordsPracticeViewState extends State<DutchWordsPracticeView> {
       _selectedAnswer = _selectedAnswers[_currentExerciseIndex];
     } else if (_answerWords.isEmpty && _availableWords.isEmpty) {
       // Use stored shuffled options for sentence building
-      final correctWords = exercise.correctAnswer.split(' ');
+      List<String> wordsToShuffle;
+      if (exercise.type == ExerciseType.sentenceBuilding) {
+        // For sentence building, use the options (individual words)
+        wordsToShuffle = List<String>.from(exercise.options);
+      } else {
+        // For other exercise types, split the correct answer
+        wordsToShuffle = exercise.correctAnswer.split(' ');
+      }
+      
       if (!_shuffledOptions.containsKey(_currentExerciseIndex)) {
-        _shuffledOptions[_currentExerciseIndex] = List<String>.from(correctWords)..shuffle();
+        _shuffledOptions[_currentExerciseIndex] = List<String>.from(wordsToShuffle)..shuffle();
       }
       _availableWords = List<String>.from(_shuffledOptions[_currentExerciseIndex]!);
       _answerWords = [];
@@ -554,7 +572,7 @@ class _DutchWordsPracticeViewState extends State<DutchWordsPracticeView> {
     );
   }
 
-  void _checkAnswer() {
+  Future<void> _checkAnswer() async {
     final currentExercise = _shuffledExercises[_currentExerciseIndex];
     bool isCorrect;
     
@@ -566,6 +584,21 @@ class _DutchWordsPracticeViewState extends State<DutchWordsPracticeView> {
       // For other exercise types, check the selected answer
       isCorrect = _selectedAnswer == currentExercise.correctAnswer;
     }
+    
+    // Update learning progress for the word exercise
+    final wordExerciseId = _exerciseToWordExerciseId[_currentExerciseIndex];
+    final dutchProvider = context.read<DutchWordExerciseProvider>();
+    final flashcardProvider = context.read<FlashcardProvider>();
+    print('🔍 Updating learning progress for word exercise ID: $wordExerciseId, wasCorrect: $isCorrect');
+    await dutchProvider.updateLearningProgress(wordExerciseId, isCorrect);
+    print('🔍 Learning progress updated successfully');
+    
+    // Sync progress to main FlashCard
+    await _syncProgressToFlashCard(wordExerciseId, isCorrect);
+    
+    // Force refresh of providers to ensure UI updates
+    dutchProvider.notifyListeners();
+    flashcardProvider.notifyListeners();
     
     setState(() {
       _showAnswer = true;
@@ -592,6 +625,104 @@ class _DutchWordsPracticeViewState extends State<DutchWordsPracticeView> {
       });
     } else {
       _showCompletionDialog();
+    }
+  }
+
+  Future<void> _syncProgressToFlashCard(String wordExerciseId, bool wasCorrect) async {
+    try {
+      final dutchProvider = context.read<DutchWordExerciseProvider>();
+      final flashcardProvider = context.read<FlashcardProvider>();
+      
+      // Find the word exercise
+      final wordExercise = dutchProvider.wordExercises.firstWhere(
+        (exercise) => exercise.id == wordExerciseId,
+        orElse: () => DutchWordExercise(
+          id: '',
+          targetWord: '',
+          wordTranslation: '',
+          deckId: '',
+          deckName: '',
+          category: WordCategory.common,
+          difficulty: ExerciseDifficulty.beginner,
+          exercises: [],
+          createdAt: DateTime.now(),
+          isUserCreated: true,
+        ),
+      );
+      
+      if (wordExercise.id.isEmpty) {
+        print('🔍 Word exercise not found for ID: $wordExerciseId');
+        return;
+      }
+      
+      // Find the corresponding FlashCard
+      final flashCard = flashcardProvider.cards.firstWhere(
+        (card) => card.word.toLowerCase() == wordExercise.targetWord.toLowerCase(),
+        orElse: () => FlashCard(
+          id: '',
+          word: '',
+          definition: '',
+          example: '',
+        ),
+      );
+      
+      if (flashCard.id.isEmpty) {
+        print('🔍 FlashCard not found for word: ${wordExercise.targetWord}');
+        return;
+      }
+      
+      // Update the FlashCard's learning progress
+      final updatedCard = FlashCard(
+        id: flashCard.id,
+        word: flashCard.word,
+        definition: flashCard.definition,
+        example: flashCard.example,
+        deckIds: flashCard.deckIds,
+        successCount: flashCard.successCount,
+        dateCreated: flashCard.dateCreated,
+        lastModified: DateTime.now(),
+        cloudKitRecordName: flashCard.cloudKitRecordName,
+        timesShown: flashCard.timesShown + 1,
+        timesCorrect: flashCard.timesCorrect + (wasCorrect ? 1 : 0),
+        srsLevel: flashCard.srsLevel,
+        nextReviewDate: flashCard.nextReviewDate,
+        consecutiveCorrect: wasCorrect ? flashCard.consecutiveCorrect + 1 : 0,
+        consecutiveIncorrect: wasCorrect ? 0 : flashCard.consecutiveIncorrect + 1,
+        easeFactor: flashCard.easeFactor,
+        lastReviewDate: DateTime.now(),
+        totalReviews: flashCard.totalReviews + 1,
+        article: flashCard.article,
+        plural: flashCard.plural,
+        pastTense: flashCard.pastTense,
+        futureTense: flashCard.futureTense,
+        pastParticiple: flashCard.pastParticiple,
+      );
+      
+      await flashcardProvider.updateCard(updatedCard);
+      print('🔍 Progress synced to FlashCard: ${flashCard.word} - timesShown: ${updatedCard.timesShown}, timesCorrect: ${updatedCard.timesCorrect}');
+      print('🔍 FlashCard learning percentage: ${updatedCard.learningPercentage}%');
+      
+      // Also check the DutchWordExercise percentage for comparison
+      final dutchExercise = dutchProvider.wordExercises.firstWhere(
+        (exercise) => exercise.id == wordExerciseId,
+        orElse: () => DutchWordExercise(
+          id: '',
+          targetWord: '',
+          wordTranslation: '',
+          deckId: '',
+          deckName: '',
+          category: WordCategory.common,
+          difficulty: ExerciseDifficulty.beginner,
+          exercises: [],
+          createdAt: DateTime.now(),
+          isUserCreated: true,
+        ),
+      );
+      if (dutchExercise.id.isNotEmpty) {
+        print('🔍 DutchWordExercise learning percentage: ${dutchExercise.learningProgress.learningPercentage}%');
+      }
+    } catch (e) {
+      print('🔍 Error syncing progress to FlashCard: $e');
     }
   }
 

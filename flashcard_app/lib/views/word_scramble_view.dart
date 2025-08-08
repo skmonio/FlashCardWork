@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'dart:math';
 import '../models/flash_card.dart';
 import '../components/unified_header.dart';
 import '../services/sound_manager.dart';
+import '../providers/flashcard_provider.dart';
+import '../providers/dutch_word_exercise_provider.dart';
+import '../models/dutch_word_exercise.dart';
 
 class WordScrambleView extends StatefulWidget {
   final List<FlashCard> cards;
@@ -122,6 +126,10 @@ class _WordScrambleViewState extends State<WordScrambleView> {
     final userWord = _userAnswer.join('');
     final correctWordWithoutSpaces = _correctWord.replaceAll(' ', '').toLowerCase();
     final isCorrect = userWord.toLowerCase() == correctWordWithoutSpaces;
+    final currentCard = widget.cards[_currentIndex];
+    
+    // Update learning progress in the provider
+    _updateCardLearningProgress(currentCard, isCorrect);
     
     setState(() {
       _answered = true;
@@ -139,6 +147,80 @@ class _WordScrambleViewState extends State<WordScrambleView> {
       // Store the answer for navigation
       _answeredQuestions[_currentIndex] = List<String>.from(_userAnswer);
     });
+  }
+
+  Future<void> _updateCardLearningProgress(FlashCard card, bool wasCorrect) async {
+    try {
+      final provider = context.read<FlashcardProvider>();
+      
+      // Update the card's learning progress
+      final updatedCard = FlashCard(
+        id: card.id,
+        word: card.word,
+        definition: card.definition,
+        example: card.example,
+        deckIds: card.deckIds,
+        successCount: card.successCount,
+        dateCreated: card.dateCreated,
+        lastModified: DateTime.now(),
+        cloudKitRecordName: card.cloudKitRecordName,
+        timesShown: card.timesShown + 1,
+        timesCorrect: card.timesCorrect + (wasCorrect ? 1 : 0),
+        srsLevel: card.srsLevel,
+        nextReviewDate: card.nextReviewDate,
+        consecutiveCorrect: wasCorrect ? card.consecutiveCorrect + 1 : 0,
+        consecutiveIncorrect: wasCorrect ? 0 : card.consecutiveIncorrect + 1,
+        easeFactor: card.easeFactor,
+        lastReviewDate: DateTime.now(),
+        totalReviews: card.totalReviews + 1,
+        article: card.article,
+        plural: card.plural,
+        pastTense: card.pastTense,
+        futureTense: card.futureTense,
+        pastParticiple: card.pastParticiple,
+      );
+      
+      await provider.updateCard(updatedCard);
+      print('🔍 WordScrambleView: Updated learning progress for "${card.word}" - wasCorrect: $wasCorrect, new percentage: ${updatedCard.learningPercentage}%');
+      
+      // Also sync to Dutch words if this card exists there
+      await _syncToDutchWords(card, wasCorrect);
+      
+    } catch (e) {
+      print('🔍 WordScrambleView: Error updating learning progress: $e');
+    }
+  }
+
+  Future<void> _syncToDutchWords(FlashCard card, bool wasCorrect) async {
+    try {
+      // Import the DutchWordExerciseProvider
+      final dutchProvider = context.read<DutchWordExerciseProvider>();
+      
+      // Find the corresponding Dutch word exercise
+      final wordExercise = dutchProvider.wordExercises.firstWhere(
+        (exercise) => exercise.targetWord.toLowerCase() == card.word.toLowerCase(),
+        orElse: () => DutchWordExercise(
+          id: '',
+          targetWord: '',
+          wordTranslation: '',
+          deckId: '',
+          deckName: '',
+          category: WordCategory.common,
+          difficulty: ExerciseDifficulty.beginner,
+          exercises: [],
+          createdAt: DateTime.now(),
+          isUserCreated: true,
+        ),
+      );
+      
+      if (wordExercise.id.isNotEmpty) {
+        // Update the Dutch word exercise learning progress
+        await dutchProvider.updateLearningProgress(wordExercise.id, wasCorrect);
+        print('🔍 WordScrambleView: Synced progress to Dutch word exercise "${wordExercise.targetWord}"');
+      }
+    } catch (e) {
+      print('🔍 WordScrambleView: Error syncing to Dutch words: $e');
+    }
   }
 
   void _goToPreviousQuestion() {

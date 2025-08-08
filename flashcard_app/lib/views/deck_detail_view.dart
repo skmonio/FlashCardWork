@@ -224,13 +224,21 @@ class _DeckDetailViewState extends State<DeckDetailView> {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: _getSRSColor(card.srsLevel),
-          child: Text(
-            card.srsLevel.toString(),
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
+        leading: Container(
+          width: 50,
+          height: 50,
+          decoration: BoxDecoration(
+            color: Colors.blue.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(25),
+          ),
+          child: Center(
+            child: Text(
+              '${card.learningPercentage}%',
+              style: TextStyle(
+                color: Colors.blue[700],
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
             ),
           ),
         ),
@@ -266,20 +274,7 @@ class _DeckDetailViewState extends State<DeckDetailView> {
                 ),
               ),
             ],
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                _buildProgressIndicator(card),
-                const SizedBox(width: 8),
-                                 Text(
-                   '${((card.learningPercentage ?? 0) * 100).toInt()}% learned',
-                   style: TextStyle(
-                     fontSize: 12,
-                     color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                   ),
-                 ),
-              ],
-            ),
+
           ],
         ),
         trailing: PopupMenuButton<String>(

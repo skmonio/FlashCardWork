@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
 import '../providers/flashcard_provider.dart';
+import '../providers/dutch_word_exercise_provider.dart';
 import '../services/sample_data_service.dart';
 import 'export_import_view.dart';
+import 'unified_import_export_view.dart';
 
 class SettingsView extends StatefulWidget {
   const SettingsView({super.key});
@@ -225,6 +227,20 @@ class _SettingsViewState extends State<SettingsView> {
               ),
               const Divider(height: 1),
               ListTile(
+                leading: const Icon(Icons.sync),
+                title: const Text('Unified Import/Export'),
+                subtitle: const Text('Import/export flashcards with exercises'),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const UnifiedImportExportView(),
+                    ),
+                  );
+                },
+              ),
+              const Divider(height: 1),
+              ListTile(
                 leading: const Icon(Icons.delete_forever, color: Colors.red),
                 title: const Text('Clear All Data', style: TextStyle(color: Colors.red)),
                 subtitle: const Text('Delete all flashcards and settings'),
@@ -312,12 +328,9 @@ class _SettingsViewState extends State<SettingsView> {
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () {
-              // TODO: Implement clear data
+            onPressed: () async {
               Navigator.of(context).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Data cleared successfully')),
-              );
+              await _clearAllData(context);
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
             child: const Text('Clear All'),
@@ -356,5 +369,56 @@ class _SettingsViewState extends State<SettingsView> {
         ],
       ),
     );
+  }
+
+  Future<void> _clearAllData(BuildContext context) async {
+    try {
+      final flashcardProvider = context.read<FlashcardProvider>();
+      
+      // Clear all cards
+      final cards = List.from(flashcardProvider.cards);
+      for (final card in cards) {
+        await flashcardProvider.deleteCard(card.id);
+      }
+      
+      // Clear all decks (except default ones)
+      final decks = List.from(flashcardProvider.decks);
+      for (final deck in decks) {
+        if (deck.name != 'Uncategorized' && deck.name != 'Default') {
+          await flashcardProvider.deleteDeck(deck.id);
+        }
+      }
+      
+      // Clear Dutch word exercises if provider is available
+      try {
+        final dutchProvider = context.read<DutchWordExerciseProvider>();
+        // Clear all exercises
+        final exercises = List.from(dutchProvider.wordExercises);
+        for (final exercise in exercises) {
+          await dutchProvider.deleteWordExercise(exercise.id);
+        }
+      } catch (e) {
+        // DutchWordExerciseProvider might not be available, that's okay
+        print('DutchWordExerciseProvider not available: $e');
+      }
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('All data cleared successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error clearing data: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 } 

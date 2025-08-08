@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'dart:math';
 import '../models/flash_card.dart';
+import '../providers/flashcard_provider.dart';
+import '../providers/dutch_word_exercise_provider.dart';
+import '../models/dutch_word_exercise.dart';
 
 enum SwipeDirection {
   none,
@@ -748,12 +752,16 @@ class _AdvancedStudyViewState extends State<AdvancedStudyView>
         _unknownCards.add(currentCard.id);
         _unknownHistory[_currentIndex] = true;
         _combo = 0;
+        // Update learning progress - marked as incorrect
+        _updateCardLearningProgress(currentCard, false);
         break;
       case SwipeDirection.right: // Known
         _knownCards.add(currentCard.id);
         _knownHistory[_currentIndex] = true;
         _combo++;
         if (_combo > _maxCombo) _maxCombo = _combo;
+        // Update learning progress - marked as correct
+        _updateCardLearningProgress(currentCard, true);
         break;
       case SwipeDirection.up: // Review
         // Don't add to any set, just skip
@@ -762,12 +770,87 @@ class _AdvancedStudyViewState extends State<AdvancedStudyView>
         _skippedCards.add(currentCard.id);
         _skippedHistory[_currentIndex] = true;
         _combo = 0;
+        // Don't update learning progress for skipped cards
         break;
       default:
         return;
     }
     
     _nextCard();
+  }
+
+  Future<void> _updateCardLearningProgress(FlashCard card, bool wasCorrect) async {
+    try {
+      final provider = context.read<FlashcardProvider>();
+      
+      // Update the card's learning progress
+      final updatedCard = FlashCard(
+        id: card.id,
+        word: card.word,
+        definition: card.definition,
+        example: card.example,
+        deckIds: card.deckIds,
+        successCount: card.successCount,
+        dateCreated: card.dateCreated,
+        lastModified: DateTime.now(),
+        cloudKitRecordName: card.cloudKitRecordName,
+        timesShown: card.timesShown + 1,
+        timesCorrect: card.timesCorrect + (wasCorrect ? 1 : 0),
+        srsLevel: card.srsLevel,
+        nextReviewDate: card.nextReviewDate,
+        consecutiveCorrect: wasCorrect ? card.consecutiveCorrect + 1 : 0,
+        consecutiveIncorrect: wasCorrect ? 0 : card.consecutiveIncorrect + 1,
+        easeFactor: card.easeFactor,
+        lastReviewDate: DateTime.now(),
+        totalReviews: card.totalReviews + 1,
+        article: card.article,
+        plural: card.plural,
+        pastTense: card.pastTense,
+        futureTense: card.futureTense,
+        pastParticiple: card.pastParticiple,
+      );
+      
+      await provider.updateCard(updatedCard);
+      print('🔍 AdvancedStudyView: Updated learning progress for "${card.word}" - wasCorrect: $wasCorrect, new percentage: ${updatedCard.learningPercentage}%');
+      
+      // Also sync to Dutch words if this card exists there
+      await _syncToDutchWords(card, wasCorrect);
+      
+    } catch (e) {
+      print('🔍 AdvancedStudyView: Error updating learning progress: $e');
+    }
+  }
+
+  Future<void> _syncToDutchWords(FlashCard card, bool wasCorrect) async {
+    try {
+      // Import the DutchWordExerciseProvider
+      final dutchProvider = context.read<DutchWordExerciseProvider>();
+      
+      // Find the corresponding Dutch word exercise
+      final wordExercise = dutchProvider.wordExercises.firstWhere(
+        (exercise) => exercise.targetWord.toLowerCase() == card.word.toLowerCase(),
+        orElse: () => DutchWordExercise(
+          id: '',
+          targetWord: '',
+          wordTranslation: '',
+          deckId: '',
+          deckName: '',
+          category: WordCategory.common,
+          difficulty: ExerciseDifficulty.beginner,
+          exercises: [],
+          createdAt: DateTime.now(),
+          isUserCreated: true,
+        ),
+      );
+      
+      if (wordExercise.id.isNotEmpty) {
+        // Update the Dutch word exercise learning progress
+        await dutchProvider.updateLearningProgress(wordExercise.id, wasCorrect);
+        print('🔍 AdvancedStudyView: Synced progress to Dutch word exercise "${wordExercise.targetWord}"');
+      }
+    } catch (e) {
+      print('🔍 AdvancedStudyView: Error syncing to Dutch words: $e');
+    }
   }
 
   void _nextCard() {

@@ -65,11 +65,32 @@ class FlashCard {
     lastModified = lastModified ?? DateTime.now();
   
   // Computed property for learning percentage
-  int? get learningPercentage {
-    if (timesShown == 0) return null;
-    // Ensure timesCorrect doesn't exceed timesShown to prevent percentages over 100%
-    final correctCount = timesCorrect.clamp(0, timesShown);
-    return ((correctCount / timesShown) * 100).round();
+  int get learningPercentage {
+    // Start with accuracy-based percentage
+    if (timesShown == 0) return 0; // New cards start at 0%
+    
+    double basePercentage = (timesCorrect / timesShown) * 100;
+    
+    // Apply time decay if not recently reviewed
+    double decayFactor = _calculateDecayFactor();
+    
+    return (basePercentage * decayFactor).clamp(0, 100).round();
+  }
+  
+  // Calculate decay factor based on time since last review
+  double _calculateDecayFactor() {
+    if (lastReviewDate == null) return 1.0;
+    
+    final daysSinceReview = DateTime.now().difference(lastReviewDate!).inDays;
+    
+    // No decay for first 7 days
+    if (daysSinceReview <= 7) return 1.0;
+    
+    // Gradual decay after 7 days: 5% per week
+    final weeksSinceReview = (daysSinceReview - 7) / 7.0;
+    final decayFactor = 1.0 - (weeksSinceReview * 0.05);
+    
+    return decayFactor.clamp(0.3, 1.0); // Minimum 30% retention
   }
   
   // Check if card is fully learned (5+ correct answers)

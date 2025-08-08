@@ -1,7 +1,9 @@
 import 'package:flutter/foundation.dart';
 import '../models/flash_card.dart';
 import '../models/deck.dart';
+import '../models/dutch_word_exercise.dart';
 import '../services/flashcard_service.dart';
+import '../services/unified_import_service.dart';
 
 class FlashcardProvider extends ChangeNotifier {
   final FlashcardService _service = FlashcardService();
@@ -642,6 +644,120 @@ class FlashcardProvider extends ChangeNotifier {
         return 'Unknown Deck';
       }
     }).toList();
+  }
+  
+  // MARK: - Unified Import/Export
+  
+  Future<Map<String, dynamic>> importUnifiedCSV(String csvContent) async {
+    print('Starting unified CSV import...');
+    try {
+      final result = await UnifiedImportService.parseUnifiedCSV(csvContent);
+      
+      if (!result['success']) {
+        return {
+          'success': 0,
+          'errors': result['errors'],
+        };
+      }
+      
+      final cards = result['cards'] as List<FlashCard>;
+      final exercises = result['exercises'] as List<DutchWordExercise>;
+      final errors = result['errors'] as List<String>;
+      
+      var successCount = 0;
+      var skippedCount = 0;
+      
+      // Import cards with duplicate prevention
+      for (final card in cards) {
+        // Check if card already exists (case-insensitive word match)
+        final existingCard = _cards.firstWhere(
+          (existing) => existing.word.toLowerCase() == card.word.toLowerCase(),
+          orElse: () => FlashCard(
+            id: '',
+            word: '',
+            definition: '',
+            example: '',
+          ),
+        );
+        
+        if (existingCard.id.isNotEmpty) {
+          // Card already exists, skip it
+          skippedCount++;
+          print('Skipping duplicate card: ${card.word}');
+          continue;
+        }
+        
+        final newCard = await createCard(
+          word: card.word,
+          definition: card.definition,
+          example: card.example,
+          deckIds: card.deckIds,
+          article: card.article,
+          plural: card.plural,
+          pastTense: card.pastTense,
+          futureTense: card.futureTense,
+          pastParticiple: card.pastParticiple,
+        );
+        
+        if (newCard != null) {
+          successCount++;
+        }
+      }
+      
+      // Import exercises to DutchWordExerciseProvider
+      var exerciseSuccessCount = 0;
+      if (exercises.isNotEmpty) {
+        try {
+          // Get the DutchWordExerciseProvider from the same context
+          // We'll need to pass it as a parameter or access it differently
+          print('Found ${exercises.length} exercises to import');
+          // TODO: Actually import exercises to DutchWordExerciseProvider
+          // This requires access to the provider context
+        } catch (e) {
+          print('Error importing exercises: $e');
+          errors.add('Failed to import exercises: $e');
+        }
+      }
+      
+      // Refresh data
+      refresh();
+      
+      return {
+        'success': successCount,
+        'skipped': skippedCount,
+        'exercises': exercises.length,
+        'errors': errors,
+      };
+    } catch (e) {
+      return {
+        'success': 0,
+        'errors': [e.toString()],
+      };
+    }
+  }
+  
+  String exportUnifiedCSV(Set<String> deckIds) {
+    // Get cards from selected decks
+    final allCards = <FlashCard>{};
+    
+    for (final deckId in deckIds) {
+      final deck = _decks.firstWhere((d) => d.id == deckId);
+      final deckCards = getCardsForDeck(deck.id);
+      allCards.addAll(deckCards);
+      
+      // Add cards from sub-decks
+      final subDecks = getSubDecks(deck.id);
+      for (final subDeck in subDecks) {
+        final subDeckCards = getCardsForDeck(subDeck.id);
+        allCards.addAll(subDeckCards);
+      }
+    }
+    
+    // For now, we'll export without exercises since we need to integrate with DutchWordExerciseProvider
+    final cards = allCards.toList()
+      ..sort((a, b) => a.word.toLowerCase().compareTo(b.word.toLowerCase()));
+    
+    return UnifiedImportService.exportUnifiedCSV(cards, []);
   }
   
   // MARK: - Utility Methods

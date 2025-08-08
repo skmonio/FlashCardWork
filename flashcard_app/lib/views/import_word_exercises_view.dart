@@ -431,7 +431,7 @@ class _ImportWordExercisesViewState extends State<ImportWordExercisesView> {
         'id': '${DateTime.now().millisecondsSinceEpoch}_${wordMap.length}_${wordMap[wordKey]!['exercises'].length}',
         'type': _convertExerciseType(exerciseType),
         'prompt': question,
-        'options': _parseOptions(options),
+        'options': _parseOptions(options, exerciseType),
         'correctAnswer': correctAnswer,
         'explanation': explanation,
         'difficulty': 'beginner',
@@ -489,15 +489,29 @@ class _ImportWordExercisesViewState extends State<ImportWordExercisesView> {
     }
   }
 
-  List<String> _parseOptions(String options) {
+  List<String> _parseOptions(String options, String exerciseType) {
     if (options.isEmpty) return [];
-    // Handle both semicolon and pipe separators
-    if (options.contains(';')) {
-      return options.split(';').map((opt) => opt.trim()).toList();
-    } else if (options.contains('|')) {
-      return options.split('|').map((opt) => opt.trim()).toList();
+    
+    // For sentence building, the options are individual words that should be shuffled
+    // For other exercise types, they are different answer choices
+    if (exerciseType.toLowerCase() == 'sentence building') {
+      // Handle both semicolon and pipe separators for sentence building words
+      if (options.contains(';')) {
+        return options.split(';').map((opt) => opt.trim()).toList();
+      } else if (options.contains('|')) {
+        return options.split('|').map((opt) => opt.trim()).toList();
+      } else {
+        return [options.trim()];
+      }
     } else {
-      return [options.trim()];
+      // For multiple choice and fill in blank, handle as before
+      if (options.contains(';')) {
+        return options.split(';').map((opt) => opt.trim()).toList();
+      } else if (options.contains('|')) {
+        return options.split('|').map((opt) => opt.trim()).toList();
+      } else {
+        return [options.trim()];
+      }
     }
   }
 
