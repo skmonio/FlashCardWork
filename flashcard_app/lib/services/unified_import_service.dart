@@ -85,11 +85,16 @@ class UnifiedImportService {
             exerciseType.toLowerCase() != 'basic' &&
             question.isNotEmpty && 
             correctAnswer.isNotEmpty) {
+          
+          // Parse options and find the correct answer
+          final parsedOptions = _parseOptions(options, exerciseType);
+          final correctAnswerFromOptions = _extractCorrectAnswerFromOptions(options);
+          
           wordMap[word]!['exercises'].add({
             'type': _convertExerciseType(exerciseType),
             'prompt': question,
-            'options': _parseOptions(options, exerciseType),
-            'correctAnswer': correctAnswer,
+            'options': parsedOptions,
+            'correctAnswer': correctAnswerFromOptions.isNotEmpty ? correctAnswerFromOptions : correctAnswer,
             'explanation': explanation,
           });
         }
@@ -232,6 +237,51 @@ class UnifiedImportService {
     return result;
   }
 
+  static List<String> _parseOptions(String options, String exerciseType) {
+    if (options.isEmpty) return [];
+    
+    final rawOptions = options.split(';').map((o) => o.trim()).toList();
+    
+    if (exerciseType.toLowerCase() == 'sentence building') {
+      // For sentence building, extract just the words without numbers
+      return rawOptions.map((option) {
+        // Remove the (number) part, e.g., "ik (1)" becomes "ik"
+        final match = RegExp(r'^(.+?)\s*\(\d+\)$').firstMatch(option);
+        return match?.group(1)?.trim() ?? option;
+      }).toList();
+    } else {
+      // For multiple choice and fill in blank, extract just the text without numbers
+      return rawOptions.map((option) {
+        // Remove the (number) part, e.g., "Lay on (1)" becomes "Lay on"
+        final match = RegExp(r'^(.+?)\s*\(\d+\)$').firstMatch(option);
+        return match?.group(1)?.trim() ?? option;
+      }).toList();
+    }
+  }
+
+  static String _extractCorrectAnswerFromOptions(String options) {
+    if (options.isEmpty) return '';
+    
+    final rawOptions = options.split(';').map((o) => o.trim()).toList();
+    
+    for (final option in rawOptions) {
+      // Look for option with (1) which indicates the correct answer
+      final match = RegExp(r'^(.+?)\s*\(1\)$').firstMatch(option);
+      if (match != null) {
+        return match.group(1)?.trim() ?? '';
+      }
+    }
+    
+    // Fallback: if no (1) found, return the first option without number
+    if (rawOptions.isNotEmpty) {
+      final firstOption = rawOptions.first;
+      final match = RegExp(r'^(.+?)\s*\(\d+\)$').firstMatch(firstOption);
+      return match?.group(1)?.trim() ?? firstOption;
+    }
+    
+    return '';
+  }
+
   static String _convertExerciseType(String csvType) {
     switch (csvType.toLowerCase()) {
       case 'sentence building':
@@ -270,16 +320,6 @@ class UnifiedImportService {
         return 'Fill in Blank';
       default:
         return 'Multiple Choice';
-    }
-  }
-
-  static List<String> _parseOptions(String options, String exerciseType) {
-    if (options.isEmpty) return [];
-    
-    if (exerciseType.toLowerCase() == 'sentence building') {
-      return options.split(';').map((o) => o.trim()).toList();
-    } else {
-      return options.split(';').map((o) => o.trim()).toList();
     }
   }
 

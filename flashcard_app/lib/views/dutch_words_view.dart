@@ -200,27 +200,6 @@ class _DutchWordsViewState extends State<DutchWordsView> {
       child: Row(
         children: [
           Expanded(
-            child: ElevatedButton.icon(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const CreateWordExerciseView(),
-                  ),
-                );
-              },
-              icon: const Icon(Icons.add),
-              label: const Text('New'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.white,
-              ),
-            ),
-          ),
-          
-          const SizedBox(width: 12),
-          
-          Expanded(
             child: OutlinedButton.icon(
               onPressed: () {
                 Navigator.push(
