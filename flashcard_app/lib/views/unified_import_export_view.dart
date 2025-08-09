@@ -256,17 +256,9 @@ class _UnifiedImportExportViewState extends State<UnifiedImportExportView> {
           // Parse the CSV to get both cards and exercises
           final parseResult = await UnifiedImportService.parseUnifiedCSV(csvContent);
           
-          if (!parseResult['success']) {
-            setState(() {
-              _importResult = 'Import failed';
-              _importErrors = List<String>.from(parseResult['errors'] ?? []);
-            });
-            return;
-          }
-
-          final cards = parseResult['cards'] as List<FlashCard>;
-          final exercises = parseResult['exercises'] as List<DutchWordExercise>;
-          final errors = parseResult['errors'] as List<String>;
+          final cards = parseResult['cards'] as List<FlashCard>? ?? [];
+          final exercises = parseResult['exercises'] as List<DutchWordExercise>? ?? [];
+          final errors = <String>[];
 
           // Import cards using FlashcardProvider
           var cardSuccessCount = 0;

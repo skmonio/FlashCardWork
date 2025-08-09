@@ -232,7 +232,7 @@ class DutchWordExercise {
           ?.map((e) => WordExercise.fromJson(e))
           .toList() ?? [],
       createdAt: DateTime.parse(json['createdAt'] ?? DateTime.now().toIso8601String()),
-      isUserCreated: json['isUserCreated'] ?? true,
+      isUserCreated: _parseBool(json['isUserCreated'], defaultValue: true),
       learningProgress: json['learningProgress'] != null 
           ? LearningProgress.fromJson(json['learningProgress'])
           : null,
@@ -312,6 +312,19 @@ class DutchWordExercise {
       // Review soon if incorrect
       return now.add(const Duration(days: 1));
     }
+  }
+
+  // Helper method to safely parse boolean values
+  static bool _parseBool(dynamic value, {bool defaultValue = false}) {
+    if (value == null) return defaultValue;
+    if (value is bool) return value;
+    if (value is String) {
+      final lowerValue = value.toLowerCase();
+      if (lowerValue == 'true' || lowerValue == '1') return true;
+      if (lowerValue == 'false' || lowerValue == '0') return false;
+    }
+    if (value is int) return value != 0;
+    return defaultValue;
   }
 }
 
