@@ -78,7 +78,15 @@ class UnifiedImportService {
           
           // Parse options - first option is always correct
           final parsedOptions = _parseOptions(options, exerciseType);
-          final correctAnswer = parsedOptions.first; // Correct answer is always option 1
+          String correctAnswer;
+          
+          if (exerciseType.toLowerCase() == 'sentence building') {
+            // For sentence building, the correct answer is all options joined together
+            correctAnswer = parsedOptions.join(' ');
+          } else {
+            // For other exercise types, the first option is the correct answer
+            correctAnswer = parsedOptions.isNotEmpty ? parsedOptions.first : '';
+          }
           
           wordMap[word]!['exercises'].add({
             'type': _convertExerciseTypeToEnum(exerciseType),
@@ -250,12 +258,37 @@ class UnifiedImportService {
     // Split by semicolon and trim each option
     final optionList = options.split(';').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
     
+    // Remove numbers in parentheses (e.g., "word (1)" becomes "word")
+    final cleanedOptions = optionList.map((option) {
+      // Remove pattern like " (1)", " (2)", etc. from the end of the option
+      // This regex matches optional whitespace, followed by parentheses with digits, followed by optional whitespace
+      String cleaned = option;
+      
+      // First try the regex approach
+      cleaned = cleaned.replaceAll(RegExp(r'\s*\(\d+\)\s*$'), '');
+      
+      // If that didn't work, try a simpler approach
+      if (cleaned == option) {
+        // Look for the pattern manually
+        final lastParenIndex = cleaned.lastIndexOf('(');
+        if (lastParenIndex != -1) {
+          final afterParen = cleaned.substring(lastParenIndex);
+          if (RegExp(r'^\(\d+\)\s*$').hasMatch(afterParen)) {
+            cleaned = cleaned.substring(0, lastParenIndex).trim();
+          }
+        }
+      }
+      
+      print('🔍 Cleaning option: "$option" -> "$cleaned"');
+      return cleaned.trim();
+    }).toList();
+    
     // For sentence building, we might have more options than needed
     if (exerciseType.toLowerCase() == 'sentence building') {
-      return optionList;
+      return cleanedOptions;
     }
     
-    return optionList;
+    return cleanedOptions;
   }
 
   static ExerciseType _convertExerciseTypeToEnum(String csvType) {

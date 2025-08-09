@@ -492,25 +492,47 @@ class _ImportWordExercisesViewState extends State<ImportWordExercisesView> {
   List<String> _parseOptions(String options, String exerciseType) {
     if (options.isEmpty) return [];
     
+    // Helper function to clean options by removing numbers in parentheses
+    String cleanOption(String option) {
+      String cleaned = option;
+      
+      // First try the regex approach
+      cleaned = cleaned.replaceAll(RegExp(r'\s*\(\d+\)\s*$'), '');
+      
+      // If that didn't work, try a simpler approach
+      if (cleaned == option) {
+        // Look for the pattern manually
+        final lastParenIndex = cleaned.lastIndexOf('(');
+        if (lastParenIndex != -1) {
+          final afterParen = cleaned.substring(lastParenIndex);
+          if (RegExp(r'^\(\d+\)\s*$').hasMatch(afterParen)) {
+            cleaned = cleaned.substring(0, lastParenIndex).trim();
+          }
+        }
+      }
+      
+      return cleaned.trim();
+    }
+    
     // For sentence building, the options are individual words that should be shuffled
     // For other exercise types, they are different answer choices
     if (exerciseType.toLowerCase() == 'sentence building') {
       // Handle both semicolon and pipe separators for sentence building words
       if (options.contains(';')) {
-        return options.split(';').map((opt) => opt.trim()).toList();
+        return options.split(';').map((opt) => cleanOption(opt.trim())).toList();
       } else if (options.contains('|')) {
-        return options.split('|').map((opt) => opt.trim()).toList();
+        return options.split('|').map((opt) => cleanOption(opt.trim())).toList();
       } else {
-        return [options.trim()];
+        return [cleanOption(options.trim())];
       }
     } else {
       // For multiple choice and fill in blank, handle as before
       if (options.contains(';')) {
-        return options.split(';').map((opt) => opt.trim()).toList();
+        return options.split(';').map((opt) => cleanOption(opt.trim())).toList();
       } else if (options.contains('|')) {
-        return options.split('|').map((opt) => opt.trim()).toList();
+        return options.split('|').map((opt) => cleanOption(opt.trim())).toList();
       } else {
-        return [options.trim()];
+        return [cleanOption(options.trim())];
       }
     }
   }

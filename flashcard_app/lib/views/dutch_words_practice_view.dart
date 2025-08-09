@@ -429,7 +429,8 @@ class _DutchWordsPracticeViewState extends State<DutchWordsPracticeView> {
     
     if (currentExercise.type == ExerciseType.sentenceBuilding) {
       // For sentence building, check if all words are used
-      return _answerWords.length == currentExercise.correctAnswer.split(' ').length;
+      // Use the options length since that's what we're shuffling and using
+      return _answerWords.length == currentExercise.options.length;
     } else {
       // For other exercise types, check if an answer is selected
       return _selectedAnswer != null;
