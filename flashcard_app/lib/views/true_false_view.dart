@@ -2,10 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:math';
 import '../models/flash_card.dart';
+import '../models/game_session.dart';
 import '../services/sound_manager.dart';
+import '../services/xp_service.dart';
 import '../providers/flashcard_provider.dart';
 import '../providers/dutch_word_exercise_provider.dart';
+import '../providers/user_profile_provider.dart';
 import '../models/dutch_word_exercise.dart';
+import '../components/xp_progress_widget.dart';
 
 class TrueFalseView extends StatefulWidget {
   final List<FlashCard> cards;
@@ -35,6 +39,7 @@ class _TrueFalseViewState extends State<TrueFalseView> {
   bool? _correctAnswer;
   String _question = '';
   bool _isQuestionMode = true; // true = word to definition, false = definition to word
+  final GameSession _gameSession = GameSession();
   
   // Track answered questions and their answers
   Map<int, bool> _answeredQuestions = {}; // question index -> selected answer
@@ -53,6 +58,9 @@ class _TrueFalseViewState extends State<TrueFalseView> {
       // Calculate success rate
       final successRate = _totalAnswered > 0 ? (_correctAnswers / _totalAnswered) : 0.0;
       final wasSuccessful = successRate >= 0.6; // 60% or higher is considered successful
+      
+      // Award XP for the session if not in shuffle mode
+      _awardXp();
       
       // Call the onComplete callback if provided
       if (widget.onComplete != null) {
@@ -288,6 +296,9 @@ class _TrueFalseViewState extends State<TrueFalseView> {
     
     print('🔍 TrueFalse: Answer selected - User chose: ${answer ? "TRUE" : "FALSE"}, Correct answer: ${_correctAnswer! ? "TRUE" : "FALSE"}, Is correct: $isCorrect');
     print('🔍 TrueFalse: Question was: $_question');
+    
+    // Track XP for this answer
+    XpService.recordAnswer(_gameSession, isCorrect);
     
     // Update learning progress in the provider
     _updateCardLearningProgress(currentCard, isCorrect);
@@ -796,7 +807,15 @@ class _TrueFalseViewState extends State<TrueFalseView> {
                   _buildStatCard('Correct', _correctAnswers.toString(), Icons.check_circle, Colors.green),
                   const SizedBox(height: 16),
                   _buildStatCard('Incorrect', (_totalAnswered - _correctAnswers).toString(), Icons.cancel, Colors.red),
+                  const SizedBox(height: 16),
+                  _buildStatCard('XP Earned', '+${_gameSession.xpGained}', Icons.star, Colors.amber),
                   const SizedBox(height: 32),
+                  
+                  // XP Progress Bar
+                  if (!widget.shuffleMode)
+                    XpProgressWidget(xpGained: _gameSession.xpGained),
+                  if (!widget.shuffleMode)
+                    const SizedBox(height: 32),
                   
                   // Action buttons
                   Row(
@@ -811,6 +830,7 @@ class _TrueFalseViewState extends State<TrueFalseView> {
                               _showingResults = false;
                               _answered = false;
                               _selectedAnswer = null;
+                              _gameSession.reset(); // Reset XP tracking
                               // Reset all navigation state
                               _answeredQuestions.clear();
                               _correctAnswersMap.clear();
@@ -922,5 +942,11 @@ class _TrueFalseViewState extends State<TrueFalseView> {
         ],
       ),
     );
+  }
+
+  void _awardXp() {
+    if (!widget.shuffleMode && _gameSession.xpGained > 0) {
+      XpService.awardSessionXp(context, _gameSession, isShuffleMode: widget.shuffleMode);
+    }
   }
 } 

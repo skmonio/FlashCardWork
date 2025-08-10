@@ -126,8 +126,12 @@ class UserProfileProvider extends ChangeNotifier {
 
   // Add XP and check for level up
   Future<void> addXp(int xpToAdd) async {
+    print('🔍 UserProfileProvider: addXp called with $xpToAdd XP');
     final oldLevel = _profile.level;
+    final oldXp = _profile.xp;
     final newXp = _profile.xp + xpToAdd;
+    
+    print('🔍 UserProfileProvider: Old XP: $oldXp, New XP: $newXp, Old Level: $oldLevel');
     
     // Calculate new level
     int newLevel = oldLevel;
@@ -135,10 +139,17 @@ class UserProfileProvider extends ChangeNotifier {
       newLevel++;
     }
     
+    print('🔍 UserProfileProvider: New Level: $newLevel');
+    print('🔍 UserProfileProvider: XP for current level ${newLevel}: ${_getXpForLevel(newLevel)}');
+    print('🔍 UserProfileProvider: XP for next level ${newLevel + 1}: ${_getXpForLevel(newLevel + 1)}');
+    
     _profile = _profile.copyWith(xp: newXp, level: newLevel);
+    
+    print('🔍 UserProfileProvider: Progress to next level: ${_profile.progressToNextLevel}');
     
     // Check for level up
     if (newLevel > oldLevel) {
+      print('🔍 UserProfileProvider: Level up detected! ${oldLevel} -> ${newLevel}');
       _checkLevelRewards(newLevel);
     }
     
@@ -147,6 +158,7 @@ class UserProfileProvider extends ChangeNotifier {
     
     await _saveToStorage();
     notifyListeners();
+    print('🔍 UserProfileProvider: XP update complete, notifyListeners called');
   }
 
   // Update session statistics

@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:math';
 import '../models/flash_card.dart';
+import '../models/game_session.dart';
 import '../components/unified_header.dart';
 import '../services/sound_manager.dart';
 import '../providers/flashcard_provider.dart';
 import '../providers/dutch_word_exercise_provider.dart';
+import '../providers/user_profile_provider.dart';
 import '../models/dutch_word_exercise.dart';
 
 class WordScrambleView extends StatefulWidget {
@@ -38,6 +40,7 @@ class _WordScrambleViewState extends State<WordScrambleView> {
   List<String> _originalLetters = [];
   bool _isQuestionMode = true; // true = definition to word, false = word to definition
   bool _isCardFlipped = false;
+  final GameSession _gameSession = GameSession();
   
   // Track answered questions and their answers
   Map<int, List<String>> _answeredQuestions = {}; // question index -> user answer

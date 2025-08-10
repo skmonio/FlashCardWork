@@ -3,9 +3,13 @@ import 'package:provider/provider.dart';
 import 'dart:math';
 import '../providers/flashcard_provider.dart';
 import '../providers/dutch_word_exercise_provider.dart';
+import '../providers/user_profile_provider.dart';
 import '../models/flash_card.dart';
 import '../models/dutch_word_exercise.dart';
+import '../models/game_session.dart';
 import '../services/sound_manager.dart';
+import '../services/xp_service.dart';
+import '../components/xp_progress_widget.dart';
 
 class MemoryGameView extends StatefulWidget {
   final List<FlashCard> cards;
@@ -39,6 +43,7 @@ class _MemoryGameViewState extends State<MemoryGameView>
   int _totalCardsProcessed = 0; // Track how many cards have been used
   List<AnimationController> _floatingControllers = [];
   List<Animation<Offset>> _floatingAnimations = [];
+  final GameSession _gameSession = GameSession();
 
   @override
   void initState() {
@@ -514,6 +519,9 @@ class _MemoryGameViewState extends State<MemoryGameView>
       // Play correct sound
       SoundManager().playCorrectSound();
       
+      // Track XP for correct match
+      XpService.recordAnswer(_gameSession, true);
+      
       // Update learning progress for the matched card
       _updateCardLearningProgress(_firstCard!.originalCard, true).catchError((e) {
         print('🔍 MemoryGameView: Error in background update: $e');
@@ -634,6 +642,10 @@ class _MemoryGameViewState extends State<MemoryGameView>
                              (_totalCardsProcessed > 0 ? _totalCardsProcessed / _moves >= 0.5 : false);
         
         print('🔍 MemoryGameView: Game complete! Shuffle mode: ${widget.shuffleMode}, Success: $wasSuccessful');
+        print('🔍 MemoryGameView: XP gained this session: ${_gameSession.xpGained}');
+        
+        // Award XP to user profile if not in shuffle mode (shuffle mode handles XP separately)
+        _awardXp();
         
         // Call the onComplete callback if provided
         if (widget.onComplete != null) {
@@ -655,6 +667,9 @@ class _MemoryGameViewState extends State<MemoryGameView>
         _canSelect = true;
       });
     } else {
+      // Track XP for incorrect match (0 XP)
+      XpService.recordAnswer(_gameSession, false);
+      
       // Update learning progress for the mismatched cards (as incorrect attempts)
       _updateCardLearningProgress(_firstCard!.originalCard, false).catchError((e) {
         print('🔍 MemoryGameView: Error in background update: $e');
@@ -823,8 +838,15 @@ class _MemoryGameViewState extends State<MemoryGameView>
       _moves = 0;
       _matches = 0;
       _gameComplete = false;
+      _gameSession.reset(); // Reset XP tracking
       _initializeGame();
     });
+  }
+
+  void _awardXp() {
+    if (!widget.shuffleMode && _gameSession.xpGained > 0) {
+      XpService.awardSessionXp(context, _gameSession, isShuffleMode: widget.shuffleMode);
+    }
   }
 
   Widget _buildResultsView() {
@@ -881,7 +903,15 @@ class _MemoryGameViewState extends State<MemoryGameView>
                   _buildStatCard('Total Moves', '$_moves', Icons.touch_app, Colors.blue),
                   const SizedBox(height: 16),
                   _buildStatCard('Efficiency', '$efficiency%', Icons.analytics, Colors.orange),
+                  const SizedBox(height: 16),
+                  _buildStatCard('XP Earned', '+${_gameSession.xpGained}', Icons.star, Colors.amber),
                   const SizedBox(height: 32),
+                  
+                  // XP Progress Bar
+                  if (!widget.shuffleMode)
+                    XpProgressWidget(xpGained: _gameSession.xpGained),
+                  if (!widget.shuffleMode)
+                    const SizedBox(height: 32),
                   
                   // Action buttons
                   Row(
@@ -952,6 +982,8 @@ class _MemoryGameViewState extends State<MemoryGameView>
       ),
     );
   }
+
+
 }
 
 class MemoryCard {

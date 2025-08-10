@@ -2,10 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:math';
 import '../models/flash_card.dart';
+import '../models/game_session.dart';
 import '../services/sound_manager.dart';
+import '../services/xp_service.dart';
 import '../providers/flashcard_provider.dart';
 import '../providers/dutch_word_exercise_provider.dart';
+import '../providers/user_profile_provider.dart';
 import '../models/dutch_word_exercise.dart';
+import '../components/xp_progress_widget.dart';
 
 class MultipleChoiceView extends StatefulWidget {
   final List<FlashCard> cards;
@@ -35,6 +39,7 @@ class _MultipleChoiceViewState extends State<MultipleChoiceView> {
   int? _correctAnswerIndex;
   List<String> _options = [];
   bool _isQuestionMode = true; // true = word to definition, false = definition to word
+  final GameSession _gameSession = GameSession();
   
   // Track answered questions and their answers
   Map<int, int> _answeredQuestions = {}; // question index -> selected answer index
