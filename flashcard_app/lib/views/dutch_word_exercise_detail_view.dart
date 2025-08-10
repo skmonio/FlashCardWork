@@ -8,10 +8,12 @@ import 'create_word_exercise_view.dart';
 
 class DutchWordExerciseDetailView extends StatefulWidget {
   final DutchWordExercise wordExercise;
+  final bool showEditDeleteButtons;
 
   const DutchWordExerciseDetailView({
     super.key,
     required this.wordExercise,
+    this.showEditDeleteButtons = true,
   });
 
   @override
@@ -72,14 +74,16 @@ class _DutchWordExerciseDetailViewState extends State<DutchWordExerciseDetailVie
         backgroundColor: Colors.green,
         foregroundColor: Colors.white,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () => _editWordExercise(context),
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete, color: Colors.red),
-            onPressed: () => _showDeleteWordDialog(context),
-          ),
+          if (widget.showEditDeleteButtons) ...[
+            IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: () => _editWordExercise(context),
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete, color: Colors.red),
+              onPressed: () => _showDeleteWordDialog(context),
+            ),
+          ],
           IconButton(
             icon: const Icon(Icons.info),
             onPressed: () => _showWordInfo(context),
@@ -810,7 +814,7 @@ class _DutchWordExerciseDetailViewState extends State<DutchWordExerciseDetailVie
   }
 
   void _nextExercise() {
-    if (_currentExerciseIndex < widget.wordExercise.exercises.length - 1) {
+    if (_currentExerciseIndex < _wordExercise.exercises.length - 1) {
       setState(() {
         _currentExerciseIndex++;
         _loadExerciseState();

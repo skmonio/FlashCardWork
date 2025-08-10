@@ -195,6 +195,7 @@ class _DutchWordsDeckViewState extends State<DutchWordsDeckView> {
                   MaterialPageRoute(
                     builder: (context) => DutchWordExerciseDetailView(
                       wordExercise: wordExercise,
+                      showEditDeleteButtons: false,
                     ),
                   ),
                 );

@@ -2,11 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/flashcard_provider.dart';
+import '../providers/dutch_word_exercise_provider.dart';
 import '../components/unified_header.dart';
 import '../models/deck.dart';
 import '../models/flash_card.dart';
+import '../models/dutch_word_exercise.dart';
 import 'add_card_view.dart';
 import 'study_view.dart';
+import 'dutch_word_exercise_detail_view.dart';
+import 'create_word_exercise_view.dart';
+import 'dutch_words_practice_view.dart';
 
 class DeckDetailView extends StatefulWidget {
   final Deck deck;
@@ -260,44 +265,90 @@ class _DeckDetailViewState extends State<DeckDetailView> {
             ),
           ],
         ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(card.definition),
-            if (card.example.isNotEmpty) ...[
-              const SizedBox(height: 4),
-              Text(
-                card.example,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontStyle: FontStyle.italic,
-                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+        subtitle: Consumer<DutchWordExerciseProvider>(
+          builder: (context, dutchProvider, child) {
+            final existingExercise = dutchProvider.getWordExerciseByWord(card.word);
+            final exerciseCount = existingExercise?.exercises.length ?? 0;
+            
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(card.definition),
+                if (card.example.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    card.example,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontStyle: FontStyle.italic,
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Text(
+                      'Added: ${_formatDate(card.dateCreated)}',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                      ),
+                    ),
+                    if (exerciseCount > 0) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          '$exerciseCount exercise${exerciseCount == 1 ? '' : 's'}',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Colors.green[700],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
-              ),
-            ],
-            const SizedBox(height: 4),
-            Text(
-              'Added: ${_formatDate(card.dateCreated)}',
-              style: TextStyle(
-                fontSize: 11,
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
-              ),
-            ),
-          ],
+              ],
+            );
+          },
         ),
         trailing: PopupMenuButton<String>(
           onSelected: (value) => _handleCardAction(value, card),
           itemBuilder: (context) => [
-            const PopupMenuItem(
-              value: 'edit',
-              child: Row(
-                children: [
-                  Icon(Icons.edit, size: 16),
-                  SizedBox(width: 8),
-                  Text('Edit'),
-                ],
-              ),
-            ),
+                            const PopupMenuItem(
+                  value: 'edit',
+                  child: Row(
+                    children: [
+                      Icon(Icons.edit, size: 16),
+                      SizedBox(width: 8),
+                      Text('Edit'),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'edit_exercises',
+                  child: Consumer<DutchWordExerciseProvider>(
+                    builder: (context, dutchProvider, child) {
+                      final existingExercise = dutchProvider.getWordExerciseByWord(card.word);
+                      final hasExercises = existingExercise?.exercises.isNotEmpty ?? false;
+                      
+                      return Row(
+                        children: [
+                          Icon(hasExercises ? Icons.quiz : Icons.add, size: 16),
+                          SizedBox(width: 8),
+                          Text(hasExercises ? 'Edit Exercises' : 'Add Exercises'),
+                        ],
+                      );
+                    },
+                  ),
+                ),
             const PopupMenuItem(
               value: 'delete',
               child: Row(
@@ -305,6 +356,16 @@ class _DeckDetailViewState extends State<DeckDetailView> {
                   Icon(Icons.delete, size: 16, color: Colors.red),
                   SizedBox(width: 8),
                   Text('Delete', style: TextStyle(color: Colors.red)),
+                ],
+              ),
+            ),
+            const PopupMenuItem(
+              value: 'study',
+              child: Row(
+                children: [
+                  Icon(Icons.quiz, size: 16, color: Colors.green),
+                  SizedBox(width: 8),
+                  Text('Study This Card', style: TextStyle(color: Colors.green)),
                 ],
               ),
             ),
@@ -397,8 +458,14 @@ class _DeckDetailViewState extends State<DeckDetailView> {
       case 'edit':
         _editCard(card);
         break;
+      case 'edit_exercises':
+        _editExercises(card);
+        break;
       case 'delete':
         _deleteCard(card);
+        break;
+      case 'study':
+        _studyCard(card);
         break;
     }
   }
@@ -452,9 +519,10 @@ class _DeckDetailViewState extends State<DeckDetailView> {
   }
 
   void _studyDeck() {
-    final deckCards = context.read<FlashcardProvider>().cards
-        .where((card) => card.deckIds.contains(widget.deck.id))
-        .toList();
+    // Get all cards in this deck
+    final provider = context.read<FlashcardProvider>();
+    final dutchProvider = context.read<DutchWordExerciseProvider>();
+    final deckCards = provider.cards.where((card) => card.deckIds.contains(widget.deck.id)).toList();
     
     if (deckCards.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -463,12 +531,50 @@ class _DeckDetailViewState extends State<DeckDetailView> {
       return;
     }
     
+    // Create Dutch word exercises from the deck cards, checking for existing exercises first
+    final exercises = deckCards.map((card) {
+      // Check if there's already an existing exercise for this card
+      final existingExercise = dutchProvider.getWordExerciseByWord(card.word);
+      
+      if (existingExercise != null) {
+        // Use existing exercise if found
+        print('🔍 DeckDetailView: Found existing exercise for "${card.word}" with ${existingExercise.exercises.length} exercises');
+        return existingExercise;
+      } else {
+        // Create a new exercise if none exists
+        print('🔍 DeckDetailView: Created new exercise for "${card.word}" with 1 exercise');
+        return DutchWordExercise(
+          id: card.id,
+          targetWord: card.word,
+          wordTranslation: card.definition,
+          deckId: widget.deck.id,
+          deckName: widget.deck.name,
+          category: WordCategory.common,
+          difficulty: ExerciseDifficulty.beginner,
+          exercises: [
+            WordExercise(
+              id: '${card.id}_exercise_1',
+              type: ExerciseType.translation,
+              prompt: 'Translate "${card.word}" to English',
+              correctAnswer: card.definition,
+              options: [card.definition, 'Incorrect option 1', 'Incorrect option 2', 'Incorrect option 3'],
+              explanation: 'The Dutch word "${card.word}" means "${card.definition}" in English.',
+              difficulty: ExerciseDifficulty.beginner,
+            ),
+          ],
+          createdAt: card.dateCreated,
+          isUserCreated: true,
+        );
+      }
+    }).toList();
+    
+    // Navigate to the Dutch words practice view
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => StudyView(
-          cards: deckCards,
-          studyMode: StudyMode.multipleChoice,
-          title: 'Study ${widget.deck.name}',
+        builder: (context) => DutchWordsPracticeView(
+          deckId: widget.deck.id,
+          deckName: widget.deck.name,
+          exercises: exercises,
         ),
       ),
     );
@@ -514,9 +620,152 @@ class _DeckDetailViewState extends State<DeckDetailView> {
   }
 
   void _editCard(FlashCard card) {
-    // TODO: Implement card editing
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Card editing coming soon!')),
+    final wordController = TextEditingController(text: card.word);
+    final definitionController = TextEditingController(text: card.definition);
+    final exampleController = TextEditingController(text: card.example);
+    final articleController = TextEditingController(text: card.article);
+    final pluralController = TextEditingController(text: card.plural);
+    final pastTenseController = TextEditingController(text: card.pastTense);
+    final futureTenseController = TextEditingController(text: card.futureTense);
+    final pastParticipleController = TextEditingController(text: card.pastParticiple);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edit Card'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: wordController,
+                decoration: const InputDecoration(
+                  labelText: 'Word',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: definitionController,
+                decoration: const InputDecoration(
+                  labelText: 'Definition',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 3,
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: exampleController,
+                decoration: const InputDecoration(
+                  labelText: 'Example',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 2,
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: articleController,
+                      decoration: const InputDecoration(
+                        labelText: 'Article',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextField(
+                      controller: pluralController,
+                      decoration: const InputDecoration(
+                        labelText: 'Plural',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: pastTenseController,
+                      decoration: const InputDecoration(
+                        labelText: 'Past Tense',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextField(
+                      controller: futureTenseController,
+                      decoration: const InputDecoration(
+                        labelText: 'Future Tense',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: pastParticipleController,
+                decoration: const InputDecoration(
+                  labelText: 'Past Participle',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final provider = context.read<FlashcardProvider>();
+              
+              // Create updated card
+              final updatedCard = FlashCard(
+                id: card.id,
+                word: wordController.text.trim(),
+                definition: definitionController.text.trim(),
+                example: exampleController.text.trim(),
+                deckIds: card.deckIds,
+                dateCreated: card.dateCreated,
+                srsLevel: card.srsLevel,
+                timesShown: card.timesShown,
+                timesCorrect: card.timesCorrect,
+                consecutiveCorrect: card.consecutiveCorrect,
+                consecutiveIncorrect: card.consecutiveIncorrect,
+                easeFactor: card.easeFactor,
+                nextReviewDate: card.nextReviewDate,
+                lastReviewDate: card.lastReviewDate,
+                totalReviews: card.totalReviews,
+                article: articleController.text.trim(),
+                plural: pluralController.text.trim(),
+                pastTense: pastTenseController.text.trim(),
+                futureTense: futureTenseController.text.trim(),
+                pastParticiple: pastParticipleController.text.trim(),
+              );
+              
+              await provider.updateCard(updatedCard);
+              if (mounted) {
+                Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Card updated successfully!')),
+                );
+              }
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -547,6 +796,74 @@ class _DeckDetailViewState extends State<DeckDetailView> {
             child: const Text('Delete'),
           ),
         ],
+      ),
+    );
+  }
+
+  void _editExercises(FlashCard card) {
+    // Check if there's already an existing exercise for this card
+    final dutchProvider = context.read<DutchWordExerciseProvider>();
+    final existingExercise = dutchProvider.getWordExerciseByWord(card.word);
+    
+    DutchWordExercise exerciseToEdit;
+    
+    if (existingExercise != null) {
+      // Use existing exercise
+      exerciseToEdit = existingExercise;
+      print('🔍 DeckDetailView: Editing existing exercise for "${card.word}" with ${existingExercise.exercises.length} exercises');
+    } else {
+      // Create a new exercise if none exists
+      exerciseToEdit = DutchWordExercise(
+        id: card.id,
+        targetWord: card.word,
+        wordTranslation: card.definition,
+        deckId: card.deckIds.isNotEmpty ? card.deckIds.first : '',
+        deckName: card.deckIds.isNotEmpty ? card.deckIds.first : 'Default',
+        category: WordCategory.common,
+        difficulty: ExerciseDifficulty.beginner,
+        exercises: [],
+        createdAt: card.dateCreated,
+        isUserCreated: true,
+      );
+      print('🔍 DeckDetailView: Creating new exercise for "${card.word}"');
+    }
+    
+    // Navigate to the create word exercise view for this card
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => CreateWordExerciseView(
+          editingExercise: exerciseToEdit,
+        ),
+      ),
+    );
+  }
+
+  void _studyCard(FlashCard card) {
+    // Check if there's already an existing exercise for this card
+    final dutchProvider = context.read<DutchWordExerciseProvider>();
+    final existingExercise = dutchProvider.getWordExerciseByWord(card.word);
+    
+    if (existingExercise == null || existingExercise.exercises.isEmpty) {
+      // Show message that no exercises exist
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('No exercises found for "${card.word}". Please add exercises first.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+    
+    // Use existing exercise
+    print('🔍 DeckDetailView: Found existing exercise for "${card.word}" with ${existingExercise.exercises.length} exercises');
+    
+    // Navigate to the Dutch word exercise detail view for this card
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => DutchWordExerciseDetailView(
+          wordExercise: existingExercise,
+          showEditDeleteButtons: false,
+        ),
       ),
     );
   }

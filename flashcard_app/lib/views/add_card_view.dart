@@ -197,7 +197,7 @@ class _AddCardViewState extends State<AddCardView> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Article *',
+          'Article (optional)',
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w500,
@@ -399,7 +399,12 @@ class _AddCardViewState extends State<AddCardView> {
           ),
         ],
       ),
-      subtitle: Text('${deck.cards.length} cards'),
+      subtitle: Consumer<FlashcardProvider>(
+        builder: (context, provider, child) {
+          final cardCount = provider.cards.where((card) => card.deckIds.contains(deck.id)).length;
+          return Text('$cardCount cards');
+        },
+      ),
       value: isSelected,
       onChanged: (value) {
         setState(() {
@@ -460,12 +465,7 @@ class _AddCardViewState extends State<AddCardView> {
       return;
     }
     
-    if (_selectedArticle.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select an article (de/het)')),
-      );
-      return;
-    }
+
     
     if (_selectedDeckIds.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(

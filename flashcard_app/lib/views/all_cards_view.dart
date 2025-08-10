@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/flashcard_provider.dart';
+import '../providers/dutch_word_exercise_provider.dart';
 import '../components/unified_header.dart';
 import '../models/flash_card.dart';
+import '../models/dutch_word_exercise.dart';
+import 'dutch_word_exercise_detail_view.dart';
+import 'create_word_exercise_view.dart';
 
 enum SortOption {
   wordAZ,
@@ -318,30 +322,59 @@ class _AllCardsViewState extends State<AllCardsView> {
                 ),
               ],
             ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(card.definition),
-                if (card.example.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    card.example,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontStyle: FontStyle.italic,
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+            subtitle: Consumer<DutchWordExerciseProvider>(
+              builder: (context, dutchProvider, child) {
+                final existingExercise = dutchProvider.getWordExerciseByWord(card.word);
+                final exerciseCount = existingExercise?.exercises.length ?? 0;
+                
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(card.definition),
+                    if (card.example.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        card.example,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontStyle: FontStyle.italic,
+                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Text(
+                          'Added: ${_formatDate(card.dateCreated)}',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                          ),
+                        ),
+                        if (exerciseCount > 0) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.green.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              '$exerciseCount exercise${exerciseCount == 1 ? '' : 's'}',
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: Colors.green[700],
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
-                  ),
-                ],
-                const SizedBox(height: 4),
-                Text(
-                  'Added: ${_formatDate(card.dateCreated)}',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
-                  ),
-                ),
-              ],
+                  ],
+                );
+              },
             ),
             trailing: _isSelectionMode ? null : PopupMenuButton<String>(
               onSelected: (value) => _handleCardAction(value, card, provider),
@@ -354,6 +387,23 @@ class _AllCardsViewState extends State<AllCardsView> {
                       SizedBox(width: 8),
                       Text('Edit Card'),
                     ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'edit_exercises',
+                  child: Consumer<DutchWordExerciseProvider>(
+                    builder: (context, dutchProvider, child) {
+                      final existingExercise = dutchProvider.getWordExerciseByWord(card.word);
+                      final hasExercises = existingExercise?.exercises.isNotEmpty ?? false;
+                      
+                      return Row(
+                        children: [
+                          Icon(hasExercises ? Icons.quiz : Icons.add, size: 16),
+                          SizedBox(width: 8),
+                          Text(hasExercises ? 'Edit Exercises' : 'Add Exercises'),
+                        ],
+                      );
+                    },
                   ),
                 ),
                 const PopupMenuItem(
@@ -373,6 +423,16 @@ class _AllCardsViewState extends State<AllCardsView> {
                       Icon(Icons.refresh, size: 16),
                       SizedBox(width: 8),
                       Text('Reset Progress'),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'study',
+                  child: Row(
+                    children: [
+                      Icon(Icons.quiz, size: 16, color: Colors.green),
+                      SizedBox(width: 8),
+                      Text('Study This Card', style: TextStyle(color: Colors.green)),
                     ],
                   ),
                 ),
@@ -482,11 +542,17 @@ class _AllCardsViewState extends State<AllCardsView> {
       case 'edit':
         _editCard(card);
         break;
+      case 'edit_exercises':
+        _editExercises(card);
+        break;
       case 'delete':
         _showDeleteCardConfirmation(card, provider);
         break;
       case 'reset':
         _resetCardProgress(card, provider);
+        break;
+      case 'study':
+        _studyCard(card);
         break;
     }
   }
@@ -763,6 +829,73 @@ class _AllCardsViewState extends State<AllCardsView> {
         SnackBar(content: Text('Reset progress for: ${card.word}')),
       );
     }
+  }
+
+  void _editExercises(FlashCard card) {
+    // Check if there's already an existing exercise for this card
+    final dutchProvider = context.read<DutchWordExerciseProvider>();
+    final existingExercise = dutchProvider.getWordExerciseByWord(card.word);
+    
+    DutchWordExercise exerciseToEdit;
+    
+    if (existingExercise != null) {
+      // Use existing exercise
+      exerciseToEdit = existingExercise;
+      print('🔍 AllCardsView: Editing existing exercise for "${card.word}" with ${existingExercise.exercises.length} exercises');
+    } else {
+      // Create a new exercise if none exists
+      exerciseToEdit = DutchWordExercise(
+        id: card.id,
+        targetWord: card.word,
+        wordTranslation: card.definition,
+        deckId: card.deckIds.isNotEmpty ? card.deckIds.first : '',
+        deckName: card.deckIds.isNotEmpty ? card.deckIds.first : 'Default',
+        category: WordCategory.common,
+        difficulty: ExerciseDifficulty.beginner,
+        exercises: [],
+        createdAt: card.dateCreated,
+        isUserCreated: true,
+      );
+      print('🔍 AllCardsView: Creating new exercise for "${card.word}"');
+    }
+    
+    // Navigate to the create word exercise view for this card
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => CreateWordExerciseView(
+          editingExercise: exerciseToEdit,
+        ),
+      ),
+    );
+  }
+
+  void _studyCard(FlashCard card) {
+    // Check if there's already an existing exercise for this card
+    final dutchProvider = context.read<DutchWordExerciseProvider>();
+    final existingExercise = dutchProvider.getWordExerciseByWord(card.word);
+    
+    if (existingExercise == null || existingExercise.exercises.isEmpty) {
+      // Show message that no exercises exist
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('No exercises found for "${card.word}". Please add exercises first.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+    
+    // Use existing exercise
+    print('🔍 AllCardsView: Found existing exercise for "${card.word}" with ${existingExercise.exercises.length} exercises');
+    
+    // Navigate to the Dutch word exercise detail view for this card
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => DutchWordExerciseDetailView(
+          wordExercise: existingExercise,
+        ),
+      ),
+    );
   }
 
   void _showSortInfo() {

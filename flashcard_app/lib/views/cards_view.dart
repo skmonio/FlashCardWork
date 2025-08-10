@@ -8,6 +8,7 @@ import 'add_deck_view.dart';
 import 'deck_detail_view.dart';
 import 'all_cards_view.dart';
 import 'all_decks_view.dart';
+import 'create_word_exercise_view.dart';
 
 class CardsView extends StatefulWidget {
   const CardsView({super.key});
@@ -284,6 +285,43 @@ class _CardsViewState extends State<CardsView> {
             ),
           ),
         ),
+        
+        const SizedBox(height: 12),
+        
+        // Add Exercise
+        Container(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: () => _showAddExerciseDialog(context),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.surface,
+              foregroundColor: Theme.of(context).colorScheme.onSurface,
+              elevation: 2,
+              shadowColor: Colors.green.withOpacity(0.2),
+              padding: const EdgeInsets.all(16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.quiz,
+                  color: Colors.green,
+                  size: 24,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'Add Exercise',
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const Spacer(),
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -402,6 +440,14 @@ class _CardsViewState extends State<CardsView> {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => const AddDeckView(),
+      ),
+    );
+  }
+
+  void _showAddExerciseDialog(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const CreateWordExerciseView(),
       ),
     );
   }

@@ -17,22 +17,31 @@ class DutchWordExerciseProvider extends ChangeNotifier {
 
   // Initialize with example data
   Future<void> initialize() async {
+    print('🔍 Provider: initialize - Starting initialization');
     _isLoading = true;
     notifyListeners();
 
     try {
       await _loadFromStorage();
       
+      print('🔍 Provider: initialize - After loading, have ${_wordExercises.length} exercises');
+      
       // Add example data if no exercises exist
       if (_wordExercises.isEmpty) {
+        print('🔍 Provider: initialize - No exercises found, adding example data');
         _wordExercises.addAll(DutchWordExerciseExamples.examples);
         await _saveToStorage();
+        print('🔍 Provider: initialize - Added ${DutchWordExerciseExamples.examples.length} example exercises');
+      } else {
+        print('🔍 Provider: initialize - Found existing exercises, not adding examples');
       }
     } catch (e) {
+      print('🔍 Provider: initialize - Error: $e');
       _error = 'Failed to initialize: $e';
     } finally {
       _isLoading = false;
       notifyListeners();
+      print('🔍 Provider: initialize - Initialization complete, total exercises: ${_wordExercises.length}');
     }
   }
 
@@ -42,13 +51,27 @@ class DutchWordExerciseProvider extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       final jsonString = prefs.getString(_storageKey);
       
+      print('🔍 Provider: _loadFromStorage - jsonString is ${jsonString != null ? 'not null' : 'null'}');
+      
       if (jsonString != null) {
+        print('🔍 Provider: _loadFromStorage - jsonString length: ${jsonString.length}');
         final List<dynamic> jsonList = json.decode(jsonString);
+        print('🔍 Provider: _loadFromStorage - decoded ${jsonList.length} exercises from JSON');
+        
         _wordExercises = jsonList
             .map((json) => DutchWordExercise.fromJson(json))
             .toList();
+        
+        print('🔍 Provider: _loadFromStorage - loaded ${_wordExercises.length} exercises into memory');
+        for (int i = 0; i < _wordExercises.length && i < 5; i++) {
+          final exercise = _wordExercises[i];
+          print('🔍 Provider: Loaded exercise $i - Word: "${exercise.targetWord}", Exercises: ${exercise.exercises.length}');
+        }
+      } else {
+        print('🔍 Provider: _loadFromStorage - No data found in storage');
       }
     } catch (e) {
+      print('🔍 Provider: _loadFromStorage - Error: $e');
       _error = 'Failed to load exercises: $e';
     }
   }
@@ -56,10 +79,14 @@ class DutchWordExerciseProvider extends ChangeNotifier {
   // Save exercises to storage
   Future<void> _saveToStorage() async {
     try {
+      print('🔍 Provider: _saveToStorage - Saving ${_wordExercises.length} exercises');
       final prefs = await SharedPreferences.getInstance();
       final jsonString = json.encode(_wordExercises.map((e) => e.toJson()).toList());
+      print('🔍 Provider: _saveToStorage - JSON string length: ${jsonString.length}');
       await prefs.setString(_storageKey, jsonString);
+      print('🔍 Provider: _saveToStorage - Successfully saved to storage');
     } catch (e) {
+      print('🔍 Provider: _saveToStorage - Error: $e');
       _error = 'Failed to save exercises: $e';
     }
   }

@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/flashcard_provider.dart';
+import '../providers/dutch_word_exercise_provider.dart';
 import '../models/deck.dart';
 import '../models/flash_card.dart';
+import '../models/dutch_word_exercise.dart';
 import 'add_deck_view.dart';
 import 'deck_detail_view.dart';
 import 'add_card_view.dart';
 import 'edit_deck_view.dart';
+import 'dutch_words_practice_view.dart';
 
 class AllDecksView extends StatefulWidget {
   const AllDecksView({super.key});
@@ -324,6 +327,26 @@ class _AllDecksViewState extends State<AllDecksView> {
                           color: Colors.grey[600],
                         ),
                       ),
+                      Consumer<DutchWordExerciseProvider>(
+                        builder: (context, dutchProvider, child) {
+                          int totalExercises = 0;
+                          for (final card in cards) {
+                            final exercise = dutchProvider.getWordExerciseByWord(card.word);
+                            totalExercises += exercise?.exercises.length ?? 0;
+                          }
+                          
+                          if (totalExercises > 0) {
+                            return Text(
+                              '$totalExercises exercise${totalExercises == 1 ? '' : 's'}',
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Colors.green[600],
+                                fontWeight: FontWeight.w500,
+                              ),
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        },
+                      ),
                     ],
                   ),
                 ),
@@ -358,6 +381,16 @@ class _AllDecksViewState extends State<AllDecksView> {
                             Icon(Icons.create_new_folder),
                             SizedBox(width: 8),
                             Text('Add Sub-deck'),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'study',
+                        child: Row(
+                          children: [
+                            Icon(Icons.quiz, color: Colors.green),
+                            SizedBox(width: 8),
+                            Text('Study This Deck', style: TextStyle(color: Colors.green)),
                           ],
                         ),
                       ),
@@ -466,10 +499,75 @@ class _AllDecksViewState extends State<AllDecksView> {
           ),
         );
         break;
+      case 'study':
+        _studyDeck(context, deck);
+        break;
       case 'delete':
         _showDeleteDeckDialog(context, deck);
         break;
     }
+  }
+
+  void _studyDeck(BuildContext context, Deck deck) {
+    // Get all cards in this deck
+    final provider = context.read<FlashcardProvider>();
+    final dutchProvider = context.read<DutchWordExerciseProvider>();
+    final deckCards = provider.cards.where((card) => card.deckIds.contains(deck.id)).toList();
+    
+    if (deckCards.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No cards in "${deck.name}" to study!')),
+      );
+      return;
+    }
+    
+    // Create Dutch word exercises from the deck cards, checking for existing exercises first
+    final exercises = deckCards.map((card) {
+      // Check if there's already an existing exercise for this card
+      final existingExercise = dutchProvider.getWordExerciseByWord(card.word);
+      
+      if (existingExercise != null) {
+        // Use existing exercise if found
+        print('🔍 AllDecksView: Found existing exercise for "${card.word}" with ${existingExercise.exercises.length} exercises');
+        return existingExercise;
+      } else {
+        // Create a new exercise if none exists
+        print('🔍 AllDecksView: Created new exercise for "${card.word}" with 1 exercise');
+        return DutchWordExercise(
+          id: card.id,
+          targetWord: card.word,
+          wordTranslation: card.definition,
+          deckId: deck.id,
+          deckName: deck.name,
+          category: WordCategory.common,
+          difficulty: ExerciseDifficulty.beginner,
+          exercises: [
+            WordExercise(
+              id: '${card.id}_exercise_1',
+              type: ExerciseType.translation,
+              prompt: 'Translate "${card.word}" to English',
+              correctAnswer: card.definition,
+              options: [card.definition, 'Incorrect option 1', 'Incorrect option 2', 'Incorrect option 3'],
+              explanation: 'The Dutch word "${card.word}" means "${card.definition}" in English.',
+              difficulty: ExerciseDifficulty.beginner,
+            ),
+          ],
+          createdAt: card.dateCreated,
+          isUserCreated: true,
+        );
+      }
+    }).toList();
+    
+    // Navigate to the Dutch words practice view
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => DutchWordsPracticeView(
+          deckId: deck.id,
+          deckName: deck.name,
+          exercises: exercises,
+        ),
+      ),
+    );
   }
 
   void _showDeleteDeckDialog(BuildContext context, Deck deck) {

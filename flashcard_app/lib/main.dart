@@ -22,7 +22,13 @@ class FlashcardApp extends StatelessWidget {
         ChangeNotifierProvider(create: (context) => FlashcardProvider()),
         ChangeNotifierProvider(create: (context) => ThemeProvider()),
         ChangeNotifierProvider(create: (context) => BubbleWordProvider()),
-        ChangeNotifierProvider(create: (context) => DutchWordExerciseProvider()),
+        ChangeNotifierProvider(
+          create: (context) {
+            final provider = DutchWordExerciseProvider();
+            provider.initialize(); // Initialize the provider
+            return provider;
+          },
+        ),
         ChangeNotifierProvider(create: (context) => UserProfileProvider()),
       ],
       child: Consumer<ThemeProvider>(
