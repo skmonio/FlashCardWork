@@ -25,7 +25,8 @@ class MemoryGameView extends StatefulWidget {
   State<MemoryGameView> createState() => _MemoryGameViewState();
 }
 
-class _MemoryGameViewState extends State<MemoryGameView> {
+class _MemoryGameViewState extends State<MemoryGameView> 
+    with TickerProviderStateMixin {
   List<MemoryCard> _memoryCards = [];
   List<FlashCard> _remainingCards = [];
   MemoryCard? _firstCard;
@@ -36,11 +37,21 @@ class _MemoryGameViewState extends State<MemoryGameView> {
   bool _gameComplete = false;
   int _totalPairs = 5; // Always show 5 pairs at a time
   int _totalCardsProcessed = 0; // Track how many cards have been used
+  List<AnimationController> _floatingControllers = [];
+  List<Animation<Offset>> _floatingAnimations = [];
 
   @override
   void initState() {
     super.initState();
     _initializeGame();
+  }
+
+  @override
+  void dispose() {
+    for (var controller in _floatingControllers) {
+      controller.dispose();
+    }
+    super.dispose();
   }
 
   void _initializeGame() {
@@ -61,14 +72,23 @@ class _MemoryGameViewState extends State<MemoryGameView> {
       _totalPairs = 5;
       final initialCards = _remainingCards.take(5).toList();
       _remainingCards.removeRange(0, 5);
-      _totalCardsProcessed = 5;
+      // Start with 0 processed - cards are only "processed" when they're matched/completed
+      _totalCardsProcessed = 0;
       _createMemoryCards(initialCards);
       print('🔍 MemoryGameView: Large deck mode - ${widget.cards.length} total cards, ${_remainingCards.length} remaining for replacement');
+      print('🔍 MemoryGameView: Starting with 0/${widget.cards.length} cards processed');
     }
   }
   
   void _createMemoryCards(List<FlashCard> cardsToUse) {
     _memoryCards = [];
+    
+    // Clear existing animations
+    for (var controller in _floatingControllers) {
+      controller.dispose();
+    }
+    _floatingControllers.clear();
+    _floatingAnimations.clear();
     
     for (final card in cardsToUse) {
       // Add word card
@@ -100,7 +120,94 @@ class _MemoryGameViewState extends State<MemoryGameView> {
     
     // Shuffle the cards
     _memoryCards.shuffle();
+    
+    // Create floating animations for each card
+    _createFloatingAnimations();
   }
+  
+  void _createFloatingAnimations() {
+    final random = Random();
+    
+    for (int i = 0; i < _memoryCards.length; i++) {
+      // Create unique animation controller for each card
+      final controller = AnimationController(
+        duration: Duration(
+          milliseconds: 3000 + random.nextInt(2000), // 3-5 seconds
+        ),
+        vsync: this,
+      );
+      
+      // Create random floating movement within bounds (increased range for visibility)
+      final beginOffset = Offset(
+        (random.nextDouble() - 0.5) * 60, // -30 to 30 pixels
+        (random.nextDouble() - 0.5) * 40, // -20 to 20 pixels
+      );
+      final endOffset = Offset(
+        (random.nextDouble() - 0.5) * 60,
+        (random.nextDouble() - 0.5) * 40,
+      );
+      
+      final animation = Tween<Offset>(
+        begin: beginOffset,
+        end: endOffset,
+      ).animate(CurvedAnimation(
+        parent: controller,
+        curve: Curves.easeInOut,
+      ));
+      
+      print('🔍 MemoryGameView: Created floating animation $i - Begin: $beginOffset, End: $endOffset');
+      
+      _floatingControllers.add(controller);
+      _floatingAnimations.add(animation);
+      
+      // Start the animation with random delay
+      Future.delayed(Duration(milliseconds: random.nextInt(1000)), () {
+        if (mounted) {
+          controller.repeat(reverse: true);
+        }
+      });
+    }
+  }
+  
+  void _updateFloatingAnimation(int index) {
+    if (index >= _floatingControllers.length) return;
+    
+    final random = Random();
+    
+    // Reset the controller
+    _floatingControllers[index].reset();
+    
+    // Create new random floating movement (increased range for visibility)
+    final beginOffset = Offset(
+      (random.nextDouble() - 0.5) * 60, // -30 to 30 pixels
+      (random.nextDouble() - 0.5) * 40, // -20 to 20 pixels
+    );
+    final endOffset = Offset(
+      (random.nextDouble() - 0.5) * 60,
+      (random.nextDouble() - 0.5) * 40,
+    );
+    
+    final newAnimation = Tween<Offset>(
+      begin: beginOffset,
+      end: endOffset,
+    ).animate(CurvedAnimation(
+      parent: _floatingControllers[index],
+      curve: Curves.easeInOut,
+    ));
+    
+    print('🔍 MemoryGameView: Updated floating animation $index - Begin: $beginOffset, End: $endOffset');
+    
+    _floatingAnimations[index] = newAnimation;
+    
+    // Start the animation with random delay
+    Future.delayed(Duration(milliseconds: random.nextInt(500)), () {
+      if (mounted) {
+        _floatingControllers[index].repeat(reverse: true);
+      }
+    });
+  }
+  
+  // Removed pause/resume functions since we want continuous smooth movement
 
   @override
   Widget build(BuildContext context) {
@@ -190,47 +297,63 @@ class _MemoryGameViewState extends State<MemoryGameView> {
       width: double.infinity,
       height: double.infinity,
       child: Center(
-        child: Transform.translate(
-          offset: const Offset(0, -40), // Move cards up by 40 pixels
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Left column - Words
-                SizedBox(
-                  width: 150,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: _memoryCards
-                        .where((card) => card.type == MemoryCardType.word)
-                        .map((card) => Padding(
-                              padding: const EdgeInsets.only(bottom: 12),
-                              child: _buildMemoryCard(card),
-                            ))
-                        .toList(),
-                  ),
-                ),
-                const SizedBox(width: 20),
-                // Right column - Definitions
-                SizedBox(
-                  width: 150,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: _memoryCards
-                        .where((card) => card.type == MemoryCardType.definition)
-                        .map((card) => Padding(
-                              padding: const EdgeInsets.only(bottom: 12),
-                              child: _buildMemoryCard(card),
-                            ))
-                        .toList(),
-                  ),
-                ),
-              ],
-            ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // First row of cards
+              Wrap(
+                spacing: 16,
+                runSpacing: 16,
+                alignment: WrapAlignment.center,
+                children: _memoryCards.take(5).map((card) {
+                  final index = _memoryCards.indexOf(card);
+                  return SizedBox(
+                    width: 120,
+                    height: 60,
+                    child: _buildFloatingCard(card, index),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 20),
+              // Second row of cards
+              Wrap(
+                spacing: 16,
+                runSpacing: 16,
+                alignment: WrapAlignment.center,
+                children: _memoryCards.skip(5).map((card) {
+                  final index = _memoryCards.indexOf(card);
+                  return SizedBox(
+                    width: 120,
+                    height: 60,
+                    child: _buildFloatingCard(card, index),
+                  );
+                }).toList(),
+              ),
+            ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildFloatingCard(MemoryCard card, int index) {
+    // Ensure we have a valid animation for this card
+    if (index >= _floatingAnimations.length) {
+      print('🔍 MemoryGameView: No animation for card $index, using static card');
+      return _buildMemoryCard(card);
+    }
+
+    return AnimatedBuilder(
+      animation: _floatingAnimations[index],
+      builder: (context, child) {
+        final offset = _floatingAnimations[index].value;
+        return Transform.translate(
+          offset: offset,
+          child: _buildMemoryCard(card),
+        );
+      },
     );
   }
 
@@ -289,8 +412,9 @@ class _MemoryGameViewState extends State<MemoryGameView> {
     return GestureDetector(
       onTap: () => _selectCard(card),
       child: AnimatedOpacity(
-        opacity: card.isFadingOut || card.isMatched ? 0.0 : 1.0,
-        duration: const Duration(milliseconds: 300),
+        opacity: card.isFadingOut ? 0.0 : (card.isFadingIn ? 1.0 : (card.isMatched ? 0.0 : 1.0)),
+        duration: Duration(milliseconds: card.isFadingOut || card.isFadingIn ? 800 : 300),
+        curve: Curves.easeInOut,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           width: double.infinity,
@@ -357,6 +481,16 @@ class _MemoryGameViewState extends State<MemoryGameView> {
 
   void _selectCard(MemoryCard card) {
     if (!_canSelect || card.isMatched) return;
+    
+    // If clicking the same card that's already selected, deselect it
+    if (_firstCard != null && _firstCard!.id == card.id) {
+      print('🔍 MemoryGameView: Deselecting first card');
+      setState(() {
+        _firstCard!.isSelected = false;
+        _firstCard = null;
+      });
+      return;
+    }
 
     setState(() {
       card.isSelected = true;
@@ -391,11 +525,14 @@ class _MemoryGameViewState extends State<MemoryGameView> {
         _secondCard!.isSelected = false;
       });
 
+      // Count each matched pair as one card processed
+      _totalCardsProcessed++;
+      
       // Check if we should replace the matched pair with new cards
       if (_remainingCards.isNotEmpty) {
         final newCard = _remainingCards.removeAt(0);
-        _totalCardsProcessed++;
         
+        print('🔍 MemoryGameView: Processed card ${_totalCardsProcessed}/${widget.cards.length}');
         print('🔍 MemoryGameView: Replacing matched pair with "${newCard.word}" - "${newCard.definition}"');
         print('🔍 MemoryGameView: Remaining cards: ${_remainingCards.length}');
         
@@ -405,14 +542,17 @@ class _MemoryGameViewState extends State<MemoryGameView> {
         
         print('🔍 MemoryGameView: First card index: $firstCardIndex, Second card index: $secondCardIndex');
         
-        // Start fade out animation for matched cards only
+        // Start gentle fade out animation for matched cards only
         setState(() {
           _firstCard!.isFadingOut = true;
           _secondCard!.isFadingOut = true;
         });
         
-        // After fade out, replace with new cards in exact same positions
-        Future.delayed(const Duration(milliseconds: 300), () {
+        // Don't pause all floating animations - let other cards continue moving
+        // Only the matched cards will fade out smoothly
+        
+        // After gentle fade out, replace with new cards in exact same positions
+        Future.delayed(const Duration(milliseconds: 800), () {
           if (mounted) {
             setState(() {
               // Replace the first matched card with new word card
@@ -428,6 +568,8 @@ class _MemoryGameViewState extends State<MemoryGameView> {
                   isFadingOut: false,
                   isFadingIn: true,
                 );
+                // Update animation for this position
+                _updateFloatingAnimation(firstCardIndex);
               }
               
               // Replace the second matched card with new definition card
@@ -443,11 +585,13 @@ class _MemoryGameViewState extends State<MemoryGameView> {
                   isFadingOut: false,
                   isFadingIn: true,
                 );
+                // Update animation for this position
+                _updateFloatingAnimation(secondCardIndex);
               }
             });
             
-            // After fade in animation completes, reset states
-            Future.delayed(const Duration(milliseconds: 300), () {
+            // After gentle fade in animation completes, reset states and resume floating
+            Future.delayed(const Duration(milliseconds: 800), () {
               if (mounted) {
                 setState(() {
                   for (var card in _memoryCards) {
@@ -455,6 +599,7 @@ class _MemoryGameViewState extends State<MemoryGameView> {
                     card.isFadingOut = false;
                   }
                 });
+                // Floating animations were never paused, so no need to resume
               }
             });
           }
@@ -469,14 +614,26 @@ class _MemoryGameViewState extends State<MemoryGameView> {
         });
       }
 
-      // Check if game is complete (all cards processed AND no more remaining cards)
-      final allCardsProcessed = _totalCardsProcessed >= widget.cards.length;
-      final noMoreReplacements = _remainingCards.isEmpty;
+      // Check if game is complete
+      bool gameComplete = false;
       
-      if (allCardsProcessed && noMoreReplacements) {
-        // Calculate success rate based on total cards processed vs total moves
-        final efficiency = _totalCardsProcessed > 0 ? _totalCardsProcessed / _moves : 0.0;
-        final wasSuccessful = efficiency >= 0.5; // 50% efficiency or higher is considered successful
+      if (_remainingCards.isEmpty) {
+        // For small decks (≤5 cards): game ends when all current cards are matched
+        // For large decks: game ends when all cards processed and no more replacements
+        if (widget.cards.length <= 5) {
+          gameComplete = _memoryCards.every((card) => card.isMatched);
+        } else {
+          gameComplete = _totalCardsProcessed >= widget.cards.length;
+        }
+      }
+      
+      if (gameComplete) {
+        // In shuffle mode, completing the memory game is always considered successful
+        // because the challenge is to match pairs, not to do it efficiently
+        final wasSuccessful = widget.shuffleMode ? true : 
+                             (_totalCardsProcessed > 0 ? _totalCardsProcessed / _moves >= 0.5 : false);
+        
+        print('🔍 MemoryGameView: Game complete! Shuffle mode: ${widget.shuffleMode}, Success: $wasSuccessful');
         
         // Call the onComplete callback if provided
         if (widget.onComplete != null) {

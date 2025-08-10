@@ -1,0 +1,177 @@
+{
+  "exercises": [
+    {
+      "targetWord": "terecht",
+      "wordTranslation": "justified",
+      "exercises": [
+        {
+          "type": "fillInBlank",
+          "prompt": "De straf was _____ voor wat hij had gedaan.",
+          "options": ["terecht", "onterecht", "recht", "rechtstreeks"],
+          "correctAnswer": "terecht",
+          "explanation": "'Terecht' means 'justified' or 'deserved'. The punishment was justified for what he had done.",
+          "hint": "Think about whether the punishment was deserved",
+          "difficulty": "medium"
+        },
+        {
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["De", "kritiek", "was", "terecht", "en", "nuttig"],
+          "correctAnswer": "De kritiek was terecht en nuttig",
+          "explanation": "'De kritiek was terecht en nuttig' means 'The criticism was justified and useful'.",
+          "hint": "Start with 'De kritiek'",
+          "difficulty": "medium"
+        },
+        {
+          "type": "multipleChoice",
+          "prompt": "What does 'terecht' mean in English?",
+          "options": ["Wrong", "Justified", "Direct", "Correct"],
+          "correctAnswer": "Justified",
+          "explanation": "'Terecht' means 'justified' or 'deserved'. It's used when something is fair or appropriate.",
+          "difficulty": "easy"
+        }
+      ],
+      "difficulty": "medium",
+      "category": "general"
+    },
+    {
+      "targetWord": "eigenlijk",
+      "wordTranslation": "actually",
+      "exercises": [
+        {
+          "type": "fillInBlank",
+          "prompt": "Ik _____ niet naar de winkel gaan, maar ik heb geen keus.",
+          "options": ["eigenlijk", "echt", "waar", "echtelijk"],
+          "correctAnswer": "eigenlijk",
+          "explanation": "'Eigenlijk' means 'actually' or 'really'. It's used to express what you really think or what the real situation is.",
+          "hint": "Think about what you really want to do",
+          "difficulty": "medium"
+        },
+        {
+          "type": "translation",
+          "prompt": "Translate 'Actually, I don't like coffee' to Dutch:",
+          "options": ["Eigenlijk hou ik niet van koffie", "Echt hou ik niet van koffie", "Waar hou ik niet van koffie", "Echtelijk hou ik niet van koffie"],
+          "correctAnswer": "Eigenlijk hou ik niet van koffie",
+          "explanation": "'Eigenlijk hou ik niet van koffie' is the correct translation. 'Eigenlijk' means 'actually'.",
+          "difficulty": "medium"
+        },
+        {
+          "type": "contextClue",
+          "prompt": "In the sentence 'Eigenlijk is het niet zo moeilijk', what does 'eigenlijk' indicate?",
+          "options": ["It's very difficult", "It's not difficult at all", "It's actually not that difficult", "It's impossible"],
+          "correctAnswer": "It's actually not that difficult",
+          "explanation": "'Eigenlijk' indicates that the speaker is revealing the real or actual situation.",
+          "difficulty": "hard"
+        }
+      ],
+      "difficulty": "medium",
+      "category": "general"
+    },
+    {
+      "targetWord": "nogal",
+      "wordTranslation": "quite",
+      "exercises": [
+        {
+          "type": "fillInBlank",
+          "prompt": "Het is _____ koud vandaag.",
+          "options": ["nogal", "niet", "heel", "erg"],
+          "correctAnswer": "nogal",
+          "explanation": "'Nogal' means 'quite' or 'rather'. It's used to express a moderate degree of something.",
+          "hint": "Think about a moderate degree of cold",
+          "difficulty": "easy"
+        },
+        {
+          "type": "synonymAntonym",
+          "prompt": "Which word is a synonym of 'nogal'?",
+          "options": ["heel", "niet", "behoorlijk", "erg"],
+          "correctAnswer": "behoorlijk",
+          "explanation": "'Behoorlijk' is a synonym of 'nogal'. Both mean 'quite' or 'rather'.",
+          "difficulty": "medium"
+        },
+        {
+          "type": "wordOrder",
+          "prompt": "Complete the sentence with the correct word order: 'Dat is _____ interessant'",
+          "options": ["nogal", "interessant", "dat", "is"],
+          "correctAnswer": "nogal",
+          "explanation": "'Dat is nogal interessant' means 'That is quite interesting'.",
+          "difficulty": "easy"
+        }
+      ],
+      "difficulty": "easy",
+      "category": "general"
+    },
+    {
+      "targetWord": "zomaar",
+      "wordTranslation": "out of the blue",
+      "exercises": [
+        {
+          "type": "fillInBlank",
+          "prompt": "Hij kwam _____ langs zonder te bellen.",
+          "options": ["zomaar", "zo", "maar", "zonder"],
+          "correctAnswer": "zomaar",
+          "explanation": "'Zomaar' means 'out of the blue' or 'just like that'. It indicates something unexpected or without reason.",
+          "hint": "Think about doing something unexpectedly",
+          "difficulty": "medium"
+        },
+        {
+          "type": "multipleChoice",
+          "prompt": "What does 'zomaar' express?",
+          "options": ["A planned action", "An unexpected action", "A difficult action", "A necessary action"],
+          "correctAnswer": "An unexpected action",
+          "explanation": "'Zomaar' expresses that something happens unexpectedly or without a clear reason.",
+          "difficulty": "medium"
+        },
+        {
+          "type": "sentenceBuilding",
+          "prompt": "Arrange the words to form a correct Dutch sentence:",
+          "options": ["Hij", "zei", "zomaar", "dat", "hij", "weg", "ging"],
+          "correctAnswer": "Hij zei zomaar dat hij weg ging",
+          "explanation": "'Hij zei zomaar dat hij weg ging' means 'He just said out of the blue that he was leaving'.",
+          "difficulty": "hard"
+        }
+      ],
+      "difficulty": "medium",
+      "category": "casual"
+    },
+    {
+      "targetWord": "geschikt",
+      "wordTranslation": "suitable",
+      "exercises": [
+        {
+          "type": "fillInBlank",
+          "prompt": "Deze kamer is _____ voor een vergadering.",
+          "options": ["geschikt", "ongeschikt", "gemaakt", "gebruikt"],
+          "correctAnswer": "geschikt",
+          "explanation": "'Geschikt' means 'suitable' or 'appropriate'. This room is suitable for a meeting.",
+          "hint": "Think about whether the room is appropriate for the purpose",
+          "difficulty": "easy"
+        },
+        {
+          "type": "translation",
+          "prompt": "Translate 'This tool is suitable for the job' to Dutch:",
+          "options": ["Dit gereedschap is geschikt voor het werk", "Dit gereedschap is ongeschikt voor het werk", "Dit gereedschap is gemaakt voor het werk", "Dit gereedschap is gebruikt voor het werk"],
+          "correctAnswer": "Dit gereedschap is geschikt voor het werk",
+          "explanation": "'Dit gereedschap is geschikt voor het werk' is the correct translation.",
+          "difficulty": "medium"
+        },
+        {
+          "type": "antonym",
+          "prompt": "What is the opposite of 'geschikt'?",
+          "options": ["gemaakt", "gebruikt", "ongeschikt", "geschikt"],
+          "correctAnswer": "ongeschikt",
+          "explanation": "'Ongeschikt' is the opposite of 'geschikt'. It means 'unsuitable' or 'inappropriate'.",
+          "difficulty": "easy"
+        }
+      ],
+      "difficulty": "easy",
+      "category": "general"
+    }
+  ],
+  "metadata": {
+    "source": "Sample Dutch Words",
+    "version": "1.0",
+    "importedAt": "2024-01-01T00:00:00Z",
+    "totalExercises": 5,
+    "categories": ["general", "casual"]
+  }
+} 

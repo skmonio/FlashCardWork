@@ -98,34 +98,42 @@ class _TrueFalseViewState extends State<TrueFalseView> {
       // True question - use correct answer
       _question = 'Does the following word "${currentCard.word}" mean "${correctAnswer}"?';
       _correctAnswer = true;
+      print('🔍 TrueFalse: TRUE question - "${currentCard.word}" means "${correctAnswer}" = TRUE');
     } else {
       // False question - use wrong answer from another card
       if (otherCards.isNotEmpty) {
-        // Try to find a card with a different answer
-        FlashCard? randomCard;
+        // Shuffle other cards to get more variety
+        otherCards.shuffle();
+        
         String wrongAnswer = '';
-        int attempts = 0;
-        final maxAttempts = 10;
+        bool foundDifferentAnswer = false;
         
-        do {
-          randomCard = otherCards[random.nextInt(otherCards.length)];
-          wrongAnswer = randomCard!.definition;
-          attempts++;
-        } while (attempts < maxAttempts && 
-                 wrongAnswer.toLowerCase().trim() == currentCard.definition.toLowerCase().trim());
+        // Try each card until we find one with a truly different definition
+        for (final otherCard in otherCards) {
+          if (otherCard.definition.toLowerCase().trim() != currentCard.definition.toLowerCase().trim()) {
+            wrongAnswer = otherCard.definition;
+            foundDifferentAnswer = true;
+            print('🔍 TrueFalse: Found different answer: "${wrongAnswer}" vs correct "${currentCard.definition}"');
+            break;
+          }
+        }
         
-        // If we found a different answer, use it
-        if (wrongAnswer.toLowerCase().trim() != currentCard.definition.toLowerCase().trim()) {
+        if (foundDifferentAnswer) {
           _question = 'Does the following word "${currentCard.word}" mean "${wrongAnswer}"?';
+          _correctAnswer = false;
+          print('🔍 TrueFalse: FALSE question - "${currentCard.word}" does NOT mean "${wrongAnswer}" = FALSE');
         } else {
-          // Use a fallback if we couldn't find a different answer
-          _question = 'Does the following word "${currentCard.word}" mean "something else"?';
+          // If all definitions are somehow the same (very unlikely), force a true question instead
+          _question = 'Does the following word "${currentCard.word}" mean "${currentCard.definition}"?';
+          _correctAnswer = true;
+          print('🔍 TrueFalse: All definitions identical, switching to TRUE question - "${currentCard.word}" means "${currentCard.definition}" = TRUE');
         }
       } else {
-        // Fallback for false question
-        _question = 'Does the following word "${currentCard.word}" mean "something else"?';
+        // If no other cards available, force a true question instead of confusing fallback
+        _question = 'Does the following word "${currentCard.word}" mean "${currentCard.definition}"?';
+        _correctAnswer = true;
+        print('🔍 TrueFalse: No other cards available, switching to TRUE question - "${currentCard.word}" means "${currentCard.definition}" = TRUE');
       }
-      _correctAnswer = false;
     }
     
     // Store question data for future reference
@@ -277,6 +285,9 @@ class _TrueFalseViewState extends State<TrueFalseView> {
     
     final isCorrect = (answer == _correctAnswer);
     final currentCard = widget.cards[_currentIndex];
+    
+    print('🔍 TrueFalse: Answer selected - User chose: ${answer ? "TRUE" : "FALSE"}, Correct answer: ${_correctAnswer! ? "TRUE" : "FALSE"}, Is correct: $isCorrect');
+    print('🔍 TrueFalse: Question was: $_question');
     
     // Update learning progress in the provider
     _updateCardLearningProgress(currentCard, isCorrect);

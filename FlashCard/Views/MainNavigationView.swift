@@ -617,6 +617,24 @@ struct HomeContentView: View {
                         .cornerRadius(12)
                         .shadow(color: .blue.opacity(0.2), radius: 3, x: 0, y: 1)
                     }
+                    
+                    NavigationLink(destination: DutchWordsView()) {
+                        HStack {
+                            Image(systemName: "textformat")
+                                .font(.title2)
+                                .foregroundColor(.green)
+                                .frame(width: 30)
+                            Text("Dutch Words")
+                                .font(.body)
+                                .foregroundColor(.primary)
+                            Spacer()
+                        }
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(Color(.secondarySystemGroupedBackground))
+                        .cornerRadius(12)
+                        .shadow(color: .green.opacity(0.2), radius: 3, x: 0, y: 1)
+                    }
                 }
                 .padding(.horizontal)
             }
