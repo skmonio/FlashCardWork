@@ -10,6 +10,7 @@ import '../models/game_session.dart';
 import '../services/sound_manager.dart';
 import '../services/xp_service.dart';
 import '../components/xp_progress_widget.dart';
+import '../components/animated_xp_counter.dart';
 
 class MemoryGameView extends StatefulWidget {
   final List<FlashCard> cards;
@@ -44,6 +45,8 @@ class _MemoryGameViewState extends State<MemoryGameView>
   List<AnimationController> _floatingControllers = [];
   List<Animation<Offset>> _floatingAnimations = [];
   final GameSession _gameSession = GameSession();
+  List<_ReplacementRequest> _replacementQueue = []; // Queue for replacement requests
+  bool _isProcessingReplacements = false; // Track if we're currently processing replacements
 
   @override
   void initState() {
@@ -65,6 +68,8 @@ class _MemoryGameViewState extends State<MemoryGameView>
     _totalCardsProcessed = 0;
     _matches = 0;
     _moves = 0;
+    _replacementQueue.clear();
+    _isProcessingReplacements = false;
     
     // If we have 5 or fewer cards, use all of them and the game ends when all are matched
     if (widget.cards.length <= 5) {
@@ -315,8 +320,8 @@ class _MemoryGameViewState extends State<MemoryGameView>
                 children: _memoryCards.take(5).map((card) {
                   final index = _memoryCards.indexOf(card);
                   return SizedBox(
-                    width: 120,
-                    height: 60,
+                    width: 140,
+                    height: 70,
                     child: _buildFloatingCard(card, index),
                   );
                 }).toList(),
@@ -330,8 +335,8 @@ class _MemoryGameViewState extends State<MemoryGameView>
                 children: _memoryCards.skip(5).map((card) {
                   final index = _memoryCards.indexOf(card);
                   return SizedBox(
-                    width: 120,
-                    height: 60,
+                    width: 140,
+                    height: 70,
                     child: _buildFloatingCard(card, index),
                   );
                 }).toList(),
@@ -417,13 +422,13 @@ class _MemoryGameViewState extends State<MemoryGameView>
     return GestureDetector(
       onTap: () => _selectCard(card),
       child: AnimatedOpacity(
-        opacity: card.isFadingOut ? 0.0 : (card.isFadingIn ? 1.0 : (card.isMatched ? 0.0 : 1.0)),
-        duration: Duration(milliseconds: card.isFadingOut || card.isFadingIn ? 800 : 300),
+        opacity: _calculateCardOpacity(card),
+        duration: Duration(milliseconds: card.isFadingOut || card.isFadingIn ? 500 : 200),
         curve: Curves.easeInOut,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           width: double.infinity,
-          height: 60,
+          height: 70,
           decoration: BoxDecoration(
             color: backgroundColor,
             borderRadius: BorderRadius.circular(12),
@@ -443,8 +448,8 @@ class _MemoryGameViewState extends State<MemoryGameView>
     return Center(
       child: Text(
         card.content,
-        style: const TextStyle(
-          fontSize: 16,
+        style: TextStyle(
+          fontSize: _calculateFontSize(card.content),
           fontWeight: FontWeight.w500,
           color: Colors.black87,
         ),
@@ -452,6 +457,55 @@ class _MemoryGameViewState extends State<MemoryGameView>
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
       ),
+    );
+  }
+
+  double _calculateFontSize(String text) {
+    // Base font size
+    double baseSize = 16.0;
+    
+    // Reduce font size for longer text
+    if (text.length > 20) {
+      baseSize = 14.0;
+    }
+    if (text.length > 30) {
+      baseSize = 12.0;
+    }
+    if (text.length > 40) {
+      baseSize = 10.0;
+    }
+    
+    return baseSize;
+  }
+
+  double _calculateCardOpacity(MemoryCard card) {
+    // If card is fading out, keep it invisible
+    if (card.isFadingOut) {
+      return 0.0;
+    }
+    
+    // If card is fading in, show it
+    if (card.isFadingIn) {
+      return 1.0;
+    }
+    
+    // If card is matched, hide it
+    if (card.isMatched) {
+      return 0.0;
+    }
+    
+    // Check if this card is in the replacement queue (waiting to be replaced)
+    if (_isCardInReplacementQueue(card.id)) {
+      return 0.0; // Keep it invisible while waiting
+    }
+    
+    // Otherwise, show the card normally
+    return 1.0;
+  }
+
+  bool _isCardInReplacementQueue(String cardId) {
+    return _replacementQueue.any((request) => 
+      request.firstCardId == cardId || request.secondCardId == cardId
     );
   }
 
@@ -541,7 +595,7 @@ class _MemoryGameViewState extends State<MemoryGameView>
         final newCard = _remainingCards.removeAt(0);
         
         print('🔍 MemoryGameView: Processed card ${_totalCardsProcessed}/${widget.cards.length}');
-        print('🔍 MemoryGameView: Replacing matched pair with "${newCard.word}" - "${newCard.definition}"');
+        print('🔍 MemoryGameView: Queueing replacement for "${newCard.word}" - "${newCard.definition}"');
         print('🔍 MemoryGameView: Remaining cards: ${_remainingCards.length}');
         
         // Find the indices of the matched cards to replace them in the same positions
@@ -550,70 +604,27 @@ class _MemoryGameViewState extends State<MemoryGameView>
         
         print('🔍 MemoryGameView: First card index: $firstCardIndex, Second card index: $secondCardIndex');
         
+        // Add replacement request to queue
+        _replacementQueue.add(_ReplacementRequest(
+          newCard: newCard,
+          firstCardIndex: firstCardIndex,
+          secondCardIndex: secondCardIndex,
+          firstCardId: _firstCard!.id,
+          secondCardId: _secondCard!.id,
+        ));
+        
         // Start gentle fade out animation for matched cards only
         setState(() {
           _firstCard!.isFadingOut = true;
           _secondCard!.isFadingOut = true;
         });
         
-        // Don't pause all floating animations - let other cards continue moving
-        // Only the matched cards will fade out smoothly
+        // Process the replacement queue if not already processing
+        if (!_isProcessingReplacements) {
+          _processReplacementQueue();
+        }
         
-        // After gentle fade out, replace with new cards in exact same positions
-        Future.delayed(const Duration(milliseconds: 800), () {
-          if (mounted) {
-            setState(() {
-              // Replace the first matched card with new word card
-              if (firstCardIndex != -1) {
-                _memoryCards[firstCardIndex] = MemoryCard(
-                  id: '${newCard.id}_word',
-                  content: newCard.word,
-                  type: MemoryCardType.word,
-                  originalCard: newCard,
-                  isMatched: false,
-                  isSelected: false,
-                  isWrong: false,
-                  isFadingOut: false,
-                  isFadingIn: true,
-                );
-                // Update animation for this position
-                _updateFloatingAnimation(firstCardIndex);
-              }
-              
-              // Replace the second matched card with new definition card
-              if (secondCardIndex != -1) {
-                _memoryCards[secondCardIndex] = MemoryCard(
-                  id: '${newCard.id}_def',
-                  content: newCard.definition,
-                  type: MemoryCardType.definition,
-                  originalCard: newCard,
-                  isMatched: false,
-                  isSelected: false,
-                  isWrong: false,
-                  isFadingOut: false,
-                  isFadingIn: true,
-                );
-                // Update animation for this position
-                _updateFloatingAnimation(secondCardIndex);
-              }
-            });
-            
-            // After gentle fade in animation completes, reset states and resume floating
-            Future.delayed(const Duration(milliseconds: 800), () {
-              if (mounted) {
-                setState(() {
-                  for (var card in _memoryCards) {
-                    card.isFadingIn = false;
-                    card.isFadingOut = false;
-                  }
-                });
-                // Floating animations were never paused, so no need to resume
-              }
-            });
-          }
-        });
-        
-        print('🔍 MemoryGameView: Replaced cards, total cards in memory: ${_memoryCards.length}');
+        print('🔍 MemoryGameView: Queued replacement, queue length: ${_replacementQueue.length}');
       } else {
         // No more cards to replace with, mark as matched
         setState(() {
@@ -695,7 +706,7 @@ class _MemoryGameViewState extends State<MemoryGameView>
       SoundManager().playWrongSound();
 
       // Reset wrong cards after a delay
-      Future.delayed(const Duration(milliseconds: 1000), () {
+      Future.delayed(const Duration(milliseconds: 800), () {
         if (mounted) {
           setState(() {
             _firstCard!.isWrong = false;
@@ -707,6 +718,84 @@ class _MemoryGameViewState extends State<MemoryGameView>
         }
       });
     }
+  }
+
+  void _processReplacementQueue() {
+    if (_replacementQueue.isEmpty || _isProcessingReplacements) {
+      return;
+    }
+
+    _isProcessingReplacements = true;
+    print('🔍 MemoryGameView: Processing replacement queue, length: ${_replacementQueue.length}');
+
+    // Process the first replacement in the queue
+    final request = _replacementQueue.removeAt(0);
+    
+    // Wait for fade out to complete, then replace cards
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (mounted) {
+        setState(() {
+          // Replace the first matched card with new word card
+          if (request.firstCardIndex != -1) {
+            _memoryCards[request.firstCardIndex] = MemoryCard(
+              id: '${request.newCard.id}_word',
+              content: request.newCard.word,
+              type: MemoryCardType.word,
+              originalCard: request.newCard,
+              isMatched: false,
+              isSelected: false,
+              isWrong: false,
+              isFadingOut: false,
+              isFadingIn: true,
+            );
+            // Update animation for this position
+            _updateFloatingAnimation(request.firstCardIndex);
+          }
+          
+          // Replace the second matched card with new definition card
+          if (request.secondCardIndex != -1) {
+            _memoryCards[request.secondCardIndex] = MemoryCard(
+              id: '${request.newCard.id}_def',
+              content: request.newCard.definition,
+              type: MemoryCardType.definition,
+              originalCard: request.newCard,
+              isMatched: false,
+              isSelected: false,
+              isWrong: false,
+              isFadingOut: false,
+              isFadingIn: true,
+            );
+            // Update animation for this position
+            _updateFloatingAnimation(request.secondCardIndex);
+          }
+        });
+        
+        print('🔍 MemoryGameView: Replaced cards for "${request.newCard.word}", queue remaining: ${_replacementQueue.length}');
+        
+        // After fade in completes, reset states only for the replaced cards and process next replacement
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted) {
+            setState(() {
+              // Only reset states for the cards that were actually replaced
+              if (request.firstCardIndex != -1 && request.firstCardIndex < _memoryCards.length) {
+                _memoryCards[request.firstCardIndex].isFadingIn = false;
+                _memoryCards[request.firstCardIndex].isFadingOut = false;
+              }
+              if (request.secondCardIndex != -1 && request.secondCardIndex < _memoryCards.length) {
+                _memoryCards[request.secondCardIndex].isFadingIn = false;
+                _memoryCards[request.secondCardIndex].isFadingOut = false;
+              }
+            });
+            
+            // Process next replacement in queue if any
+            _isProcessingReplacements = false;
+            if (_replacementQueue.isNotEmpty) {
+              _processReplacementQueue();
+            }
+          }
+        });
+      }
+    });
   }
 
   Future<void> _updateCardLearningProgress(FlashCard card, bool wasCorrect) async {
@@ -845,8 +934,24 @@ class _MemoryGameViewState extends State<MemoryGameView>
 
   void _awardXp() {
     if (!widget.shuffleMode && _gameSession.xpGained > 0) {
-      XpService.awardSessionXp(context, _gameSession, isShuffleMode: widget.shuffleMode);
+      final userProfileProvider = context.read<UserProfileProvider>();
+      XpService.awardSessionXp(userProfileProvider, _gameSession, isShuffleMode: widget.shuffleMode);
     }
+    
+    // Update session statistics
+    final totalPairs = _totalPairs;
+    final accuracy = totalPairs > 0 ? (_matches / totalPairs) : 0.0;
+    final isPerfect = _matches == totalPairs && totalPairs > 0;
+    
+    context.read<UserProfileProvider>().updateSessionStats(
+      cardsStudied: totalPairs * 2, // Each pair has 2 cards
+      sessionAccuracy: accuracy,
+      isPerfect: isPerfect,
+    );
+    
+    // Update streak (increment by 1 for completing a session)
+    final currentStreak = context.read<UserProfileProvider>().currentStreak;
+    context.read<UserProfileProvider>().updateStreak(currentStreak + 1);
   }
 
   Widget _buildResultsView() {
@@ -904,14 +1009,8 @@ class _MemoryGameViewState extends State<MemoryGameView>
                   const SizedBox(height: 16),
                   _buildStatCard('Efficiency', '$efficiency%', Icons.analytics, Colors.orange),
                   const SizedBox(height: 16),
-                  _buildStatCard('XP Earned', '+${_gameSession.xpGained}', Icons.star, Colors.amber),
-                  const SizedBox(height: 32),
-                  
-                  // XP Progress Bar
-                  if (!widget.shuffleMode)
-                    XpProgressWidget(xpGained: _gameSession.xpGained),
-                  if (!widget.shuffleMode)
-                    const SizedBox(height: 32),
+                  _buildStatCard('XP Earned', '', Icons.star, Colors.amber,
+                    AnimatedXpCounter(xpGained: _gameSession.xpGained)),
                   
                   // Action buttons
                   Row(
@@ -945,7 +1044,7 @@ class _MemoryGameViewState extends State<MemoryGameView>
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, [Color? color]) {
+  Widget _buildStatCard(String title, String value, IconData icon, [Color? color, Widget? child]) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -970,7 +1069,7 @@ class _MemoryGameViewState extends State<MemoryGameView>
               ),
             ),
           ),
-          Text(
+          child ?? Text(
             value,
             style: TextStyle(
               fontSize: 18,
@@ -1013,4 +1112,20 @@ class MemoryCard {
 enum MemoryCardType {
   word,
   definition,
+}
+
+class _ReplacementRequest {
+  final FlashCard newCard;
+  final int firstCardIndex;
+  final int secondCardIndex;
+  final String firstCardId;
+  final String secondCardId;
+
+  _ReplacementRequest({
+    required this.newCard,
+    required this.firstCardIndex,
+    required this.secondCardIndex,
+    required this.firstCardId,
+    required this.secondCardId,
+  });
 } 

@@ -9,10 +9,18 @@ class XpService {
     debugPrint('🔍 XpService: Answer recorded - Correct: $isCorrect, Total XP: ${gameSession.xpGained}');
   }
   
-  static Future<void> awardSessionXp(context, GameSession gameSession, {bool isShuffleMode = false}) async {
+  static Future<void> awardSessionXp(UserProfileProvider userProfileProvider, GameSession gameSession, {bool isShuffleMode = false}) async {
+    debugPrint('🔍 XpService: awardSessionXp called - isShuffleMode: $isShuffleMode, xpGained: ${gameSession.xpGained}');
     if (!isShuffleMode && gameSession.xpGained > 0) {
-      await context.read<UserProfileProvider>().addXp(gameSession.xpGained);
-      debugPrint('🔍 XpService: Awarded ${gameSession.xpGained} XP to user profile');
+      debugPrint('🔍 XpService: About to award ${gameSession.xpGained} XP to user profile');
+      try {
+        await userProfileProvider.addXp(gameSession.xpGained);
+        debugPrint('🔍 XpService: Successfully awarded ${gameSession.xpGained} XP to user profile');
+      } catch (e) {
+        debugPrint('🔍 XpService: Error awarding XP: $e');
+      }
+    } else {
+      debugPrint('🔍 XpService: Skipping XP award - isShuffleMode: $isShuffleMode, xpGained: ${gameSession.xpGained}');
     }
   }
   

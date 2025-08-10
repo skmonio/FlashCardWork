@@ -10,6 +10,7 @@ import '../providers/dutch_word_exercise_provider.dart';
 import '../providers/user_profile_provider.dart';
 import '../models/dutch_word_exercise.dart';
 import '../components/xp_progress_widget.dart';
+import '../components/animated_xp_counter.dart';
 
 class MultipleChoiceView extends StatefulWidget {
   final List<FlashCard> cards;
@@ -141,6 +142,9 @@ class _MultipleChoiceViewState extends State<MultipleChoiceView> {
     
     // Update learning progress in the provider
     _updateCardLearningProgress(currentCard, isCorrect);
+    
+    // Track XP for the answer
+    XpService.recordAnswer(_gameSession, isCorrect);
     
     setState(() {
       _selectedAnswer = index;
@@ -307,6 +311,8 @@ class _MultipleChoiceViewState extends State<MultipleChoiceView> {
       });
       _generateQuestion();
     } else {
+      // Award XP for the session
+      _awardXp();
       // Show results when on last question and clicking next
       setState(() {
         _showingResults = true;
@@ -722,7 +728,12 @@ class _MultipleChoiceViewState extends State<MultipleChoiceView> {
                   _buildStatCard('Correct', _correctAnswers.toString(), Icons.check_circle, Colors.green),
                   const SizedBox(height: 16),
                   _buildStatCard('Incorrect', (_totalAnswered - _correctAnswers).toString(), Icons.cancel, Colors.red),
+                  const SizedBox(height: 16),
+                  _buildStatCard('XP Earned', '', Icons.star, Colors.amber,
+                    AnimatedXpCounter(xpGained: _gameSession.xpGained)),
                   const SizedBox(height: 32),
+                  
+
                   
                   // Action buttons
                   Row(
@@ -737,6 +748,7 @@ class _MultipleChoiceViewState extends State<MultipleChoiceView> {
                               _showingResults = false;
                               _answered = false;
                               _selectedAnswer = null;
+                              _gameSession.reset(); // Reset XP tracking
                               // Reset all navigation state
                               _answeredQuestions.clear();
                               _correctAnswersMap.clear();
@@ -767,7 +779,7 @@ class _MultipleChoiceViewState extends State<MultipleChoiceView> {
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, [Color? color]) {
+  Widget _buildStatCard(String title, String value, IconData icon, [Color? color, Widget? child]) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -792,7 +804,7 @@ class _MultipleChoiceViewState extends State<MultipleChoiceView> {
               ),
             ),
           ),
-          Text(
+          child ?? Text(
             value,
             style: TextStyle(
               fontSize: 18,
@@ -849,5 +861,26 @@ class _MultipleChoiceViewState extends State<MultipleChoiceView> {
         ],
       ),
     );
+  }
+
+  void _awardXp() {
+    if (_gameSession.xpGained > 0) {
+      final userProfileProvider = context.read<UserProfileProvider>();
+      XpService.awardSessionXp(userProfileProvider, _gameSession, isShuffleMode: false);
+    }
+    
+    // Update session statistics
+    final accuracy = _totalAnswered > 0 ? (_correctAnswers / _totalAnswered) : 0.0;
+    final isPerfect = _correctAnswers == _totalAnswered && _totalAnswered > 0;
+    
+    context.read<UserProfileProvider>().updateSessionStats(
+      cardsStudied: _totalAnswered,
+      sessionAccuracy: accuracy,
+      isPerfect: isPerfect,
+    );
+    
+    // Update streak (increment by 1 for completing a session)
+    final currentStreak = context.read<UserProfileProvider>().currentStreak;
+    context.read<UserProfileProvider>().updateStreak(currentStreak + 1);
   }
 } 

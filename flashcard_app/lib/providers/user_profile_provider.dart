@@ -64,14 +64,20 @@ class UserProfileProvider extends ChangeNotifier {
 
   // Load profile from storage
   Future<void> _loadFromStorage() async {
+    print('🔍 UserProfileProvider: _loadFromStorage called');
     final prefs = await SharedPreferences.getInstance();
     final profileJson = prefs.getString(_profileKey);
+    
+    print('🔍 UserProfileProvider: Loaded profile JSON: $profileJson');
     
     if (profileJson != null) {
       try {
         final profileData = json.decode(profileJson);
+        print('🔍 UserProfileProvider: Decoded profile data: $profileData');
         _profile = UserProfile.fromJson(profileData);
+        print('🔍 UserProfileProvider: Loaded profile - XP: ${_profile.xp}, Level: ${_profile.level}');
       } catch (e) {
+        print('🔍 UserProfileProvider: Error loading profile, using default: $e');
         // If loading fails, use default profile
         _profile = UserProfile(
           username: 'Learner',
@@ -88,16 +94,22 @@ class UserProfileProvider extends ChangeNotifier {
           perfectSessions: 0,
         );
       }
+    } else {
+      print('🔍 UserProfileProvider: No profile found in storage, using default');
     }
   }
 
   // Save profile to storage
   Future<void> _saveToStorage() async {
     try {
+      print('🔍 UserProfileProvider: _saveToStorage called');
       final prefs = await SharedPreferences.getInstance();
       final profileJson = json.encode(_profile.toJson());
+      print('🔍 UserProfileProvider: Profile JSON: $profileJson');
       await prefs.setString(_profileKey, profileJson);
+      print('🔍 UserProfileProvider: Profile saved to SharedPreferences successfully');
     } catch (e) {
+      print('🔍 UserProfileProvider: Error saving profile: $e');
       _error = 'Failed to save profile: $e';
       notifyListeners();
     }
@@ -127,6 +139,8 @@ class UserProfileProvider extends ChangeNotifier {
   // Add XP and check for level up
   Future<void> addXp(int xpToAdd) async {
     print('🔍 UserProfileProvider: addXp called with $xpToAdd XP');
+    print('🔍 UserProfileProvider: Current profile XP: ${_profile.xp}, Level: ${_profile.level}');
+    
     final oldLevel = _profile.level;
     final oldXp = _profile.xp;
     final newXp = _profile.xp + xpToAdd;
@@ -145,6 +159,7 @@ class UserProfileProvider extends ChangeNotifier {
     
     _profile = _profile.copyWith(xp: newXp, level: newLevel);
     
+    print('🔍 UserProfileProvider: After copyWith - XP: ${_profile.xp}, Level: ${_profile.level}');
     print('🔍 UserProfileProvider: Progress to next level: ${_profile.progressToNextLevel}');
     
     // Check for level up
@@ -156,9 +171,13 @@ class UserProfileProvider extends ChangeNotifier {
     // Check achievements
     _checkAchievements();
     
+    print('🔍 UserProfileProvider: About to save to storage');
     await _saveToStorage();
+    print('🔍 UserProfileProvider: Storage save complete');
+    
+    print('🔍 UserProfileProvider: About to call notifyListeners');
     notifyListeners();
-    print('🔍 UserProfileProvider: XP update complete, notifyListeners called');
+    print('🔍 UserProfileProvider: notifyListeners called - XP update complete');
   }
 
   // Update session statistics
@@ -318,6 +337,25 @@ class UserProfileProvider extends ChangeNotifier {
     _profile = UserProfile(
       username: 'Learner',
       selectedAvatar: 'person',
+      xp: 0,
+      level: 1,
+      achievements: UserProfileDefaults.defaultAchievements,
+      levelRewards: UserProfileDefaults.defaultLevelRewards,
+      totalSessions: 0,
+      currentStreak: 0,
+      bestStreak: 0,
+      accuracy: 0.0,
+      totalCardsStudied: 0,
+      perfectSessions: 0,
+    );
+    
+    await _saveToStorage();
+    notifyListeners();
+  }
+
+  // Reset XP and progress
+  Future<void> resetXpAndProgress() async {
+    _profile = _profile.copyWith(
       xp: 0,
       level: 1,
       achievements: UserProfileDefaults.defaultAchievements,

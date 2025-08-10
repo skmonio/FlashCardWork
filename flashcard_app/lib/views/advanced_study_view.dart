@@ -2,9 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:math';
 import '../models/flash_card.dart';
+import '../models/game_session.dart';
 import '../providers/flashcard_provider.dart';
 import '../providers/dutch_word_exercise_provider.dart';
+import '../providers/user_profile_provider.dart';
 import '../models/dutch_word_exercise.dart';
+import '../services/xp_service.dart';
+import '../components/xp_progress_widget.dart';
+import '../components/animated_xp_counter.dart';
 
 enum SwipeDirection {
   none,
@@ -42,6 +47,7 @@ class _AdvancedStudyViewState extends State<AdvancedStudyView>
   bool _showingResults = false;
   SwipeDirection _swipeDirection = SwipeDirection.none;
   double _swipeIntensity = 0;
+  final GameSession _gameSession = GameSession();
   
   // Animation controllers
   late AnimationController _flipController;
@@ -752,6 +758,8 @@ class _AdvancedStudyViewState extends State<AdvancedStudyView>
         _unknownCards.add(currentCard.id);
         _unknownHistory[_currentIndex] = true;
         _combo = 0;
+        // Track XP for incorrect answer (0 XP)
+        XpService.recordAnswer(_gameSession, false);
         // Update learning progress - marked as incorrect
         _updateCardLearningProgress(currentCard, false);
         break;
@@ -760,6 +768,8 @@ class _AdvancedStudyViewState extends State<AdvancedStudyView>
         _knownHistory[_currentIndex] = true;
         _combo++;
         if (_combo > _maxCombo) _maxCombo = _combo;
+        // Track XP for correct answer (5 XP)
+        XpService.recordAnswer(_gameSession, true);
         // Update learning progress - marked as correct
         _updateCardLearningProgress(currentCard, true);
         break;
@@ -876,6 +886,8 @@ class _AdvancedStudyViewState extends State<AdvancedStudyView>
           _swipeIntensity = 0;
           
           if (_currentIndex >= widget.cards.length) {
+            // Award XP for the session
+            _awardXp();
             _showingResults = true;
           } else {
             _isShowingFront = !widget.startFlipped;
@@ -986,6 +998,9 @@ class _AdvancedStudyViewState extends State<AdvancedStudyView>
                   const SizedBox(height: 16),
                   _buildStatCard('Known', _knownCards.length.toString(), Icons.check_circle, Colors.green),
                   const SizedBox(height: 16),
+                  _buildStatCard('XP Earned', '', Icons.star, Colors.amber,
+                    AnimatedXpCounter(xpGained: _gameSession.xpGained)),
+                  const SizedBox(height: 16),
                   _buildStatCard('Unknown', _unknownCards.length.toString(), Icons.cancel, Colors.red),
                   const SizedBox(height: 16),
                   _buildStatCard('Skipped', _skippedCards.length.toString(), Icons.skip_next, Colors.orange),
@@ -1008,6 +1023,7 @@ class _AdvancedStudyViewState extends State<AdvancedStudyView>
                               _skippedCards.clear();
                               _combo = 0;
                               _maxCombo = 0;
+                              _gameSession.reset(); // Reset XP tracking
                               _sessionStartTime = DateTime.now();
                               _showingResults = false;
                               _isShowingFront = !widget.startFlipped;
@@ -1038,7 +1054,7 @@ class _AdvancedStudyViewState extends State<AdvancedStudyView>
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, [Color? color]) {
+  Widget _buildStatCard(String title, String value, IconData icon, [Color? color, Widget? child]) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -1063,7 +1079,7 @@ class _AdvancedStudyViewState extends State<AdvancedStudyView>
               ),
             ),
           ),
-          Text(
+          child ?? Text(
             value,
             style: TextStyle(
               fontSize: 18,
@@ -1074,5 +1090,27 @@ class _AdvancedStudyViewState extends State<AdvancedStudyView>
         ],
       ),
     );
+  }
+
+  void _awardXp() {
+    if (_gameSession.xpGained > 0) {
+      final userProfileProvider = context.read<UserProfileProvider>();
+      XpService.awardSessionXp(userProfileProvider, _gameSession, isShuffleMode: false);
+    }
+    
+    // Update session statistics
+    final totalCards = _knownCards.length + _unknownCards.length + _skippedCards.length;
+    final accuracy = totalCards > 0 ? (_knownCards.length / totalCards) : 0.0;
+    final isPerfect = _unknownCards.isEmpty && _skippedCards.isEmpty && totalCards > 0;
+    
+    context.read<UserProfileProvider>().updateSessionStats(
+      cardsStudied: totalCards,
+      sessionAccuracy: accuracy,
+      isPerfect: isPerfect,
+    );
+    
+    // Update streak (increment by 1 for completing a session)
+    final currentStreak = context.read<UserProfileProvider>().currentStreak;
+    context.read<UserProfileProvider>().updateStreak(currentStreak + 1);
   }
 } 

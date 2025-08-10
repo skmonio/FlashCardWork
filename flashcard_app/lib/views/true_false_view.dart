@@ -10,6 +10,7 @@ import '../providers/dutch_word_exercise_provider.dart';
 import '../providers/user_profile_provider.dart';
 import '../models/dutch_word_exercise.dart';
 import '../components/xp_progress_widget.dart';
+import '../components/animated_xp_counter.dart';
 
 class TrueFalseView extends StatefulWidget {
   final List<FlashCard> cards;
@@ -38,6 +39,7 @@ class _TrueFalseViewState extends State<TrueFalseView> {
   bool? _selectedAnswer;
   bool? _correctAnswer;
   String _question = '';
+  String _currentTranslation = ''; // Store the translation being tested
   bool _isQuestionMode = true; // true = word to definition, false = definition to word
   final GameSession _gameSession = GameSession();
   
@@ -46,6 +48,7 @@ class _TrueFalseViewState extends State<TrueFalseView> {
   Map<int, bool> _correctAnswersMap = {}; // question index -> is correct
   Map<int, String> _questionTexts = {}; // question index -> question text
   Map<int, bool> _questionModes = {}; // question index -> is question mode
+  Map<int, String> _translations = {}; // question index -> translation being tested
 
   @override
   void initState() {
@@ -82,6 +85,7 @@ class _TrueFalseViewState extends State<TrueFalseView> {
       _isQuestionMode = _questionModes[_currentIndex]!;
       _question = _questionTexts[_currentIndex]!;
       _correctAnswer = _correctAnswersMap[_currentIndex]!;
+      _currentTranslation = _translations[_currentIndex]!;
       _selectedAnswer = _answeredQuestions[_currentIndex]!;
       _answered = true;
       return;
@@ -89,6 +93,11 @@ class _TrueFalseViewState extends State<TrueFalseView> {
 
     final currentCard = widget.cards[_currentIndex];
     final random = Random();
+    
+    // Reset question state for new question
+    _question = '';
+    _correctAnswer = null;
+    _currentTranslation = '';
     
     // Always use word to definition format (does the following "word" mean "definition")
     _isQuestionMode = true;
@@ -105,6 +114,7 @@ class _TrueFalseViewState extends State<TrueFalseView> {
     if (isTrue) {
       // True question - use correct answer
       _question = 'Does the following word "${currentCard.word}" mean "${correctAnswer}"?';
+      _currentTranslation = correctAnswer;
       _correctAnswer = true;
       print('🔍 TrueFalse: TRUE question - "${currentCard.word}" means "${correctAnswer}" = TRUE');
     } else {
@@ -118,6 +128,7 @@ class _TrueFalseViewState extends State<TrueFalseView> {
         
         // Try each card until we find one with a truly different definition
         for (final otherCard in otherCards) {
+          print('🔍 TrueFalse: Checking otherCard "${otherCard.word}" definition: "${otherCard.definition}" vs current "${currentCard.word}" definition: "${currentCard.definition}"');
           if (otherCard.definition.toLowerCase().trim() != currentCard.definition.toLowerCase().trim()) {
             wrongAnswer = otherCard.definition;
             foundDifferentAnswer = true;
@@ -128,17 +139,20 @@ class _TrueFalseViewState extends State<TrueFalseView> {
         
         if (foundDifferentAnswer) {
           _question = 'Does the following word "${currentCard.word}" mean "${wrongAnswer}"?';
+          _currentTranslation = wrongAnswer;
           _correctAnswer = false;
           print('🔍 TrueFalse: FALSE question - "${currentCard.word}" does NOT mean "${wrongAnswer}" = FALSE');
         } else {
           // If all definitions are somehow the same (very unlikely), force a true question instead
           _question = 'Does the following word "${currentCard.word}" mean "${currentCard.definition}"?';
+          _currentTranslation = currentCard.definition;
           _correctAnswer = true;
           print('🔍 TrueFalse: All definitions identical, switching to TRUE question - "${currentCard.word}" means "${currentCard.definition}" = TRUE');
         }
       } else {
         // If no other cards available, force a true question instead of confusing fallback
         _question = 'Does the following word "${currentCard.word}" mean "${currentCard.definition}"?';
+        _currentTranslation = currentCard.definition;
         _correctAnswer = true;
         print('🔍 TrueFalse: No other cards available, switching to TRUE question - "${currentCard.word}" means "${currentCard.definition}" = TRUE');
       }
@@ -148,6 +162,7 @@ class _TrueFalseViewState extends State<TrueFalseView> {
     _questionTexts[_currentIndex] = _question;
     _correctAnswersMap[_currentIndex] = _correctAnswer!;
     _questionModes[_currentIndex] = _isQuestionMode;
+    _translations[_currentIndex] = _currentTranslation;
     
     // Debug logging
     print('🔍 TrueFalseView: Generated question for "${currentCard.word}"');
@@ -171,16 +186,8 @@ class _TrueFalseViewState extends State<TrueFalseView> {
   }
 
   String _getTranslationForQuestion() {
-    // Extract the translation from the question text
-    if (_question.contains('means "') && _question.contains('"')) {
-      final startIndex = _question.indexOf('means "') + 7;
-      final endIndex = _question.indexOf('"', startIndex);
-      if (endIndex > startIndex) {
-        return _question.substring(startIndex, endIndex);
-      }
-    }
-    // Fallback to correct translation if parsing fails
-    return _isQuestionMode ? widget.cards[_currentIndex].definition : widget.cards[_currentIndex].word;
+    // Use the stored translation that was generated for this question
+    return _currentTranslation;
   }
 
   void _goToNextQuestion() {
@@ -808,14 +815,10 @@ class _TrueFalseViewState extends State<TrueFalseView> {
                   const SizedBox(height: 16),
                   _buildStatCard('Incorrect', (_totalAnswered - _correctAnswers).toString(), Icons.cancel, Colors.red),
                   const SizedBox(height: 16),
-                  _buildStatCard('XP Earned', '+${_gameSession.xpGained}', Icons.star, Colors.amber),
-                  const SizedBox(height: 32),
+                  _buildStatCard('XP Earned', '', Icons.star, Colors.amber,
+                    AnimatedXpCounter(xpGained: _gameSession.xpGained)),
                   
-                  // XP Progress Bar
-                  if (!widget.shuffleMode)
-                    XpProgressWidget(xpGained: _gameSession.xpGained),
-                  if (!widget.shuffleMode)
-                    const SizedBox(height: 32),
+
                   
                   // Action buttons
                   Row(
@@ -860,7 +863,7 @@ class _TrueFalseViewState extends State<TrueFalseView> {
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, [Color? color]) {
+  Widget _buildStatCard(String title, String value, IconData icon, [Color? color, Widget? child]) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -885,7 +888,7 @@ class _TrueFalseViewState extends State<TrueFalseView> {
               ),
             ),
           ),
-          Text(
+          child ?? Text(
             value,
             style: TextStyle(
               fontSize: 18,
@@ -945,8 +948,27 @@ class _TrueFalseViewState extends State<TrueFalseView> {
   }
 
   void _awardXp() {
+    print('🔍 TrueFalse: _awardXp called - shuffleMode: ${widget.shuffleMode}, xpGained: ${_gameSession.xpGained}');
     if (!widget.shuffleMode && _gameSession.xpGained > 0) {
-      XpService.awardSessionXp(context, _gameSession, isShuffleMode: widget.shuffleMode);
+      print('🔍 TrueFalse: Calling XpService.awardSessionXp');
+      final userProfileProvider = context.read<UserProfileProvider>();
+      XpService.awardSessionXp(userProfileProvider, _gameSession, isShuffleMode: widget.shuffleMode);
+    } else {
+      print('🔍 TrueFalse: Skipping XP award - shuffleMode: ${widget.shuffleMode}, xpGained: ${_gameSession.xpGained}');
     }
+    
+    // Update session statistics
+    final accuracy = _totalAnswered > 0 ? (_correctAnswers / _totalAnswered) : 0.0;
+    final isPerfect = _correctAnswers == _totalAnswered && _totalAnswered > 0;
+    
+    context.read<UserProfileProvider>().updateSessionStats(
+      cardsStudied: _totalAnswered,
+      sessionAccuracy: accuracy,
+      isPerfect: isPerfect,
+    );
+    
+    // Update streak (increment by 1 for completing a session)
+    final currentStreak = context.read<UserProfileProvider>().currentStreak;
+    context.read<UserProfileProvider>().updateStreak(currentStreak + 1);
   }
 } 

@@ -4,8 +4,8 @@ import '../providers/theme_provider.dart';
 import '../providers/flashcard_provider.dart';
 import '../providers/dutch_word_exercise_provider.dart';
 import '../services/sample_data_service.dart';
-import 'export_import_view.dart';
 import 'unified_import_export_view.dart';
+import '../providers/user_profile_provider.dart';
 
 class SettingsView extends StatefulWidget {
   const SettingsView({super.key});
@@ -212,20 +212,7 @@ class _SettingsViewState extends State<SettingsView> {
         Card(
           child: Column(
             children: [
-              ListTile(
-                leading: const Icon(Icons.file_download),
-                title: const Text('Export & Import'),
-                subtitle: const Text('Backup and restore flashcards'),
-                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const ExportImportView(),
-                    ),
-                  );
-                },
-              ),
-              const Divider(height: 1),
+
               ListTile(
                 leading: const Icon(Icons.sync),
                 title: const Text('Unified Import/Export'),
@@ -237,6 +224,16 @@ class _SettingsViewState extends State<SettingsView> {
                       builder: (context) => const UnifiedImportExportView(),
                     ),
                   );
+                },
+              ),
+              const Divider(height: 1),
+              ListTile(
+                leading: const Icon(Icons.refresh, color: Colors.orange),
+                title: const Text('Reset XP & Progress', style: TextStyle(color: Colors.orange)),
+                subtitle: const Text('Reset all XP, levels, and achievements'),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.orange),
+                onTap: () {
+                  _showResetXpDialog(context);
                 },
               ),
               const Divider(height: 1),
@@ -415,6 +412,58 @@ class _SettingsViewState extends State<SettingsView> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error clearing data: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _showResetXpDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Reset XP & Progress'),
+        content: const Text(
+          'This will reset all your XP, levels, achievements, and progress statistics. '
+          'This action cannot be undone. Are you sure you want to continue?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+              await _resetXpAndProgress(context);
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.orange),
+            child: const Text('Reset'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _resetXpAndProgress(BuildContext context) async {
+    try {
+      final userProfileProvider = context.read<UserProfileProvider>();
+      await userProfileProvider.resetXpAndProgress();
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('XP and progress reset successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error resetting XP: $e'),
             backgroundColor: Colors.red,
           ),
         );

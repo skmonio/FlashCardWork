@@ -4,7 +4,10 @@ import 'dart:math';
 import '../models/flash_card.dart';
 import '../models/game_session.dart';
 import '../components/unified_header.dart';
+import '../components/xp_progress_widget.dart';
+import '../components/animated_xp_counter.dart';
 import '../services/sound_manager.dart';
+import '../services/xp_service.dart';
 import '../providers/flashcard_provider.dart';
 import '../providers/dutch_word_exercise_provider.dart';
 import '../providers/user_profile_provider.dart';
@@ -60,6 +63,9 @@ class _WordScrambleViewState extends State<WordScrambleView> {
       // Calculate success rate
       final successRate = _totalAnswered > 0 ? (_correctAnswers / _totalAnswered) : 0.0;
       final wasSuccessful = successRate >= 0.6; // 60% or higher is considered successful
+      
+      // Award XP for the session if not in shuffle mode
+      _awardXp();
       
       // Call the onComplete callback if provided
       if (widget.onComplete != null) {
@@ -144,6 +150,9 @@ class _WordScrambleViewState extends State<WordScrambleView> {
     final correctWordWithoutSpaces = _correctWord.replaceAll(' ', '').toLowerCase();
     final isCorrect = userWord.toLowerCase() == correctWordWithoutSpaces;
     final currentCard = widget.cards[_currentIndex];
+    
+    // Track XP for this answer
+    XpService.recordAnswer(_gameSession, isCorrect);
     
     // Update learning progress in the provider
     _updateCardLearningProgress(currentCard, isCorrect);
@@ -759,6 +768,9 @@ class _WordScrambleViewState extends State<WordScrambleView> {
                   _buildStatCard('Correct', _correctAnswers.toString(), Icons.check_circle, Colors.green),
                   const SizedBox(height: 16),
                   _buildStatCard('Incorrect', (_totalAnswered - _correctAnswers).toString(), Icons.cancel, Colors.red),
+                  const SizedBox(height: 16),
+                  _buildStatCard('XP Earned', '', Icons.star, Colors.amber,
+                    AnimatedXpCounter(xpGained: _gameSession.xpGained)),
                   const SizedBox(height: 32),
                   
                   // Action buttons
@@ -774,6 +786,7 @@ class _WordScrambleViewState extends State<WordScrambleView> {
                               _showingResults = false;
                               _answered = false;
                               _userAnswer = [];
+                              _gameSession.reset(); // Reset XP tracking
                               // Reset all navigation state
                               _answeredQuestions.clear();
                               _correctAnswersMap.clear();
@@ -804,7 +817,7 @@ class _WordScrambleViewState extends State<WordScrambleView> {
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, [Color? color]) {
+  Widget _buildStatCard(String title, String value, IconData icon, [Color? color, Widget? child]) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -829,7 +842,7 @@ class _WordScrambleViewState extends State<WordScrambleView> {
               ),
             ),
           ),
-          Text(
+          child ?? Text(
             value,
             style: TextStyle(
               fontSize: 18,
@@ -902,5 +915,26 @@ class _WordScrambleViewState extends State<WordScrambleView> {
         ],
       ),
     );
+  }
+
+  void _awardXp() {
+    if (!widget.shuffleMode && _gameSession.xpGained > 0) {
+      final userProfileProvider = context.read<UserProfileProvider>();
+      XpService.awardSessionXp(userProfileProvider, _gameSession, isShuffleMode: widget.shuffleMode);
+    }
+    
+    // Update session statistics
+    final accuracy = _totalAnswered > 0 ? (_correctAnswers / _totalAnswered) : 0.0;
+    final isPerfect = _correctAnswers == _totalAnswered && _totalAnswered > 0;
+    
+    context.read<UserProfileProvider>().updateSessionStats(
+      cardsStudied: _totalAnswered,
+      sessionAccuracy: accuracy,
+      isPerfect: isPerfect,
+    );
+    
+    // Update streak (increment by 1 for completing a session)
+    final currentStreak = context.read<UserProfileProvider>().currentStreak;
+    context.read<UserProfileProvider>().updateStreak(currentStreak + 1);
   }
 } 

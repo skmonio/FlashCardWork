@@ -177,7 +177,7 @@ class _UserProfileViewState extends State<UserProfileView> with TickerProviderSt
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 8),
               Text(
                 'Level ${provider.level}',
                 style: const TextStyle(
@@ -192,6 +192,14 @@ class _UserProfileViewState extends State<UserProfileView> with TickerProviderSt
                 style: TextStyle(
                   fontSize: 16,
                   color: Colors.grey[600],
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Progress: ${(provider.progressToNextLevel * 100).toStringAsFixed(1)}%',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[500],
                 ),
               ),
             ],
