@@ -9,11 +9,15 @@ import 'create_word_exercise_view.dart';
 class DutchWordExerciseDetailView extends StatefulWidget {
   final DutchWordExercise wordExercise;
   final bool showEditDeleteButtons;
+  final Function(bool)? onComplete;
+  final bool singleQuestionMode;
 
   const DutchWordExerciseDetailView({
     super.key,
     required this.wordExercise,
     this.showEditDeleteButtons = true,
+    this.onComplete,
+    this.singleQuestionMode = false,
   });
 
   @override
@@ -814,6 +818,14 @@ class _DutchWordExerciseDetailViewState extends State<DutchWordExerciseDetailVie
   }
 
   void _nextExercise() {
+    // In single question mode, call the callback immediately after the first question
+    if (widget.singleQuestionMode && widget.onComplete != null) {
+      final percentage = (_correctAnswers / _totalAnswered * 100).round();
+      final wasSuccessful = percentage >= 60; // 60% or higher is considered successful
+      widget.onComplete!(wasSuccessful);
+      return;
+    }
+    
     if (_currentExerciseIndex < _wordExercise.exercises.length - 1) {
       setState(() {
         _currentExerciseIndex++;
@@ -826,6 +838,19 @@ class _DutchWordExerciseDetailViewState extends State<DutchWordExerciseDetailVie
 
   void _showCompletionDialog() {
     final percentage = (_correctAnswers / _totalAnswered * 100).round();
+    final wasSuccessful = percentage >= 60; // Consider it successful if 60% or higher
+    
+    // In single question mode, call callback after each question
+    if (widget.singleQuestionMode && widget.onComplete != null) {
+      widget.onComplete!(wasSuccessful);
+      return; // Don't show dialog if callback is provided
+    }
+    
+    // Call the onComplete callback if provided (for regular mode)
+    if (widget.onComplete != null) {
+      widget.onComplete!(wasSuccessful);
+      return; // Don't show dialog if callback is provided
+    }
     
     showDialog(
       context: context,

@@ -10,11 +10,15 @@ import '../models/dutch_word_exercise.dart';
 class TrueFalseView extends StatefulWidget {
   final List<FlashCard> cards;
   final String title;
+  final Function(bool)? onComplete;
+  final bool shuffleMode;
 
   const TrueFalseView({
     super.key,
     required this.cards,
     required this.title,
+    this.onComplete,
+    this.shuffleMode = false,
   });
 
   @override
@@ -46,6 +50,16 @@ class _TrueFalseViewState extends State<TrueFalseView> {
 
   void _generateQuestion() {
     if (_currentIndex >= widget.cards.length) {
+      // Calculate success rate
+      final successRate = _totalAnswered > 0 ? (_correctAnswers / _totalAnswered) : 0.0;
+      final wasSuccessful = successRate >= 0.6; // 60% or higher is considered successful
+      
+      // Call the onComplete callback if provided
+      if (widget.onComplete != null) {
+        widget.onComplete!(wasSuccessful);
+        return;
+      }
+      
       setState(() {
         _showingResults = true;
       });
@@ -68,11 +82,11 @@ class _TrueFalseViewState extends State<TrueFalseView> {
     final currentCard = widget.cards[_currentIndex];
     final random = Random();
     
-    // Randomly choose question mode
-    _isQuestionMode = random.nextBool();
+    // Always use word to definition format (does the following "word" mean "definition")
+    _isQuestionMode = true;
     
-    // Get correct answer
-    final correctAnswer = _isQuestionMode ? currentCard.definition : currentCard.word;
+    // Get correct answer (always the definition)
+    final correctAnswer = currentCard.definition;
     
     // Get other cards for wrong options
     final otherCards = widget.cards.where((card) => card.id != currentCard.id).toList();
@@ -82,33 +96,34 @@ class _TrueFalseViewState extends State<TrueFalseView> {
     
     if (isTrue) {
       // True question - use correct answer
-      _question = _isQuestionMode 
-          ? '${currentCard.word} means "${correctAnswer}"'
-          : '"${correctAnswer}" means ${currentCard.word}';
+      _question = 'Does the following word "${currentCard.word}" mean "${correctAnswer}"?';
       _correctAnswer = true;
     } else {
       // False question - use wrong answer from another card
       if (otherCards.isNotEmpty) {
-        final randomCard = otherCards[random.nextInt(otherCards.length)];
-        final wrongAnswer = _isQuestionMode ? randomCard.definition : randomCard.word;
+        // Try to find a card with a different answer
+        FlashCard? randomCard;
+        String wrongAnswer = '';
+        int attempts = 0;
+        final maxAttempts = 10;
         
-        // Ensure the wrong answer is actually different from the correct answer
-        final correctAnswer = _isQuestionMode ? currentCard.definition : currentCard.word;
-        if (wrongAnswer.toLowerCase().trim() == correctAnswer.toLowerCase().trim()) {
-          // If the random answer is the same as correct, use a fallback
-          _question = _isQuestionMode 
-              ? '${currentCard.word} means "something else"'
-              : '"something else" means ${currentCard.word}';
+        do {
+          randomCard = otherCards[random.nextInt(otherCards.length)];
+          wrongAnswer = randomCard!.definition;
+          attempts++;
+        } while (attempts < maxAttempts && 
+                 wrongAnswer.toLowerCase().trim() == currentCard.definition.toLowerCase().trim());
+        
+        // If we found a different answer, use it
+        if (wrongAnswer.toLowerCase().trim() != currentCard.definition.toLowerCase().trim()) {
+          _question = 'Does the following word "${currentCard.word}" mean "${wrongAnswer}"?';
         } else {
-          _question = _isQuestionMode 
-              ? '${currentCard.word} means "${wrongAnswer}"'
-              : '"${wrongAnswer}" means ${currentCard.word}';
+          // Use a fallback if we couldn't find a different answer
+          _question = 'Does the following word "${currentCard.word}" mean "something else"?';
         }
       } else {
         // Fallback for false question
-        _question = _isQuestionMode 
-            ? '${currentCard.word} means "something else"'
-            : '"something else" means ${currentCard.word}';
+        _question = 'Does the following word "${currentCard.word}" mean "something else"?';
       }
       _correctAnswer = false;
     }
@@ -117,6 +132,12 @@ class _TrueFalseViewState extends State<TrueFalseView> {
     _questionTexts[_currentIndex] = _question;
     _correctAnswersMap[_currentIndex] = _correctAnswer!;
     _questionModes[_currentIndex] = _isQuestionMode;
+    
+    // Debug logging
+    print('🔍 TrueFalseView: Generated question for "${currentCard.word}"');
+    print('🔍 TrueFalseView: Question: "$_question"');
+    print('🔍 TrueFalseView: Correct answer: $_correctAnswer');
+    print('🔍 TrueFalseView: Question mode: ${_isQuestionMode ? "word to definition" : "definition to word"}');
     
     setState(() {
       _answered = false;
@@ -147,6 +168,15 @@ class _TrueFalseViewState extends State<TrueFalseView> {
   }
 
   void _goToNextQuestion() {
+    // In shuffle mode, we only have one question, so call the callback immediately
+    if (widget.shuffleMode) {
+      final isCorrect = _selectedAnswer == _correctAnswer;
+      if (widget.onComplete != null) {
+        widget.onComplete!(isCorrect);
+      }
+      return;
+    }
+    
     if (_currentIndex < widget.cards.length - 1) {
       setState(() {
         _currentIndex++;

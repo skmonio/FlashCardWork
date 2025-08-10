@@ -10,11 +10,15 @@ import '../services/sound_manager.dart';
 class MemoryGameView extends StatefulWidget {
   final List<FlashCard> cards;
   final bool startFlipped;
+  final Function(bool)? onComplete;
+  final bool shuffleMode;
 
   const MemoryGameView({
     super.key,
     required this.cards,
     this.startFlipped = false,
+    this.onComplete,
+    this.shuffleMode = false,
   });
 
   @override
@@ -23,13 +27,15 @@ class MemoryGameView extends StatefulWidget {
 
 class _MemoryGameViewState extends State<MemoryGameView> {
   List<MemoryCard> _memoryCards = [];
+  List<FlashCard> _remainingCards = [];
   MemoryCard? _firstCard;
   MemoryCard? _secondCard;
   bool _canSelect = true;
   int _moves = 0;
   int _matches = 0;
   bool _gameComplete = false;
-  int _totalPairs = 5; // Fixed to 5 pairs
+  int _totalPairs = 5; // Always show 5 pairs at a time
+  int _totalCardsProcessed = 0; // Track how many cards have been used
 
   @override
   void initState() {
@@ -38,11 +44,31 @@ class _MemoryGameViewState extends State<MemoryGameView> {
   }
 
   void _initializeGame() {
-    // Create 5 pairs of cards (word and definition)
-    _memoryCards = [];
+    // Initialize remaining cards list (all cards except the first 5 which we'll use immediately)
+    _remainingCards = List.from(widget.cards);
+    _totalCardsProcessed = 0;
+    _matches = 0;
+    _moves = 0;
     
-    // Use exactly 5 cards for 10 tiles (5 pairs)
-    final cardsToUse = widget.cards.take(5).toList();
+    // If we have 5 or fewer cards, use all of them and the game ends when all are matched
+    if (widget.cards.length <= 5) {
+      _totalPairs = widget.cards.length;
+      _createMemoryCards(widget.cards);
+      _remainingCards.clear();
+      print('🔍 MemoryGameView: Small deck mode - ${widget.cards.length} cards, no replacement');
+    } else {
+      // If we have more than 5 cards, start with first 5 and keep the rest for replacement
+      _totalPairs = 5;
+      final initialCards = _remainingCards.take(5).toList();
+      _remainingCards.removeRange(0, 5);
+      _totalCardsProcessed = 5;
+      _createMemoryCards(initialCards);
+      print('🔍 MemoryGameView: Large deck mode - ${widget.cards.length} total cards, ${_remainingCards.length} remaining for replacement');
+    }
+  }
+  
+  void _createMemoryCards(List<FlashCard> cardsToUse) {
+    _memoryCards = [];
     
     for (final card in cardsToUse) {
       // Add word card
@@ -54,6 +80,8 @@ class _MemoryGameViewState extends State<MemoryGameView> {
         isMatched: false,
         isSelected: false,
         isWrong: false,
+        isFadingOut: false,
+        isFadingIn: false,
       ));
       
       // Add definition card
@@ -65,6 +93,8 @@ class _MemoryGameViewState extends State<MemoryGameView> {
         isMatched: false,
         isSelected: false,
         isWrong: false,
+        isFadingOut: false,
+        isFadingIn: false,
       ));
     }
     
@@ -127,7 +157,8 @@ class _MemoryGameViewState extends State<MemoryGameView> {
   }
 
   Widget _buildProgressBar() {
-    final progress = _matches / _totalPairs;
+    final totalCards = widget.cards.length;
+    final progress = _totalCardsProcessed / totalCards;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
@@ -135,7 +166,7 @@ class _MemoryGameViewState extends State<MemoryGameView> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Matches $_matches of $_totalPairs'),
+              Text('Cards processed: $_totalCardsProcessed of $totalCards'),
               Text('${(progress * 100).toInt()}%'),
             ],
           ),
@@ -258,8 +289,8 @@ class _MemoryGameViewState extends State<MemoryGameView> {
     return GestureDetector(
       onTap: () => _selectCard(card),
       child: AnimatedOpacity(
-        opacity: card.isMatched ? 0.0 : 1.0,
-        duration: const Duration(milliseconds: 500),
+        opacity: card.isFadingOut || card.isMatched ? 0.0 : 1.0,
+        duration: const Duration(milliseconds: 300),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           width: double.infinity,
@@ -346,14 +377,6 @@ class _MemoryGameViewState extends State<MemoryGameView> {
     final isMatch = _firstCard!.originalCard.id == _secondCard!.originalCard.id;
 
     if (isMatch) {
-      setState(() {
-        _firstCard!.isMatched = true;
-        _secondCard!.isMatched = true;
-        _matches++;
-        _firstCard!.isSelected = false;
-        _secondCard!.isSelected = false;
-      });
-
       // Play correct sound
       SoundManager().playCorrectSound();
       
@@ -362,8 +385,105 @@ class _MemoryGameViewState extends State<MemoryGameView> {
         print('🔍 MemoryGameView: Error in background update: $e');
       });
 
-      // Check if game is complete
-      if (_matches == _totalPairs) {
+      setState(() {
+        _matches++;
+        _firstCard!.isSelected = false;
+        _secondCard!.isSelected = false;
+      });
+
+      // Check if we should replace the matched pair with new cards
+      if (_remainingCards.isNotEmpty) {
+        final newCard = _remainingCards.removeAt(0);
+        _totalCardsProcessed++;
+        
+        print('🔍 MemoryGameView: Replacing matched pair with "${newCard.word}" - "${newCard.definition}"');
+        print('🔍 MemoryGameView: Remaining cards: ${_remainingCards.length}');
+        
+        // Find the indices of the matched cards to replace them in the same positions
+        final firstCardIndex = _memoryCards.indexWhere((card) => card.id == _firstCard!.id);
+        final secondCardIndex = _memoryCards.indexWhere((card) => card.id == _secondCard!.id);
+        
+        print('🔍 MemoryGameView: First card index: $firstCardIndex, Second card index: $secondCardIndex');
+        
+        // Start fade out animation for matched cards only
+        setState(() {
+          _firstCard!.isFadingOut = true;
+          _secondCard!.isFadingOut = true;
+        });
+        
+        // After fade out, replace with new cards in exact same positions
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (mounted) {
+            setState(() {
+              // Replace the first matched card with new word card
+              if (firstCardIndex != -1) {
+                _memoryCards[firstCardIndex] = MemoryCard(
+                  id: '${newCard.id}_word',
+                  content: newCard.word,
+                  type: MemoryCardType.word,
+                  originalCard: newCard,
+                  isMatched: false,
+                  isSelected: false,
+                  isWrong: false,
+                  isFadingOut: false,
+                  isFadingIn: true,
+                );
+              }
+              
+              // Replace the second matched card with new definition card
+              if (secondCardIndex != -1) {
+                _memoryCards[secondCardIndex] = MemoryCard(
+                  id: '${newCard.id}_def',
+                  content: newCard.definition,
+                  type: MemoryCardType.definition,
+                  originalCard: newCard,
+                  isMatched: false,
+                  isSelected: false,
+                  isWrong: false,
+                  isFadingOut: false,
+                  isFadingIn: true,
+                );
+              }
+            });
+            
+            // After fade in animation completes, reset states
+            Future.delayed(const Duration(milliseconds: 300), () {
+              if (mounted) {
+                setState(() {
+                  for (var card in _memoryCards) {
+                    card.isFadingIn = false;
+                    card.isFadingOut = false;
+                  }
+                });
+              }
+            });
+          }
+        });
+        
+        print('🔍 MemoryGameView: Replaced cards, total cards in memory: ${_memoryCards.length}');
+      } else {
+        // No more cards to replace with, mark as matched
+        setState(() {
+          _firstCard!.isMatched = true;
+          _secondCard!.isMatched = true;
+        });
+      }
+
+      // Check if game is complete (all cards processed AND no more remaining cards)
+      final allCardsProcessed = _totalCardsProcessed >= widget.cards.length;
+      final noMoreReplacements = _remainingCards.isEmpty;
+      
+      if (allCardsProcessed && noMoreReplacements) {
+        // Calculate success rate based on total cards processed vs total moves
+        final efficiency = _totalCardsProcessed > 0 ? _totalCardsProcessed / _moves : 0.0;
+        final wasSuccessful = efficiency >= 0.5; // 50% efficiency or higher is considered successful
+        
+        // Call the onComplete callback if provided
+        if (widget.onComplete != null) {
+          widget.onComplete!(wasSuccessful);
+          return;
+        }
+        
         setState(() {
           _gameComplete = true;
         });
@@ -385,6 +505,13 @@ class _MemoryGameViewState extends State<MemoryGameView> {
       _updateCardLearningProgress(_secondCard!.originalCard, false).catchError((e) {
         print('🔍 MemoryGameView: Error in background update: $e');
       });
+      
+      // In shuffle mode, end the game immediately on incorrect match
+      if (widget.shuffleMode && widget.onComplete != null) {
+        widget.onComplete!(false);
+        return;
+      }
+      
       setState(() {
         _firstCard!.isWrong = true;
         _secondCard!.isWrong = true;
@@ -544,7 +671,7 @@ class _MemoryGameViewState extends State<MemoryGameView> {
   }
 
   Widget _buildResultsView() {
-    final efficiency = _totalPairs > 0 ? ((_totalPairs / _moves) * 100).toInt() : 0;
+    final efficiency = _totalCardsProcessed > 0 ? ((_totalCardsProcessed / _moves) * 100).toInt() : 0;
     
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
@@ -592,7 +719,7 @@ class _MemoryGameViewState extends State<MemoryGameView> {
                   const SizedBox(height: 24),
                   
                   // Session stats
-                  _buildStatCard('Pairs Found', '$_totalPairs', Icons.check_circle, Colors.green),
+                  _buildStatCard('Cards Processed', '$_totalCardsProcessed', Icons.check_circle, Colors.green),
                   const SizedBox(height: 16),
                   _buildStatCard('Total Moves', '$_moves', Icons.touch_app, Colors.blue),
                   const SizedBox(height: 16),
@@ -678,6 +805,8 @@ class MemoryCard {
   bool isMatched;
   bool isSelected;
   bool isWrong;
+  bool isFadingOut;
+  bool isFadingIn;
 
   MemoryCard({
     required this.id,
@@ -687,6 +816,8 @@ class MemoryCard {
     this.isMatched = false,
     this.isSelected = false,
     this.isWrong = false,
+    this.isFadingOut = false,
+    this.isFadingIn = false,
   });
 }
 

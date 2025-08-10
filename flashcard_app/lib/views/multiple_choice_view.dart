@@ -10,11 +10,15 @@ import '../models/dutch_word_exercise.dart';
 class MultipleChoiceView extends StatefulWidget {
   final List<FlashCard> cards;
   final String title;
+  final Function(bool)? onComplete;
+  final bool shuffleMode;
 
   const MultipleChoiceView({
     super.key,
     required this.cards,
     required this.title,
+    this.onComplete,
+    this.shuffleMode = false,
   });
 
   @override
@@ -47,6 +51,16 @@ class _MultipleChoiceViewState extends State<MultipleChoiceView> {
 
   void _generateQuestion() {
     if (_currentIndex >= widget.cards.length) {
+      // Calculate success rate
+      final successRate = _totalAnswered > 0 ? (_correctAnswers / _totalAnswered) : 0.0;
+      final wasSuccessful = successRate >= 0.6; // 60% or higher is considered successful
+      
+      // Call the onComplete callback if provided
+      if (widget.onComplete != null) {
+        widget.onComplete!(wasSuccessful);
+        return;
+      }
+      
       setState(() {
         _showingResults = true;
       });
@@ -273,6 +287,15 @@ class _MultipleChoiceViewState extends State<MultipleChoiceView> {
   }
 
   void _goToNextQuestion() {
+    // In shuffle mode, we only have one question, so call the callback immediately
+    if (widget.shuffleMode) {
+      final isCorrect = _selectedAnswer == _correctAnswerIndex;
+      if (widget.onComplete != null) {
+        widget.onComplete!(isCorrect);
+      }
+      return;
+    }
+    
     if (_currentIndex < widget.cards.length - 1) {
       setState(() {
         _currentIndex++;

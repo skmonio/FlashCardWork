@@ -11,11 +11,15 @@ import '../models/dutch_word_exercise.dart';
 class WordScrambleView extends StatefulWidget {
   final List<FlashCard> cards;
   final String title;
+  final Function(bool)? onComplete;
+  final bool shuffleMode;
 
   const WordScrambleView({
     super.key,
     required this.cards,
     required this.title,
+    this.onComplete,
+    this.shuffleMode = false,
   });
 
   @override
@@ -50,6 +54,16 @@ class _WordScrambleViewState extends State<WordScrambleView> {
 
   void _generateQuestion() {
     if (_currentIndex >= widget.cards.length) {
+      // Calculate success rate
+      final successRate = _totalAnswered > 0 ? (_correctAnswers / _totalAnswered) : 0.0;
+      final wasSuccessful = successRate >= 0.6; // 60% or higher is considered successful
+      
+      // Call the onComplete callback if provided
+      if (widget.onComplete != null) {
+        widget.onComplete!(wasSuccessful);
+        return;
+      }
+      
       setState(() {
         _showingResults = true;
       });
@@ -70,11 +84,11 @@ class _WordScrambleViewState extends State<WordScrambleView> {
     final currentCard = widget.cards[_currentIndex];
     final random = Random();
     
-    // Randomly choose question mode
-    _isQuestionMode = random.nextBool();
+    // Always show definition and ask for word (translate the word)
+    _isQuestionMode = true;
     
-    // Get correct word
-    _correctWord = _isQuestionMode ? currentCard.word : currentCard.definition;
+    // Get correct word (always the word, not definition)
+    _correctWord = currentCard.word;
     
     // Create scrambled pieces (2-3 letters each, handling multi-word phrases)
     _scrambledLetters = _createPiecesFromWords(_correctWord, random);
@@ -233,6 +247,19 @@ class _WordScrambleViewState extends State<WordScrambleView> {
   }
 
   void _goToNextQuestion() {
+    // In shuffle mode, we only have one question, so call the callback immediately
+    if (widget.shuffleMode) {
+      // Check if the answer is correct by comparing user answer with correct word
+      final userWord = _userAnswer.join('');
+      final correctWordWithoutSpaces = _correctWord.replaceAll(' ', '').toLowerCase();
+      final isCorrect = userWord.toLowerCase() == correctWordWithoutSpaces;
+      
+      if (widget.onComplete != null) {
+        widget.onComplete!(isCorrect);
+      }
+      return;
+    }
+    
     if (_currentIndex < widget.cards.length - 1) {
       setState(() {
         _currentIndex++;
@@ -415,7 +442,7 @@ class _WordScrambleViewState extends State<WordScrambleView> {
                 children: [
                   // Question text above card
                   Text(
-                    'Arrange the letters to translate',
+                    'Arrange the letters to translate the word',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,

@@ -14,6 +14,7 @@ import 'word_scramble_view.dart';
 
 import 'user_profile_view.dart';
 import '../services/sample_data_service.dart';
+import 'shuffle_cards_view.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -169,6 +170,13 @@ class _HomeViewState extends State<HomeView> {
           Icons.text_fields,
           const Color(0xFFFF6B4D),
           () => _navigateToWordScramble(context),
+        ),
+        const SizedBox(height: 12),
+        _buildMenuButton(
+          'Shuffle Your Cards',
+          Icons.shuffle,
+          Colors.purple,
+          () => _navigateToShuffleCards(context),
         ),
       ],
     );
@@ -334,6 +342,14 @@ class _HomeViewState extends State<HomeView> {
         builder: (context) => StudyTypeSelectionView(
           gameMode: GameMode.bubbleWord,
         ),
+      ),
+    );
+  }
+
+  void _navigateToShuffleCards(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const ShuffleCardsView(),
       ),
     );
   }
