@@ -5,12 +5,14 @@ import '../models/flash_card.dart';
 import '../models/game_session.dart';
 import '../services/sound_manager.dart';
 import '../services/xp_service.dart';
+import '../services/haptic_service.dart';
 import '../providers/flashcard_provider.dart';
 import '../providers/dutch_word_exercise_provider.dart';
 import '../providers/user_profile_provider.dart';
 import '../models/dutch_word_exercise.dart';
 import '../components/xp_progress_widget.dart';
 import '../components/animated_xp_counter.dart';
+import 'add_card_view.dart';
 
 class MultipleChoiceView extends StatefulWidget {
   final List<FlashCard> cards;
@@ -139,6 +141,13 @@ class _MultipleChoiceViewState extends State<MultipleChoiceView> {
     
     final isCorrect = (index == _correctAnswerIndex);
     final currentCard = widget.cards[_currentIndex];
+    
+    // Provide haptic feedback based on answer correctness
+    if (isCorrect) {
+      HapticService().successFeedback();
+    } else {
+      HapticService().errorFeedback();
+    }
     
     // Update learning progress in the provider
     _updateCardLearningProgress(currentCard, isCorrect);
@@ -324,56 +333,15 @@ class _MultipleChoiceViewState extends State<MultipleChoiceView> {
 
   void _editCurrentCard() {
     final currentCard = widget.cards[_currentIndex];
-    final wordController = TextEditingController(text: currentCard.word);
-    final definitionController = TextEditingController(text: currentCard.definition);
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Edit Card'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: wordController,
-              decoration: const InputDecoration(
-                labelText: 'Word',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: definitionController,
-              decoration: const InputDecoration(
-                labelText: 'Definition',
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 3,
-            ),
-          ],
+    
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => AddCardView(
+          cardToEdit: currentCard,
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              // Update the card
-              currentCard.word = wordController.text.trim();
-              currentCard.definition = definitionController.text.trim();
-              Navigator.of(context).pop();
-              setState(() {
-                // Regenerate question with updated card
-                _generateQuestion();
-              });
-            },
-            child: const Text('Save'),
-          ),
-        ],
       ),
     );
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -457,7 +425,7 @@ class _MultipleChoiceViewState extends State<MultipleChoiceView> {
                     height: 200, // Reduced height
                     padding: const EdgeInsets.all(24), // Reduced padding
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.surface,
                       borderRadius: BorderRadius.circular(20), // Slightly smaller radius
                       border: Border.all(
                         color: _getCardBorderColor(currentCard),
@@ -470,7 +438,7 @@ class _MultipleChoiceViewState extends State<MultipleChoiceView> {
                           offset: const Offset(0, 4),
                         ),
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.15),
+                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.15),
                           blurRadius: 15,
                           offset: const Offset(0, 6),
                         ),

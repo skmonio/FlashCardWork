@@ -9,6 +9,7 @@ import '../models/dutch_word_exercise.dart';
 import '../models/game_session.dart';
 import '../services/sound_manager.dart';
 import '../services/xp_service.dart';
+import '../services/haptic_service.dart';
 
 import '../components/animated_xp_counter.dart';
 
@@ -542,6 +543,9 @@ class _MemoryGameViewState extends State<MemoryGameView>
   void _selectCard(MemoryCard card) {
     if (!_canSelect || card.isMatched) return;
     
+    // Provide haptic feedback for card selection
+    HapticService().memoryGameFeedback();
+    
     // If clicking the same card that's already selected, deselect it
     if (_firstCard != null && _firstCard!.id == card.id) {
       print('🔍 MemoryGameView: Deselecting first card');
@@ -571,8 +575,9 @@ class _MemoryGameViewState extends State<MemoryGameView>
     final isMatch = _firstCard!.originalCard.id == _secondCard!.originalCard.id;
 
     if (isMatch) {
-      // Play correct sound
+      // Play correct sound and provide haptic feedback
       SoundManager().playCorrectSound();
+      HapticService().successFeedback();
       
       // Track XP for correct match
       XpService.recordAnswer(_gameSession, true);
@@ -703,8 +708,9 @@ class _MemoryGameViewState extends State<MemoryGameView>
         _secondCard!.isSelected = false;
       });
 
-      // Play wrong sound
+      // Play wrong sound and provide haptic feedback
       SoundManager().playWrongSound();
+      HapticService().errorFeedback();
 
       // Reset wrong cards after a delay
       Future.delayed(const Duration(milliseconds: 800), () {

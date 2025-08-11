@@ -20,6 +20,11 @@ class BubbleWordProvider extends ChangeNotifier {
   
   // Overlay functionality
   Set<String> _overlayMapIds = {};
+  
+  // Undo/Redo functionality
+  List<List<BubbleWordMap>> _undoStack = [];
+  List<List<BubbleWordMap>> _redoStack = [];
+  static const int maxUndoSteps = 20;
 
   // Color palette
   final List<Color> _bubbleColors = [
@@ -110,6 +115,10 @@ class BubbleWordProvider extends ChangeNotifier {
   }
   
   Set<String> get overlayMapIds => _overlayMapIds;
+  
+  // Undo/Redo getters
+  bool get canUndo => _undoStack.isNotEmpty;
+  bool get canRedo => _redoStack.isNotEmpty;
 
   // Helper method to get a node by word (for merged view)
   WordNode? getNodeByWord(String word) {
@@ -277,6 +286,8 @@ class BubbleWordProvider extends ChangeNotifier {
   void addNode(String word, String definition, Offset position) {
     if (currentMap == null) return;
 
+    _saveStateForUndo();
+
     final node = WordNode(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       word: word,
@@ -297,6 +308,11 @@ class BubbleWordProvider extends ChangeNotifier {
 
   void updateNode(String nodeId, {String? word, String? definition, Offset? position}) {
     if (currentMap == null) return;
+
+    // Save state for undo if we're changing word/definition (not just position)
+    if (word != null || definition != null) {
+      _saveStateForUndo();
+    }
 
     // Find the node to get its word
     WordNode? targetNode;
@@ -414,6 +430,8 @@ class BubbleWordProvider extends ChangeNotifier {
   void deleteNode(String nodeId) {
     if (currentMap == null) return;
 
+    _saveStateForUndo();
+
     // Find the node to get its word
     WordNode? targetNode;
     String? targetWord;
@@ -500,6 +518,8 @@ class BubbleWordProvider extends ChangeNotifier {
     if (currentMap == null) return;
     if (fromNodeId == toNodeId) return;
 
+    _saveStateForUndo();
+
     // Check if connection already exists
     final existingConnection = currentMap!.connections.any(
       (conn) => (conn.fromNodeId == fromNodeId && conn.toNodeId == toNodeId) ||
@@ -527,6 +547,8 @@ class BubbleWordProvider extends ChangeNotifier {
 
   void deleteConnection(String connectionId) {
     if (currentMap == null) return;
+
+    _saveStateForUndo();
 
     final updatedConnections = currentMap!.connections
         .where((conn) => conn.id != connectionId)
@@ -668,8 +690,108 @@ class BubbleWordProvider extends ChangeNotifier {
     }
   }
 
+  // Flip node between word and definition
+  void flipNode(String nodeId) {
+    if (currentMap == null) return;
+    
+    _saveStateForUndo();
+    
+    final nodeIndex = currentMap!.nodes.indexWhere((node) => node.id == nodeId);
+    if (nodeIndex != -1) {
+      final updatedNodes = List<WordNode>.from(currentMap!.nodes);
+      final oldNode = updatedNodes[nodeIndex];
+      updatedNodes[nodeIndex] = oldNode.copyWith(
+        isFlipped: !oldNode.isFlipped,
+      );
+      final updatedMap = currentMap!.copyWith(
+        nodes: updatedNodes,
+        updatedAt: DateTime.now(),
+      );
+      _updateMap(updatedMap);
+      saveData();
+      notifyListeners();
+    }
+  }
+  
+  // Undo/Redo functionality
+  void _saveStateForUndo() {
+    // Save current state to undo stack
+    final currentState = _maps.map((map) => map.copyWith()).toList();
+    _undoStack.add(currentState);
+    
+    // Limit undo stack size
+    if (_undoStack.length > maxUndoSteps) {
+      _undoStack.removeAt(0);
+    }
+    
+    // Clear redo stack when a new action is performed
+    _redoStack.clear();
+  }
+  
+  void undo() {
+    if (!canUndo) return;
+    
+    // Save current state to redo stack
+    final currentState = _maps.map((map) => map.copyWith()).toList();
+    _redoStack.add(currentState);
+    
+    // Restore previous state
+    final previousState = _undoStack.removeLast();
+    _maps = previousState;
+    
+    // Verify selected map still exists
+    if (_selectedMapId != null && !_maps.any((map) => map.id == _selectedMapId)) {
+      _selectedMapId = _maps.isNotEmpty ? _maps.first.id : null;
+    }
+    
+    saveData();
+    notifyListeners();
+  }
+  
+  void redo() {
+    if (!canRedo) return;
+    
+    // Save current state to undo stack
+    final currentState = _maps.map((map) => map.copyWith()).toList();
+    _undoStack.add(currentState);
+    
+    // Restore next state
+    final nextState = _redoStack.removeLast();
+    _maps = nextState;
+    
+    // Verify selected map still exists
+    if (_selectedMapId != null && !_maps.any((map) => map.id == _selectedMapId)) {
+      _selectedMapId = _maps.isNotEmpty ? _maps.first.id : null;
+    }
+    
+    saveData();
+    notifyListeners();
+  }
+
+  // Flip all nodes
+  void flipAllNodes() {
+    if (currentMap == null) return;
+    
+    _saveStateForUndo();
+    
+    final updatedNodes = currentMap!.nodes.map((node) => 
+      node.copyWith(isFlipped: !node.isFlipped)
+    ).toList();
+    
+    final updatedMap = currentMap!.copyWith(
+      nodes: updatedNodes,
+      updatedAt: DateTime.now(),
+    );
+    
+    _updateMap(updatedMap);
+    saveData();
+    notifyListeners();
+  }
+
   // Clear all data
   void clearAll() {
+    _saveStateForUndo();
+    
     final updatedMap = currentMap?.copyWith(
       nodes: [],
       connections: [],

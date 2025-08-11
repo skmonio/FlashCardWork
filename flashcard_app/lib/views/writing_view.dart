@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'dart:math';
 import '../models/flash_card.dart';
 import '../services/sound_manager.dart';
+import '../services/haptic_service.dart';
 import '../providers/flashcard_provider.dart';
 import '../providers/dutch_word_exercise_provider.dart';
 import '../models/dutch_word_exercise.dart';
@@ -10,11 +11,15 @@ import '../models/dutch_word_exercise.dart';
 class WritingView extends StatefulWidget {
   final List<FlashCard> cards;
   final String title;
+  final Function(bool)? onComplete;
+  final bool shuffleMode;
 
   const WritingView({
     super.key,
     required this.cards,
     required this.title,
+    this.onComplete,
+    this.shuffleMode = false,
   });
 
   @override
@@ -56,6 +61,16 @@ class _WritingViewState extends State<WritingView> {
 
   void _generateQuestion() {
     if (_currentIndex >= widget.cards.length) {
+      // Calculate success rate
+      final successRate = _totalAnswered > 0 ? (_correctAnswers / _totalAnswered) : 0.0;
+      final wasSuccessful = successRate >= 0.6; // 60% or higher is considered successful
+      
+      // Call the onComplete callback if provided
+      if (widget.onComplete != null) {
+        widget.onComplete!(wasSuccessful);
+        return;
+      }
+      
       setState(() {
         _showingResults = true;
       });
@@ -148,6 +163,7 @@ class _WritingViewState extends State<WritingView> {
         // Correct guess - reveal all instances of this letter
         _revealedLetters.add(upperLetter);
         SoundManager().playCorrectSound();
+        HapticService().successFeedback();
         
         // Update display word
         _updateDisplayWord();
@@ -167,6 +183,7 @@ class _WritingViewState extends State<WritingView> {
         // Wrong guess
         _lives--;
         SoundManager().playWrongSound();
+        HapticService().errorFeedback();
         
         // Check if game over
         if (_lives <= 0) {

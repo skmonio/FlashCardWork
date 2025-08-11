@@ -173,6 +173,13 @@ class _HomeViewState extends State<HomeView> {
         ),
         const SizedBox(height: 12),
         _buildMenuButton(
+          'Write your card',
+          Icons.edit,
+          Colors.blue,
+          () => _navigateToWriting(context),
+        ),
+        const SizedBox(height: 12),
+        _buildMenuButton(
           'Shuffle Your Cards',
           Icons.shuffle,
           Colors.purple,

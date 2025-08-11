@@ -7,8 +7,14 @@ import 'providers/dutch_word_exercise_provider.dart';
 import 'providers/user_profile_provider.dart';
 import 'views/main_navigation_view.dart';
 import 'views/loading_view.dart';
+import 'services/haptic_service.dart';
 
-void main() {
+void main() async {
+  // Ensure Flutter binding is initialized before accessing platform services
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize haptic service
+  await HapticService().initialize();
   runApp(const FlashcardApp());
 }
 
@@ -48,14 +54,17 @@ class FlashcardApp extends StatelessWidget {
                 brightness: Brightness.light,
               ),
               useMaterial3: true,
-              appBarTheme: const AppBarTheme(
+              appBarTheme: AppBarTheme(
                 backgroundColor: Colors.transparent,
                 elevation: 0,
                 centerTitle: true,
                 titleTextStyle: TextStyle(
                   fontSize: 34,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black,
+                  color: ColorScheme.fromSeed(
+                    seedColor: const Color(0xFF007AFF),
+                    brightness: Brightness.light,
+                  ).onSurface,
                 ),
               ),
             ),
@@ -65,14 +74,17 @@ class FlashcardApp extends StatelessWidget {
                 brightness: Brightness.dark,
               ),
               useMaterial3: true,
-              appBarTheme: const AppBarTheme(
+              appBarTheme: AppBarTheme(
                 backgroundColor: Colors.transparent,
                 elevation: 0,
                 centerTitle: true,
                 titleTextStyle: TextStyle(
                   fontSize: 34,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: ColorScheme.fromSeed(
+                    seedColor: const Color(0xFF007AFF),
+                    brightness: Brightness.dark,
+                  ).onSurface,
                 ),
               ),
             ),

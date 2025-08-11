@@ -3,13 +3,16 @@ import 'package:provider/provider.dart';
 import '../providers/flashcard_provider.dart';
 import '../components/unified_header.dart';
 import '../models/deck.dart';
+import '../models/flash_card.dart';
 
 class AddCardView extends StatefulWidget {
   final Deck? selectedDeck;
+  final FlashCard? cardToEdit; // For editing existing cards
   
   const AddCardView({
     super.key,
     this.selectedDeck,
+    this.cardToEdit,
   });
 
   @override
@@ -33,7 +36,21 @@ class _AddCardViewState extends State<AddCardView> {
   @override
   void initState() {
     super.initState();
-    if (widget.selectedDeck != null) {
+    
+    // If editing an existing card, populate the fields
+    if (widget.cardToEdit != null) {
+      final card = widget.cardToEdit!;
+      _wordController.text = card.word;
+      _definitionController.text = card.definition;
+      _exampleController.text = card.example ?? '';
+      _pluralController.text = card.plural ?? '';
+      _pastTenseController.text = card.pastTense ?? '';
+      _futureTenseController.text = card.futureTense ?? '';
+      _pastParticipleController.text = card.pastParticiple ?? '';
+      _selectedArticle = card.article ?? '';
+      _selectedDeckIds = List.from(card.deckIds);
+    } else if (widget.selectedDeck != null) {
+      // If adding a new card with a pre-selected deck
       _selectedDeckIds = [widget.selectedDeck!.id];
     }
   }
@@ -58,7 +75,7 @@ class _AddCardViewState extends State<AddCardView> {
         children: [
           // Header
           UnifiedHeader(
-            title: 'Add Card',
+            title: widget.cardToEdit != null ? 'Edit Card' : 'Add Card',
             onBack: () => Navigator.of(context).pop(),
           ),
           
@@ -165,9 +182,9 @@ class _AddCardViewState extends State<AddCardView> {
                         ),
                         child: _isLoading
                             ? const CircularProgressIndicator()
-                            : const Text(
-                                'Add Card',
-                                style: TextStyle(fontSize: 16),
+                            : Text(
+                                widget.cardToEdit != null ? 'Update Card' : 'Add Card',
+                                style: const TextStyle(fontSize: 16),
                               ),
                       ),
                     ),
@@ -465,8 +482,6 @@ class _AddCardViewState extends State<AddCardView> {
       return;
     }
     
-
-    
     if (_selectedDeckIds.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please select at least one deck')),
@@ -480,28 +495,68 @@ class _AddCardViewState extends State<AddCardView> {
     
     try {
       final provider = context.read<FlashcardProvider>();
-      await provider.createCard(
-        word: _wordController.text.trim(),
-        definition: _definitionController.text.trim(),
-        example: _exampleController.text.trim(),
-        article: _selectedArticle,
-        plural: _pluralController.text.trim(),
-        pastTense: _pastTenseController.text.trim(),
-        futureTense: _futureTenseController.text.trim(),
-        pastParticiple: _pastParticipleController.text.trim(),
-        deckIds: _selectedDeckIds.toSet(),
-      );
       
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Card added successfully!')),
+      if (widget.cardToEdit != null) {
+        // Update existing card
+        final updatedCard = FlashCard(
+          id: widget.cardToEdit!.id,
+          word: _wordController.text.trim(),
+          definition: _definitionController.text.trim(),
+          example: _exampleController.text.trim(),
+          deckIds: _selectedDeckIds.toSet(),
+          successCount: widget.cardToEdit!.successCount,
+          dateCreated: widget.cardToEdit!.dateCreated,
+          lastModified: DateTime.now(),
+          cloudKitRecordName: widget.cardToEdit!.cloudKitRecordName,
+          timesShown: widget.cardToEdit!.timesShown,
+          timesCorrect: widget.cardToEdit!.timesCorrect,
+          srsLevel: widget.cardToEdit!.srsLevel,
+          nextReviewDate: widget.cardToEdit!.nextReviewDate,
+          consecutiveCorrect: widget.cardToEdit!.consecutiveCorrect,
+          consecutiveIncorrect: widget.cardToEdit!.consecutiveIncorrect,
+          easeFactor: widget.cardToEdit!.easeFactor,
+          lastReviewDate: widget.cardToEdit!.lastReviewDate,
+          totalReviews: widget.cardToEdit!.totalReviews,
+          article: _selectedArticle,
+          plural: _pluralController.text.trim(),
+          pastTense: _pastTenseController.text.trim(),
+          futureTense: _futureTenseController.text.trim(),
+          pastParticiple: _pastParticipleController.text.trim(),
         );
-        Navigator.of(context).pop();
+        
+        await provider.updateCard(updatedCard);
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Card updated successfully!')),
+          );
+          Navigator.of(context).pop();
+        }
+      } else {
+        // Create new card
+        await provider.createCard(
+          word: _wordController.text.trim(),
+          definition: _definitionController.text.trim(),
+          example: _exampleController.text.trim(),
+          article: _selectedArticle,
+          plural: _pluralController.text.trim(),
+          pastTense: _pastTenseController.text.trim(),
+          futureTense: _futureTenseController.text.trim(),
+          pastParticiple: _pastParticipleController.text.trim(),
+          deckIds: _selectedDeckIds.toSet(),
+        );
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Card added successfully!')),
+          );
+          Navigator.of(context).pop();
+        }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error adding card: $e')),
+          SnackBar(content: Text('Error ${widget.cardToEdit != null ? 'updating' : 'adding'} card: $e')),
         );
       }
     } finally {

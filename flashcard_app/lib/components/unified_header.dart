@@ -37,10 +37,10 @@ class UnifiedHeader extends StatelessWidget {
               else if (onProfile != null)
                 IconButton(
                   onPressed: onProfile,
-                  icon: const CircleAvatar(
+                  icon: CircleAvatar(
                     radius: 16,
                     backgroundColor: Colors.grey,
-                    child: Icon(Icons.person, color: Colors.white, size: 20),
+                    child: Icon(Icons.person, color: Colors.grey[600], size: 20),
                   ),
                 )
               else

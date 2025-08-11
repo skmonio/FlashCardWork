@@ -144,24 +144,7 @@ class _UserProfileViewState extends State<UserProfileView> with TickerProviderSt
                 ),
               ),
               
-              // Edit indicator
-              Positioned(
-                bottom: 0,
-                right: 0,
-                child: Container(
-                  width: 30,
-                  height: 30,
-                  decoration: const BoxDecoration(
-                    color: Colors.blue,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.edit,
-                    size: 16,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
+
             ],
           ),
           
@@ -389,7 +372,7 @@ class _UserProfileViewState extends State<UserProfileView> with TickerProviderSt
           achievement.title,
           style: TextStyle(
             fontWeight: FontWeight.w500,
-            color: achievement.isUnlocked ? Colors.black : Colors.grey,
+            color: achievement.isUnlocked ? Theme.of(context).colorScheme.onSurface : Colors.grey,
           ),
         ),
         subtitle: Text(
@@ -431,7 +414,7 @@ class _UserProfileViewState extends State<UserProfileView> with TickerProviderSt
           reward.title,
           style: TextStyle(
             fontWeight: FontWeight.w500,
-            color: reward.isClaimed ? Colors.black : Colors.grey,
+            color: reward.isClaimed ? Theme.of(context).colorScheme.onSurface : Colors.grey,
           ),
         ),
         subtitle: Column(

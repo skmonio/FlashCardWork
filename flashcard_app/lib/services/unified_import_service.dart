@@ -17,14 +17,38 @@ class UnifiedImportService {
 
   static Future<Map<String, dynamic>> parseUnifiedCSV(String csvContent) async {
     final lines = csvContent.trim().split('\n');
-    if (lines.isEmpty) return {'cards': [], 'exercises': []};
+    if (lines.isEmpty) {
+      return {
+        'cards': [], 
+        'exercises': [], 
+        'errors': ['CSV file is empty or contains no data']
+      };
+    }
 
     final headers = lines[0].split(',').map((h) => h.trim()).toList();
     final data = lines.skip(1).where((line) => line.trim().isNotEmpty).toList();
+    
+    // Validate required headers
+    final requiredHeaders = ['Deck', 'Word', 'Definition', 'Exercise Type', 'Question', 'Options', 'Explanation'];
+    final missingHeaders = <String>[];
+    for (final required in requiredHeaders) {
+      if (!headers.contains(required)) {
+        missingHeaders.add(required);
+      }
+    }
+    
+    if (missingHeaders.isNotEmpty) {
+      return {
+        'cards': [], 
+        'exercises': [], 
+        'errors': ['Missing required headers: ${missingHeaders.join(', ')}']
+      };
+    }
 
     final cards = <FlashCard>[];
     final wordExercises = <DutchWordExercise>[];
     final wordMap = <String, Map<String, dynamic>>{};
+    final errors = <String>[];
     
     // Counter for unique ID generation
     int idCounter = 0;
@@ -96,11 +120,13 @@ class UnifiedImportService {
             'explanation': explanation,
           });
         }
-      } catch (e) {
-        print('Error parsing line ${i + 1}: ${e.toString()}');
-        continue;
+              } catch (e) {
+          final errorMsg = 'Error parsing line ${i + 1}: ${e.toString()}';
+          print(errorMsg);
+          errors.add(errorMsg);
+          continue;
+        }
       }
-    }
 
     // Convert to FlashCard and DutchWordExercise objects
     print('Processing ${wordMap.length} unique words...');
@@ -165,9 +191,16 @@ class UnifiedImportService {
     }
 
     print('Import completed: ${cards.length} cards, ${wordExercises.length} exercises');
+    
+    // Add summary errors if no data was imported
+    if (cards.isEmpty && wordExercises.isEmpty && errors.isEmpty) {
+      errors.add('No valid data found in CSV. Please check the format and ensure all required fields are filled.');
+    }
+    
     return {
       'cards': cards,
       'exercises': wordExercises,
+      'errors': errors,
     };
   }
 

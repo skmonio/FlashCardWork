@@ -10,6 +10,7 @@ import '../models/dutch_word_exercise.dart';
 import '../services/xp_service.dart';
 import '../components/xp_progress_widget.dart';
 import '../components/animated_xp_counter.dart';
+import 'add_card_view.dart';
 
 enum SwipeDirection {
   none,
@@ -609,59 +610,13 @@ class _AdvancedStudyViewState extends State<AdvancedStudyView>
 
   void _editCurrentCard() {
     _selectedCardForEdit = widget.cards[_currentIndex];
-    _showEditDialog();
-  }
-
-  void _showEditDialog() {
-    final card = _selectedCardForEdit;
-    if (card == null) return;
-
-    final wordController = TextEditingController(text: card.word);
-    final definitionController = TextEditingController(text: card.definition);
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Edit Card'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: wordController,
-              decoration: const InputDecoration(
-                labelText: 'Word',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: definitionController,
-              decoration: const InputDecoration(
-                labelText: 'Definition',
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 3,
-            ),
-          ],
+    final card = _selectedCardForEdit!;
+    
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => AddCardView(
+          cardToEdit: card,
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              // Update the card
-              card.word = wordController.text.trim();
-              card.definition = definitionController.text.trim();
-              Navigator.of(context).pop();
-              setState(() {
-                // Force refresh
-              });
-            },
-            child: const Text('Save'),
-          ),
-        ],
       ),
     );
   }

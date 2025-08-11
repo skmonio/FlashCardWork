@@ -6,6 +6,7 @@ import '../providers/dutch_word_exercise_provider.dart';
 import '../services/sample_data_service.dart';
 import 'unified_import_export_view.dart';
 import '../providers/user_profile_provider.dart';
+import '../services/haptic_service.dart';
 
 class SettingsView extends StatefulWidget {
   const SettingsView({super.key});
@@ -16,7 +17,6 @@ class SettingsView extends StatefulWidget {
 
 class _SettingsViewState extends State<SettingsView> {
   bool _soundEnabled = true;
-  bool _hapticEnabled = true;
 
   @override
   Widget build(BuildContext context) {
@@ -38,10 +38,6 @@ class _SettingsViewState extends State<SettingsView> {
                 children: [
                   // App Settings
                   _buildAppSettingsSection(context),
-                  const SizedBox(height: 24),
-                  
-                  // Study Settings
-                  _buildStudySettingsSection(context),
                   const SizedBox(height: 24),
                   
                   // Data Management
@@ -129,12 +125,12 @@ class _SettingsViewState extends State<SettingsView> {
               SwitchListTile(
                 title: const Text('Haptic Feedback'),
                 subtitle: const Text('Vibrate on interactions'),
-                value: _hapticEnabled,
-                onChanged: (value) {
-                  setState(() {
-                    _hapticEnabled = value;
-                  });
-                  // TODO: Implement haptic settings
+                value: HapticService().hapticEnabled,
+                onChanged: (value) async {
+                  await HapticService().setHapticEnabled(value);
+                  setState(() {});
+                  // Provide haptic feedback for the setting change
+                  HapticService().buttonTapFeedback();
                 },
               ),
             ],
@@ -144,57 +140,7 @@ class _SettingsViewState extends State<SettingsView> {
     );
   }
 
-  Widget _buildStudySettingsSection(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Study Settings',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-          ),
-        ),
-        const SizedBox(height: 16),
-        Card(
-          child: Column(
-            children: [
-              ListTile(
-                leading: const Icon(Icons.timer),
-                title: const Text('Study Reminders'),
-                subtitle: const Text('Set daily study reminders'),
-                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                onTap: () {
-                  // TODO: Navigate to reminders settings
-                },
-              ),
-              const Divider(height: 1),
-              ListTile(
-                leading: const Icon(Icons.analytics),
-                title: const Text('Study Analytics'),
-                subtitle: const Text('View your learning progress'),
-                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                onTap: () {
-                  // TODO: Navigate to analytics
-                },
-              ),
-              const Divider(height: 1),
-              ListTile(
-                leading: const Icon(Icons.language),
-                title: const Text('Language Settings'),
-                subtitle: const Text('Configure speech and language'),
-                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                onTap: () {
-                  // TODO: Navigate to language settings
-                },
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
+
 
   Widget _buildDataManagementSection(BuildContext context) {
     return Column(

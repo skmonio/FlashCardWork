@@ -258,7 +258,11 @@ class _UnifiedImportExportViewState extends State<UnifiedImportExportView> {
           
           final cards = parseResult['cards'] as List<FlashCard>? ?? [];
           final exercises = parseResult['exercises'] as List<DutchWordExercise>? ?? [];
+          final parseErrors = parseResult['errors'] as List<String>? ?? [];
           final errors = <String>[];
+          
+          // Add parsing errors to the error list
+          errors.addAll(parseErrors);
 
           // Import cards using FlashcardProvider
           var cardSuccessCount = 0;
@@ -369,9 +373,15 @@ class _UnifiedImportExportViewState extends State<UnifiedImportExportView> {
           }
 
           setState(() {
-            _importResult = 'Imported $cardSuccessCount cards successfully. '
-                'Skipped $skippedCount duplicate cards. '
-                'Imported $exerciseSuccessCount exercises successfully.';
+            if (errors.isNotEmpty) {
+              _importResult = 'Import completed with errors. '
+                  'Imported $cardSuccessCount cards and $exerciseSuccessCount exercises. '
+                  'Skipped $skippedCount duplicate cards.';
+            } else {
+              _importResult = 'Import completed successfully! '
+                  'Imported $cardSuccessCount cards and $exerciseSuccessCount exercises. '
+                  'Skipped $skippedCount duplicate cards.';
+            }
             _importErrors = List<String>.from(errors);
           });
         } else {

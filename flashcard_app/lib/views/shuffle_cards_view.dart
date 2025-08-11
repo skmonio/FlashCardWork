@@ -10,6 +10,7 @@ import 'multiple_choice_view.dart';
 import 'true_false_view.dart';
 import 'memory_game_view.dart';
 import 'word_scramble_view.dart';
+import 'writing_view.dart';
 import 'dutch_word_exercise_detail_view.dart';
 
 enum ShuffleMode {
@@ -17,6 +18,7 @@ enum ShuffleMode {
   trueFalse,
   memoryGame,
   wordScramble,
+  writing,
   dutchExercise,
 }
 
@@ -35,6 +37,16 @@ class _ShuffleCardsViewState extends State<ShuffleCardsView> {
   FlashCard? _currentCard;
   DutchWordExercise? _currentExercise;
   final Random _random = Random();
+  
+  // Exercise type customization
+  Map<ShuffleMode, bool> _enabledModes = {
+    ShuffleMode.multipleChoice: true,
+    ShuffleMode.trueFalse: true,
+    ShuffleMode.memoryGame: true,
+    ShuffleMode.wordScramble: true,
+    ShuffleMode.writing: true,
+    ShuffleMode.dutchExercise: true,
+  };
 
   @override
   void initState() {
@@ -86,19 +98,28 @@ class _ShuffleCardsViewState extends State<ShuffleCardsView> {
       return;
     }
 
-    // Randomly select a mode
+    // Randomly select a mode from enabled modes only
     final availableModes = <ShuffleMode>[];
     
     if (allCards.isNotEmpty) {
-      availableModes.addAll([
-        ShuffleMode.multipleChoice,
-        ShuffleMode.trueFalse,
-        ShuffleMode.memoryGame,
-        ShuffleMode.wordScramble,
-      ]);
+      if (_enabledModes[ShuffleMode.multipleChoice] == true) {
+        availableModes.add(ShuffleMode.multipleChoice);
+      }
+      if (_enabledModes[ShuffleMode.trueFalse] == true) {
+        availableModes.add(ShuffleMode.trueFalse);
+      }
+      if (_enabledModes[ShuffleMode.memoryGame] == true) {
+        availableModes.add(ShuffleMode.memoryGame);
+      }
+      if (_enabledModes[ShuffleMode.wordScramble] == true) {
+        availableModes.add(ShuffleMode.wordScramble);
+      }
+      if (_enabledModes[ShuffleMode.writing] == true) {
+        availableModes.add(ShuffleMode.writing);
+      }
     }
     
-    if (allExercises.isNotEmpty) {
+    if (allExercises.isNotEmpty && _enabledModes[ShuffleMode.dutchExercise] == true) {
       availableModes.add(ShuffleMode.dutchExercise);
     }
 
@@ -122,6 +143,7 @@ class _ShuffleCardsViewState extends State<ShuffleCardsView> {
       case ShuffleMode.trueFalse:
       case ShuffleMode.memoryGame:
       case ShuffleMode.wordScramble:
+      case ShuffleMode.writing:
         _currentCard = allCards[_random.nextInt(allCards.length)];
         _launchCardMode(selectedMode);
         break;
@@ -146,8 +168,27 @@ class _ShuffleCardsViewState extends State<ShuffleCardsView> {
         );
         break;
       case ShuffleMode.trueFalse:
+        // For true/false, we need multiple cards to create false questions
+        // Get 5 random cards for variety
+        final allCards = context.read<FlashcardProvider>().cards;
+        final trueFalseCards = <FlashCard>[];
+        
+        // Add the current card first
+        trueFalseCards.add(_currentCard!);
+        
+        // Add 4 more random cards (avoiding duplicates)
+        final otherCards = allCards.where((card) => card.id != _currentCard!.id).toList();
+        final random = Random();
+        
+        for (int i = 0; i < 4 && i < otherCards.length; i++) {
+          final randomCard = otherCards[random.nextInt(otherCards.length)];
+          if (!trueFalseCards.any((card) => card.id == randomCard.id)) {
+            trueFalseCards.add(randomCard);
+          }
+        }
+        
         targetView = TrueFalseView(
-          cards: [_currentCard!],
+          cards: trueFalseCards,
           title: 'True or False',
           onComplete: _handleCardModeComplete,
           shuffleMode: true,
@@ -183,6 +224,14 @@ class _ShuffleCardsViewState extends State<ShuffleCardsView> {
         targetView = WordScrambleView(
           cards: [_currentCard!],
           title: 'Word Scramble',
+          onComplete: _handleCardModeComplete,
+          shuffleMode: true,
+        );
+        break;
+      case ShuffleMode.writing:
+        targetView = WritingView(
+          cards: [_currentCard!],
+          title: 'Write Your Card',
           onComplete: _handleCardModeComplete,
           shuffleMode: true,
         );
@@ -363,7 +412,7 @@ class _ShuffleCardsViewState extends State<ShuffleCardsView> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Shuffle Your Cards'),
+          title: const Text('Shuffle'),
           backgroundColor: Colors.purple,
           foregroundColor: Colors.white,
           leading: IconButton(
@@ -382,6 +431,12 @@ class _ShuffleCardsViewState extends State<ShuffleCardsView> {
               Navigator.of(context).pop();
             },
           ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.settings),
+              onPressed: _showCustomizationDialog,
+            ),
+          ],
         ),
       body: Container(
         decoration: BoxDecoration(
@@ -500,50 +555,7 @@ class _ShuffleCardsViewState extends State<ShuffleCardsView> {
                   ),
                 ],
                 
-                const SizedBox(height: 32),
-                
-                // Exercise Types Info
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.1),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Exercise Types:',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      SizedBox(
-                        height: 120, // Fixed height to prevent overflow
-                        child: SingleChildScrollView(
-                          child: Column(
-                            children: [
-                              _buildExerciseTypeItem('Multiple Choice', Icons.check_circle, Colors.teal),
-                              _buildExerciseTypeItem('True or False', Icons.help_outline, Colors.orange),
-                              _buildExerciseTypeItem('Memory Game', Icons.psychology, Colors.purple),
-                              _buildExerciseTypeItem('Word Scramble', Icons.text_fields, Colors.blue),
-                              _buildExerciseTypeItem('Dutch Exercises', Icons.school, Colors.green),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+
               ],
             ),
           ),
@@ -553,19 +565,55 @@ class _ShuffleCardsViewState extends State<ShuffleCardsView> {
     );
   }
 
-  Widget _buildExerciseTypeItem(String title, IconData icon, Color color) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          Icon(icon, color: color, size: 20),
-          const SizedBox(width: 8),
-          Text(
-            title,
-            style: const TextStyle(fontSize: 14),
+  void _showCustomizationDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Customize Exercise Types'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Select which exercise types to include in shuffle mode:',
+                style: TextStyle(fontSize: 14, color: Colors.grey),
+              ),
+              const SizedBox(height: 16),
+              _buildModeToggle('Multiple Choice', ShuffleMode.multipleChoice, Icons.check_circle, Colors.teal),
+              _buildModeToggle('True or False', ShuffleMode.trueFalse, Icons.help_outline, Colors.orange),
+              _buildModeToggle('Memory Game', ShuffleMode.memoryGame, Icons.psychology, Colors.purple),
+              _buildModeToggle('Word Scramble', ShuffleMode.wordScramble, Icons.text_fields, Colors.blue),
+              _buildModeToggle('Write Your Card', ShuffleMode.writing, Icons.edit, Colors.blue),
+              _buildModeToggle('Dutch Exercises', ShuffleMode.dutchExercise, Icons.school, Colors.green),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Done'),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildModeToggle(String title, ShuffleMode mode, IconData icon, Color color) {
+    return SwitchListTile(
+      title: Row(
+        children: [
+          Icon(icon, color: color, size: 20),
+          const SizedBox(width: 8),
+          Text(title),
+        ],
+      ),
+      value: _enabledModes[mode] ?? true,
+      onChanged: (value) {
+        setState(() {
+          _enabledModes[mode] = value;
+        });
+      },
     );
   }
 }

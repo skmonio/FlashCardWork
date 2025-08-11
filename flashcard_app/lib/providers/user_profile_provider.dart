@@ -192,7 +192,7 @@ class UserProfileProvider extends ChangeNotifier {
     
     // Calculate new accuracy
     final totalAccuracy = (_profile.accuracy * _profile.totalSessions) + sessionAccuracy;
-    final newAccuracy = totalAccuracy / newTotalSessions;
+    final newAccuracy = (totalAccuracy / newTotalSessions).clamp(0.0, 1.0); // Clamp to 0-100%
     
     _profile = _profile.copyWith(
       totalSessions: newTotalSessions,

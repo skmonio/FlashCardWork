@@ -4,6 +4,7 @@ import '../providers/bubble_word_provider.dart';
 import '../providers/flashcard_provider.dart';
 import '../models/bubble_word_models.dart';
 import '../components/unified_header.dart';
+import '../services/haptic_service.dart';
 
 class BubbleWordView extends StatefulWidget {
   const BubbleWordView({super.key});
@@ -18,6 +19,8 @@ class _BubbleWordViewState extends State<BubbleWordView> {
   bool _showingAddWord = false;
   bool _showingEditWord = false;
   WordNode? _editingNode;
+  
+
 
   @override
   void initState() {
@@ -66,11 +69,12 @@ class _BubbleWordViewState extends State<BubbleWordView> {
                           // Reset view
                           FloatingActionButton.small(
                             onPressed: () {
+                              HapticService().buttonTapFeedback();
                               provider.setScale(1.0); // Reset to normal zoom
                               provider.setOffset(Offset.zero);
                             },
-                            backgroundColor: Colors.white,
-                            child: const Icon(Icons.center_focus_strong, color: Colors.blue),
+                            backgroundColor: Theme.of(context).colorScheme.surface,
+                            child: Icon(Icons.center_focus_strong, color: Theme.of(context).colorScheme.primary),
                           ),
                           
                           const SizedBox(height: 8),
@@ -78,11 +82,12 @@ class _BubbleWordViewState extends State<BubbleWordView> {
                           // Zoom in
                           FloatingActionButton.small(
                             onPressed: () {
+                              HapticService().buttonTapFeedback();
                               final newScale = (provider.scale * 1.2).clamp(0.5, 3.0);
                               provider.setScale(newScale);
                             },
-                            backgroundColor: Colors.white,
-                            child: const Icon(Icons.zoom_in, color: Colors.blue),
+                            backgroundColor: Theme.of(context).colorScheme.surface,
+                            child: Icon(Icons.zoom_in, color: Theme.of(context).colorScheme.primary),
                           ),
                           
                           const SizedBox(height: 8),
@@ -90,11 +95,12 @@ class _BubbleWordViewState extends State<BubbleWordView> {
                           // Zoom out
                           FloatingActionButton.small(
                             onPressed: () {
+                              HapticService().buttonTapFeedback();
                               final newScale = (provider.scale / 1.2).clamp(0.5, 3.0);
                               provider.setScale(newScale);
                             },
-                            backgroundColor: Colors.white,
-                            child: const Icon(Icons.zoom_out, color: Colors.blue),
+                            backgroundColor: Theme.of(context).colorScheme.surface,
+                            child: Icon(Icons.zoom_out, color: Theme.of(context).colorScheme.primary),
                           ),
                         ],
                       ),
@@ -164,6 +170,28 @@ class _BubbleWordViewState extends State<BubbleWordView> {
             ],
           ),
         ),
+        PopupMenuItem(
+          value: 'undo',
+          enabled: provider.canUndo,
+          child: Row(
+            children: [
+              Icon(Icons.undo, color: provider.canUndo ? null : Colors.grey),
+              SizedBox(width: 8),
+              Text('Undo', style: TextStyle(color: provider.canUndo ? null : Colors.grey)),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: 'redo',
+          enabled: provider.canRedo,
+          child: Row(
+            children: [
+              Icon(Icons.redo, color: provider.canRedo ? null : Colors.grey),
+              SizedBox(width: 8),
+              Text('Redo', style: TextStyle(color: provider.canRedo ? null : Colors.grey)),
+            ],
+          ),
+        ),
         const PopupMenuItem(
           value: 'reset',
           child: Row(
@@ -171,6 +199,16 @@ class _BubbleWordViewState extends State<BubbleWordView> {
               Icon(Icons.refresh),
               SizedBox(width: 8),
               Text('Reset View'),
+            ],
+          ),
+        ),
+        const PopupMenuItem(
+          value: 'flip_all',
+          child: Row(
+            children: [
+              Icon(Icons.flip),
+              SizedBox(width: 8),
+              Text('Flip All'),
             ],
           ),
         ),
@@ -348,14 +386,17 @@ class _BubbleWordViewState extends State<BubbleWordView> {
       return const SizedBox.shrink();
     }
     
-    return GestureDetector(
-      onLongPress: () => _showDeleteConnectionDialog(context, connection, provider),
-      child: CustomPaint(
-        size: Size.infinite,
-        painter: ConnectionPainter(
-          from: fromNode.position,
-          to: toNode.position,
-          color: connection.color,
+    return Transform.translate(
+      offset: Offset.zero, // Connections are positioned at their raw coordinates
+      child: GestureDetector(
+        onLongPress: () => _showDeleteConnectionDialog(context, connection, provider),
+        child: CustomPaint(
+          size: Size.infinite,
+          painter: ConnectionPainter(
+            from: fromNode.position,
+            to: toNode.position,
+            color: connection.color,
+          ),
         ),
       ),
     );
@@ -363,8 +404,26 @@ class _BubbleWordViewState extends State<BubbleWordView> {
 
 
 
+  // Calculate dynamic bubble size based on text length
+  double _calculateBubbleSize(String text) {
+    const double minSize = 60.0;
+    const double maxSize = 150.0;
+    const double baseSize = 80.0;
+    const double sizePerCharacter = 4.0;
+    
+    // Calculate size based on text length
+    final calculatedSize = baseSize + (text.length * sizePerCharacter);
+    
+    // Clamp to min/max values
+    return calculatedSize.clamp(minSize, maxSize);
+  }
+
   Widget _buildWordBubble(WordNode node, BubbleWordProvider provider) {
     final isSelected = provider.selectedNodeId == node.id;
+    
+    // Calculate dynamic size based on the current displayed text
+    final displayText = node.isFlipped ? node.definition : node.word;
+    final dynamicSize = _calculateBubbleSize(displayText);
     
     // Check if this node is from an overlay map
     bool isOverlayNode = false;
@@ -378,7 +437,7 @@ class _BubbleWordViewState extends State<BubbleWordView> {
     }
     
     return Transform.translate(
-      offset: Offset(node.position.dx - node.size / 2, node.position.dy - node.size / 2),
+      offset: Offset(node.position.dx - dynamicSize / 2, node.position.dy - dynamicSize / 2),
       child: GestureDetector(
           onTap: () => _handleNodeTap(node, provider),
           onDoubleTap: () => _showEditWordDialog(context, node),
@@ -388,13 +447,13 @@ class _BubbleWordViewState extends State<BubbleWordView> {
           },
           onLongPress: () => _showDeleteWordDialog(context, node, provider),
         child: Container(
-          width: node.size,
-          height: node.size,
+          width: dynamicSize,
+          height: dynamicSize,
           decoration: BoxDecoration(
             color: isOverlayNode ? node.color.withOpacity(0.8) : node.color,
             borderRadius: BorderRadius.circular(20),
             border: isSelected
-                ? Border.all(color: Colors.white, width: 3)
+                ? Border.all(color: Theme.of(context).colorScheme.onPrimary, width: 3)
                 : isOverlayNode
                     ? Border.all(color: Colors.orange, width: 2)
                     : null,
@@ -412,9 +471,9 @@ class _BubbleWordViewState extends State<BubbleWordView> {
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Text(
-                    node.word,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    displayText,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onPrimary,
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
                     ),
@@ -449,16 +508,45 @@ class _BubbleWordViewState extends State<BubbleWordView> {
 
 
   void _handleNodeTap(WordNode node, BubbleWordProvider provider) {
+    HapticService().bubbleWordFeedback();
+    
     // Simple tap-to-connect: if a node is already selected, connect to this one
     if (provider.selectedNodeId != null && provider.selectedNodeId != node.id) {
-      // Connect the selected node to this one
-      provider.addConnection(provider.selectedNodeId!, node.id);
-      // Keep the new node selected
-      provider.selectNode(node.id);
+      // Check if we can connect these nodes based on overlay restrictions
+      if (_canConnectNodes(provider.selectedNodeId!, node.id, provider)) {
+        // Connect the selected node to this one
+        provider.addConnection(provider.selectedNodeId!, node.id);
+        // Keep the new node selected
+        provider.selectNode(node.id);
+      } else {
+        // Show error message or just select the new node
+        provider.selectNode(node.id);
+      }
     } else {
       // Just select this node
       provider.selectNode(node.id);
     }
+  }
+  
+
+  
+  bool _canConnectNodes(String fromNodeId, String toNodeId, BubbleWordProvider provider) {
+    // If no overlays are active, allow all connections
+    if (provider.overlayMapIds.isEmpty) {
+      return true;
+    }
+    
+    // Check if both nodes are from the current map (not overlays)
+    bool fromNodeInCurrentMap = false;
+    bool toNodeInCurrentMap = false;
+    
+    if (provider.currentMap != null) {
+      fromNodeInCurrentMap = provider.currentMap!.nodes.any((node) => node.id == fromNodeId);
+      toNodeInCurrentMap = provider.currentMap!.nodes.any((node) => node.id == toNodeId);
+    }
+    
+    // Only allow connections if both nodes are from the current map
+    return fromNodeInCurrentMap && toNodeInCurrentMap;
   }
 
   void _handleMenuAction(String action, BuildContext context, BubbleWordProvider provider) {
@@ -475,8 +563,17 @@ class _BubbleWordViewState extends State<BubbleWordView> {
       case 'overlay':
         _showOverlayMapsDialog(context, provider);
         break;
+      case 'undo':
+        provider.undo();
+        break;
+      case 'redo':
+        provider.redo();
+        break;
       case 'reset':
         provider.resetView();
+        break;
+      case 'flip_all':
+        provider.flipAllNodes();
         break;
       case 'clear':
         _showClearAllDialog(context, provider);
@@ -586,6 +683,8 @@ class _BubbleWordViewState extends State<BubbleWordView> {
   void _showExistingWordsDialog(BuildContext context) {
     final flashcardProvider = context.read<FlashcardProvider>();
     final cards = flashcardProvider.cards;
+    // Sort cards alphabetically by word
+    final sortedCards = List.from(cards)..sort((a, b) => a.word.toLowerCase().compareTo(b.word.toLowerCase()));
     
     showDialog(
       context: context,
@@ -595,9 +694,9 @@ class _BubbleWordViewState extends State<BubbleWordView> {
           width: double.maxFinite,
           height: 400,
           child: ListView.builder(
-            itemCount: cards.length,
+            itemCount: sortedCards.length,
             itemBuilder: (context, index) {
-              final card = cards[index];
+              final card = sortedCards[index];
               return ListTile(
                 title: Text(card.word),
                 subtitle: Text(card.definition),
@@ -656,6 +755,24 @@ class _BubbleWordViewState extends State<BubbleWordView> {
                 border: OutlineInputBorder(),
               ),
               maxLines: 3,
+            ),
+            const SizedBox(height: 16),
+            // Flip toggle
+            Consumer<BubbleWordProvider>(
+              builder: (context, provider, child) {
+                final currentNode = provider.currentMap?.nodes.firstWhere((n) => n.id == node.id, orElse: () => node);
+                return Row(
+                  children: [
+                    Checkbox(
+                      value: currentNode?.isFlipped ?? false,
+                      onChanged: (value) {
+                        provider.flipNode(node.id);
+                      },
+                    ),
+                    const Text('Show definition (flipped)'),
+                  ],
+                );
+              },
             ),
           ],
         ),
@@ -855,8 +972,9 @@ class _BubbleWordViewState extends State<BubbleWordView> {
                   ),
                   const SizedBox(height: 16),
                   Expanded(
-                    child: Column(
-                      children: [
+                    child: SingleChildScrollView(
+                        child: Column(
+                          children: [
                         // Current map at the top
                         ...provider.maps.where((map) => provider.selectedMapId == map.id).map((map) {
                           return ListTile(
@@ -888,9 +1006,10 @@ class _BubbleWordViewState extends State<BubbleWordView> {
                             },
                           );
                         }),
-                      ],
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
                 ],
               );
             },

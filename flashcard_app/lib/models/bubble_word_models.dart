@@ -11,6 +11,7 @@ class WordNode {
   final double size;
   bool isSelected;
   bool isDragging;
+  bool isFlipped;
 
   WordNode({
     required this.id,
@@ -21,6 +22,7 @@ class WordNode {
     this.size = 80,
     this.isSelected = false,
     this.isDragging = false,
+    this.isFlipped = false,
   });
 
   WordNode copyWith({
@@ -32,6 +34,7 @@ class WordNode {
     double? size,
     bool? isSelected,
     bool? isDragging,
+    bool? isFlipped,
   }) {
     return WordNode(
       id: id ?? this.id,
@@ -42,6 +45,7 @@ class WordNode {
       size: size ?? this.size,
       isSelected: isSelected ?? this.isSelected,
       isDragging: isDragging ?? this.isDragging,
+      isFlipped: isFlipped ?? this.isFlipped,
     );
   }
 
@@ -53,6 +57,7 @@ class WordNode {
       'color': color.value,
       'position': {'dx': position.dx, 'dy': position.dy},
       'size': size,
+      'isFlipped': isFlipped,
     };
   }
 
@@ -64,6 +69,7 @@ class WordNode {
       color: Color(json['color']),
       position: Offset(json['position']['dx'], json['position']['dy']),
       size: json['size'] ?? 80,
+      isFlipped: json['isFlipped'] ?? false,
     );
   }
 }

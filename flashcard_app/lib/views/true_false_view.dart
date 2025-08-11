@@ -5,12 +5,14 @@ import '../models/flash_card.dart';
 import '../models/game_session.dart';
 import '../services/sound_manager.dart';
 import '../services/xp_service.dart';
+import '../services/haptic_service.dart';
 import '../providers/flashcard_provider.dart';
 import '../providers/dutch_word_exercise_provider.dart';
 import '../providers/user_profile_provider.dart';
 import '../models/dutch_word_exercise.dart';
 import '../components/xp_progress_widget.dart';
 import '../components/animated_xp_counter.dart';
+import 'add_card_view.dart';
 
 class TrueFalseView extends StatefulWidget {
   final List<FlashCard> cards;
@@ -143,18 +145,21 @@ class _TrueFalseViewState extends State<TrueFalseView> {
           _correctAnswer = false;
           print('🔍 TrueFalse: FALSE question - "${currentCard.word}" does NOT mean "${wrongAnswer}" = FALSE');
         } else {
-          // If all definitions are somehow the same (very unlikely), force a true question instead
-          _question = 'Does the following word "${currentCard.word}" mean "${currentCard.definition}"?';
-          _currentTranslation = currentCard.definition;
-          _correctAnswer = true;
-          print('🔍 TrueFalse: All definitions identical, switching to TRUE question - "${currentCard.word}" means "${currentCard.definition}" = TRUE');
+          // If all definitions are somehow the same, try a different approach
+          // Use a completely wrong definition by combining words or using a generic wrong answer
+          final generatedWrongAnswer = _generateWrongDefinition(currentCard.word, otherCards);
+          _question = 'Does the following word "${currentCard.word}" mean "${generatedWrongAnswer}"?';
+          _currentTranslation = generatedWrongAnswer;
+          _correctAnswer = false;
+          print('🔍 TrueFalse: Generated wrong definition: "${generatedWrongAnswer}" for FALSE question');
         }
       } else {
-        // If no other cards available, force a true question instead of confusing fallback
-        _question = 'Does the following word "${currentCard.word}" mean "${currentCard.definition}"?';
-        _currentTranslation = currentCard.definition;
-        _correctAnswer = true;
-        print('🔍 TrueFalse: No other cards available, switching to TRUE question - "${currentCard.word}" means "${currentCard.definition}" = TRUE');
+        // If no other cards available, generate a wrong definition
+        final generatedWrongAnswer = _generateWrongDefinition(currentCard.word, []);
+        _question = 'Does the following word "${currentCard.word}" mean "${generatedWrongAnswer}"?';
+        _currentTranslation = generatedWrongAnswer;
+        _correctAnswer = false;
+        print('🔍 TrueFalse: Generated wrong definition: "${generatedWrongAnswer}" for FALSE question (no other cards)');
       }
     }
     
@@ -190,6 +195,32 @@ class _TrueFalseViewState extends State<TrueFalseView> {
     return _currentTranslation;
   }
 
+  String _generateWrongDefinition(String word, List<FlashCard> otherCards) {
+    // Create plausible but wrong definitions
+    final random = Random();
+    final wrongDefinitions = [
+      'a type of food',
+      'an animal',
+      'a color',
+      'a number',
+      'a place',
+      'an object',
+      'an action',
+      'a feeling',
+      'a time period',
+      'a weather condition',
+    ];
+    
+    // If we have other cards, try to use one of their definitions
+    if (otherCards.isNotEmpty) {
+      final randomCard = otherCards[random.nextInt(otherCards.length)];
+      return randomCard.definition;
+    }
+    
+    // Otherwise use a generic wrong definition
+    return wrongDefinitions[random.nextInt(wrongDefinitions.length)];
+  }
+
   void _goToNextQuestion() {
     // In shuffle mode, we only have one question, so call the callback immediately
     if (widget.shuffleMode) {
@@ -217,56 +248,15 @@ class _TrueFalseViewState extends State<TrueFalseView> {
 
   void _editCurrentCard() {
     final currentCard = widget.cards[_currentIndex];
-    final wordController = TextEditingController(text: currentCard.word);
-    final definitionController = TextEditingController(text: currentCard.definition);
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Edit Card'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: wordController,
-              decoration: const InputDecoration(
-                labelText: 'Word',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: definitionController,
-              decoration: const InputDecoration(
-                labelText: 'Definition',
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 3,
-            ),
-          ],
+    
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => AddCardView(
+          cardToEdit: currentCard,
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              // Update the card
-              currentCard.word = wordController.text.trim();
-              currentCard.definition = definitionController.text.trim();
-              Navigator.of(context).pop();
-              setState(() {
-                // Regenerate question with updated card
-                _generateQuestion();
-              });
-            },
-            child: const Text('Save'),
-          ),
-        ],
       ),
     );
-  }
+
 
   Color _getCardBorderColor(FlashCard card) {
     // Generate consistent vibrant colors based on card content
@@ -300,6 +290,13 @@ class _TrueFalseViewState extends State<TrueFalseView> {
     
     final isCorrect = (answer == _correctAnswer);
     final currentCard = widget.cards[_currentIndex];
+    
+    // Provide haptic feedback based on answer correctness
+    if (isCorrect) {
+      HapticService().successFeedback();
+    } else {
+      HapticService().errorFeedback();
+    }
     
     print('🔍 TrueFalse: Answer selected - User chose: ${answer ? "TRUE" : "FALSE"}, Correct answer: ${_correctAnswer! ? "TRUE" : "FALSE"}, Is correct: $isCorrect');
     print('🔍 TrueFalse: Question was: $_question');
@@ -404,7 +401,10 @@ class _TrueFalseViewState extends State<TrueFalseView> {
   }
 
   Color _getButtonColor(bool isTrue) {
-    if (!_answered) return Colors.transparent;
+    if (!_answered) {
+      // Use vibrant colors when not answered
+      return isTrue ? Colors.blue.withValues(alpha: 0.1) : Colors.orange.withValues(alpha: 0.1);
+    }
     
     if (isTrue == _correctAnswer) {
       return Colors.green.withValues(alpha: 0.2);
@@ -412,11 +412,14 @@ class _TrueFalseViewState extends State<TrueFalseView> {
       return Colors.red.withValues(alpha: 0.2);
     }
     
-    return Colors.transparent;
+    return Colors.grey.withValues(alpha: 0.1);
   }
 
   Color _getButtonBorderColor(bool isTrue) {
-    if (!_answered) return Colors.grey.withValues(alpha: 0.3);
+    if (!_answered) {
+      // Use vibrant colors when not answered
+      return isTrue ? Colors.blue : Colors.orange;
+    }
     
     if (isTrue == _correctAnswer) {
       return Colors.green;
@@ -508,7 +511,7 @@ class _TrueFalseViewState extends State<TrueFalseView> {
                     height: 200, // Reduced height
                     padding: const EdgeInsets.all(24), // Reduced padding
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.surface,
                       borderRadius: BorderRadius.circular(20), // Slightly smaller radius
                       border: Border.all(
                         color: _getCardBorderColor(currentCard),
@@ -521,7 +524,7 @@ class _TrueFalseViewState extends State<TrueFalseView> {
                           offset: const Offset(0, 4),
                         ),
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.15),
+                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.15),
                           blurRadius: 15,
                           offset: const Offset(0, 6),
                         ),
@@ -730,10 +733,11 @@ class _TrueFalseViewState extends State<TrueFalseView> {
                   ),
                 ),
                 const SizedBox(width: 12), // Reduced spacing
+                // Only show check/cross when answered and this button is the correct answer or wrong selected answer
                 if (_answered && isTrue == _correctAnswer)
-                  const Icon(Icons.check_circle, color: Colors.green, size: 24), // Smaller icon
+                  const Icon(Icons.check_circle, color: Colors.green, size: 24),
                 if (_answered && isTrue == _selectedAnswer && isTrue != _correctAnswer)
-                  const Icon(Icons.cancel, color: Colors.red, size: 24), // Smaller icon
+                  const Icon(Icons.cancel, color: Colors.red, size: 24),
               ],
             ),
           ),

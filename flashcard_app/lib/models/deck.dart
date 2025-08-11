@@ -80,7 +80,7 @@ class Deck {
     
     for (final card in cards) {
       print('🔍 Deck calculation: Card "${card.word}" has ${card.learningPercentage}%');
-      totalPercentage += card.learningPercentage;
+      totalPercentage += card.learningPercentage.toDouble();
     }
     
     final result = totalPercentage / cards.length;
@@ -101,7 +101,7 @@ class Deck {
     
     for (final card in cards) {
       print('🔍 Static Deck calculation: Card "${card.word}" has ${card.learningPercentage}%');
-      totalPercentage += card.learningPercentage;
+      totalPercentage += card.learningPercentage.toDouble();
     }
     
     final result = totalPercentage / cards.length;
