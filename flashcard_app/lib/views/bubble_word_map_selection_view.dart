@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/bubble_word_provider.dart';
+import '../models/bubble_word_models.dart';
 import '../components/unified_header.dart';
 import 'bubble_word_view.dart';
 
@@ -53,20 +54,7 @@ class _BubbleWordMapSelectionViewState extends State<BubbleWordMapSelectionView>
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     children: [
-                      // Debug info
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        margin: const EdgeInsets.only(bottom: 16),
-                        decoration: BoxDecoration(
-                          color: Colors.blue.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.blue.withOpacity(0.3)),
-                        ),
-                        child: Text(
-                          'Debug: ${provider.maps.length} maps loaded, Selected: ${provider.selectedMapId ?? "none"}',
-                          style: const TextStyle(fontSize: 12, color: Colors.blue),
-                        ),
-                      ),
+
                       
                       // Welcome message
                       if (provider.maps.isEmpty) ...[
@@ -141,9 +129,18 @@ class _BubbleWordMapSelectionViewState extends State<BubbleWordMapSelectionView>
                                   subtitle: Text(
                                     '${map.nodes.length} words, ${map.connections.length} connections',
                                   ),
-                                  trailing: isSelected 
-                                    ? const Icon(Icons.check_circle, color: Colors.green)
-                                    : const Icon(Icons.arrow_forward_ios, size: 16),
+                                  trailing: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.arrow_forward_ios, size: 16),
+                                      const SizedBox(width: 8),
+                                      IconButton(
+                                        onPressed: () => _showDeleteMapDialog(context, map, provider),
+                                        icon: const Icon(Icons.delete_forever, color: Colors.red, size: 20),
+                                        tooltip: 'Delete Map',
+                                      ),
+                                    ],
+                                  ),
                                   onTap: () {
                                     provider.selectMap(map.id);
                                     Navigator.of(context).push(
@@ -202,6 +199,30 @@ class _BubbleWordMapSelectionViewState extends State<BubbleWordMapSelectionView>
               }
             },
             child: const Text('Create'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteMapDialog(BuildContext context, BubbleWordMap map, BubbleWordProvider provider) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Map'),
+        content: Text('Are you sure you want to delete "${map.name}"? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              provider.deleteMap(map.id);
+              Navigator.of(context).pop();
+            },
+            style: ElevatedButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
           ),
         ],
       ),

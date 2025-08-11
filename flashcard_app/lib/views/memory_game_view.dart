@@ -9,7 +9,7 @@ import '../models/dutch_word_exercise.dart';
 import '../models/game_session.dart';
 import '../services/sound_manager.dart';
 import '../services/xp_service.dart';
-import '../components/xp_progress_widget.dart';
+
 import '../components/animated_xp_counter.dart';
 
 class MemoryGameView extends StatefulWidget {
@@ -403,7 +403,7 @@ class _MemoryGameViewState extends State<MemoryGameView>
         ),
       ];
     } else {
-      borderColor = _getCardBorderColor(card.originalCard);
+      borderColor = _getMemoryCardBorderColor(card);
       backgroundColor = Colors.white;
       shadows = [
         BoxShadow(
@@ -509,8 +509,8 @@ class _MemoryGameViewState extends State<MemoryGameView>
     );
   }
 
-  Color _getCardBorderColor(FlashCard card) {
-    // Generate consistent vibrant colors based on card content
+  Color _getMemoryCardBorderColor(MemoryCard card) {
+    // Generate random vibrant colors to prevent color-based matching
     final vibrantColors = [
       const Color(0xFFE91E63), // Pink
       const Color(0xFF9C27B0), // Purple
@@ -530,9 +530,10 @@ class _MemoryGameViewState extends State<MemoryGameView>
       const Color(0xFF795548), // Brown
     ];
     
-    // Use card content to generate consistent index
-    final hash = card.word.hashCode + card.definition.hashCode;
-    final index = hash.abs() % vibrantColors.length;
+    // Use the MemoryCard's unique ID to generate random colors
+    // This ensures each individual card (word/definition) gets a different color
+    final random = Random(card.id.hashCode);
+    final index = random.nextInt(vibrantColors.length);
     return vibrantColors[index];
   }
 

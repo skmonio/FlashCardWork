@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'dart:math';
 import '../providers/bubble_word_provider.dart';
 import '../providers/flashcard_provider.dart';
 import '../models/bubble_word_models.dart';
@@ -23,9 +22,6 @@ class _BubbleWordViewState extends State<BubbleWordView> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<BubbleWordProvider>().initialize();
-    });
   }
 
   @override
@@ -53,6 +49,8 @@ class _BubbleWordViewState extends State<BubbleWordView> {
               // Action buttons
               _buildActionButtons(provider),
               
+
+              
               // Canvas
               Expanded(
                 child: Stack(
@@ -65,6 +63,18 @@ class _BubbleWordViewState extends State<BubbleWordView> {
                       right: 20,
                       child: Column(
                         children: [
+                          // Reset view
+                          FloatingActionButton.small(
+                            onPressed: () {
+                              provider.setScale(1.0); // Reset to normal zoom
+                              provider.setOffset(Offset.zero);
+                            },
+                            backgroundColor: Colors.white,
+                            child: const Icon(Icons.center_focus_strong, color: Colors.blue),
+                          ),
+                          
+                          const SizedBox(height: 8),
+                          
                           // Zoom in
                           FloatingActionButton.small(
                             onPressed: () {
@@ -174,6 +184,16 @@ class _BubbleWordViewState extends State<BubbleWordView> {
             ],
           ),
         ),
+        const PopupMenuItem(
+          value: 'delete_map',
+          child: Row(
+            children: [
+              Icon(Icons.delete_forever, color: Colors.red),
+              SizedBox(width: 8),
+              Text('Delete Map', style: TextStyle(color: Colors.red)),
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -181,43 +201,27 @@ class _BubbleWordViewState extends State<BubbleWordView> {
   Widget _buildActionButtons(BubbleWordProvider provider) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
+      child: const Row(
         children: [
-          // Undo button
-          IconButton(
-            onPressed: provider.canUndo ? provider.undo : null,
-            icon: Icon(
-              Icons.undo,
-              color: provider.canUndo ? Colors.orange : Colors.grey,
-            ),
-          ),
-          
-          // Redo button
-          IconButton(
-            onPressed: provider.canRedo ? provider.redo : null,
-            icon: Icon(
-              Icons.redo,
-              color: provider.canRedo ? Colors.purple : Colors.grey,
-            ),
-          ),
-          
-          const Spacer(),
-          
-
-          
-          // Disconnect button (only show when a node is selected)
-          if (provider.selectedNodeId != null)
-            TextButton.icon(
-              onPressed: () => _showDisconnectDialog(context, provider),
-              icon: const Icon(Icons.link_off),
-              label: const Text('Disconnect'),
-            ),
+          Spacer(),
         ],
       ),
     );
   }
 
+
+
   Widget _buildCanvas(BubbleWordProvider provider) {
+    // Debug information
+    print('BubbleWordView: Building canvas');
+    print('BubbleWordView: Current map: ${provider.currentMap?.name ?? "none"}');
+    print('BubbleWordView: Nodes count: ${provider.nodes.length}');
+    print('BubbleWordView: Connections count: ${provider.connections.length}');
+    print('BubbleWordView: Scale: ${provider.scale}, Offset: ${provider.offset}');
+    for (final node in provider.nodes) {
+      print('BubbleWordView: Node "${node.word}" at position: ${node.position}');
+    }
+    
     return GestureDetector(
       onScaleUpdate: (details) {
         // Handle both scale and pan in the scale gesture
@@ -242,38 +246,52 @@ class _BubbleWordViewState extends State<BubbleWordView> {
           scale: provider.scale,
           child: Transform.translate(
             offset: provider.offset,
-            child: Stack(
-              children: [
-                                // Connections
-                ...provider.connections.map((connection) => _buildConnection(connection, provider)),
-                
-                // Overlay indicator
-                if (provider.overlayMapIds.isNotEmpty)
-                  Positioned(
-                    top: 10,
-                    left: 10,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.withOpacity(0.9),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        '${provider.overlayMapIds.length} overlay${provider.overlayMapIds.length == 1 ? '' : 's'} active',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                // Create a truly infinite canvas by using Size.infinite
+                return SizedBox.expand(
+                  child: Stack(
+                    children: [
+                      // Connections
+                      ...provider.connections.map((connection) => _buildConnection(connection, provider)),
+                      
+                      // Word bubbles
+                      ...provider.nodes.map((node) => _buildWordBubble(node, provider)),
+                      
+                      // Empty state message
+                      if (provider.nodes.isEmpty)
+                        Positioned.fill(
+                          child: Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.bubble_chart,
+                                  size: 64,
+                                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'No words yet',
+                                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Tap the + button to add your first word',
+                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
+                    ],
                   ),
-                
-                // Word bubbles
-                ...provider.nodes.map((node) => _buildWordBubble(node, provider)),
-                
-
-              ],
+                );
+              },
             ),
           ),
         ),
@@ -282,28 +300,63 @@ class _BubbleWordViewState extends State<BubbleWordView> {
   }
 
   Widget _buildConnection(WordConnection connection, BubbleWordProvider provider) {
-    // Find nodes by word (for merged connections) or by ID (for regular connections)
+    // Find nodes by ID across all maps (current + overlays)
     WordNode? fromNode;
     WordNode? toNode;
     
-    if (connection.fromNodeId.length < 20) {
-      // Word-based ID (merged connection)
-      fromNode = provider.nodes.firstWhere((node) => node.word == connection.fromNodeId);
-      toNode = provider.nodes.firstWhere((node) => node.word == connection.toNodeId);
-    } else {
-      // Regular node ID
-      fromNode = provider.nodes.firstWhere((node) => node.id == connection.fromNodeId);
-      toNode = provider.nodes.firstWhere((node) => node.id == connection.toNodeId);
+    // First try to find in current map
+    if (provider.currentMap != null) {
+      try {
+        fromNode = provider.currentMap!.nodes.firstWhere((node) => node.id == connection.fromNodeId);
+        toNode = provider.currentMap!.nodes.firstWhere((node) => node.id == connection.toNodeId);
+      } catch (e) {
+        // Not found in current map, continue to overlays
+      }
     }
     
-    if (fromNode == null || toNode == null) return const SizedBox.shrink();
+    // If not found in current map, search in overlay maps
+    if (fromNode == null || toNode == null) {
+      for (final mapId in provider.overlayMapIds) {
+        try {
+          final overlayMap = provider.maps.firstWhere((map) => map.id == mapId);
+          
+          if (fromNode == null) {
+            try {
+              fromNode = overlayMap.nodes.firstWhere((node) => node.id == connection.fromNodeId);
+            } catch (e) {
+              // Continue searching
+            }
+          }
+          
+          if (toNode == null) {
+            try {
+              toNode = overlayMap.nodes.firstWhere((node) => node.id == connection.toNodeId);
+            } catch (e) {
+              // Continue searching
+            }
+          }
+          
+          if (fromNode != null && toNode != null) break;
+        } catch (e) {
+          // Overlay map not found, continue
+        }
+      }
+    }
     
-    return CustomPaint(
-      size: Size.infinite,
-      painter: ConnectionPainter(
-        from: fromNode.position,
-        to: toNode.position,
-        color: connection.color,
+    if (fromNode == null || toNode == null) {
+      print('BubbleWordView: Connection nodes not found: ${connection.fromNodeId} -> ${connection.toNodeId}');
+      return const SizedBox.shrink();
+    }
+    
+    return GestureDetector(
+      onLongPress: () => _showDeleteConnectionDialog(context, connection, provider),
+      child: CustomPaint(
+        size: Size.infinite,
+        painter: ConnectionPainter(
+          from: fromNode.position,
+          to: toNode.position,
+          color: connection.color,
+        ),
       ),
     );
   }
@@ -313,25 +366,38 @@ class _BubbleWordViewState extends State<BubbleWordView> {
   Widget _buildWordBubble(WordNode node, BubbleWordProvider provider) {
     final isSelected = provider.selectedNodeId == node.id;
     
-    return Positioned(
-      left: node.position.dx - node.size / 2,
-      top: node.position.dy - node.size / 2,
+    // Check if this node is from an overlay map
+    bool isOverlayNode = false;
+    if (provider.currentMap != null) {
+      try {
+        provider.currentMap!.nodes.firstWhere((n) => n.id == node.id);
+      } catch (e) {
+        // Node not found in current map, so it's from an overlay
+        isOverlayNode = true;
+      }
+    }
+    
+    return Transform.translate(
+      offset: Offset(node.position.dx - node.size / 2, node.position.dy - node.size / 2),
       child: GestureDetector(
-        onTap: () => _handleNodeTap(node, provider),
-        onDoubleTap: () => _showEditWordDialog(context, node),
-        onPanUpdate: (details) {
-          final newPosition = node.position + details.delta;
-          provider.updateNode(node.id, position: newPosition);
-        },
+          onTap: () => _handleNodeTap(node, provider),
+          onDoubleTap: () => _showEditWordDialog(context, node),
+          onPanUpdate: (details) {
+            final newPosition = node.position + details.delta;
+            provider.updateNode(node.id, position: newPosition);
+          },
+          onLongPress: () => _showDeleteWordDialog(context, node, provider),
         child: Container(
           width: node.size,
           height: node.size,
           decoration: BoxDecoration(
-            color: node.color,
+            color: isOverlayNode ? node.color.withOpacity(0.8) : node.color,
             borderRadius: BorderRadius.circular(20),
             border: isSelected
                 ? Border.all(color: Colors.white, width: 3)
-                : null,
+                : isOverlayNode
+                    ? Border.all(color: Colors.orange, width: 2)
+                    : null,
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.2),
@@ -340,21 +406,40 @@ class _BubbleWordViewState extends State<BubbleWordView> {
               ),
             ],
           ),
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(
-                node.word,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
+          child: Stack(
+            children: [
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    node.word,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
               ),
-            ),
+
+              // Overlay indicator
+              if (isOverlayNode)
+                Positioned(
+                  top: 4,
+                  left: 4,
+                  child: Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      color: Colors.orange,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
       ),
@@ -395,6 +480,9 @@ class _BubbleWordViewState extends State<BubbleWordView> {
         break;
       case 'clear':
         _showClearAllDialog(context, provider);
+        break;
+      case 'delete_map':
+        _showDeleteMapDialog(context, provider);
         break;
     }
   }
@@ -476,11 +564,10 @@ class _BubbleWordViewState extends State<BubbleWordView> {
             onPressed: () {
               if (_wordController.text.isNotEmpty) {
                 final provider = context.read<BubbleWordProvider>();
-                final random = Random();
-                final position = Offset(
-                  random.nextDouble() * 300 + 100,
-                  random.nextDouble() * 300 + 100,
-                );
+                // Position the word at the center of the screen (simple approach)
+                final screenSize = MediaQuery.of(context).size;
+                final position = Offset(screenSize.width / 2, screenSize.height / 2);
+                print('BubbleWordView: Adding word at screen center: $position');
                 provider.addNode(
                   _wordController.text.trim(),
                   _definitionController.text.trim(),
@@ -516,11 +603,10 @@ class _BubbleWordViewState extends State<BubbleWordView> {
                 subtitle: Text(card.definition),
                 onTap: () {
                   final bubbleProvider = context.read<BubbleWordProvider>();
-                  final random = Random();
-                  final position = Offset(
-                    random.nextDouble() * 300 + 100,
-                    random.nextDouble() * 300 + 100,
-                  );
+                                    // Position the word at the center of the screen (simple approach)
+                  final screenSize = MediaQuery.of(context).size;
+                  final position = Offset(screenSize.width / 2, screenSize.height / 2);
+                  print('BubbleWordView: Adding existing word at screen center: $position');
                   bubbleProvider.addNode(
                     card.word,
                     card.definition,
@@ -597,31 +683,7 @@ class _BubbleWordViewState extends State<BubbleWordView> {
     );
   }
 
-  void _showDisconnectDialog(BuildContext context, BubbleWordProvider provider) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Disconnect Node'),
-        content: const Text('Are you sure you want to disconnect all connections for this node?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (provider.selectedNodeId != null) {
-                provider.deleteConnectionsForNode(provider.selectedNodeId!);
-                Navigator.of(context).pop();
-              }
-            },
-            style: ElevatedButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Disconnect'),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   void _showClearAllDialog(BuildContext context, BubbleWordProvider provider) {
     showDialog(
@@ -641,6 +703,85 @@ class _BubbleWordViewState extends State<BubbleWordView> {
             },
             style: ElevatedButton.styleFrom(foregroundColor: Colors.red),
             child: const Text('Clear All'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteMapDialog(BuildContext context, BubbleWordProvider provider) {
+    if (provider.currentMap == null) return;
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Map'),
+        content: Text('Are you sure you want to delete "${provider.currentMap!.name}"? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final mapId = provider.selectedMapId;
+              if (mapId != null) {
+                provider.deleteMap(mapId);
+                Navigator.of(context).pop();
+                // Navigate back to map selection
+                Navigator.of(context).pop();
+              }
+            },
+            style: ElevatedButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteWordDialog(BuildContext context, WordNode node, BubbleWordProvider provider) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Word'),
+        content: Text('Are you sure you want to delete "${node.word}"? This will also remove all connections to this word.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              provider.deleteNode(node.id);
+              Navigator.of(context).pop();
+            },
+            style: ElevatedButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteConnectionDialog(BuildContext context, WordConnection connection, BubbleWordProvider provider) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Connection'),
+        content: const Text('Are you sure you want to delete this connection?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              provider.deleteConnection(connection.id);
+              Navigator.of(context).pop();
+            },
+            style: ElevatedButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
           ),
         ],
       ),
@@ -704,43 +845,55 @@ class _BubbleWordViewState extends State<BubbleWordView> {
         content: SizedBox(
           width: double.maxFinite,
           height: 300,
-          child: Column(
-            children: [
-              Text(
-                'Select maps to overlay. Duplicate words will be merged automatically:',
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 16),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: provider.maps.length,
-                  itemBuilder: (context, index) {
-                    final map = provider.maps[index];
-                    final isCurrentMap = provider.selectedMapId == map.id;
-                    final isOverlayed = provider.overlayMapIds.contains(map.id);
-                    
-                    return ListTile(
-                      title: Text(map.name),
-                      subtitle: Text('${map.nodes.length} words, ${map.connections.length} connections'),
-                      leading: isCurrentMap 
-                        ? const Icon(Icons.radio_button_checked, color: Colors.blue)
-                        : const Icon(Icons.radio_button_unchecked, color: Colors.grey),
-                      trailing: isCurrentMap 
-                        ? const Text('Current', style: TextStyle(color: Colors.blue))
-                        : Checkbox(
-                            value: isOverlayed,
-                            onChanged: (value) {
+          child: Consumer<BubbleWordProvider>(
+            builder: (context, provider, child) {
+              return Column(
+                children: [
+                  Text(
+                    'Select maps to overlay. Duplicate words will be merged automatically:',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 16),
+                  Expanded(
+                    child: Column(
+                      children: [
+                        // Current map at the top
+                        ...provider.maps.where((map) => provider.selectedMapId == map.id).map((map) {
+                          return ListTile(
+                            title: Text(map.name),
+                            subtitle: Text('${map.nodes.length} words, ${map.connections.length} connections'),
+                            leading: const Icon(Icons.radio_button_checked, color: Colors.blue),
+                            trailing: const Text('Current', style: TextStyle(color: Colors.blue)),
+                          );
+                        }),
+                        
+                        // Divider
+                        if (provider.maps.any((map) => provider.selectedMapId != map.id))
+                          const Divider(),
+                        
+                        // Other maps below
+                        ...provider.maps.where((map) => provider.selectedMapId != map.id).map((map) {
+                          final isOverlayed = provider.overlayMapIds.contains(map.id);
+                          return ListTile(
+                            title: Text(map.name),
+                            subtitle: Text('${map.nodes.length} words, ${map.connections.length} connections'),
+                            leading: Switch(
+                              value: isOverlayed,
+                              onChanged: (value) {
+                                provider.toggleOverlay(map.id);
+                              },
+                            ),
+                            onTap: () {
                               provider.toggleOverlay(map.id);
                             },
-                          ),
-                      onTap: isCurrentMap ? null : () {
-                        provider.toggleOverlay(map.id);
-                      },
-                    );
-                  },
-                ),
-              ),
-            ],
+                          );
+                        }),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
         ),
         actions: [
@@ -801,41 +954,15 @@ class ConnectionPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    // Draw a very thick, highly visible connection line
+    // Draw a simple connection line
     final paint = Paint()
-      ..color = Colors.red // Use bright red for maximum visibility
-      ..strokeWidth = 8 // Much thicker line
+      ..color = color
+      ..strokeWidth = 4
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
     // Draw the main line
     canvas.drawLine(from, to, paint);
-    
-    // Draw arrow at the end
-    final direction = (to - from).direction;
-    final arrowLength = 20.0;
-    final arrowAngle = 0.6;
-    
-    final arrowPoint1 = to - Offset(
-      arrowLength * cos(direction - arrowAngle),
-      arrowLength * sin(direction - arrowAngle),
-    );
-    final arrowPoint2 = to - Offset(
-      arrowLength * cos(direction + arrowAngle),
-      arrowLength * sin(direction + arrowAngle),
-    );
-    
-    canvas.drawLine(to, arrowPoint1, paint);
-    canvas.drawLine(to, arrowPoint2, paint);
-    
-    // Add a shadow for extra visibility
-    final shadowPaint = Paint()
-      ..color = Colors.black.withOpacity(0.3)
-      ..strokeWidth = 10
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-    
-    canvas.drawLine(from, to, shadowPaint);
   }
 
   @override
