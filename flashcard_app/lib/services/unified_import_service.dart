@@ -4,8 +4,8 @@ import '../models/flash_card.dart';
 import '../models/dutch_word_exercise.dart';
 
 class UnifiedImportService {
-  // Actual CSV format: Deck,Word,Definition,Exercise Type,Question,Correct Answer,Options,Explanation
-  static const List<String> csvHeaders = [
+  // Unified CSV format: Deck,Word,Definition,Exercise Type,Question,Options,Explanation
+  static const List<String> unifiedHeaders = [
     'Deck',
     'Word',
     'Definition',
@@ -13,6 +13,19 @@ class UnifiedImportService {
     'Question',
     'Options',
     'Explanation',
+  ];
+
+  // Basic flashcard CSV format: Word,Translation,Deck,Example,Article,Plural,Past Tense,Future Tense,Past Participle
+  static const List<String> basicHeaders = [
+    'Word',
+    'Translation',
+    'Deck',
+    'Example',
+    'Article',
+    'Plural',
+    'Past Tense',
+    'Future Tense',
+    'Past Participle',
   ];
 
   static Future<Map<String, dynamic>> parseUnifiedCSV(String csvContent) async {
@@ -28,23 +41,117 @@ class UnifiedImportService {
     final headers = lines[0].split(',').map((h) => h.trim()).toList();
     final data = lines.skip(1).where((line) => line.trim().isNotEmpty).toList();
     
-    // Validate required headers
-    final requiredHeaders = ['Deck', 'Word', 'Definition', 'Exercise Type', 'Question', 'Options', 'Explanation'];
-    final missingHeaders = <String>[];
-    for (final required in requiredHeaders) {
-      if (!headers.contains(required)) {
-        missingHeaders.add(required);
-      }
-    }
+    // Detect CSV format
+    final isUnifiedFormat = _isUnifiedFormat(headers);
+    final isBasicFormat = _isBasicFormat(headers);
     
-    if (missingHeaders.isNotEmpty) {
+    if (!isUnifiedFormat && !isBasicFormat) {
       return {
         'cards': [], 
         'exercises': [], 
-        'errors': ['Missing required headers: ${missingHeaders.join(', ')}']
+        'errors': ['Unsupported CSV format. Expected either unified format (Deck,Word,Definition,Exercise Type,Question,Options,Explanation) or basic format (Word,Translation,Deck,Example,Article,Plural,Past Tense,Future Tense,Past Participle)']
       };
     }
 
+    if (isUnifiedFormat) {
+      return _parseUnifiedFormat(headers, data);
+    } else {
+      return _parseBasicFormat(headers, data);
+    }
+  }
+
+  static bool _isUnifiedFormat(List<String> headers) {
+    final requiredHeaders = ['Deck', 'Word', 'Definition', 'Exercise Type', 'Question', 'Options', 'Explanation'];
+    return requiredHeaders.every((header) => headers.contains(header));
+  }
+
+  static bool _isBasicFormat(List<String> headers) {
+    final requiredHeaders = ['Word', 'Translation', 'Deck'];
+    return requiredHeaders.every((header) => headers.contains(header));
+  }
+
+  static Map<String, dynamic> _parseBasicFormat(List<String> headers, List<String> data) {
+    final cards = <FlashCard>[];
+    final errors = <String>[];
+    
+    for (int i = 0; i < data.length; i++) {
+      final line = data[i].trim();
+      if (line.isEmpty) continue;
+
+      try {
+        final values = _parseCSVLine(line);
+        if (values.length < 3) {
+          continue;
+        }
+
+        final wordIndex = headers.indexOf('Word');
+        final translationIndex = headers.indexOf('Translation');
+        final deckIndex = headers.indexOf('Deck');
+        
+        if (wordIndex == -1 || translationIndex == -1 || deckIndex == -1) {
+          errors.add('Missing required headers: Word, Translation, or Deck');
+          continue;
+        }
+        
+        final word = values[wordIndex].trim();
+        final translation = values[translationIndex].trim();
+        final deckName = values[deckIndex].trim();
+        
+        // Optional fields with safe index checking
+        final exampleIndex = headers.indexOf('Example');
+        final articleIndex = headers.indexOf('Article');
+        final pluralIndex = headers.indexOf('Plural');
+        final pastTenseIndex = headers.indexOf('Past Tense');
+        final futureTenseIndex = headers.indexOf('Future Tense');
+        final pastParticipleIndex = headers.indexOf('Past Participle');
+        
+        final example = exampleIndex != -1 && exampleIndex < values.length ? values[exampleIndex].trim() : '';
+        final article = articleIndex != -1 && articleIndex < values.length ? values[articleIndex].trim() : '';
+        final plural = pluralIndex != -1 && pluralIndex < values.length ? values[pluralIndex].trim() : '';
+        final pastTense = pastTenseIndex != -1 && pastTenseIndex < values.length ? values[pastTenseIndex].trim() : '';
+        final futureTense = futureTenseIndex != -1 && futureTenseIndex < values.length ? values[futureTenseIndex].trim() : '';
+        final pastParticiple = pastParticipleIndex != -1 && pastParticipleIndex < values.length ? values[pastParticipleIndex].trim() : '';
+        
+        print('🔍 Basic CSV parsing: Word="$word", Translation="$translation", Deck="$deckName"');
+
+        // Create FlashCard
+        final deckIds = _parseDeckNames(deckName);
+        print('🔍 Creating basic card for "$word" with deckIds: $deckIds');
+        
+        final card = FlashCard(
+          id: DateTime.now().millisecondsSinceEpoch.toString(),
+          word: word,
+          definition: translation,
+          example: example,
+          article: article,
+          plural: plural,
+          pastTense: pastTense,
+          futureTense: futureTense,
+          pastParticiple: pastParticiple,
+          deckIds: deckIds,
+          dateCreated: DateTime.now(),
+        );
+        cards.add(card);
+        
+      } catch (e) {
+        final errorMsg = 'Error parsing line ${i + 1}: ${e.toString()}';
+        print(errorMsg);
+        errors.add(errorMsg);
+        continue;
+      }
+    }
+
+    print('Basic import completed: ${cards.length} cards');
+    
+    return {
+      'cards': cards,
+      'exercises': <DutchWordExercise>[],
+      'errors': errors,
+      'success': true,
+    };
+  }
+
+  static Map<String, dynamic> _parseUnifiedFormat(List<String> headers, List<String> data) {
     final cards = <FlashCard>[];
     final wordExercises = <DutchWordExercise>[];
     final wordMap = <String, Map<String, dynamic>>{};
@@ -63,15 +170,29 @@ class UnifiedImportService {
           continue;
         }
 
-        final deckName = values[headers.indexOf('Deck')].trim();
-        final word = values[headers.indexOf('Word')].trim();
-        final definition = values[headers.indexOf('Definition')].trim();
-        final exerciseType = values[headers.indexOf('Exercise Type')].trim();
-        final question = values[headers.indexOf('Question')].trim();
-        final options = values[headers.indexOf('Options')].trim();
-        final explanation = values[headers.indexOf('Explanation')].trim();
+        final deckIndex = headers.indexOf('Deck');
+        final wordIndex = headers.indexOf('Word');
+        final definitionIndex = headers.indexOf('Definition');
+        final exerciseTypeIndex = headers.indexOf('Exercise Type');
+        final questionIndex = headers.indexOf('Question');
+        final optionsIndex = headers.indexOf('Options');
+        final explanationIndex = headers.indexOf('Explanation');
         
-        print('🔍 CSV parsing: Word="$word", DeckName="$deckName"');
+        if (deckIndex == -1 || wordIndex == -1 || definitionIndex == -1 || 
+            exerciseTypeIndex == -1 || questionIndex == -1 || optionsIndex == -1 || explanationIndex == -1) {
+          errors.add('Missing required headers for unified format');
+          continue;
+        }
+        
+        final deckName = values[deckIndex].trim();
+        final word = values[wordIndex].trim();
+        final definition = values[definitionIndex].trim();
+        final exerciseType = values[exerciseTypeIndex].trim();
+        final question = values[questionIndex].trim();
+        final options = values[optionsIndex].trim();
+        final explanation = values[explanationIndex].trim();
+        
+        print('🔍 Unified CSV parsing: Word="$word", DeckName="$deckName"');
 
         // Create or update word entry
         if (!wordMap.containsKey(word)) {
@@ -120,35 +241,35 @@ class UnifiedImportService {
             'explanation': explanation,
           });
         }
-              } catch (e) {
-          final errorMsg = 'Error parsing line ${i + 1}: ${e.toString()}';
-          print(errorMsg);
-          errors.add(errorMsg);
-          continue;
-        }
+      } catch (e) {
+        final errorMsg = 'Error parsing line ${i + 1}: ${e.toString()}';
+        print(errorMsg);
+        errors.add(errorMsg);
+        continue;
       }
+    }
 
     // Convert to FlashCard and DutchWordExercise objects
     print('Processing ${wordMap.length} unique words...');
     for (final wordData in wordMap.values) {
       print('Creating card for word: ${wordData['word']}');
-              // Create FlashCard
-        final deckIds = _parseDeckNames(wordData['deckNames']);
-        print('🔍 Creating card for "${wordData['word']}" with deckIds: $deckIds');
-        
-        final card = FlashCard(
-          id: DateTime.now().millisecondsSinceEpoch.toString(),
-          word: wordData['word'],
-          definition: wordData['definition'],
-          example: wordData['example'] ?? '', // Optional field
-          article: wordData['article'] ?? '', // Optional field
-          plural: wordData['plural'] ?? '', // Optional field
-          pastTense: wordData['pastTense'] ?? '', // Optional field
-          futureTense: wordData['futureTense'] ?? '', // Optional field
-          pastParticiple: wordData['pastParticiple'] ?? '', // Optional field
-          deckIds: deckIds,
-          dateCreated: DateTime.now(),
-        );
+      // Create FlashCard
+      final deckIds = _parseDeckNames(wordData['deckNames']);
+      print('🔍 Creating card for "${wordData['word']}" with deckIds: $deckIds');
+      
+      final card = FlashCard(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        word: wordData['word'],
+        definition: wordData['definition'],
+        example: wordData['example'] ?? '', // Optional field
+        article: wordData['article'] ?? '', // Optional field
+        plural: wordData['plural'] ?? '', // Optional field
+        pastTense: wordData['pastTense'] ?? '', // Optional field
+        futureTense: wordData['futureTense'] ?? '', // Optional field
+        pastParticiple: wordData['pastParticiple'] ?? '', // Optional field
+        deckIds: deckIds,
+        dateCreated: DateTime.now(),
+      );
       cards.add(card);
 
       // Create DutchWordExercise if exercises exist
@@ -190,7 +311,7 @@ class UnifiedImportService {
       }
     }
 
-    print('Import completed: ${cards.length} cards, ${wordExercises.length} exercises');
+    print('Unified import completed: ${cards.length} cards, ${wordExercises.length} exercises');
     
     // Add summary errors if no data was imported
     if (cards.isEmpty && wordExercises.isEmpty && errors.isEmpty) {
@@ -201,6 +322,7 @@ class UnifiedImportService {
       'cards': cards,
       'exercises': wordExercises,
       'errors': errors,
+      'success': true,
     };
   }
 
@@ -208,7 +330,7 @@ class UnifiedImportService {
     final lines = <String>[];
     
     // Add header
-    lines.add(csvHeaders.join(','));
+    lines.add(unifiedHeaders.join(','));
     
     // Group exercises by word for easier lookup
     final exerciseMap = <String, DutchWordExercise>{};

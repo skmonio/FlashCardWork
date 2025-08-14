@@ -239,16 +239,19 @@ class _AllDecksViewState extends State<AllDecksView> {
   }
 
   Widget _buildDeckCard(BuildContext context, FlashcardProvider provider, Deck deck) {
-    final cards = provider.getCardsForDeck(deck.id);
+    // For parent decks, get cards including sub-decks; for sub-decks, get only their own cards
+    final cards = deck.isSubDeck 
+        ? provider.getCardsForDeck(deck.id)
+        : provider.getCardsForDeckWithSubDecks(deck.id);
     final subDecks = provider.getSubDecks(deck.id);
     final isSelected = _selectedDeckIds.contains(deck.id);
     
     // Debug: Print deck info
-    print('🔍 AllDecksView: Deck "${deck.name}" (${deck.id}) has ${cards.length} cards');
+    print('🔍 AllDecksView: Deck "${deck.name}" (${deck.id}) has ${cards.length} cards (${deck.isSubDeck ? 'sub-deck' : 'parent deck'})');
     for (final card in cards) {
       print('🔍 AllDecksView:   - Card "${card.word}" has ${card.learningPercentage}% (timesShown: ${card.timesShown}, timesCorrect: ${card.timesCorrect})');
     }
-    print('🔍 AllDecksView: Deck "${deck.name}" calculated percentage: ${deck.learningPercentage.round()}%');
+    print('🔍 AllDecksView: Deck "${deck.name}" calculated percentage: ${Deck.calculateLearningPercentage(deck.name, cards).round()}%');
     
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -423,15 +426,59 @@ class _AllDecksViewState extends State<AllDecksView> {
   }
 
   List<Deck> _sortDecks(List<Deck> decks) {
-    final sorted = List<Deck>.from(decks);
-    sorted.sort((a, b) {
+    final provider = context.read<FlashcardProvider>();
+    
+    // Separate parent and child decks
+    final parentDecks = decks.where((deck) => deck.parentId == null).toList();
+    final childDecks = decks.where((deck) => deck.parentId != null).toList();
+    
+    // Sort parent decks
+    parentDecks.sort((a, b) {
       if (_sortOption == 'A-Z') {
         return a.name.toLowerCase().compareTo(b.name.toLowerCase());
       } else {
         return b.name.toLowerCase().compareTo(a.name.toLowerCase());
       }
     });
-    return sorted;
+    
+    // Sort child decks within each parent
+    childDecks.sort((a, b) {
+      // First sort by parent deck name
+      final parentA = provider.getDeck(a.parentId!);
+      final parentB = provider.getDeck(b.parentId!);
+      
+      if (parentA != null && parentB != null) {
+        final parentComparison = _sortOption == 'A-Z' 
+            ? parentA.name.toLowerCase().compareTo(parentB.name.toLowerCase())
+            : parentB.name.toLowerCase().compareTo(parentA.name.toLowerCase());
+        
+        if (parentComparison != 0) {
+          return parentComparison;
+        }
+      }
+      
+      // Then sort by child deck name
+      if (_sortOption == 'A-Z') {
+        return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+      } else {
+        return b.name.toLowerCase().compareTo(a.name.toLowerCase());
+      }
+    });
+    
+    // Combine parent and child decks in hierarchical order
+    final result = <Deck>[];
+    
+    // Add parent decks and their children in hierarchical order
+    for (final parentDeck in parentDecks) {
+      // Add the parent deck
+      result.add(parentDeck);
+      
+      // Add all children of this parent deck immediately after
+      final children = childDecks.where((child) => child.parentId == parentDeck.id).toList();
+      result.addAll(children);
+    }
+    
+    return result;
   }
 
   void _toggleSelectionMode() {
@@ -509,14 +556,16 @@ class _AllDecksViewState extends State<AllDecksView> {
   }
 
   void _studyDeck(BuildContext context, Deck deck) {
-    // Get all cards in this deck
+    // Get all cards in this deck including sub-decks for parent decks
     final provider = context.read<FlashcardProvider>();
     final dutchProvider = context.read<DutchWordExerciseProvider>();
-    final deckCards = provider.cards.where((card) => card.deckIds.contains(deck.id)).toList();
+    final deckCards = deck.isSubDeck 
+        ? provider.getCardsForDeck(deck.id)
+        : provider.getCardsForDeckWithSubDecks(deck.id);
     
     if (deckCards.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('No cards in "${deck.name}" to study!')),
+        SnackBar(content: Text('No cards in "${deck.name}"${deck.isSubDeck ? '' : ' or its sub-decks'} to study!')),
       );
       return;
     }

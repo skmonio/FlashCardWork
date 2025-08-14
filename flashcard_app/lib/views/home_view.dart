@@ -11,6 +11,7 @@ import 'multiple_choice_view.dart';
 import 'true_false_view.dart';
 import 'writing_view.dart';
 import 'word_scramble_view.dart';
+import 'dutch_grammar_rules_view.dart';
 
 import 'user_profile_view.dart';
 import '../services/sample_data_service.dart';
@@ -205,15 +206,9 @@ class _HomeViewState extends State<HomeView> {
           ),
         ),
         const SizedBox(height: 16),
+
         _buildMenuButton(
-          'Dutch Lessons',
-          Icons.book,
-          Colors.blue,
-          () => _navigateToLessons(context),
-        ),
-        const SizedBox(height: 12),
-        _buildMenuButton(
-          'Dutch Grammar',
+          'Grammar Rules',
           Icons.language,
           Colors.indigo,
           () => _navigateToGrammar(context),
@@ -287,11 +282,7 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
-  void _navigateToLessons(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Dutch Lessons coming soon!')),
-    );
-  }
+
 
   void _navigateToStudy(BuildContext context) {
     Navigator.of(context).push(
@@ -370,8 +361,10 @@ class _HomeViewState extends State<HomeView> {
   }
 
   void _navigateToGrammar(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Dutch Grammar guide coming soon!')),
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const DutchGrammarRulesView(),
+      ),
     );
   }
 

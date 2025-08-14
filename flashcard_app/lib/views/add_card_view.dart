@@ -95,15 +95,20 @@ class _AddCardViewState extends State<AddCardView> {
                     // Dutch Word
                     TextFormField(
                       controller: _wordController,
+                      maxLength: 100,
                       decoration: const InputDecoration(
                         labelText: 'Dutch Word *',
                         hintText: 'e.g., huis',
                         border: OutlineInputBorder(),
                         prefixIcon: Icon(Icons.text_fields),
+                        counterText: '',
                       ),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
                           return 'Please enter a Dutch word';
+                        }
+                        if (value.length > 100) {
+                          return 'Word must be 100 characters or less';
                         }
                         return null;
                       },
@@ -117,15 +122,17 @@ class _AddCardViewState extends State<AddCardView> {
                     // English Definition
                     TextFormField(
                       controller: _definitionController,
+                      maxLength: 200,
                       decoration: const InputDecoration(
-                        labelText: 'English Definition *',
-                        hintText: 'e.g., house',
+                        labelText: 'English Definition (optional)',
+                        hintText: 'e.g., house (you can add this later)',
                         border: OutlineInputBorder(),
                         prefixIcon: Icon(Icons.translate),
+                        counterText: '',
                       ),
                       validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Please enter an English definition';
+                        if (value != null && value.length > 200) {
+                          return 'Definition must be 200 characters or less';
                         }
                         return null;
                       },
@@ -136,12 +143,20 @@ class _AddCardViewState extends State<AddCardView> {
                     TextFormField(
                       controller: _exampleController,
                       maxLines: 2,
+                      maxLength: 300,
                       decoration: const InputDecoration(
                         labelText: 'Example Sentence',
                         hintText: 'e.g., Ik woon in een groot huis.',
                         border: OutlineInputBorder(),
                         prefixIcon: Icon(Icons.format_quote),
+                        counterText: '',
                       ),
+                      validator: (value) {
+                        if (value != null && value.length > 300) {
+                          return 'Example must be 300 characters or less';
+                        }
+                        return null;
+                      },
                     ),
                     const SizedBox(height: 24),
                     
@@ -152,12 +167,20 @@ class _AddCardViewState extends State<AddCardView> {
                     // Plural Form
                     TextFormField(
                       controller: _pluralController,
+                      maxLength: 100,
                       decoration: const InputDecoration(
                         labelText: 'Plural Form',
                         hintText: 'e.g., huizen',
                         border: OutlineInputBorder(),
                         prefixIcon: Icon(Icons.list),
+                        counterText: '',
                       ),
+                      validator: (value) {
+                        if (value != null && value.length > 100) {
+                          return 'Plural form must be 100 characters or less';
+                        }
+                        return null;
+                      },
                     ),
                     const SizedBox(height: 16),
                     
@@ -307,22 +330,38 @@ class _AddCardViewState extends State<AddCardView> {
             Expanded(
               child: TextFormField(
                 controller: _pastTenseController,
+                maxLength: 100,
                 decoration: const InputDecoration(
                   labelText: 'Past Tense',
                   hintText: 'e.g., woonde',
                   border: OutlineInputBorder(),
+                  counterText: '',
                 ),
+                validator: (value) {
+                  if (value != null && value.length > 100) {
+                    return 'Past tense must be 100 characters or less';
+                  }
+                  return null;
+                },
               ),
             ),
             const SizedBox(width: 8),
             Expanded(
               child: TextFormField(
                 controller: _futureTenseController,
+                maxLength: 100,
                 decoration: const InputDecoration(
                   labelText: 'Future Tense',
                   hintText: 'e.g., zal wonen',
                   border: OutlineInputBorder(),
+                  counterText: '',
                 ),
+                validator: (value) {
+                  if (value != null && value.length > 100) {
+                    return 'Future tense must be 100 characters or less';
+                  }
+                  return null;
+                },
               ),
             ),
           ],
@@ -330,11 +369,19 @@ class _AddCardViewState extends State<AddCardView> {
         const SizedBox(height: 8),
         TextFormField(
           controller: _pastParticipleController,
+          maxLength: 100,
           decoration: const InputDecoration(
             labelText: 'Past Participle',
             hintText: 'e.g., gewoond',
             border: OutlineInputBorder(),
+            counterText: '',
           ),
+          validator: (value) {
+            if (value != null && value.length > 100) {
+              return 'Past participle must be 100 characters or less';
+            }
+            return null;
+          },
         ),
       ],
     );
@@ -501,8 +548,8 @@ class _AddCardViewState extends State<AddCardView> {
         final updatedCard = FlashCard(
           id: widget.cardToEdit!.id,
           word: _wordController.text.trim(),
-          definition: _definitionController.text.trim(),
-          example: _exampleController.text.trim(),
+          definition: _definitionController.text.trim().isEmpty ? null : _definitionController.text.trim(),
+          example: _exampleController.text.trim().isEmpty ? null : _exampleController.text.trim(),
           deckIds: _selectedDeckIds.toSet(),
           successCount: widget.cardToEdit!.successCount,
           dateCreated: widget.cardToEdit!.dateCreated,
@@ -518,10 +565,10 @@ class _AddCardViewState extends State<AddCardView> {
           lastReviewDate: widget.cardToEdit!.lastReviewDate,
           totalReviews: widget.cardToEdit!.totalReviews,
           article: _selectedArticle,
-          plural: _pluralController.text.trim(),
-          pastTense: _pastTenseController.text.trim(),
-          futureTense: _futureTenseController.text.trim(),
-          pastParticiple: _pastParticipleController.text.trim(),
+          plural: _pluralController.text.trim().isEmpty ? '' : _pluralController.text.trim(),
+          pastTense: _pastTenseController.text.trim().isEmpty ? '' : _pastTenseController.text.trim(),
+          futureTense: _futureTenseController.text.trim().isEmpty ? '' : _futureTenseController.text.trim(),
+          pastParticiple: _pastParticipleController.text.trim().isEmpty ? '' : _pastParticipleController.text.trim(),
         );
         
         await provider.updateCard(updatedCard);
@@ -536,13 +583,13 @@ class _AddCardViewState extends State<AddCardView> {
         // Create new card
         await provider.createCard(
           word: _wordController.text.trim(),
-          definition: _definitionController.text.trim(),
-          example: _exampleController.text.trim(),
+          definition: _definitionController.text.trim().isEmpty ? null : _definitionController.text.trim(),
+          example: _exampleController.text.trim().isEmpty ? null : _exampleController.text.trim(),
           article: _selectedArticle,
-          plural: _pluralController.text.trim(),
-          pastTense: _pastTenseController.text.trim(),
-          futureTense: _futureTenseController.text.trim(),
-          pastParticiple: _pastParticipleController.text.trim(),
+          plural: _pluralController.text.trim().isEmpty ? '' : _pluralController.text.trim(),
+          pastTense: _pastTenseController.text.trim().isEmpty ? '' : _pastTenseController.text.trim(),
+          futureTense: _futureTenseController.text.trim().isEmpty ? '' : _futureTenseController.text.trim(),
+          pastParticiple: _pastParticipleController.text.trim().isEmpty ? '' : _pastParticipleController.text.trim(),
           deckIds: _selectedDeckIds.toSet(),
         );
         

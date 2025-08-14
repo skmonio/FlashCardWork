@@ -14,6 +14,13 @@ subprojects {
 }
 subprojects {
     project.evaluationDependsOn(":app")
+    
+    // Suppress unchecked warnings for all subprojects (including ML Kit packages)
+    afterEvaluate {
+        tasks.withType<JavaCompile> {
+            options.compilerArgs.addAll(listOf("-Xlint:-unchecked"))
+        }
+    }
 }
 
 tasks.register<Delete>("clean") {

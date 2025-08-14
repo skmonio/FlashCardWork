@@ -55,6 +55,10 @@ dependencies:
   path_provider: ^2.1.1
   image_picker: ^1.0.7
   
+  # OCR and Text Recognition
+  google_ml_kit: ^0.16.3
+  camera: ^0.10.5+9
+  
   # UI Components
   flutter_staggered_animations: ^1.1.1
   confetti: ^0.7.0
@@ -86,6 +90,7 @@ flutter:
     - assets/audio/
     - assets/images/
     - assets/data/
+    - assets/data/grammar_rules/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

@@ -4,14 +4,17 @@ import 'dart:math';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/flashcard_provider.dart';
 import '../providers/dutch_word_exercise_provider.dart';
+import '../providers/dutch_grammar_provider.dart';
 import '../models/flash_card.dart';
 import '../models/dutch_word_exercise.dart';
+import '../models/dutch_grammar_rule.dart';
 import 'multiple_choice_view.dart';
 import 'true_false_view.dart';
 import 'memory_game_view.dart';
 import 'word_scramble_view.dart';
 import 'writing_view.dart';
 import 'dutch_word_exercise_detail_view.dart';
+import 'dutch_grammar_exercise_view.dart';
 
 enum ShuffleMode {
   multipleChoice,
@@ -20,6 +23,7 @@ enum ShuffleMode {
   wordScramble,
   writing,
   dutchExercise,
+  grammarExercise,
 }
 
 class ShuffleCardsView extends StatefulWidget {
@@ -36,6 +40,8 @@ class _ShuffleCardsViewState extends State<ShuffleCardsView> {
   ShuffleMode? _currentMode;
   FlashCard? _currentCard;
   DutchWordExercise? _currentExercise;
+  GrammarExercise? _currentGrammarExercise;
+  DutchGrammarRule? _currentGrammarRule;
   final Random _random = Random();
   
   // Exercise type customization
@@ -46,12 +52,14 @@ class _ShuffleCardsViewState extends State<ShuffleCardsView> {
     ShuffleMode.wordScramble: true,
     ShuffleMode.writing: true,
     ShuffleMode.dutchExercise: true,
+    ShuffleMode.grammarExercise: true,
   };
 
   @override
   void initState() {
     super.initState();
     _loadHighScore();
+    _loadEnabledModes();
   }
 
   void _loadHighScore() async {
@@ -59,6 +67,32 @@ class _ShuffleCardsViewState extends State<ShuffleCardsView> {
     setState(() {
       _highScore = prefs.getInt('shuffle_high_score') ?? 0;
     });
+  }
+
+  void _loadEnabledModes() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _enabledModes = {
+        ShuffleMode.multipleChoice: prefs.getBool('shuffle_mode_multiple_choice') ?? true,
+        ShuffleMode.trueFalse: prefs.getBool('shuffle_mode_true_false') ?? true,
+        ShuffleMode.memoryGame: prefs.getBool('shuffle_mode_memory_game') ?? true,
+        ShuffleMode.wordScramble: prefs.getBool('shuffle_mode_word_scramble') ?? true,
+        ShuffleMode.writing: prefs.getBool('shuffle_mode_writing') ?? true,
+        ShuffleMode.dutchExercise: prefs.getBool('shuffle_mode_dutch_exercise') ?? true,
+        ShuffleMode.grammarExercise: prefs.getBool('shuffle_mode_grammar_exercise') ?? true,
+      };
+    });
+  }
+
+  void _saveEnabledModes() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('shuffle_mode_multiple_choice', _enabledModes[ShuffleMode.multipleChoice] ?? true);
+    await prefs.setBool('shuffle_mode_true_false', _enabledModes[ShuffleMode.trueFalse] ?? true);
+    await prefs.setBool('shuffle_mode_memory_game', _enabledModes[ShuffleMode.memoryGame] ?? true);
+    await prefs.setBool('shuffle_mode_word_scramble', _enabledModes[ShuffleMode.wordScramble] ?? true);
+    await prefs.setBool('shuffle_mode_writing', _enabledModes[ShuffleMode.writing] ?? true);
+    await prefs.setBool('shuffle_mode_dutch_exercise', _enabledModes[ShuffleMode.dutchExercise] ?? true);
+    await prefs.setBool('shuffle_mode_grammar_exercise', _enabledModes[ShuffleMode.grammarExercise] ?? true);
   }
 
   void _saveHighScore() async {
@@ -84,16 +118,26 @@ class _ShuffleCardsViewState extends State<ShuffleCardsView> {
 
     final provider = context.read<FlashcardProvider>();
     final dutchProvider = context.read<DutchWordExerciseProvider>();
+    final grammarProvider = context.read<DutchGrammarProvider>();
     
     // Get all available cards and exercises
     final allCards = provider.cards;
     final allExercises = dutchProvider.wordExercises;
+    final allGrammarRules = grammarProvider.allRules;
+    final allGrammarExercises = <GrammarExercise>[];
+    
+    // Collect all grammar exercises from all rules
+    for (final rule in allGrammarRules) {
+      allGrammarExercises.addAll(rule.exercises);
+    }
     
     // Debug logging
     print('🔍 ShuffleCardsView: Available cards: ${allCards.length}');
     print('🔍 ShuffleCardsView: Available exercises: ${allExercises.length}');
+    print('🔍 ShuffleCardsView: Available grammar rules: ${allGrammarRules.length}');
+    print('🔍 ShuffleCardsView: Available grammar exercises: ${allGrammarExercises.length}');
     
-    if (allCards.isEmpty && allExercises.isEmpty) {
+    if (allCards.isEmpty && allExercises.isEmpty && allGrammarExercises.isEmpty) {
       _showGameOver('No cards or exercises available!');
       return;
     }
@@ -121,6 +165,10 @@ class _ShuffleCardsViewState extends State<ShuffleCardsView> {
     
     if (allExercises.isNotEmpty && _enabledModes[ShuffleMode.dutchExercise] == true) {
       availableModes.add(ShuffleMode.dutchExercise);
+    }
+    
+    if (allGrammarExercises.isNotEmpty && _enabledModes[ShuffleMode.grammarExercise] == true) {
+      availableModes.add(ShuffleMode.grammarExercise);
     }
 
     if (availableModes.isEmpty) {
@@ -150,6 +198,10 @@ class _ShuffleCardsViewState extends State<ShuffleCardsView> {
       case ShuffleMode.dutchExercise:
         _currentExercise = allExercises[_random.nextInt(allExercises.length)];
         _launchDutchExercise();
+        break;
+      case ShuffleMode.grammarExercise:
+        _currentGrammarExercise = allGrammarExercises[_random.nextInt(allGrammarExercises.length)];
+        _launchGrammarExercise();
         break;
     }
   }
@@ -279,12 +331,48 @@ class _ShuffleCardsViewState extends State<ShuffleCardsView> {
     );
   }
 
+  void _launchGrammarExercise() {
+    if (_currentGrammarExercise == null) return;
+
+    // Find the rule that contains this exercise
+    final grammarProvider = context.read<DutchGrammarProvider>();
+    DutchGrammarRule? containingRule;
+    
+    for (final rule in grammarProvider.allRules) {
+      if (rule.exercises.contains(_currentGrammarExercise)) {
+        containingRule = rule;
+        break;
+      }
+    }
+
+    if (containingRule == null) return;
+
+    // Create a single exercise view for shuffle mode
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DutchGrammarExerciseView(
+          exercises: [_currentGrammarExercise!],
+          ruleTitle: containingRule?.title ?? 'Grammar Exercise',
+          ruleId: containingRule?.id ?? 'unknown',
+          onComplete: _handleGrammarExerciseComplete,
+          shuffleMode: true,
+        ),
+      ),
+    );
+  }
+
   void _handleCardModeComplete(bool wasCorrect) {
     Navigator.pop(context);
     _handleChallengeComplete(wasCorrect);
   }
 
   void _handleDutchExerciseComplete(bool wasCorrect) {
+    Navigator.pop(context);
+    _handleChallengeComplete(wasCorrect);
+  }
+
+  void _handleGrammarExerciseComplete(bool wasCorrect) {
     Navigator.pop(context);
     _handleChallengeComplete(wasCorrect);
   }
@@ -553,6 +641,41 @@ class _ShuffleCardsViewState extends State<ShuffleCardsView> {
                       ),
                     ),
                   ),
+                ] else ...[
+                  // Enabled modes summary
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.settings, size: 16, color: Colors.grey[600]),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Enabled Exercise Types:',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 4,
+                          children: _buildEnabledModeChips(),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
                 
 
@@ -568,52 +691,174 @@ class _ShuffleCardsViewState extends State<ShuffleCardsView> {
   void _showCustomizationDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Customize Exercise Types'),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'Select which exercise types to include in shuffle mode:',
-                style: TextStyle(fontSize: 14, color: Colors.grey),
-              ),
-              const SizedBox(height: 16),
-              _buildModeToggle('Multiple Choice', ShuffleMode.multipleChoice, Icons.check_circle, Colors.teal),
-              _buildModeToggle('True or False', ShuffleMode.trueFalse, Icons.help_outline, Colors.orange),
-              _buildModeToggle('Memory Game', ShuffleMode.memoryGame, Icons.psychology, Colors.purple),
-              _buildModeToggle('Word Scramble', ShuffleMode.wordScramble, Icons.text_fields, Colors.blue),
-              _buildModeToggle('Write Your Card', ShuffleMode.writing, Icons.edit, Colors.blue),
-              _buildModeToggle('Dutch Exercises', ShuffleMode.dutchExercise, Icons.school, Colors.green),
-            ],
+      builder: (context) => ShuffleCustomizationDialog(
+        enabledModes: Map.from(_enabledModes),
+        onSettingsChanged: (newEnabledModes) {
+          setState(() {
+            _enabledModes = newEnabledModes;
+          });
+          _saveEnabledModes();
+        },
+      ),
+    );
+  }
+
+  List<Widget> _buildEnabledModeChips() {
+    final enabledCount = _enabledModes.values.where((enabled) => enabled).length;
+    final totalCount = _enabledModes.length;
+    
+    if (enabledCount == totalCount) {
+      return [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.green.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.green.withOpacity(0.3)),
+          ),
+          child: Text(
+            'All Types Enabled',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.green[700],
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Done'),
+      ];
+    } else if (enabledCount == 0) {
+      return [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.red.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.red.withOpacity(0.3)),
           ),
-        ],
+          child: Text(
+            'No Types Enabled',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.red[700],
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+      ];
+    } else {
+      return [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.blue.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.blue.withOpacity(0.3)),
+          ),
+          child: Text(
+            '$enabledCount of $totalCount Types',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.blue[700],
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+      ];
+    }
+  }
+}
+
+// Separate stateful widget for the customization dialog
+class ShuffleCustomizationDialog extends StatefulWidget {
+  final Map<ShuffleMode, bool> enabledModes;
+  final Function(Map<ShuffleMode, bool>) onSettingsChanged;
+
+  const ShuffleCustomizationDialog({
+    super.key,
+    required this.enabledModes,
+    required this.onSettingsChanged,
+  });
+
+  @override
+  State<ShuffleCustomizationDialog> createState() => _ShuffleCustomizationDialogState();
+}
+
+class _ShuffleCustomizationDialogState extends State<ShuffleCustomizationDialog> {
+  late Map<ShuffleMode, bool> _localEnabledModes;
+
+  @override
+  void initState() {
+    super.initState();
+    _localEnabledModes = Map.from(widget.enabledModes);
+  }
+
+  void _updateMode(ShuffleMode mode, bool value) {
+    setState(() {
+      _localEnabledModes[mode] = value;
+    });
+    widget.onSettingsChanged(_localEnabledModes);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Customize Exercise Types'),
+      content: SizedBox(
+        width: double.maxFinite,
+        height: 350, // Reduced height to prevent overflow
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Select which exercise types to include in shuffle mode:',
+              style: TextStyle(fontSize: 14, color: Colors.grey),
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    _buildModeToggle('Multiple Choice', ShuffleMode.multipleChoice, Icons.check_circle, Colors.teal),
+                    _buildModeToggle('True or False', ShuffleMode.trueFalse, Icons.help_outline, Colors.orange),
+                    _buildModeToggle('Memory Game', ShuffleMode.memoryGame, Icons.psychology, Colors.purple),
+                    _buildModeToggle('Word Scramble', ShuffleMode.wordScramble, Icons.text_fields, Colors.blue),
+                    _buildModeToggle('Write Your Card', ShuffleMode.writing, Icons.edit, Colors.blue),
+                    _buildModeToggle('Words', ShuffleMode.dutchExercise, Icons.school, Colors.green),
+                    _buildModeToggle('Grammar', ShuffleMode.grammarExercise, Icons.book, Colors.indigo),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Done'),
+        ),
+      ],
     );
   }
 
   Widget _buildModeToggle(String title, ShuffleMode mode, IconData icon, Color color) {
     return SwitchListTile(
+      dense: true, // Make the tiles more compact
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       title: Row(
         children: [
-          Icon(icon, color: color, size: 20),
+          Icon(icon, color: color, size: 18),
           const SizedBox(width: 8),
-          Text(title),
+          Expanded(
+            child: Text(
+              title,
+              style: const TextStyle(fontSize: 14),
+            ),
+          ),
         ],
       ),
-      value: _enabledModes[mode] ?? true,
-      onChanged: (value) {
-        setState(() {
-          _enabledModes[mode] = value;
-        });
-      },
+      value: _localEnabledModes[mode] ?? true,
+      onChanged: (value) => _updateMode(mode, value),
     );
   }
 }

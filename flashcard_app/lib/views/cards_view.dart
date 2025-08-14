@@ -9,6 +9,7 @@ import 'deck_detail_view.dart';
 import 'all_cards_view.dart';
 import 'all_decks_view.dart';
 import 'create_word_exercise_view.dart';
+import 'photo_import_view.dart';
 
 class CardsView extends StatefulWidget {
   const CardsView({super.key});
@@ -105,15 +106,19 @@ class _CardsViewState extends State<CardsView> {
     final allCards = provider.cards;
     final allDecks = provider.getAllDecksHierarchical();
     
+    print('🔍 CardsView: Building stats section with ${allCards.length} cards and ${allDecks.length} decks');
+    
     // Calculate average learning percentage for cards
     final averageCardProgress = allCards.isEmpty 
         ? 0 
-        : (allCards.fold<int>(0, (sum, card) => sum + card.learningPercentage) / allCards.length).round();
+        : _calculateAverageCardProgress(allCards);
     
     // Calculate average learning percentage for decks
     final averageDeckProgress = allDecks.isEmpty 
         ? 0 
-        : (allDecks.fold<double>(0, (sum, deck) => sum + deck.learningPercentage) / allDecks.length).round();
+        : _calculateOverallDeckProgress(context, allDecks);
+    
+    print('🔍 CardsView: Displaying - Cards: ${averageCardProgress}%, Decks: ${averageDeckProgress}%');
     
     return Row(
       children: [
@@ -241,6 +246,42 @@ class _CardsViewState extends State<CardsView> {
                 const SizedBox(width: 12),
                 Text(
                   'Add New Card',
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const Spacer(),
+              ],
+            ),
+          ),
+        ),
+        
+        // Import from Photo
+        Container(
+          width: double.infinity,
+          margin: const EdgeInsets.only(bottom: 12),
+          child: ElevatedButton(
+            onPressed: () => _showPhotoImportDialog(context),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.surface,
+              foregroundColor: Theme.of(context).colorScheme.onSurface,
+              elevation: 2,
+              shadowColor: Colors.blue.withOpacity(0.2),
+              padding: const EdgeInsets.all(16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.camera_alt,
+                  color: Colors.blue,
+                  size: 24,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'Import from Photo',
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     fontWeight: FontWeight.w500,
                   ),
@@ -452,6 +493,14 @@ class _CardsViewState extends State<CardsView> {
     );
   }
 
+  void _showPhotoImportDialog(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const PhotoImportView(),
+      ),
+    );
+  }
+
   void _viewAllCards(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -496,5 +545,52 @@ class _CardsViewState extends State<CardsView> {
         ],
       ),
     );
+  }
+
+  int _calculateAverageCardProgress(List<FlashCard> cards) {
+    if (cards.isEmpty) return 0;
+    
+    double totalProgress = 0.0;
+    for (final card in cards) {
+      totalProgress += card.learningPercentage.toDouble();
+    }
+    final averageProgress = totalProgress / cards.length;
+    
+    return averageProgress.round();
+  }
+  
+  int _calculateOverallDeckProgress(BuildContext context, List<Deck> decks) {
+    print('🔍 CardsView: Calculating deck progress for ${decks.length} decks');
+    
+    if (decks.isEmpty) {
+      print('🔍 CardsView: No decks, returning 0%');
+      return 0;
+    }
+    
+    // Calculate percentage of decks that are 100% learned
+    int fullyLearnedDecks = 0;
+    
+    for (final deck in decks) {
+      // Get the actual cards for this deck from the provider
+      final deckCards = context.read<FlashcardProvider>().getCardsForDeck(deck.id);
+      print('🔍 CardsView: Checking deck "${deck.name}" with ${deckCards.length} cards');
+      
+      if (deckCards.isNotEmpty) {
+        double deckProgress = Deck.calculateLearningPercentage(deck.name, deckCards);
+        print('🔍 CardsView: Deck "${deck.name}" has ${deckProgress}% progress');
+        
+        if (deckProgress >= 100.0) {
+          fullyLearnedDecks++;
+          print('🔍 CardsView: Deck "${deck.name}" is fully learned! (${fullyLearnedDecks} total)');
+        }
+      } else {
+        print('🔍 CardsView: Deck "${deck.name}" is empty');
+      }
+    }
+    
+    final percentageOfFullyLearnedDecks = (fullyLearnedDecks / decks.length) * 100;
+    print('🔍 CardsView: Final calculation: $fullyLearnedDecks fully learned / ${decks.length} total = ${percentageOfFullyLearnedDecks}%');
+    
+    return percentageOfFullyLearnedDecks.round();
   }
 } 

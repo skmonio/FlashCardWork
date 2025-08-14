@@ -122,27 +122,27 @@ class FlashcardProvider extends ChangeNotifier {
   
   Future<FlashCard?> createCard({
     required String word,
-    required String definition,
-    required String example,
+    String? definition,
+    String? example,
     Set<String>? deckIds,
     String article = '',
-    String plural = '',
-    String pastTense = '',
-    String futureTense = '',
-    String pastParticiple = '',
+    String? plural,
+    String? pastTense,
+    String? futureTense,
+    String? pastParticiple,
   }) async {
     try {
       print('Provider: Creating card: $word');
       final card = await _service.createCard(
         word: word,
-        definition: definition,
-        example: example,
+        definition: definition ?? '',
+        example: example ?? '',
         deckIds: deckIds,
         article: article,
-        plural: plural,
-        pastTense: pastTense,
-        futureTense: futureTense,
-        pastParticiple: pastParticiple,
+        plural: plural ?? '',
+        pastTense: pastTense ?? '',
+        futureTense: futureTense ?? '',
+        pastParticiple: pastParticiple ?? '',
       );
       // Refresh the cards list from the service instead of trying to modify the unmodifiable list
       _cards = _service.cards;
@@ -194,6 +194,10 @@ class FlashcardProvider extends ChangeNotifier {
     return _service.getCardsForDeck(deckId);
   }
   
+  List<FlashCard> getCardsForDeckWithSubDecks(String deckId) {
+    return _service.getCardsForDeckWithSubDecks(deckId);
+  }
+  
   List<FlashCard> getCardsForDecks(List<String> deckIds) {
     return _service.getCardsForDecks(deckIds);
   }
@@ -241,6 +245,40 @@ class FlashcardProvider extends ChangeNotifier {
       card.markIncorrect();
       await _service.updateCard(card);
       
+      // Update the card in our local list
+      final index = _cards.indexWhere((c) => c.id == card.id);
+      if (index != -1) {
+        _cards[index] = card;
+        notifyListeners();
+      }
+      return true;
+    } catch (e) {
+      _setError(e.toString());
+      return false;
+    }
+  }
+  
+  // MARK: - Review Deck Management
+  
+  Future<bool> addCardToReview(FlashCard card) async {
+    try {
+      await _service.addCardToReview(card);
+      // Update the card in our local list
+      final index = _cards.indexWhere((c) => c.id == card.id);
+      if (index != -1) {
+        _cards[index] = card;
+        notifyListeners();
+      }
+      return true;
+    } catch (e) {
+      _setError(e.toString());
+      return false;
+    }
+  }
+  
+  Future<bool> removeCardFromReview(FlashCard card) async {
+    try {
+      await _service.removeCardFromReview(card);
       // Update the card in our local list
       final index = _cards.indexWhere((c) => c.id == card.id);
       if (index != -1) {

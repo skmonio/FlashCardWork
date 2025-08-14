@@ -404,9 +404,8 @@ class _DeckDetailViewState extends State<DeckDetailView> {
   }
 
   List<FlashCard> _getFilteredAndSortedCards(FlashcardProvider provider) {
-    var cards = provider.cards.where((card) => 
-      card.deckIds.contains(widget.deck.id)
-    ).toList();
+    // Get cards from the deck including all sub-decks
+    var cards = provider.getCardsForDeckWithSubDecks(widget.deck.id);
 
     // Filter by search query
     if (_searchQuery.isNotEmpty) {
@@ -519,14 +518,14 @@ class _DeckDetailViewState extends State<DeckDetailView> {
   }
 
   void _studyDeck() {
-    // Get all cards in this deck
+    // Get all cards in this deck including sub-decks
     final provider = context.read<FlashcardProvider>();
     final dutchProvider = context.read<DutchWordExerciseProvider>();
-    final deckCards = provider.cards.where((card) => card.deckIds.contains(widget.deck.id)).toList();
+    final deckCards = provider.getCardsForDeckWithSubDecks(widget.deck.id);
     
     if (deckCards.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No cards in this deck to study!')),
+        const SnackBar(content: Text('No cards in this deck or its sub-decks to study!')),
       );
       return;
     }
@@ -627,7 +626,7 @@ class _DeckDetailViewState extends State<DeckDetailView> {
         ),
       ),
     );
-
+  }
 
   void _deleteCard(FlashCard card) {
     showDialog(

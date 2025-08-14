@@ -256,7 +256,7 @@ class _TrueFalseViewState extends State<TrueFalseView> {
         ),
       ),
     );
-
+  }
 
   Color _getCardBorderColor(FlashCard card) {
     // Generate consistent vibrant colors based on card content
@@ -622,13 +622,40 @@ class _TrueFalseViewState extends State<TrueFalseView> {
                         color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
                       ),
                     ),
-                    child: Text(
-                      _getTranslationForQuestion(),
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      textAlign: TextAlign.center,
+                    child: Column(
+                      children: [
+                        Text(
+                          _getTranslationForQuestion(),
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        // Show correct answer if user answered incorrectly
+                        if (_answered && _selectedAnswer != _correctAnswer) ...[
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.green.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: Colors.green.withValues(alpha: 0.3),
+                              ),
+                            ),
+                            child: Text(
+                              'Correct answer: ${widget.cards[_currentIndex].definition}',
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.green,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   ),
                   

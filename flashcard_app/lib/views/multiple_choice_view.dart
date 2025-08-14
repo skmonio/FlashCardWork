@@ -341,7 +341,7 @@ class _MultipleChoiceViewState extends State<MultipleChoiceView> {
         ),
       ),
     );
-
+  }
 
   @override
   Widget build(BuildContext context) {

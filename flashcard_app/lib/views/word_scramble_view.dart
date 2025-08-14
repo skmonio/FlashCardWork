@@ -547,7 +547,6 @@ class _WordScrambleViewState extends State<WordScrambleView> {
                   // Answer box
                   Container(
                     width: double.infinity,
-                    height: 80, // Fixed height for consistency
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: Theme.of(context).colorScheme.surfaceVariant,
@@ -556,18 +555,49 @@ class _WordScrambleViewState extends State<WordScrambleView> {
                         color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
                       ),
                     ),
-                    child: _userAnswer.isEmpty
-                        ? Center(
+                    child: Column(
+                      children: [
+                        // User answer display
+                        SizedBox(
+                          height: 80,
+                          child: _userAnswer.isEmpty
+                              ? Center(
+                                  child: Text(
+                                    'Tap pieces to build the word',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                )
+                              : _buildUserAnswerDisplay(),
+                        ),
+                        // Show correct answer if user answered incorrectly
+                        if (_answered && _userAnswer.join('').toLowerCase() != _correctWord.replaceAll(' ', '').toLowerCase()) ...[
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.green.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: Colors.green.withValues(alpha: 0.3),
+                              ),
+                            ),
                             child: Text(
-                              'Tap pieces to build the word',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                              'The correct answer is: $_correctWord',
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.green,
                               ),
                               textAlign: TextAlign.center,
                             ),
-                          )
-                        : _buildUserAnswerDisplay(),
+                          ),
+                        ],
+                      ],
+                    ),
                   ),
                   
                   const SizedBox(height: 32),

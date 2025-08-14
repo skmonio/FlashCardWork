@@ -4,6 +4,7 @@ import '../models/dutch_word_exercise.dart';
 import '../providers/dutch_word_exercise_provider.dart';
 import '../providers/flashcard_provider.dart';
 import '../models/flash_card.dart';
+import '../components/text_context_menu.dart';
 import 'create_word_exercise_view.dart';
 
 class DutchWordExerciseDetailView extends StatefulWidget {
@@ -220,12 +221,37 @@ class _DutchWordExerciseDetailViewState extends State<DutchWordExerciseDetailVie
           const SizedBox(height: 24),
           
           // Exercise prompt
-          Text(
+          SelectableText(
             exercise.prompt,
             style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w500,
             ),
+            textAlign: TextAlign.left,
+            enableInteractiveSelection: true,
+            showCursor: false,
+            contextMenuBuilder: (context, editableTextState) {
+              final selectedText = editableTextState.textEditingValue.selection.textInside(exercise.prompt);
+              if (selectedText.isEmpty) {
+                return const SizedBox.shrink();
+              }
+              
+              return TextContextMenu(
+                selectedText: selectedText,
+                onCopy: () {
+                  // Copy functionality is handled in TextContextMenu
+                },
+                onTranslate: () {
+                  // Translation is handled in TextContextMenu
+                },
+                onAddToDeck: () {
+                  _addWordToDeck(selectedText);
+                },
+                onSearch: () {
+                  _searchWord(selectedText);
+                },
+              );
+            },
           ),
           
           const SizedBox(height: 24),
@@ -625,9 +651,34 @@ class _DutchWordExerciseDetailViewState extends State<DutchWordExerciseDetailVie
             ],
           ),
           const SizedBox(height: 8),
-          Text(
+          SelectableText(
             exercise.explanation,
             style: const TextStyle(fontSize: 16),
+            textAlign: TextAlign.left,
+            enableInteractiveSelection: true,
+            showCursor: false,
+            contextMenuBuilder: (context, editableTextState) {
+              final selectedText = editableTextState.textEditingValue.selection.textInside(exercise.explanation);
+              if (selectedText.isEmpty) {
+                return const SizedBox.shrink();
+              }
+              
+              return TextContextMenu(
+                selectedText: selectedText,
+                onCopy: () {
+                  // Copy functionality is handled in TextContextMenu
+                },
+                onTranslate: () {
+                  // Translation is handled in TextContextMenu
+                },
+                onAddToDeck: () {
+                  _addWordToDeck(selectedText);
+                },
+                onSearch: () {
+                  _searchWord(selectedText);
+                },
+              );
+            },
           ),
           if (!_isCorrect && exercise.type == ExerciseType.sentenceBuilding) ...[
             const SizedBox(height: 8),
@@ -643,13 +694,38 @@ class _DutchWordExerciseDetailViewState extends State<DutchWordExerciseDetailVie
                   Icon(Icons.check, color: Colors.green, size: 16),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Text(
+                    child: SelectableText(
                       'Correct answer: ${exercise.correctAnswer}',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.green[700],
                         fontWeight: FontWeight.w500,
                       ),
+                      textAlign: TextAlign.left,
+                      enableInteractiveSelection: true,
+                      showCursor: false,
+                      contextMenuBuilder: (context, editableTextState) {
+                        final selectedText = editableTextState.textEditingValue.selection.textInside('Correct answer: ${exercise.correctAnswer}');
+                        if (selectedText.isEmpty) {
+                          return const SizedBox.shrink();
+                        }
+                        
+                        return TextContextMenu(
+                          selectedText: selectedText,
+                          onCopy: () {
+                            // Copy functionality is handled in TextContextMenu
+                          },
+                          onTranslate: () {
+                            // Translation is handled in TextContextMenu
+                          },
+                          onAddToDeck: () {
+                            _addWordToDeck(selectedText);
+                          },
+                          onSearch: () {
+                            _searchWord(selectedText);
+                          },
+                        );
+                      },
                     ),
                   ),
                 ],
@@ -658,13 +734,38 @@ class _DutchWordExerciseDetailViewState extends State<DutchWordExerciseDetailVie
           ],
           if (exercise.hint != null) ...[
             const SizedBox(height: 8),
-            Text(
+            SelectableText(
               'Hint: ${exercise.hint}',
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey[600],
                 fontStyle: FontStyle.italic,
               ),
+              textAlign: TextAlign.left,
+              enableInteractiveSelection: true,
+              showCursor: false,
+              contextMenuBuilder: (context, editableTextState) {
+                final selectedText = editableTextState.textEditingValue.selection.textInside('Hint: ${exercise.hint}');
+                if (selectedText.isEmpty) {
+                  return const SizedBox.shrink();
+                }
+                
+                return TextContextMenu(
+                  selectedText: selectedText,
+                  onCopy: () {
+                    // Copy functionality is handled in TextContextMenu
+                  },
+                  onTranslate: () {
+                    // Translation is handled in TextContextMenu
+                  },
+                  onAddToDeck: () {
+                    _addWordToDeck(selectedText);
+                  },
+                  onSearch: () {
+                    _searchWord(selectedText);
+                  },
+                );
+              },
             ),
           ],
         ],
@@ -1108,5 +1209,58 @@ class _DutchWordExerciseDetailViewState extends State<DutchWordExerciseDetailVie
       case ExerciseType.contextClue:
         return 'Context Clue';
     }
+  }
+
+  // Helper methods for context menu actions
+  void _addWordToDeck(String word) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Add Word to Deck'),
+        content: Text('Would you like to add "$word" to a deck?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              // TODO: Implement add to deck functionality
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Add to deck functionality coming soon!')),
+              );
+            },
+            child: const Text('Add'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _searchWord(String word) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Search Word'),
+        content: Text('Would you like to search for "$word" in your flashcards?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              // TODO: Implement search functionality
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Search functionality coming soon!')),
+              );
+            },
+            child: const Text('Search'),
+          ),
+        ],
+      ),
+    );
   }
 } 

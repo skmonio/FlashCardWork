@@ -150,13 +150,18 @@ class _StudyViewState extends State<StudyView> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Text(
+                  SelectableText(
                     _isFlipped ? card.definition : card.word,
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                     ),
                     textAlign: TextAlign.center,
+                    enableInteractiveSelection: true,
+                    showCursor: false,
+                    contextMenuBuilder: (context, editableTextState) {
+                      return const SizedBox.shrink(); // Hide context menu
+                    },
                   ),
                   if (card.article.isNotEmpty && !_isFlipped) ...[
                     const SizedBox(height: 8),
@@ -210,21 +215,33 @@ class _StudyViewState extends State<StudyView> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Text(
+                  SelectableText(
                     _scrambledWord,
                     style: const TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 2,
                     ),
+                    textAlign: TextAlign.center,
+                    enableInteractiveSelection: true,
+                    showCursor: false,
+                    contextMenuBuilder: (context, editableTextState) {
+                      return const SizedBox.shrink(); // Hide context menu
+                    },
                   ),
                   const SizedBox(height: 8),
-                  Text(
+                  SelectableText(
                     'Hint: ${card.definition}',
                     style: TextStyle(
                       fontSize: 14,
                       color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
+                    textAlign: TextAlign.center,
+                    enableInteractiveSelection: true,
+                    showCursor: false,
+                    contextMenuBuilder: (context, editableTextState) {
+                      return const SizedBox.shrink(); // Hide context menu
+                    },
                   ),
                 ],
               ),
@@ -533,10 +550,15 @@ class _StudyViewState extends State<StudyView> {
           padding: const EdgeInsets.all(16),
           alignment: Alignment.centerLeft,
         ),
-        child: Text(
+        child: SelectableText(
           option,
           style: const TextStyle(fontSize: 16),
           textAlign: TextAlign.left,
+          enableInteractiveSelection: true,
+          showCursor: false,
+          contextMenuBuilder: (context, editableTextState) {
+            return const SizedBox.shrink(); // Hide context menu
+          },
         ),
       ),
     );

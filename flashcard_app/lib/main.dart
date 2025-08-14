@@ -5,6 +5,7 @@ import 'providers/theme_provider.dart';
 import 'providers/bubble_word_provider.dart';
 import 'providers/dutch_word_exercise_provider.dart';
 import 'providers/user_profile_provider.dart';
+import 'providers/dutch_grammar_provider.dart';
 import 'views/main_navigation_view.dart';
 import 'views/loading_view.dart';
 import 'services/haptic_service.dart';
@@ -42,6 +43,7 @@ class FlashcardApp extends StatelessWidget {
             return provider;
           },
         ),
+        ChangeNotifierProvider(create: (context) => DutchGrammarProvider()),
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {

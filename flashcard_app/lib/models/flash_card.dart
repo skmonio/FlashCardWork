@@ -37,8 +37,8 @@ class FlashCard {
   FlashCard({
     String? id,
     required this.word,
-    required this.definition,
-    required this.example,
+    String? definition,
+    String? example,
     Set<String>? deckIds,
     this.successCount = 0,
     DateTime? dateCreated,
@@ -60,6 +60,8 @@ class FlashCard {
     this.pastParticiple = '',
   }) : 
     id = id ?? const Uuid().v4(),
+    definition = definition ?? '',
+    example = example ?? '',
     deckIds = deckIds ?? {},
     dateCreated = dateCreated ?? DateTime.now(),
     lastModified = lastModified ?? DateTime.now();

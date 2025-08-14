@@ -729,7 +729,8 @@ class _AdvancedStudyViewState extends State<AdvancedStudyView>
         _updateCardLearningProgress(currentCard, true);
         break;
       case SwipeDirection.up: // Review
-        // Don't add to any set, just skip
+        // Add card to review deck
+        _addCardToReview(currentCard);
         break;
       case SwipeDirection.down: // Skip
         _skippedCards.add(currentCard.id);
@@ -783,6 +784,16 @@ class _AdvancedStudyViewState extends State<AdvancedStudyView>
       
     } catch (e) {
       print('🔍 AdvancedStudyView: Error updating learning progress: $e');
+    }
+  }
+
+  Future<void> _addCardToReview(FlashCard card) async {
+    try {
+      final provider = context.read<FlashcardProvider>();
+      await provider.addCardToReview(card);
+      print('🔍 AdvancedStudyView: Added "${card.word}" to review deck');
+    } catch (e) {
+      print('🔍 AdvancedStudyView: Error adding card to review: $e');
     }
   }
 

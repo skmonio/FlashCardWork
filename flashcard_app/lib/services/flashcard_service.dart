@@ -25,6 +25,7 @@ class FlashcardService {
   Future<void> initialize() async {
     await _loadData();
     await _loadSettings();
+    await _ensureSystemDecks();
   }
   
   // MARK: - Data Persistence
@@ -83,6 +84,38 @@ class FlashcardService {
   Future<void> _saveSettings() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_settingsKey, jsonEncode(_settings));
+  }
+  
+  // MARK: - System Decks
+  
+  Future<void> _ensureSystemDecks() async {
+    // Ensure Uncategorized deck exists
+    if (!_decks.any((deck) => deck.name == 'Uncategorized')) {
+      await createDeck('Uncategorized');
+    }
+    
+    // Ensure Review deck exists
+    if (!_decks.any((deck) => deck.name == 'Review')) {
+      await createDeck('Review');
+    }
+  }
+  
+  // Add card to review deck
+  Future<void> addCardToReview(FlashCard card) async {
+    final reviewDeck = _decks.firstWhere((deck) => deck.name == 'Review');
+    if (!card.deckIds.contains(reviewDeck.id)) {
+      card.deckIds.add(reviewDeck.id);
+      await _saveData();
+    }
+  }
+  
+  // Remove card from review deck
+  Future<void> removeCardFromReview(FlashCard card) async {
+    final reviewDeck = _decks.firstWhere((deck) => deck.name == 'Review');
+    if (card.deckIds.contains(reviewDeck.id)) {
+      card.deckIds.remove(reviewDeck.id);
+      await _saveData();
+    }
   }
   
   // MARK: - Deck Management
@@ -217,6 +250,27 @@ class FlashcardService {
   
   List<FlashCard> getCardsForDeck(String deckId) {
     return _cards.where((card) => card.deckIds.contains(deckId)).toList();
+  }
+  
+  List<FlashCard> getCardsForDeckWithSubDecks(String deckId) {
+    // Get cards from the main deck
+    final mainDeckCards = getCardsForDeck(deckId);
+    
+    // Get all sub-decks
+    final subDecks = getSubDecks(deckId);
+    
+    // Get cards from all sub-decks
+    final subDeckCards = <FlashCard>[];
+    for (final subDeck in subDecks) {
+      subDeckCards.addAll(getCardsForDeck(subDeck.id));
+    }
+    
+    // Combine and return all cards
+    final allCards = <FlashCard>[];
+    allCards.addAll(mainDeckCards);
+    allCards.addAll(subDeckCards);
+    
+    return allCards;
   }
   
   List<FlashCard> getCardsForDecks(List<String> deckIds) {

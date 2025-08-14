@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.example.flashcard_app"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 36
     ndkVersion = "27.0.12077973"
 
     compileOptions {
@@ -17,6 +17,11 @@ android {
 
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_11.toString()
+    }
+
+    // Suppress unchecked warnings from Google ML Kit packages
+    tasks.withType<JavaCompile> {
+        options.compilerArgs.addAll(listOf("-Xlint:-unchecked"))
     }
 
     defaultConfig {
