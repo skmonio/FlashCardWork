@@ -1,0 +1,17 @@
+Deck,Word,Definition,Exercise Type,Question,Options,Explanation
+Basic Dutch,kat,cat,Multiple Choice,What does "kat" mean?,cat|dog|bird|fish,The word "kat" means cat in Dutch.
+Basic Dutch,kat,cat,Sentence Building,Complete the sentence: "Ik heb een ___",Ik heb een kat|Ik heb een kat,The correct sentence is "Ik heb een kat" (I have a cat).
+Basic Dutch,hond,dog,Multiple Choice,What does "hond" mean?,dog|cat|bird|fish,The word "hond" means dog in Dutch.
+Basic Dutch,hond,dog,True/False,Does "hond" mean cat?,false|true,The word "hond" means dog, not cat.
+Basic Dutch,huis,house,Multiple Choice,What does "huis" mean?,house|car|tree|book,The word "huis" means house in Dutch.
+Basic Dutch,huis,house,Sentence Building,Complete the sentence: "Dit is mijn ___",Dit is mijn huis|Dit is mijn huis,The correct sentence is "Dit is mijn huis" (This is my house).
+Food,brood,bread,Multiple Choice,What does "brood" mean?,bread|milk|cheese|butter,The word "brood" means bread in Dutch.
+Food,brood,bread,True/False,Does "brood" mean cheese?,false|true,The word "brood" means bread, not cheese.
+Food,kaas,cheese,Multiple Choice,What does "kaas" mean?,cheese|bread|milk|butter,The word "kaas" means cheese in Dutch.
+Food,melk,milk,Multiple Choice,What does "melk" mean?,milk|water|juice|coffee,The word "melk" means milk in Dutch.
+Colors,rood,red,Multiple Choice,What does "rood" mean?,red|blue|green|yellow,The word "rood" means red in Dutch.
+Colors,blauw,blue,Multiple Choice,What does "blauw" mean?,blue|red|green|yellow,The word "blauw" means blue in Dutch.
+Colors,groen,green,True/False,Does "groen" mean red?,false|true,The word "groen" means green, not red.
+Numbers,een,one,Multiple Choice,What does "een" mean?,one|two|three|four,The word "een" means one in Dutch.
+Numbers,twee,two,Multiple Choice,What does "twee" mean?,two|one|three|four,The word "twee" means two in Dutch.
+Numbers,drie,three,Sentence Building,Complete the sentence: "Ik heb ___ appels",Ik heb drie appels|Ik heb drie appels,The correct sentence is "Ik heb drie appels" (I have three apples).
